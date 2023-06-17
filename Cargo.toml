@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    # "core-viewer/",
+    # "core-engine/",
+    # "core-editor/",
+    "web-server/",
+]
