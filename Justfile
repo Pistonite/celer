@@ -8,28 +8,48 @@ install:
     rustup update
     cargo install cargo-watch
     cargo install cross --git https://github.com/cross-rs/cross
+    cargo install txtpp
     cd docs && npm i
+    cd web-client && npm i
 
 # Install dependencies for CI
 install-ci:
     cargo install cross --git https://github.com/cross-rs/cross
     cd docs && npm ci
+    cd web-client && npm ci
+
+# Start running txtpp and watch for changes
+dev-pp:
+    cargo watch -s "txtpp verify . -r || txtpp -r"
 
 # Start hosting the docs locally and watch for changes
 dev-docs:
     cd docs && npm run dev
 
+# Start the web client locally and watch for changes
+dev-client:
+    cd web-client && npm run dev
+
 # Start the server locally and watch for changes
 dev-server:
     cargo watch -B 1 -s "cargo run -- --debug --docs-dir docs/src/.vitepress/dist"
 
+check-docs PACKAGE VERBOSE="":
+    node docs/scripts/checkDocCompletion.js {{PACKAGE}} {{VERBOSE}}
+
+dump-symbol PATH SYMBOL +FLAGS="--doc --code":
+    node docs/scripts/dumpSymbol.js {{PATH}} '{{SYMBOL}}' {{FLAGS}}
+
 # Format the code
 fmt:
     cargo fmt
+    cd web-client && npm run lint -- --fix
 
-# Format and lint the code
+# Lint the code
 lint:
     cargo clippy --all-features --all-targets -- -D warnings
+    cd web-client && npm run lint
+    txtpp verify . -r
 
 lint-ci: && lint
     cargo fmt --check
@@ -37,17 +57,22 @@ lint-ci: && lint
 test:
     echo "no tests yet"
 
+# Grep TODOs
+todo:
+    grep "TODO" . -i -w -r --exclude-dir=target --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist | grep -v "./Justfile"
+
 # Build the project for release
 build:
     mkdir -p dist
     rm -rf dist/*
+    txtpp -r
     @echo "Building docs"
     cd docs && npm run build
     mkdir dist/docs
     cp -r docs/src/.vitepress/dist/* dist/docs
     @echo "Building server"
     rustup default stable
-    cross build --release --target x86_64-unknown-linux-musl
+    cross build --bin start-server --release --target x86_64-unknown-linux-musl
     cp target/x86_64-unknown-linux-musl/release/start-server dist/start-server
     @echo "Done - Build outputs saved to dist/"
 

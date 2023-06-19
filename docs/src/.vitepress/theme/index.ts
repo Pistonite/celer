@@ -2,6 +2,7 @@
 import { h } from 'vue'
 import Theme from 'vitepress/theme'
 import './style.css'
+import SourceLink from "./SourceLink.vue"
 
 export default {
   ...Theme,
@@ -11,6 +12,6 @@ export default {
     })
   },
   enhanceApp({ app, router, siteData }) {
-    // ...
+    app.component('SourceLink', SourceLink);
   }
 }

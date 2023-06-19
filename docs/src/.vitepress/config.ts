@@ -31,21 +31,32 @@ export default defineConfig({
     nav: [
       { text: 'Usage', link: '/' },
       { text: 'Syntax', link: '/markdown-examples' },
-      { text: 'Developer', link: '/markdown-examples' },
+      { text: 'Developer', link: '/developer/' },
     ],
 
-    sidebar: [
-      {
-        text: 'Examples',
-        items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' }
-        ]
-      }
-    ],
+    sidebar: {
+      "/usage/": [
+        {
+          text: 'Examples',
+          items: [
+            { text: 'Markdown Examples', link: '/markdown-examples' },
+            { text: 'Runtime API Examples', link: '/api-examples' }
+          ]
+        }
+      ],
+      "/developer/": [
+        {
+          text: 'Web Client',
+          items: [
+            { text: 'core-engine', link: '/developer/web-client/core-engine' },
+            { text: 'Redux Store', link: '/developer/web-client/data-store' },
+          ]
+        }
+      ]
+    },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/Pistonite/celer' }
     ],
 
     search: {
