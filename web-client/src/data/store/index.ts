@@ -4,5 +4,5 @@
 
 export * from "./configureStore";
 export * from "./settings";
-export * from "./LayoutTypes";
+export * from "./toolbar";
 export * from "./action";

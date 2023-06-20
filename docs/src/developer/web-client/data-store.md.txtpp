@@ -35,11 +35,6 @@ To create a slice, use the `configureSlice` helper function, which is a wrapper 
 2. `xxxActions` - The slice's action creators, which can be used to dispatch actions later.
 3. `xxxSelector` - The selector function used to get the slice state from the store state.
 
-Additionally, slices should define a selector hook for easy usage within React:
-
-```typescript
--TXTPP#run just dump-symbol web-client/src/data/store/settings/index.ts "export const useSettingsStore" --doc --code
-```
 
 ## Creating Store
 To create the store, import all the reducers and use redux's `configureStore`. Note that we can use the imported reducers directly, as they are already wrapped with the slice name.
@@ -51,25 +46,34 @@ To create the store, import all the reducers and use redux's `configureStore`. N
 The store also has additional setups like subscribing to updates. See <SourceLink link="web-client/src/data/store/configureStore.ts" /> for more details.
 
 ## Usage with React
-To access the store state, use the selector hook exported by the slice. For example, to access the `settings` slice state, use the `useSettingsStore` hook.
+### Access state
+To access the store state, use the `useSelector` hook from `react-redux` along with the selector exported by the slice:
 
+```typescript
+import { useSelector } from "react-redux";
+
+const Foo = () => {
+    const { someSettingValue } = useSelector(settingsSelector);
+}
+```
+
+### Dispatch actions
 To access the actions, there's a custom hook `useActions` that wraps `useDispatch` and `bindActionCreators`.
 
 ```typescript
--TXTPP#run just dump-symbol web-client/src/data/store/util.ts "useActions" --doc --code
+-TXTPP#run just dump-symbol web-client/src/data/store/action.ts "useActions" --doc --code
 ```
 
 Example usage of the `useActions` hook in a component:
 
 ```typescript
+import { useActions } from "data/store";
+
 const Foo = () => {
-    const actions = useActions({
-        settingsActtions.addAndSwitchLayout,
-        // ... other actions
-    });
+    const { addAndSwitchLayout } = useActions(settingsActtions);
 
     // ... later
-    actions.addAndSwitchLayout(payload);
+    addAndSwitchLayout(payload);
 }
 ```
 

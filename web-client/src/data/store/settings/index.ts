@@ -1,13 +1,16 @@
-//! Settings store slice is used for user settings, such as theme, layout, map settings, etc.
+//! Settings store slice
+//!
+//! This is used for user settings, such as theme, layout, map settings, etc.
+//! These settings need to be persisted to local storage.
 
 import { ReducerDecl, configureSlice } from 'data/store/util';
-import { useSelector } from 'react-redux';
 import { LayoutSettings, initialLayoutSettings, LayoutReducers } from './layout';
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";
 
-type SettingsStore = LayoutSettings;
+/// The settings slice state
+export type SettingsStore = LayoutSettings;
 
 /// Try loading initial state from local storage
 const loadState = (): SettingsStore => {
@@ -39,6 +42,6 @@ export const {
     }
 });
 
-export const useSettingsStore = () => {
-    useSelector(settingsSelector);
-}
+// re-exports
+export * from "./layout/defaults";
+export * from "./layout/util";

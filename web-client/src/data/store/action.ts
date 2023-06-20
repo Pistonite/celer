@@ -4,7 +4,7 @@ import { ActionCreatorWithPayload, ActionCreatorWithoutPayload, AnyAction, bindA
 import { useDispatch } from "react-redux";
 
 /// TypeScript magic to (correctly) type the result of redux's `bindActionCreators`
-type BindedActionCreators<ActionCreators> = {
+export type BindedActionCreators<ActionCreators> = {
     [t in keyof ActionCreators]:
         ActionCreators[t] extends ActionCreatorWithPayload<infer P, infer _>
         ? (payload: P) => void
@@ -26,16 +26,8 @@ type UnbindedActionCreators<ActionCreators> = {
 
 /// Bind actions to dispatch as a React hook
 ///
-/// This is a simple wrapper around redux's `bindActionCreators`. For example:
-/// ```
-/// import { MyActions } from "./slice"; // Import actions from slice
-/// 
-/// // ... inside a component
-/// const actions = useActions({ MyActions.doSomething });
-///
-/// // ... later
-/// actions.doSomething(payload);
-export const useActions = <ActionCreators>(actions: UnbindedActionCreators<ActionCreators>): BindedActionCreators<ActionCreators> => {
+/// This is a simple wrapper around redux's `bindActionCreators`
+export const useActions = <ActionCreators extends UnbindedActionCreators<ActionCreators>>(actions: ActionCreators): BindedActionCreators<ActionCreators> => {
     const dispatch = useDispatch();
     return bindActions(actions, dispatch);
 }

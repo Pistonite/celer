@@ -70,3 +70,8 @@ export const configureSlice = <
     } as SliceConfiguration<Name, State, typeof slice.actions>;
 }
 
+/// Helper type for defining a generic payload with value of type T
+export type ValuePayload<T> = {
+    /// The value of the payload
+    value: T
+};

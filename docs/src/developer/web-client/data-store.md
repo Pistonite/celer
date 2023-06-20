@@ -33,10 +33,10 @@ One example is the `addAndSwitchLayout` reducer in the layout setting slice (<So
 
 ```typescript
 /// Add a layout and switch to it
-export const addAndSwitchLayout: ReducerDeclWithPayload<LayoutSettings, IsEditorPayload & {
+export const addAndSwitchLayout: ReducerDeclWithPayload<LayoutSettings, {
     /// The layout to add
     layout: Layout
-}> = withPayload((state, {isEditor, layout}) => { ... });
+}> = withPayload((state, { layout }) => { ... });
 ```
 
 The reducers declared this way will eventually be passed into redux's `createSlice` function, which packages them into `ActionCreator`s. Redux uses `immer` internally for the immutable update pattern, so you can write the reducer as if it is mutating the state (as indicated by `Draft<S>` in the declaration)
@@ -60,6 +60,10 @@ export const {
         setCurrentViewingLayoutTest
     }
 });
+
+// re-exports
+export * from "./layout/defaults";
+export * from "./layout/util";
 ```
 
 `configureSlice` will return 3 things for us:
@@ -67,14 +71,6 @@ export const {
 2. `xxxActions` - The slice's action creators, which can be used to dispatch actions later.
 3. `xxxSelector` - The selector function used to get the slice state from the store state.
 
-Additionally, slices should define a selector hook for easy usage within React:
-
-```typescript
-
-export const useSettingsStore = () => {
-    useSelector(settingsSelector);
-}
-```
 
 ## Creating Store
 To create the store, import all the reducers and use redux's `configureStore`. Note that we can use the imported reducers directly, as they are already wrapped with the slice name.
@@ -83,7 +79,8 @@ To create the store, import all the reducers and use redux's `configureStore`. N
 /// The store
 export const store = configureStore({
     reducer: {
-        ...settingsReducer
+        ...settingsReducer,
+        ...toolbarReducer
     }
 });
 ```
@@ -91,23 +88,25 @@ export const store = configureStore({
 The store also has additional setups like subscribing to updates. See <SourceLink link="web-client/src/data/store/configureStore.ts" /> for more details.
 
 ## Usage with React
-To access the store state, use the selector hook exported by the slice. For example, to access the `settings` slice state, use the `useSettingsStore` hook.
+### Access state
+To access the store state, use the `useSelector` hook from `react-redux` along with the selector exported by the slice:
 
+```typescript
+import { useSelector } from "react-redux";
+
+const Foo = () => {
+    const { someSettingValue } = useSelector(settingsSelector);
+}
+```
+
+### Dispatch actions
 To access the actions, there's a custom hook `useActions` that wraps `useDispatch` and `bindActionCreators`.
 
 ```typescript
 /// Bind actions to dispatch as a React hook
 ///
-/// This is a simple wrapper around redux's `bindActionCreators`. For example:
-/// ```
-/// import { MyActions } from "./slice"; // Import actions from slice
-///
-/// // ... inside a component
-/// const actions = useActions({ MyActions.doSomething });
-///
-/// // ... later
-/// actions.doSomething(payload);
-export const useActions = <ActionCreators>(actions: UnbindedActionCreators<ActionCreators>): BindedActionCreators<ActionCreators> => {
+/// This is a simple wrapper around redux's `bindActionCreators`
+export const useActions = <ActionCreators extends UnbindedActionCreators<ActionCreators>>(actions: ActionCreators): BindedActionCreators<ActionCreators> => {
     const dispatch = useDispatch();
     return bindActions(actions, dispatch);
 }
@@ -116,14 +115,13 @@ export const useActions = <ActionCreators>(actions: UnbindedActionCreators<Actio
 Example usage of the `useActions` hook in a component:
 
 ```typescript
+import { useActions } from "data/store";
+
 const Foo = () => {
-    const actions = useActions({
-        settingsActtions.addAndSwitchLayout,
-        // ... other actions
-    });
+    const { addAndSwitchLayout } = useActions(settingsActtions);
 
     // ... later
-    actions.addAndSwitchLayout(payload);
+    addAndSwitchLayout(payload);
 }
 ```
 

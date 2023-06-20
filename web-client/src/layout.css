@@ -1,0 +1,19 @@
+div.widget-container {
+    border: 1px solid black;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
+div.widget-toolbar-top {
+    flex-direction: column;
+}
+
+div.widget-toolbar-bottom {
+    flex-direction: column-reverse;
+}
+
+div.widget {
+    flex: 1;
+}

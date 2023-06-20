@@ -1,9 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
-import GridLayout from "react-grid-layout";
-import { useWindowSize } from "core/utils";
-import { WidgetType } from "data/store";
+import ReactGridLayout from "react-grid-layout";
+import "react-grid-layout/css/styles.css";
+import { useLayout, useWindowSize } from "core/utils";
+import { Layout, settingsSelector, GridFull, getDefaultMobileLayout, getDefaultLandscapeViewerLayout, getDefaultPortraitViewerLayout, settingsActions, useActions, LayoutDim, WidgetType, toolbarSelector } from "data/store";
+import { Loading } from "Loading";
+import { useSelector } from "react-redux";
+import { Header } from "ui/surfaces";
+import "./layout.css";
+import clsx from "clsx";
 
 
 //import "./App.css";
@@ -26,82 +32,66 @@ import { WidgetType } from "data/store";
 //     )
 // };
 
-// const adjustHeight = (layout: Widget) => {
-//     // Make sure the top of always visible
-//     if (layout.y < 0) {
-//         layout.y = 0;
-//     }
-//     // Make sure the bottom is always visible
-//     if (layout.y >= GRID_SIZE) {
-//         layout.y = GRID_SIZE;
-//     }
-//     if (layout.y + layout.h > GRID_SIZE) {
-//         layout.h = GRID_SIZE - layout.y;
-//     }
-//     // Make sure the left is always visible
-//     if (layout.x < 0) {
-//         layout.x = 0;
-//     }
-//     if (layout.x >= GRID_SIZE) {
-//         layout.x = GRID_SIZE;
-//     }
-//     // Make sure the right is always visible
-//     if (layout.x + layout.w > GRID_SIZE) {
-//         layout.w = GRID_SIZE - layout.x;
-//     }
-//     // If the widget has 0 width or height, try to make it visible
-//     if (layout.w <= 0) {
-//         layout.w = GRID_SIZE - layout.x;
-//     }
-//     // If the widget has 0 width or height, try to make it visible
-//     if (layout.h <= 0) {
-//         layout.h = GRID_SIZE - layout.h;
-//     }
-//     return layout;
-// };
+/// Margin to show when editing the layout
+const LayoutEditingMargin = 5;
 
 /// Root of the application
 ///
 /// This handles things like layout and routing
 export const AppRoot: React.FC = () => {
-    // const { currentLayout, isEditingLayout, saveEditingLayout } = useLayoutApi();
-    // const {windowWidth, windowHeight} = useWindowSize();
-    // const margin = isEditingLayout ? EDITING_MARGIN : 0;
+    const { isEditingLayout } = useSelector(toolbarSelector);
+    const {
+        widgets,
+        layout,
+        setLayout,
+    } = useLayout();
+    const { windowWidth, windowHeight } = useWindowSize();
+    const margin = isEditingLayout ? LayoutEditingMargin : 0;
+    //const { setCurrentLayout } = useActions(settingsActions);
+
+    // compute layout numbers
+    const rowHeight = (windowHeight - (GridFull + 1) * margin) / GridFull;
+
+
+
+
     // console.log({windowWidth, windowHeight})
     // console.log((windowHeight - (GRID_SIZE+1)*EDITING_MARGIN)/GRID_SIZE);
-    // return (
-    //     <div style={{height: "100vh"}}>
-    //                 <GridLayout
-    //                     className="layout"
-    //                     layout={currentLayout.widgets.map((widget) => ({i: widget.type, ...widget}))}
-    //                     cols={GRID_SIZE}
-    //                     width={windowWidth}
-            
-    //                     rowHeight={(windowHeight - (GRID_SIZE+1)*margin)/GRID_SIZE}
-    //                     isResizable={isEditingLayout}
-    //                     isDraggable={isEditingLayout}
-    //                     margin={[margin,margin]}
-    //                     onLayoutChange={(widgets) => {
-    //                         saveEditingLayout({
-    //                             ...currentLayout,
-    //                             widgets: widgets.map((widget) => ({...widget, type: widget.i as WidgetType}))
-    //                         });
-    //                     }}
+    return (
+        <ReactGridLayout
+            layout={widgets}
+            cols={GridFull}
+            width={windowWidth}
 
-    //                 >
-    //                     {
-    //                         currentLayout.widgets.map((widget, i)=>
-    //                             <div className="widget" key={widget.type}>
-    //                                 I am a {widget.type} widget
-    //                             </div>
+            rowHeight={rowHeight}
+            isResizable={isEditingLayout}
+            isDraggable={isEditingLayout}
+            margin={[margin, margin]}
+            onLayoutChange={setLayout}
 
-    //                         )
-    //                     }
-    //                 </GridLayout>
-    //             </div>
-    
-    return App();
+        >
+            {
+                widgets.map((widget) =>
+                    <div className={clsx(
+                        "widget-container",
+                        `widget-toolbar-${layout.toolbarAnchor}`
+                    )} key={widget.i}>
+                        {
+                            layout.toolbar === widget.i && <Header isToolbarBelowTitle={true} />
+                        }
+                        <div className="widget">
+
+                            I am a {widget.i} widget
+                        </div>
+                    </div>
+
+                )
+            }
+        </ReactGridLayout>
+    );
 }
+
+
 
 function App() {
     const [count, setCount] = useState(0);
@@ -141,9 +131,12 @@ function App() {
             <p className="read-the-docs">
                 Click on the Vite and React logos to learn more
             </p>
-            <div className="meter">
-    <span style={{width: "25%"}}></span>
-  </div>
+            <div style={{
+                width: "100%",
+                height: "20vh"
+            }}>
+                <Loading color="yellow" />
+            </div>
         </>
     );
 }
