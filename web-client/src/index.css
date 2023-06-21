@@ -21,3 +21,6 @@ body {
   overflow: hidden;
 }
 
+div#style-root {
+  height: 100vh;
+}

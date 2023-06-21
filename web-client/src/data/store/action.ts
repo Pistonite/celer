@@ -1,26 +1,25 @@
 //! APIs for the app to use store actions
 
-import { ActionCreatorWithPayload, ActionCreatorWithoutPayload, AnyAction, bindActionCreators as reduxBindActionCreators, Dispatch} from "@reduxjs/toolkit";
+import { ActionCreatorWithPayload, ActionCreatorWithoutPayload, AnyAction, bindActionCreators as reduxBindActionCreators, Dispatch } from "@reduxjs/toolkit";
 import { useDispatch } from "react-redux";
 
 /// TypeScript magic to (correctly) type the result of redux's `bindActionCreators`
 export type BindedActionCreators<ActionCreators> = {
-    [t in keyof ActionCreators]:
-        ActionCreators[t] extends ActionCreatorWithPayload<infer P, infer _>
-        ? (payload: P) => void
-        : ActionCreators[t] extends ActionCreatorWithoutPayload<infer _>
-        ? () => void
-        : never;
+    [t in keyof ActionCreators]: ActionCreators[t] extends ActionCreatorWithoutPayload<infer _>
+    ? () => void
+    : ActionCreators[t] extends ActionCreatorWithPayload<infer P, infer _>
+    ? (payload: P) => void
+    : never;
 }
 
 /// TypeScript magic to (correctly) type the result of redux's `bindActionCreators`
 type UnbindedActionCreators<ActionCreators> = {
     [t in keyof ActionCreators]:
-        ActionCreators[t] extends ActionCreatorWithPayload<infer P, infer N>
-        ? ActionCreatorWithPayload<P, N>
-        : ActionCreators[t] extends ActionCreatorWithoutPayload<infer N>
-        ? ActionCreatorWithoutPayload<N>
-        : never;
+    ActionCreators[t] extends ActionCreatorWithPayload<infer P, infer N>
+    ? ActionCreatorWithPayload<P, N>
+    : ActionCreators[t] extends ActionCreatorWithoutPayload<infer N>
+    ? ActionCreatorWithoutPayload<N>
+    : never;
 }
 
 

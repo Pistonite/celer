@@ -1,9 +1,14 @@
 div.widget-container {
-    border: 1px solid black;
+    
     box-sizing: border-box;
-    width: 100%;
-    height: 100%;
+    /* width: 100%;
+    height: 100%; */
     display: flex;
+}
+
+div.widget-container.editing {
+    border: 1px solid #888;
+    border-radius: 2px;
 }
 
 div.widget-toolbar-top {
@@ -15,5 +20,20 @@ div.widget-toolbar-bottom {
 }
 
 div.widget {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    /* overflow: auto; */
+}
+
+/* react-grid-layout drag handle */
+/* make sure its always on top */
+.react-grid-item > .react-resizable-handle::after {
+    z-index: 99999;
+}
+
+@media(prefers-color-scheme: dark) {
+    .react-grid-item > .react-resizable-handle::after {
+        border-color: rgba(255, 255, 255, 0.4);
+    }
 }

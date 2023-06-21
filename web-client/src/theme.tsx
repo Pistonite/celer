@@ -7,7 +7,7 @@ const DarkModeContext = React.createContext(false);
 export const ThemeProvider: React.FC<PropsWithChildren> = ({children}) => {
     const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
-        <FluentProvider theme={isDarkMode ? webDarkTheme : webLightTheme}>
+        <FluentProvider id="style-root" theme={isDarkMode ? webDarkTheme : webLightTheme}>
             <DarkModeContext.Provider value={isDarkMode}>
                 {children}
             </DarkModeContext.Provider>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import ReactGridLayout from "react-grid-layout";
@@ -10,6 +10,9 @@ import { useSelector } from "react-redux";
 import { Header } from "ui/surfaces";
 import "./layout.css";
 import clsx from "clsx";
+import { Card } from "@fluentui/react-components";
+
+const Map: React.FC = React.lazy(() => import("ui/map"));
 
 
 //import "./App.css";
@@ -59,6 +62,7 @@ export const AppRoot: React.FC = () => {
     // console.log((windowHeight - (GRID_SIZE+1)*EDITING_MARGIN)/GRID_SIZE);
     return (
         <ReactGridLayout
+            className="layout-root"
             layout={widgets}
             cols={GridFull}
             width={windowWidth}
@@ -74,14 +78,26 @@ export const AppRoot: React.FC = () => {
                 widgets.map((widget) =>
                     <div className={clsx(
                         "widget-container",
+                        isEditingLayout && "editing",
                         `widget-toolbar-${layout.toolbarAnchor}`
                     )} key={widget.i}>
                         {
-                            layout.toolbar === widget.i && <Header isToolbarBelowTitle={true} />
+                            layout.toolbar === widget.i && <Header />
                         }
                         <div className="widget">
-
-                            I am a {widget.i} widget
+                            {
+                                widget.i === "map" && <Suspense fallback={<Loading color="green"/>}>
+                                    <Map />
+                                    </Suspense>
+                                    
+                            }
+                            {
+                                widget.i === "viewer" && <div>I am a viewer</div>
+                            }
+                            {
+                                widget.i === "editor" && <div>I am a editor</div>
+                            }
+                            
                         </div>
                     </div>
 

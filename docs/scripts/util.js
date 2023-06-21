@@ -43,6 +43,34 @@ const getMemberType = (config /* :Config */, line /* :string */) /* :number 0=no
     return 0;
 }
 
+const readModulesInDirectory = (
+    root /* :string */,
+    config /* :Config */,
+    filePath /* :string */,
+    modules /* :Module[] */
+) /* :void */ => {
+    readdirSync(join(root, filePath)).forEach((file) => {
+        if (ignores.includes(file)) {
+            return;
+        }
+        if (statSync(join(root, filePath, file)).isDirectory()) {
+            readModulesInDirectory(root, config, join(filePath, file), modules);
+        } else {
+            let isMatch = false;
+            for (let i = 0; i < config.filePatterns.length; i++) {
+                if (config.filePatterns[i].test(file)) {
+                    isMatch = true;
+                    break;
+                }
+            }
+            if (!isMatch) {
+                return;
+            }
+            modules.push(readModuleFromFile(root, config, join(filePath, file)));
+        }
+    });
+}
+
 const readModuleFromFile = (root /* :string */, config /* :Config */, filePath /* :string */) /* :Module */ => {
     if (config.verbose) {
         console.log(`Reading ${filePath}`);
@@ -50,6 +78,11 @@ const readModuleFromFile = (root /* :string */, config /* :Config */, filePath /
     const file = readFileSync(join(root, filePath), 'utf-8');
 
     const lines = file.split('\n');
+    return readModule(config, filePath, lines);
+
+}
+
+const readModule = (config /* :Config */, path /* :string */, content /* :string[] */) /* :Module */ => {
     const { allowInBetweenPatterns } = config;
 
     const moduleDoc = [];
@@ -148,7 +181,7 @@ const readModuleFromFile = (root /* :string */, config /* :Config */, filePath /
     }
 
     return {
-        filePath,
+        filePath: path,
         doc: cleanCode(moduleDoc),
         members: members.map(member => ({
             doc: cleanCode(member.doc),
@@ -156,37 +189,8 @@ const readModuleFromFile = (root /* :string */, config /* :Config */, filePath /
             code: cleanCode(member.code)
         }))
     };
-
-
 }
 
-const readModulesInDirectory = (
-    root /* :string */,
-    config /* :Config */,
-    filePath /* :string */,
-    modules /* :Module[] */
-) /* :void */ => {
-    readdirSync(join(root, filePath)).forEach((file) => {
-        if (ignores.includes(file)) {
-            return;
-        }
-        if (statSync(join(root, filePath, file)).isDirectory()) {
-            readModulesInDirectory(root, config, join(filePath, file), modules);
-        } else {
-            let isMatch = false;
-            for (let i = 0; i < config.filePatterns.length; i++) {
-                if (config.filePatterns[i].test(file)) {
-                    isMatch = true;
-                    break;
-                }
-            }
-            if (!isMatch) {
-                return;
-            }
-            modules.push(readModuleFromFile(root, config, join(filePath, file)));
-        }
-    });
-}
 
 const findRepoRoot = () /* :string */ => {
     let dir = resolve(".");
@@ -206,7 +210,7 @@ const cleanCode = (code /* :string[] */) /* :string[] */ => {
     return code.join("\n").trim().split("\n").map(line => line.trimEnd());
 }
 
-const getSignatureFromCode = (code /* :string[] */) /* :string */ => {
+const getSignatureFromCode = (code /* :string[] */) /* :[string, string[]] */ => {
     if (code.length === 0) {
         return "";
     }
@@ -235,12 +239,23 @@ const getSignatureFromCode = (code /* :string[] */) /* :string */ => {
     }
     let signature = code.filter((_, i) => i <= startLine).join("\n");
     signature += " ... " + code[code.length - 1];
-    return signature;
+
+    const lastBlockContent = code.filter((_, i) => i > startLine && i < code.length - 1);
+    let indent = 0;
+    for (let i=0;i<lastBlockContent.length;i++) {
+        const trimmed = lastBlockContent[i].trimStart();
+        if (trimmed !== lastBlockContent[i]) {
+            indent = lastBlockContent[i].length - trimmed.length;
+            break;
+        }
+    }
+    return [signature, lastBlockContent.map(line => line.substring(indent))];
 }
 
 module.exports = {
     readModuleFromFile,
     readModulesInDirectory,
     findRepoRoot,
-    getSignatureFromCode
+    getSignatureFromCode,
+    readModule,
 }

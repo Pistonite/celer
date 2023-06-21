@@ -1,6 +1,6 @@
 //! Layout store types
 
-import { produce } from "immer";
+import { Draft, produce } from "immer";
 
 /// Layout settings. This is part of the SettingsStore
 export type LayoutSettings = {
@@ -66,37 +66,44 @@ export const initialLayoutSettings: LayoutSettings = {
 /// It will also try to make the layout visible if it is not (i.e. has 0 width or height)
 ///
 /// This will return a new reference even if the layout is not modified.
-export const fitLayoutToGrid = (layout: LayoutDim): LayoutDim => {
+export const fitLayoutToGrid = (layout: Layout): Layout => {
     return produce(layout, (layout) => {
-        // Make sure the top of always visible
-        if (layout.y < 0) {
-            layout.y = 0;
-        }
-        // Make sure the bottom is always visible
-        if (layout.y >= GridFull) {
-            layout.y = GridFull;
-        }
-        if (layout.y + layout.h > GridFull) {
-            layout.h = GridFull - layout.y;
-        }
-        // Make sure the left is always visible
-        if (layout.x < 0) {
-            layout.x = 0;
-        }
-        if (layout.x >= GridFull) {
-            layout.x = GridFull;
-        }
-        // Make sure the right is always visible
-        if (layout.x + layout.w > GridFull) {
-            layout.w = GridFull - layout.x;
-        }
-        // If the widget has 0 width or height, try to make it visible
-        if (layout.w <= 0) {
-            layout.w = GridFull - layout.x;
-        }
-        // If the widget has 0 width or height, try to make it visible
-        if (layout.h <= 0) {
-            layout.h = GridFull - layout.h;
-        }
+        layout.viewer && fitLayoutDimToGrid(layout.viewer);
+        layout.map && fitLayoutDimToGrid(layout.map);
+        layout.editor && fitLayoutDimToGrid(layout.editor);
     });
+}
+
+
+const fitLayoutDimToGrid = (layout: Draft<LayoutDim>) => {
+    // Make sure the top of always visible
+    if (layout.y < 0) {
+        layout.y = 0;
+    }
+    // Make sure the bottom is always visible
+    if (layout.y >= GridFull) {
+        layout.y = GridFull;
+    }
+    if (layout.y + layout.h > GridFull) {
+        layout.h = GridFull - layout.y;
+    }
+    // Make sure the left is always visible
+    if (layout.x < 0) {
+        layout.x = 0;
+    }
+    if (layout.x >= GridFull) {
+        layout.x = GridFull;
+    }
+    // Make sure the right is always visible
+    if (layout.x + layout.w > GridFull) {
+        layout.w = GridFull - layout.x;
+    }
+    // If the widget has 0 width or height, try to make it visible
+    if (layout.w <= 0) {
+        layout.w = GridFull - layout.x;
+    }
+    // If the widget has 0 width or height, try to make it visible
+    if (layout.h <= 0) {
+        layout.h = GridFull - layout.h;
+    }
 };

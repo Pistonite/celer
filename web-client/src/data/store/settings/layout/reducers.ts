@@ -1,7 +1,7 @@
 //! Layout store reducers
 
 import { ReducerDecl, ReducerDeclWithPayload, withPayload } from "data/store/util";
-import { Layout, LayoutSettings } from "./util";
+import { Layout, LayoutSettings, fitLayoutToGrid } from "./util";
 
 /// Modify the current layout
 export const setCurrentLayout: ReducerDeclWithPayload<LayoutSettings, {
@@ -9,7 +9,7 @@ export const setCurrentLayout: ReducerDeclWithPayload<LayoutSettings, {
     layout: Layout
 }> = withPayload((state, { layout }) => {
     if (state.currentLayout >= 0 && state.currentLayout < state.savedLayouts.length) {
-        state.savedLayouts[state.currentLayout] = layout;
+        state.savedLayouts[state.currentLayout] = fitLayoutToGrid(layout);
     }
 });
 
@@ -26,7 +26,7 @@ export const addAndSwitchLayout: ReducerDeclWithPayload<LayoutSettings, {
     /// The layout to add
     layout: Layout
 }> = withPayload((state, { layout }) => {
-    state.savedLayouts.push(layout);
+    state.savedLayouts.push(fitLayoutToGrid(layout));
     state.currentLayout = state.savedLayouts.length - 1;
 });
 

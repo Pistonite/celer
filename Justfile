@@ -27,8 +27,8 @@ dev-docs:
     cd docs && npm run dev
 
 # Start the web client locally and watch for changes
-dev-client:
-    cd web-client && npm run dev
+dev-client +FLAGS="":
+    cd web-client && npm run dev {{FLAGS}}
 
 # Start the server locally and watch for changes
 dev-server:
