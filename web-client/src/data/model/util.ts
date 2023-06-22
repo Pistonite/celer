@@ -78,10 +78,6 @@ export type DocumentMapLayer = {
     ///
     /// This value is ignored for the first (lowest) layer
     startZ: number,
-    /// If the layer below this layer should be rendered
-    ///
-    /// This value is ignored for the first (lowest) layer
-    seeThrough: boolean,
 }
 
 /// The tileset transform
