@@ -3,9 +3,9 @@
 import L from "leaflet";
 import "leaflet-rastercoords";
 import "./leaflet-tilelayer-nogap";
-import { documentSelector, settingsSelector, store, toolbarSelector } from "data/store";
+import { ToolbarStore, documentSelector, settingsSelector, store, toolbarSelector } from "data/store";
 import reduxWatch from "redux-watch";
-import { DocumentMapLayer, DocumentMapLayerTilesetTransform, ExecutedDocument } from "data/model";
+import { DocumentMapLayer, DocumentMapLayerAttribution, DocumentMapLayerTilesetTransform, ExecutedDocument } from "data/model";
 
 /// Leaflet map container div id
 const LMapContainerId = "lmap-container";
@@ -88,17 +88,18 @@ export class MapState {
         }));
         
         const watchToolbar = reduxWatch(() => toolbarSelector(store.getState()));
-        store.subscribe(watchToolbar(() => {
+        store.subscribe(watchToolbar((newVal, oldVal) => {
             this.update("toolbar update");
+            this.onToolbarUpdate(newVal);
         }));
 
         const watchDocument = reduxWatch(() => documentSelector(store.getState()));
         store.subscribe(watchDocument((newVal, oldVal) => {
-            this.onDocumentUpdate(newVal, oldVal);
+            console.log("document update");
+            this.onDocumentUpdate(newVal.document, oldVal.document);
         }));
         
         this.map = map;
-        this.tilesetLayer = null;
     }
 
     /// Get the underlying L.Map
@@ -135,29 +136,41 @@ export class MapState {
     /// This will update the map layers if needed, and will always redraw the map icons and lines
     private onDocumentUpdate(newDoc: ExecutedDocument, oldDoc: ExecutedDocument) {
         // If the project name and version is the same, assume the map layers are the same
+        console.log(newDoc.project);
+        console.log(oldDoc.project);
         if (newDoc.project.name !== oldDoc.project.name || newDoc.project.version !== oldDoc.project.version) {
-            // TODO update map layers
-            const tilesetLayer = L.tileLayer('https://objmap.zeldamods.org/game_files/maptex/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxNativeZoom: 7,
-            bounds: rc.getMaxBounds(),
-            noWrap: true,
-        });
-
-        tilesetLayer.addTo(map);
+            this.initTilesetLayers(newDoc.project.map.layers);
         }
+        // Update the current tileset layer
+        this.setActiveTilesetLayer(0);
+
     }
 
-    /// Initialize the tileset layer, remove previous one if exists
-    private initTilesetLayer(mapLayers: DocumentMapLayer[]) {
+    /// Initialize the tileset layers, remove previous one if exists
+    private initTilesetLayers(mapLayers: DocumentMapLayer[]) {
         this.getActiveTilesetLayer()?.layer.remove();
         // create new tileset layers
         this.tilesetLayers = mapLayers.map((layer) => {
             // Create raster coords for the layer
-            const rc = new L.RasterCoords(this.map, layer.tileset.size);
-        })
-        const tilesetLayer = L.tileLayer('https://objmap.zeldamods.org/game_files/maptex/{z}/{x}/{y}.png', {
-    });
+            const rc = new L.RasterCoords(this.map, layer.size);
+            const tilesetLayer = L.tileLayer(layer.templateUrl, {
+                noWrap: true,
+                bounds: rc.getMaxBounds(),
+                attribution: this.getAttributionHtml(layer.attribution),
+                maxNativeZoom: layer.maxNativeZoom,
+            });
+            return {
+                layer: tilesetLayer,
+                startZ: layer.startZ,
+                transform: layer.transform,
+            };
+        });
+    }
+
+    private setActiveTilesetLayer(index: number) {
+        this.getActiveTilesetLayer()?.layer.remove();
+        this.activeTilesetLayerIndex = index;
+        this.getActiveTilesetLayer()?.layer.addTo(this.map);
     }
 
 
@@ -166,6 +179,20 @@ export class MapState {
             return null;
         }
         return this.tilesetLayers[this.activeTilesetLayerIndex];
+    }
+
+    private getAttributionHtml(attribution: DocumentMapLayerAttribution): string | undefined {
+        if (!attribution.link) {
+            return undefined;
+        }
+        return `${attribution.copyright ? "&copy;" : ""}<a href="${attribution.link}">${attribution.link}</a>`;
+
+    }
+
+    private onToolbarUpdate(toolbar: ToolbarStore) {
+        if (toolbar.currentMapLayer !== this.activeTilesetLayerIndex) {
+            this.setActiveTilesetLayer(toolbar.currentMapLayer);
+        }
     }
 
 }

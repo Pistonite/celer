@@ -29,11 +29,10 @@ const initialState: DocumentStore = {
                     _3d: ["x", "y", "z"]
                 },
                 zoomBounds: [0, 0],
-                attribution: {
-                    link: "",
-                    text: "",
-                    copyRight: false
-                },
+                // attribution: {
+                //     link: "",
+                //     copyright: false
+                // },
             },
             icons: {},
         },

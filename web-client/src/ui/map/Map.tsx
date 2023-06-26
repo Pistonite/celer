@@ -11,6 +11,7 @@ import reduxWatch from "redux-watch";
 import { useSelector } from "react-redux";
 import { Loading } from "Loading";
 import { MapState } from "./MapState";
+import { ErrorScreen } from "ui/components";
 
 console.log("[Map] loading map module");
 
@@ -42,6 +43,7 @@ export const Map: React.FC = () => {
     const rootRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
+        console.log("1")
         if(!rootRef.current) {
             return;
         }
@@ -60,10 +62,14 @@ export const Map: React.FC = () => {
         console.log("[Map] attaching map to container");
         mapState.attach(rootRef.current);
 
-    }, [rootRef.current]);
+    }, [rootRef.current, document]);
 
     if (!document.loaded) {
         return <Loading color="green" />;
+    }
+
+    if (document.project.map.layers.length <= 0) {
+        return <ErrorScreen message="No map layers in project" />;
     }
 
     return (

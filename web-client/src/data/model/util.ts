@@ -27,8 +27,6 @@ export type DocumentMetadata = {
     url: string,
 }
 
-
-
 /// Parameter for the map
 export type DocumentMapParameters = {
     /// The map layers. First is the lowest layer.
@@ -43,15 +41,6 @@ export type DocumentMapParameters = {
     },
     /// Min and max zoom levels
     zoomBounds: [number, number]
-    /// Attribution
-    attribution: {
-        /// Url of the attribution
-        link: string
-        /// Text of the attribution
-        text: string
-        /// If the copyright sign should be displayed
-        copyRight: boolean
-    }
 }
 
 export type DocumentMapLayer = {
@@ -78,6 +67,15 @@ export type DocumentMapLayer = {
     ///
     /// This value is ignored for the first (lowest) layer
     startZ: number,
+    /// Attribution (displayed as &copy; LINK)
+    attribution: DocumentMapLayerAttribution
+}
+
+export type DocumentMapLayerAttribution = {
+    /// Url of the attribution
+    link: string
+    /// If the copyright sign should be displayed
+    copyright: boolean
 }
 
 /// The tileset transform

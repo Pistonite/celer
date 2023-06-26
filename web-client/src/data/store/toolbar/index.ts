@@ -11,11 +11,14 @@ export type ToolbarStore = {
     isEditingLayout: boolean;
     /// If the user currently has the settings dialog open
     isSettingsOpen: boolean;
+    /// Current map layer the user is on
+    currentMapLayer: number;
 };
 
 const initialState: ToolbarStore = {
     isEditingLayout: false,
-    isSettingsOpen: false
+    isSettingsOpen: false,
+    currentMapLayer: 0,
 };
 
 
@@ -26,6 +29,13 @@ const setIsEditingLayout: ReducerDeclWithPayload<
     state.isEditingLayout = value;
 });
 
+const setCurrentMapLayer: ReducerDeclWithPayload<
+    ToolbarStore, number
+> = withPayload((state: ToolbarStore, value: number) => {
+    state.currentMapLayer = value;
+});
+
+
 /// The toolbar store slice
 export const {
     toolbarReducer,
@@ -35,6 +45,7 @@ export const {
     name: "toolbar",
     initialState,
     reducers: {
-        setIsEditingLayout
+        setIsEditingLayout,
+        setCurrentMapLayer,
     }
 });
