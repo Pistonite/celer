@@ -21,7 +21,6 @@ const initialState: ToolbarStore = {
     currentMapLayer: 0,
 };
 
-
 /* reducers: TODO may need to refactor */
 const setIsEditingLayout: ReducerDeclWithPayload<
     ToolbarStore, boolean
@@ -34,7 +33,6 @@ const setCurrentMapLayer: ReducerDeclWithPayload<
 > = withPayload((state: ToolbarStore, value: number) => {
     state.currentMapLayer = value;
 });
-
 
 /// The toolbar store slice
 export const {

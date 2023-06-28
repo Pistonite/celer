@@ -22,14 +22,13 @@ type UnbindedActionCreators<ActionCreators> = {
     : never;
 }
 
-
 /// Bind actions to dispatch as a React hook
 ///
 /// This is a simple wrapper around redux's `bindActionCreators`
 export const useActions = <ActionCreators extends UnbindedActionCreators<ActionCreators>>(actions: ActionCreators): BindedActionCreators<ActionCreators> => {
     const dispatch = useDispatch();
     return bindActions(actions, dispatch);
-}
+};
 
 /// Bind actions to dispatch. Can be used outside of React
 ///
@@ -39,4 +38,4 @@ export const bindActions = <ActionCreators>(
     dispatch: Dispatch<AnyAction>
 ): BindedActionCreators<ActionCreators> => {
     return reduxBindActionCreators(actions, dispatch) as BindedActionCreators<ActionCreators>;
-}
+};

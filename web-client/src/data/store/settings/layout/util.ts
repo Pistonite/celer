@@ -72,8 +72,7 @@ export const fitLayoutToGrid = (layout: Layout): Layout => {
         layout.map && fitLayoutDimToGrid(layout.map);
         layout.editor && fitLayoutDimToGrid(layout.editor);
     });
-}
-
+};
 
 const fitLayoutDimToGrid = (layout: Draft<LayoutDim>) => {
     // Make sure the top of always visible

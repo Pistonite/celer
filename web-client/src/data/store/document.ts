@@ -41,7 +41,7 @@ const initialState: DocumentStore = {
             icons: [],
         }
     }
-}
+};
 
 const setDocument: ReducerDeclWithPayload<
     DocumentStore, ExecutedDocument

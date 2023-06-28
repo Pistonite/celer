@@ -2,7 +2,7 @@
 //!
 //! This is the object returned from the compiler.
 
-import { DocumentMapParameters, DocumentMetadata } from "./util"
+import { DocumentMapParameters, DocumentMetadata } from "./util";
 
 /// The root object of the compiled document
 export type CompiledDocument = {

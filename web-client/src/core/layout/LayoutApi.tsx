@@ -200,7 +200,6 @@
 //     return [unitWidth, unitHeight];
 // }
 
-
 // export const setEditingEnabled = (enabled: boolean) => {
 //     if(!LayoutRt) {
 //         console.warn("setEditingEnabled called before Gridster is initialized");

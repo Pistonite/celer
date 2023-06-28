@@ -3,8 +3,8 @@
 //! This is used for user settings, such as theme, layout, map settings, etc.
 //! These settings need to be persisted to local storage.
 
-import { ReducerDecl, configureSlice } from 'data/store/util';
-import { LayoutSettings, initialLayoutSettings, LayoutReducers } from './layout';
+import { ReducerDecl, configureSlice } from "data/store/util";
+import { LayoutSettings, initialLayoutSettings, LayoutReducers } from "./layout";
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";
@@ -20,12 +20,11 @@ const loadState = (): SettingsStore => {
         ...initialLayoutSettings,
         ...loadedState,
     };
-}
-
+};
 
 /// TODO remove this
 const setCurrentViewingLayoutTest: ReducerDecl<SettingsStore> = (state) => {
-    console.log(state)
+    console.log(state);
 };
 
 /// The setting state slice

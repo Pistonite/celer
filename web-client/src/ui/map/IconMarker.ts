@@ -14,7 +14,7 @@ const IconSize = 32;
 // extend L.Canvas to include a custom function to draw our icons
 L.Canvas.include({
     /// Draw the icon marker at its position using hard-coded size
-    drawIconMarker(layer: any, opacity: number) {
+    drawIconMarker(layer: any, opacity: number) { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (!layer) {
             return;
         }
@@ -54,7 +54,7 @@ export class IconMarker extends L.CircleMarker {
             console.warn("[map] IconMarker: no icon provided");
             return;
         }
-        const renderer = (this as any)._renderer;
+        const renderer = (this as any)._renderer; // eslint-disable-line @typescript-eslint/no-explicit-any
         if (!renderer || !renderer.drawIconMarker) {
             console.warn("[map] IconMarker: invalid renderer");
             return;

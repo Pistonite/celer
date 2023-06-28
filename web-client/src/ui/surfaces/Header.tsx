@@ -6,7 +6,29 @@
 //!
 //! The toolbar can be below or on top of the title depending on the layout.
 import "./Header.css";
-import { Card, CardHeader, MenuButton, Title1, Toolbar, Text, ToolbarDivider, Title3, Subtitle2, Subtitle1, ToolbarButton, Tooltip, Menu, MenuTrigger, MenuPopover, MenuList, MenuItem, MenuDivider, MenuItemRadio, MenuGroup, MenuGroupHeader, MenuProps, Overflow, OverflowItem, useIsOverflowItemVisible, useOverflowMenu, useIsOverflowGroupVisible } from "@fluentui/react-components";
+import { 
+    Card,
+    CardHeader,
+    MenuButton,
+    Toolbar,
+    ToolbarDivider,
+    Subtitle1,
+    ToolbarButton,
+    Tooltip,
+    Menu,
+    MenuTrigger,
+    MenuPopover,
+    MenuList,
+    MenuItem,
+    MenuDivider,
+    MenuItemRadio,
+    MenuProps,
+    Overflow,
+    OverflowItem,
+    useIsOverflowItemVisible,
+    useOverflowMenu,
+    useIsOverflowGroupVisible,
+} from "@fluentui/react-components";
 import { 
     Layer20Regular, 
     MoreHorizontal20Filled,
@@ -24,7 +46,6 @@ import { WidgetType, documentSelector, settingsActions, settingsSelector, toolba
 import React from "react";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-
 
 const LayoutRadioName = "Select a layout";
 const ToolbarLocationRadioName = "Select a toolbar location";
@@ -59,8 +80,6 @@ export const Header: React.FC = () => {
         );
     };
 
-
-
     const layoutMenuCheckedItems = {
         [LayoutRadioName]: [`${isDefaultLayout ? -1 : currentLayout}`],
     };
@@ -68,31 +87,29 @@ export const Header: React.FC = () => {
     const onChangeLayoutMenuCheckedItems: MenuProps["onCheckedValueChange"] = (_, { name, checkedItems }) => {
         console.log(checkedItems);
         switchLayout({ index: parseInt(checkedItems[0] as string) });
-    }
-
+    };
 
     const toolbarMenuCheckedItems = useMemo(() => {
         return {
             [ToolbarLocationRadioName]: [layout.toolbar],
             [ToolbarAnchorRadioName]: [layout.toolbarAnchor],
-        }
+        };
     }, [layout]);
 
     const onChangeToolbarMenuCheckedItems: MenuProps["onCheckedValueChange"] = (_, { name, checkedItems }) => {
         const newLayout = { ...layout };
         switch (name) {
-            case ToolbarLocationRadioName:
-                newLayout.toolbar = checkedItems[0] as WidgetType;
-                break;
-            case ToolbarAnchorRadioName:
-                newLayout.toolbarAnchor = checkedItems[0] as "top" | "bottom";
-                break;
-        };
+        case ToolbarLocationRadioName:
+            newLayout.toolbar = checkedItems[0] as WidgetType;
+            break;
+        case ToolbarAnchorRadioName:
+            newLayout.toolbarAnchor = checkedItems[0] as "top" | "bottom";
+            break;
+        }
         setCurrentLayout({
             layout: newLayout
         });
     };
-
 
     return (
         <header className={clsx("celer-header", layout.toolbarAnchor)}>
@@ -104,7 +121,6 @@ export const Header: React.FC = () => {
                 </CardHeader>
 
                 <Subtitle1 as="h1">{title}</Subtitle1>
-
 
             </Card>
 
@@ -127,7 +143,6 @@ export const Header: React.FC = () => {
                                                 <MenuItemRadio name={LayoutRadioName} value={`${i}`} key={i} >Custom {i + 1}</MenuItemRadio>
                                             ))
                                         }
-
 
                                         <MenuDivider />
                                         {
@@ -157,7 +172,6 @@ export const Header: React.FC = () => {
                                             deleteCurrentLayout();
                                         }}>Delete</MenuItem>
 
-
                                     </MenuList>
                                 </MenuPopover>
                             </Menu>
@@ -185,7 +199,6 @@ export const Header: React.FC = () => {
                                         <MenuItemRadio name={ToolbarAnchorRadioName} value="top">Top</MenuItemRadio>
                                         <MenuItemRadio name={ToolbarAnchorRadioName} value="bottom">Bottom</MenuItemRadio>
 
-
                                     </MenuList>
                                 </MenuPopover>
                             </Menu>
@@ -196,19 +209,19 @@ export const Header: React.FC = () => {
                         <span>
                             <Menu checkedValues={layerMenuCheckedItems} onCheckedValueChange={onChangeLayerMenuCheckedItems}>
                                 <MenuTrigger>
-                            <MenuButton icon={<Layer20Regular />} >
-                                {layerNames[currentMapLayer] || "Unknown" }
-                            </MenuButton>
-                            </MenuTrigger>
-                            <MenuPopover>
-                                <MenuList>
+                                    <MenuButton icon={<Layer20Regular />} >
+                                        {layerNames[currentMapLayer] || "Unknown" }
+                                    </MenuButton>
+                                </MenuTrigger>
+                                <MenuPopover>
+                                    <MenuList>
                                         {
                                             layerNames.map((layerName, i) => (
                                                 <MenuItemRadio name={LayerRadioName} value={`${i}`} key={i} >{layerName}</MenuItemRadio>
                                             ))
                                         }
-                                </MenuList>
-                            </MenuPopover>
+                                    </MenuList>
+                                </MenuPopover>
                             </Menu>
                         </span>
                         
@@ -239,7 +252,7 @@ export const Header: React.FC = () => {
         </header>
     );
 
-}
+};
 type ToolbarOverflowDividerProps = {
     groupId: string;
 };
@@ -278,7 +291,6 @@ const OverflowMenuItem2: React.FC = () => {
 const OverflowMenu: React.FC<{ itemIds: string[][] }> = ({ itemIds }) => {
     const { ref, overflowCount, isOverflowing } =
         useOverflowMenu<HTMLButtonElement>();
-
 
     if (!isOverflowing) {
         return null;

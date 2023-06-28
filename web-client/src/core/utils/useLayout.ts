@@ -42,7 +42,7 @@ export const useLayout = (): UseLayout => {
     const [layout, widgets, availableToolbarLocations] = useMemo(() => {
         const theLayout = isDefaultLayout ? getDefaultLayout(windowWidth, windowHeight) : savedLayouts[currentLayout];
         const widgets: ReactGridLayout.Layout[] = [];
-        const locations: WidgetType[] = []
+        const locations: WidgetType[] = [];
         WidgetTypes.forEach((type) => {
             const dim = theLayout[type];
             if (dim) {
@@ -64,13 +64,12 @@ export const useLayout = (): UseLayout => {
         widgets.forEach((widget) => {
             const type = widget.i;
             if ((WidgetTypes as string[]).includes(type)) {
-                layout[type as WidgetType] = { x: widget.x, y: widget.y, w: widget.w, h: widget.h }
+                layout[type as WidgetType] = { x: widget.x, y: widget.y, w: widget.w, h: widget.h };
             }
         });
 
         setCurrentLayout({layout});
     }, [toolbar, toolbarAnchor]);
-
 
     return {
         layout,
@@ -78,11 +77,10 @@ export const useLayout = (): UseLayout => {
         availableToolbarLocations,
         setLayout,
         isDefaultLayout
-    }
-}
+    };
+};
 
 const MobileWidthThreshold = 400;
-
 
 const getDefaultLayout = (windowWidth: number, windowHeight: number): Layout => {
     // TODO: check editor mode StageStore
@@ -93,4 +91,4 @@ const getDefaultLayout = (windowWidth: number, windowHeight: number): Layout => 
         return getDefaultLandscapeViewerLayout();
     }
     return getDefaultPortraitViewerLayout();
-}
+};

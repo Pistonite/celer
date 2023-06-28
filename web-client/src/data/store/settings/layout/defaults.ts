@@ -23,7 +23,7 @@ export const getDefaultLandscapeViewerLayout = (): Layout => {
             h: GridFull,
         },
     };
-}
+};
 
 /// Get the default portrait viewer layout
 ///
@@ -46,7 +46,7 @@ export const getDefaultPortraitViewerLayout = (): Layout => {
             h: GridHalf,
         },
     };
-}
+};
 
 /// Get the default landscape editor layout
 ///
@@ -75,7 +75,7 @@ export const getDefaultLandscapeEditorLayout = (): Layout => {
             h: GridFull,
         },
     };
-}
+};
 
 /// Get the default portrait editor layout
 ///
@@ -104,7 +104,7 @@ export const getDefaultPortraitEditorLayout = (): Layout => {
             h: GridThird,
         },
     };
-}
+};
 
 /// Get the default mobile layout
 ///
@@ -120,5 +120,5 @@ export const getDefaultMobileLayout = (): Layout => {
             h: GridFull,
         },
     };
-}
+};
 

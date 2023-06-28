@@ -4,9 +4,8 @@
     
     // setup code goes here
 
-    self.addEventListener('message', function() {
+    self.addEventListener("message", function() {
         // run time code goe here
-
 
         //var verLongnamePleaseModifyMe = "b";
         //console.log(verLongnamePleaseModifyMe);
@@ -18,8 +17,5 @@
 
     }, false);
 
-    
-
 })((window as any)._INJECTED_PLUGINS as unknown[]);
-
 

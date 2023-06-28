@@ -1,5 +1,5 @@
 //! Component for rendering a loading spinner
-import "./Loading.css";
+import "./LoadScreen.css";
 
 /// Props for the loading component
 type LoadingProps = {
@@ -7,7 +7,7 @@ type LoadingProps = {
     color: "green" | "red" | "blue" | "yellow"
 }
 
-export const Loading: React.FC<LoadingProps> = ({ color }) => {
+export const LoadScreen: React.FC<LoadingProps> = ({ color }) => {
     return (
         <div className="loading-container">
             <img className="loading-logo" src={`/static/celer-${color}.svg`} />
@@ -17,4 +17,4 @@ export const Loading: React.FC<LoadingProps> = ({ color }) => {
         </div>
 
     );
-}
+};

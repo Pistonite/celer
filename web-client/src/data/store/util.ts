@@ -36,8 +36,8 @@ type ReducerEffect<S, P=undefined> = P extends undefined ? ReducerDecl<S> : (sta
 export const withPayload = <S, P>(effect: ReducerEffect<S, P>): ReducerDeclWithPayload<S, P> => {
     return (state, action) => {
         effect(state, action.payload);
-    }
-}
+    };
+};
 
 /// Return type definition for configureSlice
 type SliceConfiguration<
@@ -68,4 +68,4 @@ export const configureSlice = <
         [`${args.name}Actions`]: slice.actions,
         [`${args.name}Selector`]: (state: any) => state[args.name]
     } as SliceConfiguration<Name, State, typeof slice.actions>;
-}
+};

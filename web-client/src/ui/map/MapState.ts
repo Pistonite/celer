@@ -2,12 +2,48 @@
 
 import L from "leaflet";
 import "leaflet-rastercoords";
+import "leaflet/dist/leaflet.css";
 import "./leaflet-tilelayer-nogap";
 import { ToolbarStore, documentSelector, settingsSelector, store, toolbarSelector } from "data/store";
 import reduxWatch from "redux-watch";
-import { DocumentIconMap, DocumentMapLayer, DocumentMapLayerAttribution, DocumentMapLayerTilesetTransform, ExecutedDocument, MapIcon } from "data/model";
+import { DocumentMapLayer, DocumentMapLayerAttribution, DocumentMapLayerTilesetTransform, ExecutedDocument } from "data/model";
 import { IconMarker } from "./IconMarker";
 
+const log = (msg: string) => {
+    console.log(`[Map] ${msg}`); // eslint-disable-line no-console
+};
+
+log("loading map module");
+
+/// Storing map state as window global because HMR will cause the map to be recreated
+declare global {
+    interface Window {
+        __theMapState: MapState | null;
+    }
+}
+
+/// Map entry point
+///
+/// This should be called when the map component is first mounted
+export const initMap = () => {
+    if (window.__theMapState) {
+        console.warn("[Map] found existing map instance. You are either in a dev environment or this is a bug");
+        try {
+            window.__theMapState.delete();
+        } catch (e) {
+            console.error(e);
+            console.warn("[Map] failed to remove existing map instance");
+        }
+    }
+    log("[Map] creating map");
+
+    const map = new MapState();
+    map.tryAttachAsyncUntilSuccess();
+    window.__theMapState = map;
+};
+
+/// Container div id
+export const RootContainerId = "map-root";
 /// Leaflet map container div id
 const LMapContainerId = "lmap-container";
 
@@ -26,9 +62,11 @@ type TilesetLayer = {
 /// State of the current map.
 ///
 /// Holds a reference to L.Map
-export class MapState {
+class MapState {
     /// The map
     private map: L.Map;
+    /// The attach update handle
+    private attachUpdateHandle: number | null = null;
     /// The tileset layers
     private tilesetLayers: TilesetLayer[] = [];
     /// The active tileset layer
@@ -37,57 +75,16 @@ export class MapState {
     private icons: IconMarker[] = [];
 
     constructor() {
-        //const testPointGame: [number, number] = [0, 0];
-        const testPointGame1: [number, number] = [4737.48, 3772.09];
-        const testPointGame2: [number, number] = [0, 0];
-        const testPointGame3: [number, number] = [-4446.80, -3803.04];
+        // Create map container
+        const container = document.createElement("div");
+        container.id = LMapContainerId;
+        container.style.backgroundColor = "#000000";
 
-        const a = 2;
-        const b = 12000;
-        const c = 2;
-        const d = 10000;
-
-        const transform = (point: [number, number]): [number, number] => {
-            return [
-                b + a * point[0],
-                d + c * point[1],
-            ];
-        };
-
-        const tmpContainer = document.createElement("div");
-        tmpContainer.id = LMapContainerId;
-        tmpContainer.style.backgroundColor = "#000000";
-        const tmpDiv = document.querySelector("#tmp");
-        if (!tmpDiv) {
-            throw new Error("[Map] The temp div is not found. The map cannot be created!");
-        }
-        tmpDiv.appendChild(tmpContainer);
-
-        // probably only need to create the map
-        // since the tile layer is dynamic
-        //const crs = L.extend({}, L.CRS.Simple);
-        const map = L.map(tmpContainer, {
+        const map = L.map(container, {
             crs: L.CRS.Simple,
             renderer: L.canvas(),
             zoomControl: false,
         });
-        tmpContainer.remove();
-
-        const rc = new L.RasterCoords(map, [24000, 20000]);
-        rc.setMaxBounds();
-
-
-
-
-
-
-        map.setView(rc.unproject([0, 0]), 3);
-        // new IconMarker(rc.unproject(transform(testPointGame1)),
-        //     "https://icons.pistonite.org/icon/shrine.shrine.none.69a2d5.c1fefe.69a2d5.c1fefe.69a2d5.c1fefe.png",0.5)
-        // .addTo(map);
-        // L.marker(rc.unproject(transform(testPointGame1))).addTo(map);
-        L.marker(rc.unproject(transform(testPointGame2))).addTo(map);
-        L.marker(rc.unproject(transform(testPointGame3))).addTo(map);
 
         // Subscribe to store updates
 
@@ -97,45 +94,89 @@ export class MapState {
         }));
 
         const watchToolbar = reduxWatch(() => toolbarSelector(store.getState()));
-        store.subscribe(watchToolbar((newVal, oldVal) => {
+        store.subscribe(watchToolbar((newVal, _oldVal) => {
             this.update("toolbar update");
             this.onToolbarUpdate(newVal);
         }));
 
         const watchDocument = reduxWatch(() => documentSelector(store.getState()));
         store.subscribe(watchDocument((newVal, oldVal) => {
-            console.log("document update");
+            // console.log("document update");
             this.onDocumentUpdate(newVal.document, oldVal.document);
         }));
 
         this.map = map;
     }
 
-    /// Get the underlying L.Map
-    ///
-    /// This can be used to do one-off operations that are not supported by this class.
-    /// In most cases, shared logic should be added to this class.
-    underlying(): L.Map {
-        return this.map;
+    /// Delete the map and free up the resources
+    delete() {
+        if (this.attachUpdateHandle) {
+            window.clearTimeout(this.attachUpdateHandle);
+            this.attachUpdateHandle = null;
+        }
+        this.map.remove();
+    }
+
+    /// Attempt to attach the map to the root container until success
+    tryAttachAsyncUntilSuccess() {
+        if (this.attachUpdateHandle) {
+            // already trying
+            return;
+        }
+        if (this.attach()) {
+            // attached
+            return;
+        }
+        this.attachUpdateHandle = window.setTimeout(() => {
+            this.attachUpdateHandle = null;
+            this.tryAttachAsyncUntilSuccess();
+        }, 1000);
     }
 
     /// Attach the map to a container HTMLElement root
     ///
-    /// This will add the map container as a child to the root
-    attach(container: HTMLElement) {
+    /// This will add the map container as a child to the root.
+    /// If the root is not provided, it will search for the root by id
+    /// and attached to that if found.
+    ///
+    /// Return true if the map ends up being attached to a container,
+    /// either it is already attached, or newly attached.
+    private attach(root?: HTMLElement | undefined | null) {
+        if (!root) {
+            const rootInDom = document.getElementById(RootContainerId);
+            if (!rootInDom) {
+                return false;
+            }
+            root = rootInDom;
+        }
+        // see what the current container is
+        const prevContainer = root.children[0];
+        if (prevContainer === this.map.getContainer()) {
+            return true;
+        }
+
+        // remove the previous container, might not be needed
+        if (prevContainer) {
+            prevContainer.remove();
+        }
+
+        log("attaching map to container");
+
         // Remove from the old place
         this.map.getContainer().remove();
         // add to new place
-        container.appendChild(this.map.getContainer());
+        root.appendChild(this.map.getContainer());
         this.update();
+
+        return true;
     }
 
     /// Update the map
     ///
     /// This will call invalidateSize() to refresh the map
-    update(reason?: string) {
+    private update(reason?: string) {
         if (reason) {
-            console.log(`[Map] updating map due to ${reason}`);
+            log(`updating map due to ${reason}`);
         }
         this.map.invalidateSize();
     }
@@ -183,7 +224,6 @@ export class MapState {
         this.getActiveTilesetLayer()?.layer.addTo(this.map);
     }
 
-
     private getActiveTilesetLayer(): TilesetLayer | null {
         if (this.activeTilesetLayerIndex < 0 || this.activeTilesetLayerIndex >= this.tilesetLayers.length) {
             return null;
@@ -225,21 +265,21 @@ export class MapState {
         this.icons = mapIcons.map((icon) => {
             const iconSrc = registeredIcons[icon.id];
             if (!iconSrc) {
-                console.warn(`[map] Icon ${icon.id} is not registered`);
+                console.warn(`[Map] Icon ${icon.id} is not registered`);
                 return undefined;
             }
-            
+
             const [x, y, z] = icon.coord;
 
             // Get the layer the icon is on
-            let layer = this.activeTilesetLayerIndex-1;
-            for(;layer <= this.activeTilesetLayerIndex+1; layer++) {
+            let layer = this.activeTilesetLayerIndex - 1;
+            for (; layer <= this.activeTilesetLayerIndex + 1; layer++) {
                 if (this.isZOnLayer(z, layer)) {
                     break;
                 }
-            } 
+            }
             // icon is not on current layer or adjacent layers
-            if (layer > this.activeTilesetLayerIndex+1) {
+            if (layer > this.activeTilesetLayerIndex + 1) {
                 return undefined;
             }
 
@@ -247,7 +287,7 @@ export class MapState {
             // current layer = 1
             // adjacent layers = 0.5
             const opacity = layer === this.activeTilesetLayerIndex ? 1 : 0.5;
-            const { transform, rc }  = this.tilesetLayers[layer];
+            const { transform, rc } = this.tilesetLayers[layer];
             const mapX = transform.scale[0] * x + transform.translate[0];
             const mapY = transform.scale[1] * y + transform.translate[1];
             const latlng = rc.unproject([mapX, mapY]);

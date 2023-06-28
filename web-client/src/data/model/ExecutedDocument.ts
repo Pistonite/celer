@@ -2,7 +2,7 @@
 //!
 //! This is the object returned from the engine.
 
-import { DocumentIconMap, DocumentMapParameters, DocumentMetadata, MapIcon } from "./util"
+import { DocumentIconMap, DocumentMapParameters, DocumentMetadata, MapIcon } from "./util";
 
 export type ExecutedDocument = {
     /// If the document is loaded

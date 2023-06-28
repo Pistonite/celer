@@ -33,7 +33,7 @@ export const testExec = async (): Promise<string> => {
     const constructPluginExpr = (name: string, plugin: string) => {
         const body = `var __plugin_name__=${JSON.stringify(name)};${ConsoleSource};return (${plugin});`;
         return `((function(){${body}})())`;
-    }
+    };
     const magic = "(window._INJECTED_PLUGINS);";
     if (!WorkerSource.endsWith(magic)) {
         throw new Error("WorkerSource does not end with magic");
@@ -48,13 +48,13 @@ export const testExec = async (): Promise<string> => {
     const WorkerSourceWithPlugin = "\"use strict\";var exports={};" + WorkerSourceWithoutMagic + "([" + constructPluginExpr("testengine1", plugin) + "]);";
     const blob = new Blob([WorkerSourceWithPlugin], { type: "application/javascript" });
     const url = URL.createObjectURL(blob);
-    let worker = new Worker(url);
+    const worker = new Worker(url);
 
     const promise = new Promise<string>((resolve, reject) => {
         worker.addEventListener("message", (event) => {
             console.log("Worker message:", event.data);
             if (event.data.type === "done") {
-                console.log("Worker done")
+                console.log("Worker done");
                 resolve(event.data);
             }
         });
@@ -64,14 +64,14 @@ export const testExec = async (): Promise<string> => {
         });
         worker.postMessage("start");
         setTimeout(function(){
-            console.log("working timeout")
+            console.log("working timeout");
             worker.terminate();
-            reject("timeout")
+            reject("timeout");
             //worker = null as any;
         }, 1000);
     });
 
     return await promise;
-}
+};
 
-"(window._INJECTED_PLUGINS);"
+"(window._INJECTED_PLUGINS);";

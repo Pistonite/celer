@@ -38,4 +38,3 @@ export const deleteCurrentLayout: ReducerDecl<LayoutSettings> = (state) => {
     state.currentLayout = -1;
 };
 
-
