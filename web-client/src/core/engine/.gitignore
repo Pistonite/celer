@@ -1,4 +1,1 @@
-worker.js
-worker.min.js
-console.min.js
-WorkerMessage.js
+*.js
