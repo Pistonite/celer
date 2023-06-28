@@ -25,8 +25,8 @@ const initialState: DocumentStore = {
             map: {
                 layers: [],
                 coordMap: {
-                    _2d: ["x", "y"],
-                    _3d: ["x", "y", "z"]
+                    "2d": ["x", "y"],
+                    "3d": ["x", "y", "z"]
                 },
                 zoomBounds: [0, 0],
                 // attribution: {

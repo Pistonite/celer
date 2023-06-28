@@ -36,8 +36,8 @@ export type DocumentMapParameters = {
         /// The mapping if 2 coordinates are specified in the route
         ///
         /// For example, ["x", "z"] will map the coordinates to the x (horizontal) and z (height) axis of the map.
-        _2d: [Axis, Axis],
-        _3d: [Axis, Axis, Axis],
+        "2d": [Axis, Axis],
+        "3d": [Axis, Axis, Axis],
     },
     /// Min and max zoom levels
     zoomBounds: [number, number]
@@ -90,7 +90,6 @@ export type DocumentMapLayerTilesetTransform = {
 
 export type Axis = "x" | "y" | "z";
 
-
 /// Game coordinate
 ///
 /// This is usually the in game coordinate.
@@ -110,7 +109,5 @@ export type MapIcon = {
     id: string,
     /// Game coordinate for the icon
     coord: GameCoord,
-    /// Opacity of the icon (0 = invisible, 1 = fully visible)
-    opacity: number,
 }
 

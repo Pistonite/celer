@@ -5,7 +5,8 @@ import "leaflet-rastercoords";
 import "./leaflet-tilelayer-nogap";
 import { ToolbarStore, documentSelector, settingsSelector, store, toolbarSelector } from "data/store";
 import reduxWatch from "redux-watch";
-import { DocumentMapLayer, DocumentMapLayerAttribution, DocumentMapLayerTilesetTransform, ExecutedDocument } from "data/model";
+import { DocumentIconMap, DocumentMapLayer, DocumentMapLayerAttribution, DocumentMapLayerTilesetTransform, ExecutedDocument, MapIcon } from "data/model";
+import { IconMarker } from "./IconMarker";
 
 /// Leaflet map container div id
 const LMapContainerId = "lmap-container";
@@ -17,7 +18,9 @@ type TilesetLayer = {
     /// The start Z value
     startZ: number,
     /// Coodinate transformation from game to map
-    transform: DocumentMapLayerTilesetTransform
+    transform: DocumentMapLayerTilesetTransform,
+    /// The raster coords of this layer
+    rc: L.RasterCoords,
 }
 
 /// State of the current map.
@@ -30,8 +33,11 @@ export class MapState {
     private tilesetLayers: TilesetLayer[] = [];
     /// The active tileset layer
     private activeTilesetLayerIndex = -1;
+    /// The icons
+    private icons: IconMarker[] = [];
+
     constructor() {
-         //const testPointGame: [number, number] = [0, 0];
+        //const testPointGame: [number, number] = [0, 0];
         const testPointGame1: [number, number] = [4737.48, 3772.09];
         const testPointGame2: [number, number] = [0, 0];
         const testPointGame3: [number, number] = [-4446.80, -3803.04];
@@ -45,10 +51,8 @@ export class MapState {
             return [
                 b + a * point[0],
                 d + c * point[1],
-            ]
-        }
-
-   
+            ];
+        };
 
         const tmpContainer = document.createElement("div");
         tmpContainer.id = LMapContainerId;
@@ -57,13 +61,15 @@ export class MapState {
         if (!tmpDiv) {
             throw new Error("[Map] The temp div is not found. The map cannot be created!");
         }
-        tmpDiv.appendChild(tmpContainer); 
-        
+        tmpDiv.appendChild(tmpContainer);
+
         // probably only need to create the map
         // since the tile layer is dynamic
         //const crs = L.extend({}, L.CRS.Simple);
         const map = L.map(tmpContainer, {
             crs: L.CRS.Simple,
+            renderer: L.canvas(),
+            zoomControl: false,
         });
         tmpContainer.remove();
 
@@ -72,21 +78,24 @@ export class MapState {
 
 
 
-        
+
 
 
         map.setView(rc.unproject([0, 0]), 3);
-        L.marker(rc.unproject(transform(testPointGame1))).addTo(map);
+        // new IconMarker(rc.unproject(transform(testPointGame1)),
+        //     "https://icons.pistonite.org/icon/shrine.shrine.none.69a2d5.c1fefe.69a2d5.c1fefe.69a2d5.c1fefe.png",0.5)
+        // .addTo(map);
+        // L.marker(rc.unproject(transform(testPointGame1))).addTo(map);
         L.marker(rc.unproject(transform(testPointGame2))).addTo(map);
         L.marker(rc.unproject(transform(testPointGame3))).addTo(map);
 
         // Subscribe to store updates
-  
+
         const watchLayout = reduxWatch(() => settingsSelector(store.getState()).currentLayout);
         store.subscribe(watchLayout(() => {
             this.update("switching layout");
         }));
-        
+
         const watchToolbar = reduxWatch(() => toolbarSelector(store.getState()));
         store.subscribe(watchToolbar((newVal, oldVal) => {
             this.update("toolbar update");
@@ -98,7 +107,7 @@ export class MapState {
             console.log("document update");
             this.onDocumentUpdate(newVal.document, oldVal.document);
         }));
-        
+
         this.map = map;
     }
 
@@ -136,13 +145,13 @@ export class MapState {
     /// This will update the map layers if needed, and will always redraw the map icons and lines
     private onDocumentUpdate(newDoc: ExecutedDocument, oldDoc: ExecutedDocument) {
         // If the project name and version is the same, assume the map layers are the same
-        console.log(newDoc.project);
-        console.log(oldDoc.project);
         if (newDoc.project.name !== oldDoc.project.name || newDoc.project.version !== oldDoc.project.version) {
             this.initTilesetLayers(newDoc.project.map.layers);
         }
         // Update the current tileset layer
         this.setActiveTilesetLayer(0);
+        // Redraw all the icons
+        this.updateIcons(newDoc);
 
     }
 
@@ -163,6 +172,7 @@ export class MapState {
                 layer: tilesetLayer,
                 startZ: layer.startZ,
                 transform: layer.transform,
+                rc,
             };
         });
     }
@@ -186,13 +196,80 @@ export class MapState {
             return undefined;
         }
         return `${attribution.copyright ? "&copy;" : ""}<a href="${attribution.link}">${attribution.link}</a>`;
-
     }
 
     private onToolbarUpdate(toolbar: ToolbarStore) {
         if (toolbar.currentMapLayer !== this.activeTilesetLayerIndex) {
             this.setActiveTilesetLayer(toolbar.currentMapLayer);
+            // redraw icons
+            const doc = documentSelector(store.getState()).document;
+            this.updateIcons(doc);
         }
     }
 
+    /// Update the icons on the map
+    ///
+    /// Requires tileset layers to be up-to-date (for transforms to work)
+    /// This will filter the icons based on the layer and other settings
+    private updateIcons(doc: ExecutedDocument) {
+        const registeredIcons = doc.project.icons;
+        const mapIcons = doc.map.icons;
+        // remove existing icons
+        this.icons.forEach((icon) => icon.remove());
+        this.icons = [];
+        const activeLayer = this.getActiveTilesetLayer();
+        if (!activeLayer) {
+            return;
+        }
+        // create new icon markers
+        this.icons = mapIcons.map((icon) => {
+            const iconSrc = registeredIcons[icon.id];
+            if (!iconSrc) {
+                console.warn(`[map] Icon ${icon.id} is not registered`);
+                return undefined;
+            }
+            
+            const [x, y, z] = icon.coord;
+
+            // Get the layer the icon is on
+            let layer = this.activeTilesetLayerIndex-1;
+            for(;layer <= this.activeTilesetLayerIndex+1; layer++) {
+                if (this.isZOnLayer(z, layer)) {
+                    break;
+                }
+            } 
+            // icon is not on current layer or adjacent layers
+            if (layer > this.activeTilesetLayerIndex+1) {
+                return undefined;
+            }
+
+            // get the opacity of the icon
+            // current layer = 1
+            // adjacent layers = 0.5
+            const opacity = layer === this.activeTilesetLayerIndex ? 1 : 0.5;
+            const { transform, rc }  = this.tilesetLayers[layer];
+            const mapX = transform.scale[0] * x + transform.translate[0];
+            const mapY = transform.scale[1] * y + transform.translate[1];
+            const latlng = rc.unproject([mapX, mapY]);
+            return new IconMarker(latlng, iconSrc, opacity);
+        }).filter(Boolean) as IconMarker[];
+        // add new icons
+        this.icons.forEach((icon) => icon.addTo(this.map));
+    }
+
+    /// Check if a z level is on the i-th layer
+    private isZOnLayer(z: number, i: number) {
+        if (i < 0 || i >= this.tilesetLayers.length) {
+            return false;
+        }
+        if (i !== 0 && z < this.tilesetLayers[i].startZ) {
+            // icon is below this layer
+            return false;
+        }
+        if (i !== this.tilesetLayers.length - 1 && z > this.tilesetLayers[i + 1].startZ) {
+            // icon is above this layer
+            return false;
+        }
+        return true;
+    }
 }
