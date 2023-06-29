@@ -56,7 +56,7 @@ export const AppRoot: React.FC = () => {
                         `widget-toolbar-${layout.toolbarAnchor}`
                     )} key={widget.i}>
                         {
-                            layout.toolbar === widget.i && <Header />
+                            layout.toolbar === widget.i && <Header toolbarAnchor={layout.toolbarAnchor} />
                         }
                         <div className="widget">
                             {

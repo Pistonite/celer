@@ -51,7 +51,7 @@ export const useLayout = (): UseLayout => {
             }
         });
         return [theLayout, widgets, locations];
-    }, [currentLayout, savedLayouts, windowWidth, windowHeight]);
+    }, [isDefaultLayout, currentLayout, savedLayouts, windowWidth, windowHeight]);
 
     const { toolbar, toolbarAnchor } = layout;
 
@@ -60,7 +60,7 @@ export const useLayout = (): UseLayout => {
             toolbar,
             toolbarAnchor,
         };
-    
+
         widgets.forEach((widget) => {
             const type = widget.i;
             if ((WidgetTypes as string[]).includes(type)) {
@@ -68,8 +68,8 @@ export const useLayout = (): UseLayout => {
             }
         });
 
-        setCurrentLayout({layout});
-    }, [toolbar, toolbarAnchor]);
+        setCurrentLayout({ layout });
+    }, [toolbar, toolbarAnchor, setCurrentLayout]);
 
     return {
         layout,

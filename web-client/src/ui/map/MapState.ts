@@ -109,6 +109,8 @@ class MapState {
     }
 
     /// Delete the map and free up the resources
+    ///
+    /// Also cancels pending attach attempts
     delete() {
         if (this.attachUpdateHandle) {
             window.clearTimeout(this.attachUpdateHandle);
@@ -235,7 +237,10 @@ class MapState {
         if (!attribution.link) {
             return undefined;
         }
-        return `${attribution.copyright ? "&copy;" : ""}<a href="${attribution.link}">${attribution.link}</a>`;
+        const a = document.createElement("a");
+        a.href = attribution.link;
+        a.innerText = attribution.link;
+        return `${attribution.copyright ? "&copy;" : ""}${a.outerHTML}`;
     }
 
     private onToolbarUpdate(toolbar: ToolbarStore) {

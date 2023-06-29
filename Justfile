@@ -57,10 +57,6 @@ lint-ci: && lint
 test:
     echo "no tests yet"
 
-# Grep TODOs
-todo:
-    grep "TODO" . -i -w -r --exclude-dir=target --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist | grep -v "./Justfile"
-
 # Build the project for release
 build:
     mkdir -p dist
