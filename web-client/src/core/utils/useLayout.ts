@@ -14,7 +14,7 @@ import {
     settingsSelector,
     useActions
 } from "data/store";
-import { useWindowSize } from "./useWindowSize";
+import { useWindowSize } from "./WindowSize";
 
 /// Return type of useLayout hook
 export type UseLayout = {

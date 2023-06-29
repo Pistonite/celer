@@ -5,7 +5,7 @@ import { store } from "data/store";
 
 import "./index.css";
 import { Provider as ReduxProvider } from "react-redux";
-import { ThemeProvider } from "theme.tsx";
+import { ThemeProvider, WindowSizeProvider } from "core/utils";
 
 window.addEventListener("popstate", (event) => {
     console.log(event);
@@ -15,11 +15,12 @@ const root = ReactDOM.createRoot(document.getElementById("react-root") as HTMLEl
 
 root.render(
     <React.StrictMode>
-        <ThemeProvider>
-            <ReduxProvider store={store}>
-                <AppRoot />
-            </ReduxProvider>
-
-        </ThemeProvider>
+        <ReduxProvider store={store}>
+            <WindowSizeProvider>
+                <ThemeProvider>
+                    <AppRoot />
+                </ThemeProvider>
+            </WindowSizeProvider>
+        </ReduxProvider>
     </React.StrictMode>,
 );

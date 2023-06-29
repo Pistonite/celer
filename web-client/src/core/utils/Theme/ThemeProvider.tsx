@@ -1,7 +1,10 @@
-import { FluentProvider, webDarkTheme, webLightTheme } from "@fluentui/react-components";
+//! ThemeProvider component
+//!
+//! Wraps FluentProvider and provides dark mode context
 import React, { PropsWithChildren } from "react";
+import { FluentProvider, webDarkTheme, webLightTheme } from "@fluentui/react-components";
 
-const DarkModeContext = React.createContext(false);
+import { DarkModeContext } from "./useIsDarkMode";
 
 /// Theme provider
 export const ThemeProvider: React.FC<PropsWithChildren> = ({children}) => {
@@ -15,4 +18,3 @@ export const ThemeProvider: React.FC<PropsWithChildren> = ({children}) => {
     );
 };
 
-export const useIsDarkMode = () => React.useContext(DarkModeContext);
