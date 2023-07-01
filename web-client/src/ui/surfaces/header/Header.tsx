@@ -22,7 +22,7 @@ import { MoreHorizontal20Filled, } from "@fluentui/react-icons";
 import clsx from "clsx";
 import React, { PropsWithChildren } from "react";
 
-import { ToolbarControl } from "./util";
+import { HeaderControlList } from "./util";
 import { SwitchToolbarLocation } from "./SwitchToolbarLocation";
 import { SwitchLayout } from "./SwitchLayout";
 import { SwitchMapLayer } from "./SwitchMapLayer";
@@ -31,13 +31,22 @@ import { Setting } from "./Setting";
 /// Header controls.
 ///
 /// The controls are defined in groups. Each control is a ToolbarControl that defines its apperances in the toolbar and in the overflow menu
-const HeaderControls: ToolbarControl[][] = [
+const HeaderControls: HeaderControlList = [
     // UI Controls
-    [SwitchLayout, SwitchToolbarLocation],
+    {
+        priority: 0,
+        controls: [SwitchLayout, SwitchToolbarLocation],
+    },
     // Map Controls
-    [SwitchMapLayer],
+    {
+        priority: 0,
+        controls: [SwitchMapLayer],
+    },
     // Setting
-    [Setting],
+    {
+        priority: 99,
+        controls: [Setting],
+    },
 ];
 
 /// The header props
@@ -62,10 +71,15 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
             <Overflow padding={90} minimumVisible={1}>
                 <Toolbar className="celer-toolbar">
                     {
-                        HeaderControls.map((controls, i) => (
+                        HeaderControls.map((group, i) => (
                             <React.Fragment key={i}>
-                                {controls.map((Control, j) => (
-                                    <OverflowItem id={toItemId(i, j)} groupId={i.toString()}>
+                                {group.controls.map((Control, j) => (
+                                    <OverflowItem
+                                        priority={group.priority}
+                                        id={toItemId(i, j)} 
+                                        groupId={i.toString()} 
+                                        key={j}
+                                    >
                                         <Control.ToolbarButton />
                                     </OverflowItem>
                                 ))}
@@ -110,24 +124,23 @@ const OverflowMenu: React.FC = () => {
             <MenuTrigger disableButtonEnhancement>
                 <ToolbarButton ref={ref} icon={<MoreHorizontal20Filled />}></ToolbarButton>
             </MenuTrigger>
-
             <MenuPopover>
                 <MenuList>
                     {
-                        HeaderControls.map((controls, i) => (
+                        HeaderControls.map((group, i) => (
                             <React.Fragment key={i}>
                                 {
-                                    controls.map((Control, j) => (
-                                        <ShowIfOverflown itemId={toItemId(i, j)}>
+                                    group.controls.map((Control, j) => (
+                                        <ShowIfOverflown itemId={toItemId(i, j)} key={j}>
                                             <Control.MenuItem />
                                         </ShowIfOverflown>
                                     ))
                                 }
                                 {
                                     i < HeaderControls.length - 1 &&
-                                    <ShowIfOverflown itemId={toItemId(i, controls.length - 1)}>
-                                        <MenuDivider />
-                                    </ShowIfOverflown>
+                                        <ShowIfGroupOverflown groupId={`${i}`}>
+                                            <MenuDivider />
+                                        </ShowIfGroupOverflown>
                                 }
                             </React.Fragment>
                         ))
@@ -136,6 +149,14 @@ const OverflowMenu: React.FC = () => {
             </MenuPopover>
         </Menu>
     );
+};
+/// Show children if the toolbar group is overflown
+const ShowIfGroupOverflown: React.FC<PropsWithChildren<{ groupId: string }>> = ({ children, groupId }) => {
+    const groupVisibleState = useIsOverflowGroupVisible(groupId);
+    if (groupVisibleState !== "hidden") {
+        return <>{children}</>;
+    }
+    return null;
 };
 
 /// Show children if the toolbar item is overflown

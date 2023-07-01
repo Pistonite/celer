@@ -30,17 +30,21 @@ export type DocumentMetadata = {
 /// Parameter for the map
 export type DocumentMapParameters = {
     /// The map layers. First is the lowest layer.
-    layers: DocumentMapLayer[]
+    layers: DocumentMapLayer[],
     /// Mapping for the coordinates in the route.
-    coordMap: {
-        /// The mapping if 2 coordinates are specified in the route
-        ///
-        /// For example, ["x", "z"] will map the coordinates to the x (horizontal) and z (height) axis of the map.
-        "2d": [Axis, Axis],
-        "3d": [Axis, Axis, Axis],
-    },
-    /// Min and max zoom levels
-    zoomBounds: [number, number]
+    coordMap: DocumentMapCoordMap,
+    /// Initial coordinates (route coordinates
+    initialCoord: RouteCoord,
+    /// Initial zoom level
+    initialZoom: number,
+}
+
+/// The mapping if 2 coordinates are specified in the route
+///
+/// For example, ["x", "z"] will map the coordinates to the x (horizontal) and z (height) axis of the map.
+export type DocumentMapCoordMap = {
+    "2d": [Axis, Axis],
+    "3d": [Axis, Axis, Axis],
 }
 
 export type DocumentMapLayer = {
@@ -57,6 +61,8 @@ export type DocumentMapLayer = {
     /// See: https://github.com/commenthol/leaflet-rastercoords.
     /// Form is [width, height]
     size: [number, number]
+    /// Min and max zoom levels
+    zoomBounds: [number, number]
     /// Max native zoom of the tileset
     maxNativeZoom: number
     /// Coordinate transformation
@@ -97,6 +103,12 @@ export type Axis = "x" | "y" | "z";
 /// but the coordinates (x, y, z) after mapped to the game coordinate system
 /// using the route's coordMap.
 export type GameCoord = [number, number, number];
+
+/// Route coordinate
+///
+/// This is the coordinate in the document, before mapping to GameCoord.
+/// NOTE: the last element is only there so that TypeScript treats this as a different type from GameCoord.
+export type RouteCoord = [number, number, number|undefined, undefined];
 
 /// Map coordinate
 ///

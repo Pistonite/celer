@@ -4,13 +4,26 @@ import L from "leaflet";
 import "leaflet-rastercoords";
 import "leaflet/dist/leaflet.css";
 import "./leaflet-tilelayer-nogap";
-import { ToolbarStore, documentSelector, settingsSelector, store, toolbarSelector } from "data/store";
+
 import reduxWatch from "redux-watch";
-import { DocumentMapLayer, DocumentMapLayerAttribution, DocumentMapLayerTilesetTransform, ExecutedDocument } from "data/model";
+
+import { ToolbarStore, documentSelector, settingsSelector, store, toolbarSelector } from "data/store";
+import { 
+    DocumentMapLayer,
+    DocumentMapLayerAttribution,
+    DocumentMapLayerTilesetTransform,
+    ExecutedDocument,
+    GameCoord,
+} from "data/model";
+
 import { IconMarker } from "./IconMarker";
+import { toGameCoord } from "./util";
 
 const log = (msg: string) => {
     console.log(`[Map] ${msg}`); // eslint-disable-line no-console
+};
+const warn = (msg: string) => {
+    console.warn(`[Map] ${msg}`); // eslint-disable-line no-console
 };
 
 log("loading map module");
@@ -23,23 +36,17 @@ declare global {
 }
 
 /// Map entry point
-///
-/// This should be called when the map component is first mounted
-export const initMap = () => {
+export const initMap = (): MapState => {
     if (window.__theMapState) {
-        console.warn("[Map] found existing map instance. You are either in a dev environment or this is a bug");
-        try {
-            window.__theMapState.delete();
-        } catch (e) {
-            console.error(e);
-            console.warn("[Map] failed to remove existing map instance");
-        }
+        warn("found existing map instance. You are either in a dev environment or this is a bug");
+        return window.__theMapState;
     }
-    log("[Map] creating map");
+    log("creating map");
 
     const map = new MapState();
-    map.tryAttachAsyncUntilSuccess();
     window.__theMapState = map;
+
+    return map;
 };
 
 /// Container div id
@@ -101,7 +108,6 @@ class MapState {
 
         const watchDocument = reduxWatch(() => documentSelector(store.getState()));
         store.subscribe(watchDocument((newVal, oldVal) => {
-            // console.log("document update");
             this.onDocumentUpdate(newVal.document, oldVal.document);
         }));
 
@@ -129,6 +135,7 @@ class MapState {
             // attached
             return;
         }
+        warn("failed to attach to root container. Will retry in 1s");
         this.attachUpdateHandle = window.setTimeout(() => {
             this.attachUpdateHandle = null;
             this.tryAttachAsyncUntilSuccess();
@@ -143,13 +150,10 @@ class MapState {
     ///
     /// Return true if the map ends up being attached to a container,
     /// either it is already attached, or newly attached.
-    private attach(root?: HTMLElement | undefined | null) {
+    private attach() {
+        const root = document.getElementById(RootContainerId);
         if (!root) {
-            const rootInDom = document.getElementById(RootContainerId);
-            if (!rootInDom) {
-                return false;
-            }
-            root = rootInDom;
+            return false;
         }
         // see what the current container is
         const prevContainer = root.children[0];
@@ -187,9 +191,16 @@ class MapState {
     ///
     /// This will update the map layers if needed, and will always redraw the map icons and lines
     private onDocumentUpdate(newDoc: ExecutedDocument, oldDoc: ExecutedDocument) {
+        if (!newDoc.loaded) {
+            // do nothing if doc is not loaded
+            // we should be notified again when doc loads
+            return;
+        }
         // If the project name and version is the same, assume the map layers are the same
         if (newDoc.project.name !== oldDoc.project.name || newDoc.project.version !== oldDoc.project.version) {
-            this.initTilesetLayers(newDoc.project.map.layers);
+            const { initialCoord, initialZoom, coordMap, layers } = newDoc.project.map;
+            const initialGameCoord = toGameCoord(initialCoord, coordMap);
+            this.initTilesetLayers(initialGameCoord, initialZoom, layers);
         }
         // Update the current tileset layer
         this.setActiveTilesetLayer(0);
@@ -199,7 +210,9 @@ class MapState {
     }
 
     /// Initialize the tileset layers, remove previous one if exists
-    private initTilesetLayers(mapLayers: DocumentMapLayer[]) {
+    ///
+    /// This will also set the map to the initial coord
+    private initTilesetLayers(initialCoord: GameCoord, initialZoom: number, mapLayers: DocumentMapLayer[]) {
         this.getActiveTilesetLayer()?.layer.remove();
         // create new tileset layers
         this.tilesetLayers = mapLayers.map((layer) => {
@@ -210,6 +223,8 @@ class MapState {
                 bounds: rc.getMaxBounds(),
                 attribution: this.getAttributionHtml(layer.attribution),
                 maxNativeZoom: layer.maxNativeZoom,
+                minZoom: layer.zoomBounds[0],
+                maxZoom: layer.zoomBounds[1],
             });
             return {
                 layer: tilesetLayer,
@@ -218,6 +233,22 @@ class MapState {
                 rc,
             };
         });
+
+        const defaultZoom = 2;
+        const initialLayer = this.tilesetLayers.filter((_, i) => this.isZOnLayer(initialCoord[2], i));
+        if (initialLayer.length === 0) {
+            warn(`initial coord ${initialCoord} is not on any layer`);
+            this.map.setView([0, 0], defaultZoom);
+        } else {
+            const layer = initialLayer[0];
+            const coord = layer.rc.unproject([initialCoord[0], initialCoord[1]]);
+            if (initialZoom <= 0) {
+                warn(`Invalid initial zoom: ${initialZoom}`);
+                this.map.setView(coord, defaultZoom);
+            } else {
+                this.map.setView(coord, initialZoom);
+            }
+        }
     }
 
     private setActiveTilesetLayer(index: number) {
@@ -270,7 +301,7 @@ class MapState {
         this.icons = mapIcons.map((icon) => {
             const iconSrc = registeredIcons[icon.id];
             if (!iconSrc) {
-                console.warn(`[Map] Icon ${icon.id} is not registered`);
+                warn(`Icon ${icon.id} is not registered`);
                 return undefined;
             }
 
@@ -317,4 +348,5 @@ class MapState {
         }
         return true;
     }
+
 }

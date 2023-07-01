@@ -8,11 +8,11 @@ import { ControlComponentProps, ToolbarControl } from "./util";
 
 /// The settings control
 export const Setting: ToolbarControl = {
-    ToolbarButton: React.forwardRef(() => {
+    ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
         return (
             <SettingInternal>
                 <Tooltip content="Settings" relationship="label">
-                    <ToolbarButton icon={<Settings20Regular />} />
+                    <ToolbarButton icon={<Settings20Regular />} ref={ref}/>
                 </Tooltip>
             </SettingInternal>
         );

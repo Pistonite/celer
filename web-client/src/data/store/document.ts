@@ -28,11 +28,8 @@ const initialState: DocumentStore = {
                     "2d": ["x", "y"],
                     "3d": ["x", "y", "z"]
                 },
-                zoomBounds: [0, 0],
-                // attribution: {
-                //     link: "",
-                //     copyright: false
-                // },
+                initialCoord: [0, 0, 0, undefined],
+                initialZoom: 0,
             },
             icons: {},
         },

@@ -2,6 +2,14 @@
 
 import { MenuProps } from "@fluentui/react-components";
 
+/// Type for defining the control groups and controls in the header
+export type HeaderControlList = {
+    /// The group priority in the overflow. Higher = overflow later
+    priority: number;
+    /// The controls in the group
+    controls: ToolbarControl[];
+}[];
+
 /// Common toolbar control type
 export type ToolbarControl = {
     /// The control component as toobar button

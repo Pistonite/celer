@@ -23,12 +23,12 @@ dev-pp:
     cargo watch -s "txtpp verify . -r || txtpp -r"
 
 # Start hosting the docs locally and watch for changes
-dev-docs:
-    cd docs && npm run dev
+dev-docs +FLAGS="":
+    cd docs && npm run dev -- --host {{FLAGS}}
 
 # Start the web client locally and watch for changes
 dev-client +FLAGS="":
-    cd web-client && npm run dev {{FLAGS}}
+    cd web-client && npm run dev -- --host {{FLAGS}}
 
 # Start the server locally and watch for changes
 dev-server:
