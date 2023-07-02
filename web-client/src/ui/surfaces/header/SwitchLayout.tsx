@@ -13,7 +13,7 @@ import { Menu, MenuDivider, MenuItem, MenuItemRadio, MenuList, MenuPopover, Menu
 import { Grid20Regular, Save20Regular, Delete20Regular, Copy20Regular, Edit20Regular } from "@fluentui/react-icons";
 
 import { useLayout } from "core/utils";
-import { settingsActions, settingsSelector, toolbarActions, toolbarSelector, useActions } from "data/store";
+import { settingsActions, settingsSelector, viewActions, viewSelector, useActions } from "data/store";
 
 import { ControlComponentProps, OnMenuCheckedValueChangeFunction, ToolbarControl } from "./util";
 
@@ -47,9 +47,9 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({ children }) => 
     // settings store
     const { currentLayout, savedLayouts } = useSelector(settingsSelector);
     const { addAndSwitchLayout, deleteCurrentLayout, switchLayout } = useActions(settingsActions);
-    // toolbar store
-    const { isEditingLayout } = useSelector(toolbarSelector);
-    const { setIsEditingLayout } = useActions(toolbarActions);
+    // view store
+    const { isEditingLayout } = useSelector(viewSelector);
+    const { setIsEditingLayout } = useActions(viewActions);
 
     // compute which menu items should show as checked
     const layoutMenuCheckedItems = {

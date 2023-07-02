@@ -9,7 +9,7 @@ import "./layout.css";
 import { Header } from "ui/surfaces";
 const Map: React.FC = React.lazy(() => import("ui/map"));
 import { useLayout, useWindowSize } from "core/utils";
-import { GridFull, toolbarSelector } from "data/store";
+import { GridFull, viewSelector } from "data/store";
 import { LoadScreen } from "ui/components";
 
 /// Margin to show when editing the layout
@@ -19,7 +19,7 @@ const LayoutEditingMargin = 5;
 ///
 /// This handles things like layout and routing
 export const AppRoot: React.FC = () => {
-    const { isEditingLayout } = useSelector(toolbarSelector);
+    const { isEditingLayout } = useSelector(viewSelector);
     const {
         widgets,
         layout,

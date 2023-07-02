@@ -4,6 +4,11 @@
 
 import { DocumentIconMap, DocumentMapParameters, DocumentMetadata, MapIcon } from "./util";
 
+/// The executed document
+///
+/// This is the output of the engine, ready to be rendered in the map and document view.
+///
+/// All coordinates should be GameCoord at this point
 export type ExecutedDocument = {
     /// If the document is loaded
     ///

@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 import { Menu, MenuItem, MenuItemRadio, MenuList, MenuPopover, MenuTrigger, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { Layer20Regular } from "@fluentui/react-icons";
 
-import { documentSelector, toolbarActions, toolbarSelector, useActions } from "data/store";
+import { documentSelector, viewActions, viewSelector, useActions } from "data/store";
 
 import { ControlComponentProps, OnMenuCheckedValueChangeFunction, ToolbarControl } from "./util";
 
@@ -57,15 +57,15 @@ type SwitchMapLayerInternalProps = ControlComponentProps & {
 
 const SwitchMapLayerInternal: React.FC<SwitchMapLayerInternalProps> = ({ layerNames, children }) => {
 
-    const { currentMapLayer } = useSelector(toolbarSelector);
-    const { setCurrentMapLayer } = useActions(toolbarActions);
+    const { currentMapLayer } = useSelector(viewSelector);
+    const { setMapLayer } = useActions(viewActions);
 
     const layerMenuCheckedItems = {
         [LayerRadioName]: [`${currentMapLayer}`],
     };
 
     const onChangeLayerMenuCheckedItems: OnMenuCheckedValueChangeFunction = (_, { checkedItems }) => {
-        setCurrentMapLayer(
+        setMapLayer(
             parseInt(checkedItems[0] as string)
         );
     };

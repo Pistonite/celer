@@ -33,8 +33,8 @@ export type DocumentMapParameters = {
     layers: DocumentMapLayer[],
     /// Mapping for the coordinates in the route.
     coordMap: DocumentMapCoordMap,
-    /// Initial coordinates (route coordinates
-    initialCoord: RouteCoord,
+    /// Initial coordinates
+    initialCoord: GameCoord,
     /// Initial zoom level
     initialZoom: number,
 }
@@ -113,6 +113,7 @@ export type RouteCoord = [number, number, number|undefined, undefined];
 /// Map coordinate
 ///
 /// This is the (x, y) coordinate on the map, corresponding to the map coordinate system.
+/// This is only used internally in the map
 export type MapCoord = [number, number];
 
 /// Icon on the map

@@ -3,14 +3,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import reduxWatch from "redux-watch";
 import { settingsReducer, settingsSelector } from "./settings";
-import { toolbarReducer } from "./toolbar";
+import { viewReducer } from "./view";
 import { documentReducer } from "./document";
 
 /// The store
 export const store = configureStore({
     reducer: {
         ...settingsReducer,
-        ...toolbarReducer,
+        ...viewReducer,
         ...documentReducer
     }
 });
