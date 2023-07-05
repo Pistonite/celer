@@ -7,17 +7,28 @@ import { GameCoord } from "data/model";
 export type MapViewStore = {
     /// Current map layer the user is on
     currentMapLayer: number;
-    /// Current map center
+    /// Current map view
     ///
-    /// If the value is an array with one element, that element is the center coord.
-    /// Otherwise, the map should fit the bounds so that all points are in view.
-    currentMapCenter: GameCoord[];
-    /// Current map zoom
-    currentMapZoom: number;
+    /// The map listens to this value and updates the map view accordingly.
+    /// If the value is an array, the map will fit so all points are visible.
+    currentMapView: GameCoord[] | MapView;
+    /// Min and max zoom
+    ///
+    /// This is usually tied to the layer. The map automatically updates this
+    /// according to the current layer
+    currentZoomBounds: [number, number]
+}
+
+/// Map view data
+///
+/// Center and zoom need to be updated together.
+export type MapView = {
+    center: GameCoord;
+    zoom: number;
 }
 
 export const initialMapViewStore: MapViewStore = {
+    currentMapView: { center: [0, 0, 0], zoom: 1 },
     currentMapLayer: 0,
-    currentMapCenter: [[0, 0, 0]],
-    currentMapZoom: 1, // 0 zoom may cause issues in the map calculation
+    currentZoomBounds: [1, 1],
 };

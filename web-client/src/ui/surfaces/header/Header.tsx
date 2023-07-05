@@ -27,6 +27,7 @@ import { SwitchToolbarLocation } from "./SwitchToolbarLocation";
 import { SwitchLayout } from "./SwitchLayout";
 import { SwitchMapLayer } from "./SwitchMapLayer";
 import { Setting } from "./Setting";
+import { ZoomIn, ZoomOut } from "./Zoom";
 
 /// Header controls.
 ///
@@ -40,7 +41,7 @@ const HeaderControls: HeaderControlList = [
     // Map Controls
     {
         priority: 0,
-        controls: [SwitchMapLayer],
+        controls: [SwitchMapLayer, ZoomIn, ZoomOut],
     },
     // Setting
     {

@@ -37,6 +37,11 @@ export const initMap = (): MapState => {
     return map;
 };
 
+const FlyOptions = {
+    duration: 0.2, // seconds
+    easeLinearity: 0.8,
+};
+
 /// State of the current map.
 ///
 /// Holds a reference to L.Map
@@ -68,9 +73,8 @@ class MapState {
         }));
 
         const watchView = reduxWatch(() => viewSelector(store.getState()));
-        store.subscribe(watchView((newVal, _oldVal) => {
-            this.map.invalidateSize();
-            this.onViewUpdate(newVal);
+        store.subscribe(watchView((newVal, oldVal) => {
+            this.onViewUpdate(newVal, oldVal);
         }));
 
         const watchDocument = reduxWatch(() => documentSelector(store.getState()));
@@ -78,21 +82,23 @@ class MapState {
             this.onDocumentUpdate(newVal.document, oldVal.document);
         }));
 
-        map.on("zoomend", () => {
-            const view = viewSelector(store.getState());
-            if (!roughlyEquals(view.currentMapZoom, map.getZoom())) {
-                const { setMapZoom } = viewActions;
-                store.dispatch(setMapZoom(map.getZoom()));
+        const updateView = () => {
+            const center = this.layerMgr.project(this.map.getCenter());
+            if (!center) {
+                return;
             }
-        });
+            store.dispatch(viewActions.setMapView({
+                center,
+                zoom: this.map.getZoom(),
+            }));
+        };
 
+        map.on("zoomend", () => {
+            updateView();
+        });
+        
         map.on("moveend", () => {
-            const { setMapCenter } = viewActions;
-            const center = this.layerMgr.project(map.getCenter());
-            if (center) {
-                console.log(map.getCenter());
-                store.dispatch(setMapCenter([center]));
-            }
+            updateView();
         });
 
         this.map = map;
@@ -115,15 +121,20 @@ class MapState {
         // If the project name and version is the same, assume the map layers are the same
         if (newDoc.project.name !== oldDoc.project.name || newDoc.project.version !== oldDoc.project.version) {
             const { initialCoord, initialZoom, layers } = newDoc.project.map;
-            this.layerMgr.initLayers(this.map, layers);
-            const center = this.layerMgr.unproject(initialCoord);
+            this.layerMgr.initLayers(this.map, layers, initialCoord);
+            const [center, _] = this.layerMgr.unproject(initialCoord);
+            // initLayers above already sets the correct layer
             this.map.setView(center, initialZoom);
         }
         // Redraw all the icons
         this.updateIcons(newDoc);
     }
 
-    private onViewUpdate(view: ViewStore) {
+    private onViewUpdate(view: ViewStore, oldView: ViewStore) {
+        if (view.isEditingLayout !== oldView.isEditingLayout) {
+            this.map.invalidateSize();
+        }
+
         if (view.currentMapLayer !== this.layerMgr.getActiveLayerIndex()) {
             this.layerMgr.setActiveLayer(this.map, view.currentMapLayer);
             // redraw icons
@@ -131,44 +142,53 @@ class MapState {
             this.updateIcons(doc);
         }
 
-        // update map center
-        if (view.currentMapCenter.length > 1) {
-            // find the min max x and y, and min z
-            let minX = Infinity;
-            let minY = Infinity;
-            let minZ = Infinity;
-            let maxX = -Infinity;
-            let maxY = -Infinity;
-
-            view.currentMapCenter.forEach((coord) => {
-                const [x, y, z] = coord;
-                minX = Math.min(minX, x);
-                minY = Math.min(minY, y);
-                minZ = Math.min(minZ, z);
-                maxX = Math.max(maxX, x);
-                maxY = Math.max(maxY, y);
-            });
-
-            const corner1 = this.layerMgr.unproject([minX, minY, minZ]);
-            const corner2 = this.layerMgr.unproject([maxX, maxY, minZ]);
-            const bounds = L.latLngBounds(corner1, corner2);
-            this.map.flyToBounds(bounds);
-        } else if (view.currentMapCenter.length === 1) {
-            // center to the first coord if needed
-            const currentCenter = this.map.getCenter();
-            const center = this.layerMgr.unproject(view.currentMapCenter[0]);
-
-            if (!roughlyEquals(currentCenter.lat, center.lat) || !roughlyEquals(currentCenter.lng, center.lng)) {
-                console.log({center, currentCenter});
+        const currentMapView = view.currentMapView;
+        if (Array.isArray(currentMapView)) {
+            if (currentMapView.length === 0) {
+                MapLog.warn("invalid map view");
+            } else if (currentMapView.length === 1) {
                 setTimeout(() => {
-                    this.map.flyTo(center);
+                    const [center, layer] = this.layerMgr.unproject(currentMapView[0]);
+                    this.setLayerInStore(layer);
+                    this.map.flyTo(center, undefined, FlyOptions);
+                }, 0);
+            } else {
+                // find the min max x and y, and min z
+                let minX = Infinity;
+                let minY = Infinity;
+                let minZ = Infinity;
+                let maxX = -Infinity;
+                let maxY = -Infinity;
+                currentMapView.forEach((coord) => {
+                    const [x, y, z] = coord;
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    minZ = Math.min(minZ, z);
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
                 });
+                const [corner1, layer] = this.layerMgr.unproject([minX, minY, minZ]);
+                const [corner2, _] = this.layerMgr.unproject([maxX, maxY, minZ]);
+                const bounds = L.latLngBounds(corner1, corner2);
+                setTimeout(() => {
+                    this.setLayerInStore(layer);
+                    this.map.flyToBounds(bounds, FlyOptions);
+                });
+            }
+        } else {
+            // update map zoom
+            // we don't update center here because it will be inaccurate when zooming
+            if (!roughlyEquals(currentMapView.zoom, this.map.getZoom())) {
+                this.map.setZoom(currentMapView.zoom);
             }
         }
 
-        // update map zoom
-        if (!roughlyEquals(view.currentMapZoom, this.map.getZoom())) {
-            this.map.setZoom(view.currentMapZoom);
+    }
+
+    /// Change the current layer
+    private setLayerInStore(index: number) {
+        if (index !== viewSelector(store.getState()).currentMapLayer) {
+            store.dispatch(viewActions.setMapLayer(index));
         }
     }
 
@@ -201,7 +221,7 @@ class MapState {
             // current layer = 1
             // adjacent layers = 0.5
             const opacity = layer === this.layerMgr.getActiveLayerIndex() ? 1 : 0.5;
-            const latlng = this.layerMgr.unproject(icon.coord);
+            const [latlng] = this.layerMgr.unproject(icon.coord);
             return new IconMarker(latlng, iconSrc, opacity);
         }).filter(Boolean) as IconMarker[];
         // add new icons

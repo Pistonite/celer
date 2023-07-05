@@ -5,6 +5,7 @@ import "leaflet-rastercoords";
 import { DocumentMapLayer, DocumentMapLayerTilesetTransform, GameCoord } from "data/model";
 
 import { getAttributionHtml } from "./util";
+import { store, viewActions } from "data/store";
 
 /// Tile layer wrapper
 type MapLayer = {
@@ -16,6 +17,8 @@ type MapLayer = {
     transform: DocumentMapLayerTilesetTransform,
     /// The raster coords of this layer
     rc: L.RasterCoords,
+    /// Zoom bound of this layer
+    zoomBounds: [number, number],
 }
 
 /// Manages the map tile layers and coordinate transformation to layers
@@ -28,7 +31,7 @@ export class MapLayerMgr {
     /// Initialize the tileset layers, remove previous one if exists
     ///
     /// This will also set the map to the initial coord
-    public initLayers(map: L.Map, mapLayers: DocumentMapLayer[]) {
+    public initLayers(map: L.Map, mapLayers: DocumentMapLayer[], initialCoord: GameCoord) {
         this.getActiveLayer()?.layer.remove();
         // create new tileset layers
         this.layers = mapLayers.map((layer) => {
@@ -47,26 +50,12 @@ export class MapLayerMgr {
                 startZ: layer.startZ,
                 transform: layer.transform,
                 rc,
+                zoomBounds: layer.zoomBounds,
             };
         });
 
-            this.activeLayerIndex = 0;
-            this.getActiveLayer()?.layer.addTo(map);
-        // const defaultZoom = 2;
-        // const initialLayer = this.tilesetLayers.filter((_, i) => this.isZOnLayer(initialCoord[2], i));
-        // if (initialLayer.length === 0) {
-        //     warn(`initial coord ${initialCoord} is not on any layer`);
-        //     this.map.setView([0, 0], defaultZoom);
-        // } else {
-        //     const layer = initialLayer[0];
-        //     const coord = layer.rc.unproject([initialCoord[0], initialCoord[1]]);
-        //     if (initialZoom <= 0) {
-        //         warn(`Invalid initial zoom: ${initialZoom}`);
-        //         this.map.setView(coord, defaultZoom);
-        //     } else {
-        //         this.map.setView(coord, initialZoom);
-        //     }
-        // }
+        const initialLayer = this.getLayerByZ(initialCoord[2]);
+        this.setActiveLayer(map, initialLayer);
     }
 
     private getActiveLayer(): MapLayer | undefined {
@@ -79,7 +68,12 @@ export class MapLayerMgr {
     public setActiveLayer(map: L.Map, index: number) {
         this.getActiveLayer()?.layer.remove();
         this.activeLayerIndex = index;
-        this.getActiveLayer()?.layer.addTo(map);
+        const newLayer = this.getActiveLayer();
+        if (newLayer) {
+            newLayer.layer.addTo(map);
+
+            store.dispatch(viewActions.setMapZoomBounds(newLayer.zoomBounds));
+        }
     }
 
     /// Get the active layer index
@@ -91,13 +85,13 @@ export class MapLayerMgr {
     ///
     /// The (x, y) of the game coord will be unprojected using the layer's coordinate transformation.
     /// Z will be used to find the layer.
-    public unproject(coord: GameCoord): L.LatLng {
+    public unproject(coord: GameCoord): [L.LatLng, number] {
         const [x, y, z] = coord;
         const layerIndex = this.getLayerByZ(z);
         const { transform, rc } = this.layers[layerIndex];
         const mapX = transform.scale[0] * x + transform.translate[0];
         const mapY = transform.scale[1] * y + transform.translate[1];
-        return rc.unproject([mapX, mapY]);
+        return [rc.unproject([mapX, mapY]), layerIndex];
     }
 
     /// Get the game coord from latlng, using the current active layer's coordinate transformation

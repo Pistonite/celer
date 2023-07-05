@@ -3,7 +3,7 @@
 import { ReducerDeclWithPayload, withPayload } from "data/store/util";
 import { GameCoord } from "data/model";
 
-import { MapViewStore } from "./state";
+import { MapViewStore, MapView } from "./state";
 
 /// Set the current map layer
 export const setMapLayer: ReducerDeclWithPayload<
@@ -12,17 +12,27 @@ export const setMapLayer: ReducerDeclWithPayload<
     state.currentMapLayer = value;
 });
 
-/// Set the current map center
-export const setMapCenter: ReducerDeclWithPayload<
-    MapViewStore, GameCoord[]
-> = withPayload((state: MapViewStore, value: GameCoord[]) => {
-    state.currentMapCenter = value;
+/// Set the current map center and zoom
+export const setMapView: ReducerDeclWithPayload<
+    MapViewStore, GameCoord[] | MapView
+> = withPayload((state: MapViewStore, value: GameCoord[] | MapView) => {
+    state.currentMapView = value;
 });
 
-/// Set the current map zoom
+/// Set the current map zoom without changing center
 export const setMapZoom: ReducerDeclWithPayload<
     MapViewStore, number
 > = withPayload((state: MapViewStore, value: number) => {
-    state.currentMapZoom = value;
+    state.currentMapView = {
+        center: [0, 0, 0], // center will be set by the map
+        zoom: value,
+    };
+});
+
+/// Set map zoom bound
+export const setMapZoomBounds: ReducerDeclWithPayload<
+    MapViewStore, [number, number]
+> = withPayload((state: MapViewStore, value: [number, number]) => {
+    state.currentZoomBounds = value;
 });
 

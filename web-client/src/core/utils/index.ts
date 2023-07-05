@@ -5,3 +5,4 @@
 export * from "./Theme";
 export * from "./WindowSize";
 export * from "./useLayout";
+export * from "./useZoomControl";
