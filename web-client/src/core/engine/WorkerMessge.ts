@@ -9,5 +9,4 @@ export type WorkerConsoleMessage = {
 /// Message send from worker for finishing
 export type WorkerDoneMessage = {
     type: "done";
-
 };

@@ -9,13 +9,39 @@
 
 import React from "react";
 import { useSelector } from "react-redux";
-import { Menu, MenuDivider, MenuItem, MenuItemRadio, MenuList, MenuPopover, MenuTrigger, ToolbarButton, Tooltip } from "@fluentui/react-components";
-import { Grid20Regular, Save20Regular, Delete20Regular, Copy20Regular, Edit20Regular } from "@fluentui/react-icons";
+import {
+    Menu,
+    MenuDivider,
+    MenuItem,
+    MenuItemRadio,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
+    ToolbarButton,
+    Tooltip,
+} from "@fluentui/react-components";
+import {
+    DataTreemap20Regular,
+    Save20Regular,
+    Delete20Regular,
+    Copy20Regular,
+    Edit20Regular,
+} from "@fluentui/react-icons";
 
 import { useLayout } from "core/utils";
-import { settingsActions, settingsSelector, viewActions, viewSelector, useActions } from "data/store";
+import {
+    settingsActions,
+    settingsSelector,
+    viewActions,
+    viewSelector,
+    useActions,
+} from "data/store";
 
-import { ControlComponentProps, OnMenuCheckedValueChangeFunction, ToolbarControl } from "./util";
+import {
+    ControlComponentProps,
+    OnMenuCheckedValueChangeFunction,
+    ToolbarControl,
+} from "./util";
 
 /// Switch layout control
 export const SwitchLayout: ToolbarControl = {
@@ -23,7 +49,7 @@ export const SwitchLayout: ToolbarControl = {
         return (
             <SwitchLayoutInternal>
                 <Tooltip content="Layout" relationship="label">
-                    <ToolbarButton ref={ref} icon={<Grid20Regular />} />
+                    <ToolbarButton ref={ref} icon={<DataTreemap20Regular />} />
                 </Tooltip>
             </SwitchLayoutInternal>
         );
@@ -31,7 +57,7 @@ export const SwitchLayout: ToolbarControl = {
     MenuItem: () => {
         return (
             <SwitchLayoutInternal>
-                <MenuItem icon={<Grid20Regular />}>Layouts</MenuItem>
+                <MenuItem icon={<DataTreemap20Regular />}>Layouts</MenuItem>
             </SwitchLayoutInternal>
         );
     },
@@ -41,12 +67,15 @@ export const SwitchLayout: ToolbarControl = {
 const LayoutRadioName = "Select a layout";
 
 /// Internal switch layout control logic
-const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({ children }) => {
+const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
+    children,
+}) => {
     // layout api
     const { layout, isDefaultLayout } = useLayout();
     // settings store
     const { currentLayout, savedLayouts } = useSelector(settingsSelector);
-    const { addAndSwitchLayout, deleteCurrentLayout, switchLayout } = useActions(settingsActions);
+    const { addAndSwitchLayout, deleteCurrentLayout, switchLayout } =
+        useActions(settingsActions);
     // view store
     const { isEditingLayout } = useSelector(viewSelector);
     const { setIsEditingLayout } = useActions(viewActions);
@@ -57,52 +86,82 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({ children }) => 
     };
 
     // callback to set the layer
-    const onChangeLayoutMenuCheckedItems: OnMenuCheckedValueChangeFunction = (_, { checkedItems }) => {
-        switchLayout({ index: parseInt(checkedItems[0] as string) });
+    const onChangeLayoutMenuCheckedItems: OnMenuCheckedValueChangeFunction = (
+        _,
+        { checkedItems },
+    ) => {
+        switchLayout(parseInt(checkedItems[0] as string));
     };
     return (
-        <Menu checkedValues={layoutMenuCheckedItems} onCheckedValueChange={onChangeLayoutMenuCheckedItems}>
-            <MenuTrigger>
-                {children}
-            </MenuTrigger>
+        <Menu
+            checkedValues={layoutMenuCheckedItems}
+            onCheckedValueChange={onChangeLayoutMenuCheckedItems}
+        >
+            <MenuTrigger>{children}</MenuTrigger>
             <MenuPopover>
                 <MenuList>
-                    <MenuItemRadio name={LayoutRadioName} value="-1">Default Layout</MenuItemRadio>
-                    {
-                        savedLayouts.map((_, i) => (
-                            <MenuItemRadio name={LayoutRadioName} value={`${i}`} key={i} >
-                                Custom {i + 1}
-                            </MenuItemRadio>
-                        ))
-                    }
+                    <MenuItemRadio name={LayoutRadioName} value="-1">
+                        Default Layout
+                    </MenuItemRadio>
+                    {savedLayouts.map((_, i) => (
+                        <MenuItemRadio
+                            name={LayoutRadioName}
+                            value={`${i}`}
+                            key={i}
+                        >
+                            Custom {i + 1}
+                        </MenuItemRadio>
+                    ))}
 
                     <MenuDivider />
-                    {
-                        isEditingLayout ? (
-                            <Tooltip content="Finish editing the current layout" relationship="label">
-                                <MenuItem icon={<Save20Regular />} onClick={() => setIsEditingLayout(false)}>
-                                    Finish
-                                </MenuItem>
-                            </Tooltip>
-                        ) : (
-                            <Tooltip content={
-                                isDefaultLayout ? "Cannot edit the default layout" : "Edit the current layout"
-                            } relationship="label">
-                                <MenuItem disabled={isDefaultLayout} icon={<Edit20Regular />} onClick={() => setIsEditingLayout(true)}>
-                                    Edit
-                                </MenuItem>
-                            </Tooltip>
-                        )
-                    }
+                    {isEditingLayout ? (
+                        <Tooltip
+                            content="Finish editing the current layout"
+                            relationship="label"
+                        >
+                            <MenuItem
+                                icon={<Save20Regular />}
+                                onClick={() => setIsEditingLayout(false)}
+                            >
+                                Finish
+                            </MenuItem>
+                        </Tooltip>
+                    ) : (
+                        <Tooltip
+                            content={
+                                isDefaultLayout
+                                    ? "Cannot edit the default layout"
+                                    : "Edit the current layout"
+                            }
+                            relationship="label"
+                        >
+                            <MenuItem
+                                disabled={isDefaultLayout}
+                                icon={<Edit20Regular />}
+                                onClick={() => setIsEditingLayout(true)}
+                            >
+                                Edit
+                            </MenuItem>
+                        </Tooltip>
+                    )}
 
-                    <MenuItem icon={<Copy20Regular />} onClick={() => {
-                        addAndSwitchLayout({ layout });
-                    }}>Duplicate</MenuItem>
+                    <MenuItem
+                        icon={<Copy20Regular />}
+                        onClick={() => {
+                            addAndSwitchLayout(layout);
+                        }}
+                    >
+                        Duplicate
+                    </MenuItem>
 
-                    <MenuItem icon={<Delete20Regular />} onClick={() => {
-                        deleteCurrentLayout();
-                    }}>Delete</MenuItem>
-
+                    <MenuItem
+                        icon={<Delete20Regular />}
+                        onClick={() => {
+                            deleteCurrentLayout();
+                        }}
+                    >
+                        Delete
+                    </MenuItem>
                 </MenuList>
             </MenuPopover>
         </Menu>

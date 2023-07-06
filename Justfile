@@ -43,16 +43,16 @@ dump-symbol PATH SYMBOL +FLAGS="--doc --code":
 # Format the code
 fmt:
     cargo fmt
+    cd web-client && npm run fmt -- --write
     cd web-client && npm run lint -- --fix
 
 # Lint the code
 lint:
+    cargo fmt --check
     cargo clippy --all-features --all-targets -- -D warnings
+    cd web-client && npm run fmt -- --check
     cd web-client && npm run lint
     txtpp verify . -r
-
-lint-ci: && lint
-    cargo fmt --check
 
 test:
     echo "no tests yet"

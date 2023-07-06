@@ -11,7 +11,9 @@ window.addEventListener("popstate", (event) => {
     console.log(event);
 });
 
-const root = ReactDOM.createRoot(document.getElementById("react-root") as HTMLElement);
+const root = ReactDOM.createRoot(
+    document.getElementById("react-root") as HTMLElement,
+);
 
 root.render(
     <React.StrictMode>

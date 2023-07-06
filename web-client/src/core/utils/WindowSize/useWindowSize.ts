@@ -9,14 +9,13 @@ import React, { useContext } from "react";
 export type WindowSize = {
     windowWidth: number;
     windowHeight: number;
-}
+};
 
 /// Context for window size
 export const WindowSizeContext = React.createContext<WindowSize>({
-    windowWidth: window.innerWidth-1,
-    windowHeight: window.innerHeight-1,
+    windowWidth: window.innerWidth - 1,
+    windowHeight: window.innerHeight - 1,
 });
 
 /// Hook for using the WindowSizeContext
 export const useWindowSize = () => useContext(WindowSizeContext);
-

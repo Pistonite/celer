@@ -1,6 +1,12 @@
 //! Utility for the map logic
 
-import { Axis, DocumentMapCoordMap, DocumentMapLayerAttribution, GameCoord, RouteCoord } from "data/model";
+import {
+    Axis,
+    DocumentMapCoordMap,
+    DocumentMapLayerAttribution,
+    GameCoord,
+    RouteCoord,
+} from "data/model";
 import { createLogMgr } from "data/util";
 
 /// Map module logger
@@ -15,14 +21,18 @@ export const roughlyEquals = (a: number, b: number): boolean => {
 };
 
 /// Convert a route coordinate to a game coordinate using the coordMap
-export const toGameCoord = (routeCoord: RouteCoord, coordMap: DocumentMapCoordMap): GameCoord => {
+export const toGameCoord = (
+    routeCoord: RouteCoord,
+    coordMap: DocumentMapCoordMap,
+): GameCoord => {
     const coord: Record<Axis, number> = {
         x: 0,
         y: 0,
         z: 0,
     };
 
-    const mapper = routeCoord[2] === undefined ? coordMap["2d"] : coordMap["3d"];
+    const mapper =
+        routeCoord[2] === undefined ? coordMap["2d"] : coordMap["3d"];
 
     mapper.forEach((axis, i) => {
         coord[axis] = routeCoord[i] as number;
@@ -34,7 +44,9 @@ export const toGameCoord = (routeCoord: RouteCoord, coordMap: DocumentMapCoordMa
 /// Get attribution html to be used in the map
 ///
 /// This uses `innerText` to sanitize the link.
-export const getAttributionHtml = (attribution: DocumentMapLayerAttribution): string | undefined => {
+export const getAttributionHtml = (
+    attribution: DocumentMapLayerAttribution,
+): string | undefined => {
     if (!attribution.link) {
         return undefined;
     }

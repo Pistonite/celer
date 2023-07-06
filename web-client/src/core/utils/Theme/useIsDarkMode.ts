@@ -6,4 +6,3 @@ import React from "react";
 export const DarkModeContext = React.createContext(false);
 /// The hook
 export const useIsDarkMode = () => React.useContext(DarkModeContext);
-

@@ -31,7 +31,9 @@ export const testExec = async (): Promise<string> => {
     const plugin = testengine; // this should be checked plugin source code
     // construct and start web worker
     const constructPluginExpr = (name: string, plugin: string) => {
-        const body = `var __plugin_name__=${JSON.stringify(name)};${ConsoleSource};return (${plugin});`;
+        const body = `var __plugin_name__=${JSON.stringify(
+            name,
+        )};${ConsoleSource};return (${plugin});`;
         return `((function(){${body}})())`;
     };
     const magic = "(window._INJECTED_PLUGINS);";
@@ -39,14 +41,24 @@ export const testExec = async (): Promise<string> => {
         throw new Error("WorkerSource does not end with magic");
     }
 
-    const startMagic = "\"use strict\";";
+    const startMagic = '"use strict";';
     if (!WorkerSource.startsWith(startMagic)) {
         throw new Error("WorkerSource does not start with magic");
     }
 
-    const WorkerSourceWithoutMagic = WorkerSource.slice(startMagic.length, -magic.length);
-    const WorkerSourceWithPlugin = "\"use strict\";var exports={};" + WorkerSourceWithoutMagic + "([" + constructPluginExpr("testengine1", plugin) + "]);";
-    const blob = new Blob([WorkerSourceWithPlugin], { type: "application/javascript" });
+    const WorkerSourceWithoutMagic = WorkerSource.slice(
+        startMagic.length,
+        -magic.length,
+    );
+    const WorkerSourceWithPlugin =
+        '"use strict";var exports={};' +
+        WorkerSourceWithoutMagic +
+        "([" +
+        constructPluginExpr("testengine1", plugin) +
+        "]);";
+    const blob = new Blob([WorkerSourceWithPlugin], {
+        type: "application/javascript",
+    });
     const url = URL.createObjectURL(blob);
     const worker = new Worker(url);
 
@@ -63,7 +75,7 @@ export const testExec = async (): Promise<string> => {
             reject(event);
         });
         worker.postMessage("start");
-        setTimeout(function(){
+        setTimeout(function () {
             console.log("working timeout");
             worker.terminate();
             reject("timeout");
@@ -74,4 +86,4 @@ export const testExec = async (): Promise<string> => {
     return await promise;
 };
 
-"(window._INJECTED_PLUGINS);";
+("(window._INJECTED_PLUGINS);");

@@ -5,12 +5,30 @@
 //!
 import React from "react";
 import { useSelector } from "react-redux";
-import { Menu, MenuItem, MenuItemRadio, MenuList, MenuPopover, MenuTrigger, ToolbarButton, Tooltip } from "@fluentui/react-components";
+import {
+    Menu,
+    MenuItem,
+    MenuItemRadio,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
+    ToolbarButton,
+    Tooltip,
+} from "@fluentui/react-components";
 import { Layer20Regular } from "@fluentui/react-icons";
 
-import { documentSelector, viewActions, viewSelector, useActions } from "data/store";
+import {
+    documentSelector,
+    viewActions,
+    viewSelector,
+    useActions,
+} from "data/store";
 
-import { ControlComponentProps, OnMenuCheckedValueChangeFunction, ToolbarControl } from "./util";
+import {
+    ControlComponentProps,
+    OnMenuCheckedValueChangeFunction,
+    ToolbarControl,
+} from "./util";
 
 /// The map layer switch control
 export const SwitchMapLayer: ToolbarControl = {
@@ -19,7 +37,7 @@ export const SwitchMapLayer: ToolbarControl = {
         return (
             <SwitchMapLayerInternal layerNames={layerNames}>
                 <Tooltip content="Map layer" relationship="label">
-                    <ToolbarButton 
+                    <ToolbarButton
                         ref={ref}
                         icon={<Layer20Regular />}
                         disabled={layerNames.length < 2}
@@ -32,7 +50,10 @@ export const SwitchMapLayer: ToolbarControl = {
         const layerNames = useMapLayerNames();
         return (
             <SwitchMapLayerInternal layerNames={layerNames}>
-                <MenuItem icon={<Layer20Regular />} disabled={layerNames.length < 2}>
+                <MenuItem
+                    icon={<Layer20Regular />}
+                    disabled={layerNames.length < 2}
+                >
                     Map layers
                 </MenuItem>
             </SwitchMapLayerInternal>
@@ -43,7 +64,9 @@ export const SwitchMapLayer: ToolbarControl = {
 /// Internal convenience hook to get the layer names
 const useMapLayerNames = () => {
     const { document } = useSelector(documentSelector);
-    return document.project.map.layers.map(layer => layer.name || "(Unnamed layer)");
+    return document.project.map.layers.map(
+        (layer) => layer.name || "(Unnamed layer)",
+    );
 };
 
 /// The control is disabled if there are less than 2 layers.
@@ -55,8 +78,10 @@ type SwitchMapLayerInternalProps = ControlComponentProps & {
     layerNames: string[];
 };
 
-const SwitchMapLayerInternal: React.FC<SwitchMapLayerInternalProps> = ({ layerNames, children }) => {
-
+const SwitchMapLayerInternal: React.FC<SwitchMapLayerInternalProps> = ({
+    layerNames,
+    children,
+}) => {
     const { currentMapLayer } = useSelector(viewSelector);
     const { setMapLayer } = useActions(viewActions);
 
@@ -64,25 +89,29 @@ const SwitchMapLayerInternal: React.FC<SwitchMapLayerInternalProps> = ({ layerNa
         [LayerRadioName]: [`${currentMapLayer}`],
     };
 
-    const onChangeLayerMenuCheckedItems: OnMenuCheckedValueChangeFunction = (_, { checkedItems }) => {
-        setMapLayer(
-            parseInt(checkedItems[0] as string)
-        );
+    const onChangeLayerMenuCheckedItems: OnMenuCheckedValueChangeFunction = (
+        _,
+        { checkedItems },
+    ) => {
+        setMapLayer(parseInt(checkedItems[0] as string));
     };
     return (
-        <Menu checkedValues={layerMenuCheckedItems} onCheckedValueChange={onChangeLayerMenuCheckedItems}>
-            <MenuTrigger>
-                {children}
-            </MenuTrigger>
+        <Menu
+            checkedValues={layerMenuCheckedItems}
+            onCheckedValueChange={onChangeLayerMenuCheckedItems}
+        >
+            <MenuTrigger>{children}</MenuTrigger>
             <MenuPopover>
                 <MenuList>
-                    {
-                        layerNames.map((layerName, i) => (
-                            <MenuItemRadio name={LayerRadioName} value={`${i}`} key={i} >
-                                {layerName}
-                            </MenuItemRadio>
-                        ))
-                    }
+                    {layerNames.map((layerName, i) => (
+                        <MenuItemRadio
+                            name={LayerRadioName}
+                            value={`${i}`}
+                            key={i}
+                        >
+                            {layerName}
+                        </MenuItemRadio>
+                    ))}
                 </MenuList>
             </MenuPopover>
         </Menu>

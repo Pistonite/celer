@@ -5,7 +5,10 @@ import { useSelector } from "react-redux";
 import { useActions, viewSelector, viewActions } from "data/store";
 
 export const useZoomControl = (isZoomIn: boolean): (() => void) | undefined => {
-    const { currentMapView, currentZoomBounds: [min, max] } = useSelector(viewSelector);
+    const {
+        currentMapView,
+        currentZoomBounds: [min, max],
+    } = useSelector(viewSelector);
     const { setMapZoom } = useActions(viewActions);
 
     if (Array.isArray(currentMapView)) {
@@ -18,13 +21,13 @@ export const useZoomControl = (isZoomIn: boolean): (() => void) | undefined => {
     if (isZoomIn) {
         if (zoom < max) {
             return () => {
-                setMapZoom(Math.min(zoom+1, max));
+                setMapZoom(Math.min(zoom + 1, max));
             };
         }
     } else {
         if (zoom > min) {
             return () => {
-                setMapZoom(Math.max(zoom-1, min));
+                setMapZoom(Math.max(zoom - 1, min));
             };
         }
     }

@@ -3,9 +3,14 @@
 //! The view slice stores global application state that doesn't need to persisted.
 //! Such as toolbar, map view, and other UI states.
 
-import { ReducerDeclWithPayload, configureSlice, withPayload } from "data/store/util";
+import {
+    ReducerDeclWithPayload,
+    configureSlice,
+    withPayload,
+} from "data/store/util";
 
-import { MapViewReducers, MapViewStore, initialMapViewStore } from "./map";
+import { MapViewStore, initialMapViewStore } from "./map";
+import * as mapViewReducers from "./mapReducers";
 
 /// The toolbar slice state
 export type ViewStore = MapViewStore & {
@@ -19,22 +24,17 @@ const initialState: ViewStore = {
 };
 
 /* reducers: TODO may need to refactor */
-const setIsEditingLayout: ReducerDeclWithPayload<
-    ViewStore, boolean
-> = withPayload((state: ViewStore, value: boolean) => {
-    state.isEditingLayout = value;
-});
+const setIsEditingLayout: ReducerDeclWithPayload<ViewStore, boolean> =
+    withPayload((state: ViewStore, value: boolean) => {
+        state.isEditingLayout = value;
+    });
 
 /// The toolbar store slice
-export const {
-    viewReducer,
-    viewActions,
-    viewSelector
-} = configureSlice({
+export const { viewReducer, viewActions, viewSelector } = configureSlice({
     name: "view",
     initialState,
     reducers: {
         setIsEditingLayout,
-        ...MapViewReducers,
-    }
+        ...mapViewReducers,
+    },
 });

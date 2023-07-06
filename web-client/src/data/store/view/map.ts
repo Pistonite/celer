@@ -16,8 +16,8 @@ export type MapViewStore = {
     ///
     /// This is usually tied to the layer. The map automatically updates this
     /// according to the current layer
-    currentZoomBounds: [number, number]
-}
+    currentZoomBounds: [number, number];
+};
 
 /// Map view data
 ///
@@ -25,7 +25,7 @@ export type MapViewStore = {
 export type MapView = {
     center: GameCoord;
     zoom: number;
-}
+};
 
 export const initialMapViewStore: MapViewStore = {
     currentMapView: { center: [0, 0, 0], zoom: 1 },

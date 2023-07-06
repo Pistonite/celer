@@ -10,7 +10,7 @@ import { ReducerDeclWithPayload, configureSlice, withPayload } from "./util";
 type DocumentStore = {
     /// The current document
     document: ExecutedDocument;
-}
+};
 
 /// The initial state
 const initialState: DocumentStore = {
@@ -26,7 +26,7 @@ const initialState: DocumentStore = {
                 layers: [],
                 coordMap: {
                     "2d": ["x", "y"],
-                    "3d": ["x", "y", "z"]
+                    "3d": ["x", "y", "z"],
                 },
                 initialCoord: [0, 0, 0, undefined],
                 initialZoom: 0,
@@ -36,25 +36,21 @@ const initialState: DocumentStore = {
         map: {
             lines: undefined,
             icons: [],
-        }
-    }
+        },
+    },
 };
 
-const setDocument: ReducerDeclWithPayload<
-    DocumentStore, ExecutedDocument
-> = withPayload((state, value) => {
-    state.document = value;
-});
+const setDocument: ReducerDeclWithPayload<DocumentStore, ExecutedDocument> =
+    withPayload((state, value) => {
+        state.document = value;
+    });
 
 /// The document store slice
-export const {
-    documentReducer,
-    documentActions,
-    documentSelector
-} = configureSlice({
-    name: "document",
-    initialState,
-    reducers: {
-        setDocument
-    }
-});
+export const { documentReducer, documentActions, documentSelector } =
+    configureSlice({
+        name: "document",
+        initialState,
+        reducers: {
+            setDocument,
+        },
+    });

@@ -20,13 +20,14 @@ export type ToolbarControl = {
     ///
     /// Rendered when the toolbar overflows
     MenuItem: React.ComponentType;
-}
+};
 
 /// Common toolbar control props
 export type ControlComponentProps = {
     /// The element to render as the control (e.g. <ToolbarButton /> or <MenuItem />)
     children: React.ReactElement;
-}
+};
 
 /// Fluentui menu checked value change function
-export type OnMenuCheckedValueChangeFunction = MenuProps["onCheckedValueChange"];
+export type OnMenuCheckedValueChangeFunction =
+    MenuProps["onCheckedValueChange"];

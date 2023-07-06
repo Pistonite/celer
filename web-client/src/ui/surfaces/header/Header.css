@@ -1,6 +1,6 @@
 header.celer-header {
     overflow: hidden;
-    display:flex;
+    display: flex;
     min-height: 80px;
 }
 
@@ -13,19 +13,13 @@ header.celer-header.bottom {
 }
 
 .celer-toolbar {
-    /* height: 32px; */
-    overflow:hidden;
+    overflow: hidden;
 }
 
 div.celer-title {
     display: flex;
     flex-direction: row;
 }
-
-/* div.celer-toolbar-main {
-    height: 32px;
-    overflow:hidden;
-} */
 
 div.celer-title > h1 {
     margin: 0;

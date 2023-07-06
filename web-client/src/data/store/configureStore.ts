@@ -11,16 +11,18 @@ export const store = configureStore({
     reducer: {
         ...settingsReducer,
         ...viewReducer,
-        ...documentReducer
-    }
+        ...documentReducer,
+    },
 });
 
 const watchSettings = reduxWatch(() => settingsSelector(store.getState()));
-store.subscribe(watchSettings((newVal, oldVal) => {
-    console.log({
-        "message": "settings changed",
-        "new": newVal,
-        "old": oldVal
-    });
-}));
+store.subscribe(
+    watchSettings((newVal, oldVal) => {
+        console.log({
+            message: "settings changed",
+            new: newVal,
+            old: oldVal,
+        });
+    }),
+);
 // TODO need a way for outsiders to subscribe easily

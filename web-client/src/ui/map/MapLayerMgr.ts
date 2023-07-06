@@ -2,7 +2,11 @@
 import L from "leaflet";
 import "leaflet-rastercoords";
 
-import { DocumentMapLayer, DocumentMapLayerTilesetTransform, GameCoord } from "data/model";
+import {
+    DocumentMapLayer,
+    DocumentMapLayerTilesetTransform,
+    GameCoord,
+} from "data/model";
 
 import { getAttributionHtml } from "./util";
 import { store, viewActions } from "data/store";
@@ -10,16 +14,16 @@ import { store, viewActions } from "data/store";
 /// Tile layer wrapper
 type MapLayer = {
     /// The tile layer
-    layer: L.TileLayer,
+    layer: L.TileLayer;
     /// The start Z value
-    startZ: number,
+    startZ: number;
     /// Coodinate transformation from game to map
-    transform: DocumentMapLayerTilesetTransform,
+    transform: DocumentMapLayerTilesetTransform;
     /// The raster coords of this layer
-    rc: L.RasterCoords,
+    rc: L.RasterCoords;
     /// Zoom bound of this layer
-    zoomBounds: [number, number],
-}
+    zoomBounds: [number, number];
+};
 
 /// Manages the map tile layers and coordinate transformation to layers
 export class MapLayerMgr {
@@ -31,7 +35,11 @@ export class MapLayerMgr {
     /// Initialize the tileset layers, remove previous one if exists
     ///
     /// This will also set the map to the initial coord
-    public initLayers(map: L.Map, mapLayers: DocumentMapLayer[], initialCoord: GameCoord) {
+    public initLayers(
+        map: L.Map,
+        mapLayers: DocumentMapLayer[],
+        initialCoord: GameCoord,
+    ) {
         this.getActiveLayer()?.layer.remove();
         // create new tileset layers
         this.layers = mapLayers.map((layer) => {
@@ -99,29 +107,44 @@ export class MapLayerMgr {
         const layer = this.getActiveLayer();
         if (!layer) {
             return undefined;
-        }   
+        }
         const { transform, rc } = layer;
         const { x: mapX, y: mapY } = rc.project(coord);
 
         const x = (mapX - transform.translate[0]) / transform.scale[0];
         const y = (mapY - transform.translate[1]) / transform.scale[1];
-        return [x, y, layer.startZ+1];
+        return [x, y, layer.startZ + 1];
     }
 
     /// Get the layer given a z level.
     public getLayerByZ(z: number): number {
-        return this.getLayerByZInRange(z, 0, this.layers.length - 1) ?? (this.layers.length-1);
+        return (
+            this.getLayerByZInRange(z, 0, this.layers.length - 1) ??
+            this.layers.length - 1
+        );
     }
 
     /// Get the layer given a z level and a search range relative to the current active layer
     ///
     /// The range is inclusive (e.g. -1, 1 means search from active layer - 1 to active layer + 1)
-    public getLayerByZInRelativeRange(z: number, minRelLayer: number, maxRelLayer: number): number | undefined {
-        return this.getLayerByZInRange(z, this.activeLayerIndex + minRelLayer, this.activeLayerIndex + maxRelLayer);
+    public getLayerByZInRelativeRange(
+        z: number,
+        minRelLayer: number,
+        maxRelLayer: number,
+    ): number | undefined {
+        return this.getLayerByZInRange(
+            z,
+            this.activeLayerIndex + minRelLayer,
+            this.activeLayerIndex + maxRelLayer,
+        );
     }
 
     /// Get the layer given a z level and a absolute search range
-    private getLayerByZInRange(z: number, minLayer: number, maxLayer: number): number | undefined {
+    private getLayerByZInRange(
+        z: number,
+        minLayer: number,
+        maxLayer: number,
+    ): number | undefined {
         for (let layer = minLayer; layer <= maxLayer; layer++) {
             if (this.isZOnLayer(z, layer)) {
                 return layer;
@@ -145,6 +168,4 @@ export class MapLayerMgr {
         }
         return true;
     }
-
 }
-

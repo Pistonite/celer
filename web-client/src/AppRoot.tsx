@@ -20,64 +20,48 @@ const LayoutEditingMargin = 5;
 /// This handles things like layout and routing
 export const AppRoot: React.FC = () => {
     const { isEditingLayout } = useSelector(viewSelector);
-    const {
-        widgets,
-        layout,
-        setLayout,
-    } = useLayout();
+    const { widgets, layout, setLayout } = useLayout();
     const { windowWidth, windowHeight } = useWindowSize();
     const margin = isEditingLayout ? LayoutEditingMargin : 0;
-    //const { setCurrentLayout } = useActions(settingsActions);
 
     // compute layout numbers
     const rowHeight = (windowHeight - (GridFull + 1) * margin) / GridFull;
 
-    // console.log({windowWidth, windowHeight})
-    // console.log((windowHeight - (GRID_SIZE+1)*EDITING_MARGIN)/GRID_SIZE);
     return (
         <ReactGridLayout
             className="layout-root"
             layout={widgets}
             cols={GridFull}
             width={windowWidth}
-
             rowHeight={rowHeight}
             isResizable={isEditingLayout}
             isDraggable={isEditingLayout}
             margin={[margin, margin]}
             onLayoutChange={setLayout}
-
         >
-            {
-                widgets.map((widget) =>
-                    <div className={clsx(
+            {widgets.map((widget) => (
+                <div
+                    className={clsx(
                         "widget-container",
                         isEditingLayout && "editing",
-                        `widget-toolbar-${layout.toolbarAnchor}`
-                    )} key={widget.i}>
-                        {
-                            layout.toolbar === widget.i && <Header toolbarAnchor={layout.toolbarAnchor} />
-                        }
-                        <div className="widget">
-                            {
-                                widget.i === "map" && <Suspense fallback={<LoadScreen color="green"/>}>
-                                    <Map />
-                                </Suspense>
-                                    
-                            }
-                            {
-                                widget.i === "viewer" && <div>I am a viewer</div>
-                            }
-                            {
-                                widget.i === "editor" && <div>I am a editor</div>
-                            }
-                            
-                        </div>
+                        `widget-toolbar-${layout.toolbarAnchor}`,
+                    )}
+                    key={widget.i}
+                >
+                    {layout.toolbar === widget.i && (
+                        <Header toolbarAnchor={layout.toolbarAnchor} />
+                    )}
+                    <div className="widget">
+                        {widget.i === "map" && (
+                            <Suspense fallback={<LoadScreen color="green" />}>
+                                <Map />
+                            </Suspense>
+                        )}
+                        {widget.i === "viewer" && <div>I am a viewer</div>}
+                        {widget.i === "editor" && <div>I am a editor</div>}
                     </div>
-
-                )
-            }
+                </div>
+            ))}
         </ReactGridLayout>
     );
 };
-

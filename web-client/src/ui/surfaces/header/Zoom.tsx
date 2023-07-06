@@ -16,16 +16,31 @@ const createZoomControl = (isZoomIn: boolean): ToolbarControl => {
             const handler = useZoomControl(isZoomIn);
             return (
                 <Tooltip content={text} relationship="label">
-                    <ToolbarButton ref={ref} icon={isZoomIn ? <ZoomIn20Regular /> : <ZoomOut20Regular />} disabled={!handler} onClick={handler}/>
+                    <ToolbarButton
+                        ref={ref}
+                        icon={
+                            isZoomIn ? (
+                                <ZoomIn20Regular />
+                            ) : (
+                                <ZoomOut20Regular />
+                            )
+                        }
+                        disabled={!handler}
+                        onClick={handler}
+                    />
                 </Tooltip>
             );
         }),
         MenuItem: () => {
             const handler = useZoomControl(isZoomIn);
             return (
-                <MenuItem icon={isZoomIn ? <ZoomIn20Regular /> : <ZoomOut20Regular />} disabled={!handler} onClick={handler}>
+                <MenuItem
+                    icon={isZoomIn ? <ZoomIn20Regular /> : <ZoomOut20Regular />}
+                    disabled={!handler}
+                    onClick={handler}
+                >
                     {text}
-                </MenuItem> 
+                </MenuItem>
             );
         },
     };
