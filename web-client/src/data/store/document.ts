@@ -3,13 +3,13 @@
 //! This slice stores the current ExecutedDocument ready to be viewed
 //! by the document viewer and the map.
 
-import { ExecutedDocument } from "data/model";
+import { ExecDoc } from "data/model";
 import { ReducerDeclWithPayload, configureSlice, withPayload } from "./util";
 
 /// The document store type
 type DocumentStore = {
     /// The current document
-    document: ExecutedDocument;
+    document: ExecDoc;
 };
 
 /// The initial state
@@ -28,19 +28,16 @@ const initialState: DocumentStore = {
                     "2d": ["x", "y"],
                     "3d": ["x", "y", "z"],
                 },
-                initialCoord: [0, 0, 0, undefined],
+                initialCoord: [0, 0, 0],
                 initialZoom: 0,
             },
             icons: {},
         },
-        map: {
-            lines: undefined,
-            icons: [],
-        },
+        map: []
     },
 };
 
-const setDocument: ReducerDeclWithPayload<DocumentStore, ExecutedDocument> =
+const setDocument: ReducerDeclWithPayload<DocumentStore, ExecDoc> =
     withPayload((state, value) => {
         state.document = value;
     });

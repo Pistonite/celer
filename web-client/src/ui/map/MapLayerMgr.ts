@@ -3,12 +3,12 @@ import L from "leaflet";
 import "leaflet-rastercoords";
 
 import {
-    DocumentMapLayer,
-    DocumentMapLayerTilesetTransform,
+    DocMapLayer,
+    DocMapLayerTilesetTransform,
     GameCoord,
 } from "data/model";
 
-import { getAttributionHtml } from "./util";
+import { MapLog, getAttributionHtml } from "./util";
 import { store, viewActions } from "data/store";
 
 /// Tile layer wrapper
@@ -18,7 +18,7 @@ type MapLayer = {
     /// The start Z value
     startZ: number;
     /// Coodinate transformation from game to map
-    transform: DocumentMapLayerTilesetTransform;
+    transform: DocMapLayerTilesetTransform;
     /// The raster coords of this layer
     rc: L.RasterCoords;
     /// Zoom bound of this layer
@@ -37,9 +37,10 @@ export class MapLayerMgr {
     /// This will also set the map to the initial coord
     public initLayers(
         map: L.Map,
-        mapLayers: DocumentMapLayer[],
+        mapLayers: DocMapLayer[],
         initialCoord: GameCoord,
     ) {
+        MapLog.info("initializing map layers");
         this.getActiveLayer()?.layer.remove();
         // create new tileset layers
         this.layers = mapLayers.map((layer) => {

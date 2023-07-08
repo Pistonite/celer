@@ -11,15 +11,18 @@ import {
 
 import { MapViewStore, initialMapViewStore } from "./map";
 import * as mapViewReducers from "./mapReducers";
+import { DocViewStore, initialDocViewStore } from "./doc";
+import * as docViewReducers from "./docReducers";
 
 /// The toolbar slice state
-export type ViewStore = MapViewStore & {
+export type ViewStore = MapViewStore & DocViewStore & {
     /// If the user is currently editing the layout
     isEditingLayout: boolean;
 };
 
 const initialState: ViewStore = {
     ...initialMapViewStore,
+    ...initialDocViewStore,
     isEditingLayout: false,
 };
 
@@ -36,5 +39,6 @@ export const { viewReducer, viewActions, viewSelector } = configureSlice({
     reducers: {
         setIsEditingLayout,
         ...mapViewReducers,
+        ...docViewReducers,
     },
 });

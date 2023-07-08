@@ -7,6 +7,7 @@ import "./leaflet-tilelayer-nogap";
 import reduxWatch from "redux-watch";
 
 import {
+    SettingsStore,
     ViewStore,
     documentSelector,
     settingsSelector,
@@ -14,12 +15,12 @@ import {
     viewActions,
     viewSelector,
 } from "data/store";
-import { ExecutedDocument } from "data/model";
+import { ExecDoc } from "data/model";
 
-import { IconMarker } from "./IconMarker";
 import { MapLog, roughlyEquals } from "./util";
 import { MapContainerMgr } from "./MapContainerMgr";
 import { MapLayerMgr } from "./MapLayerMgr";
+import { MapVisualMgr } from "./MapVisualMgr";
 
 MapLog.info("loading map module");
 
@@ -61,12 +62,13 @@ class MapState {
     private containerMgr: MapContainerMgr;
     /// Layer Manager
     private layerMgr: MapLayerMgr;
-    /// The icons
-    private icons: IconMarker[] = [];
+    /// The visual (icons, lines, markers)
+    private visualMgr: MapVisualMgr;
 
     constructor() {
         this.containerMgr = new MapContainerMgr();
         this.layerMgr = new MapLayerMgr();
+        this.visualMgr = new MapVisualMgr();
 
         // Create map
         const map = L.map(this.containerMgr.createMapContainer(), {
@@ -76,12 +78,12 @@ class MapState {
         });
 
         // Subscribe to store updates
-        const watchLayout = reduxWatch(
-            () => settingsSelector(store.getState()).currentLayout,
+        const watchSettings = reduxWatch(
+            () => settingsSelector(store.getState()),
         );
         store.subscribe(
-            watchLayout(() => {
-                this.map.invalidateSize();
+            watchSettings((newVal, _oldVal) => {
+                this.onSettingsUpdate(newVal);
             }),
         );
 
@@ -130,12 +132,27 @@ class MapState {
         this.containerMgr.attach(this.map);
     }
 
+    /// Called when the settings is updated
+    private onSettingsUpdate(newVal: SettingsStore) {
+        /// Update the size since the layout could have changed
+        this.map.invalidateSize();
+        /// Recreate the visuals
+        const state = store.getState();
+        this.visualMgr.recreate(
+            this.map, 
+            this.layerMgr, 
+            documentSelector(state).document,
+            viewSelector(state),
+            newVal,
+        );
+    }
+
     /// Called when the document is updated
     ///
-    /// This will update the map layers if needed, and will always redraw the map icons and lines
+    /// This will update the map layers if needed, and will always redraw the map visuals
     private onDocumentUpdate(
-        newDoc: ExecutedDocument,
-        oldDoc: ExecutedDocument,
+        newDoc: ExecDoc,
+        oldDoc: ExecDoc,
     ) {
         if (!newDoc.loaded) {
             // do nothing if doc is not loaded
@@ -153,8 +170,15 @@ class MapState {
             // initLayers above already sets the correct layer
             this.map.setView(center, initialZoom);
         }
-        // Redraw all the icons
-        this.updateIcons(newDoc);
+        // recreate the visuals
+        const state = store.getState();
+        this.visualMgr.recreate(
+            this.map,
+            this.layerMgr,
+            newDoc,
+            viewSelector(state),
+            settingsSelector(state),
+        );
     }
 
     private onViewUpdate(view: ViewStore, oldView: ViewStore) {
@@ -162,12 +186,26 @@ class MapState {
             this.map.invalidateSize();
         }
 
+        const state = store.getState();
+
         if (view.currentMapLayer !== this.layerMgr.getActiveLayerIndex()) {
             this.layerMgr.setActiveLayer(this.map, view.currentMapLayer);
-            // redraw icons
-            const doc = documentSelector(store.getState()).document;
-            this.updateIcons(doc);
+            // recreate the visuals since the map layer changed
+            this.visualMgr.recreate(
+                this.map,
+                this.layerMgr,
+                documentSelector(state).document,
+                view,
+                settingsSelector(state),
+            );
         }
+
+        // update the visuals based on the view and settings
+        this.visualMgr.update(
+            this.map,
+            view,
+            settingsSelector(state),
+        );
 
         const currentMapView = view.currentMapView;
         if (Array.isArray(currentMapView)) {
@@ -226,48 +264,5 @@ class MapState {
         if (index !== viewSelector(store.getState()).currentMapLayer) {
             store.dispatch(viewActions.setMapLayer(index));
         }
-    }
-
-    /// Update the icons on the map
-    ///
-    /// Requires tileset layers to be up-to-date (for transforms to work)
-    /// This will filter the icons based on the layer and other settings
-    private updateIcons(doc: ExecutedDocument) {
-        const registeredIcons = doc.project.icons;
-        const mapIcons = doc.map.icons;
-        // remove existing icons
-        this.icons.forEach((icon) => icon.remove());
-        this.icons = [];
-        // create new icon markers
-        this.icons = mapIcons
-            .map((icon) => {
-                const iconSrc = registeredIcons[icon.id];
-                if (!iconSrc) {
-                    MapLog.warn(`Icon ${icon.id} is not registered`);
-                    return undefined;
-                }
-
-                const z = icon.coord[2];
-                const layer = this.layerMgr.getLayerByZInRelativeRange(
-                    z,
-                    -1,
-                    1,
-                );
-                if (!layer) {
-                    // icon is not on current layer or adjacent layers
-                    return undefined;
-                }
-
-                // get the opacity of the icon
-                // current layer = 1
-                // adjacent layers = 0.5
-                const opacity =
-                    layer === this.layerMgr.getActiveLayerIndex() ? 1 : 0.5;
-                const [latlng] = this.layerMgr.unproject(icon.coord);
-                return new IconMarker(latlng, iconSrc, opacity);
-            })
-            .filter(Boolean) as IconMarker[];
-        // add new icons
-        this.icons.forEach((icon) => icon.addTo(this.map));
     }
 }

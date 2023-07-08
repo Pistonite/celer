@@ -2,8 +2,8 @@
 
 import {
     Axis,
-    DocumentMapCoordMap,
-    DocumentMapLayerAttribution,
+    DocMapCoordMap,
+    DocMapLayerAttribution,
     GameCoord,
     RouteCoord,
 } from "data/model";
@@ -23,7 +23,7 @@ export const roughlyEquals = (a: number, b: number): boolean => {
 /// Convert a route coordinate to a game coordinate using the coordMap
 export const toGameCoord = (
     routeCoord: RouteCoord,
-    coordMap: DocumentMapCoordMap,
+    coordMap: DocMapCoordMap,
 ): GameCoord => {
     const coord: Record<Axis, number> = {
         x: 0,
@@ -45,7 +45,7 @@ export const toGameCoord = (
 ///
 /// This uses `innerText` to sanitize the link.
 export const getAttributionHtml = (
-    attribution: DocumentMapLayerAttribution,
+    attribution: DocMapLayerAttribution,
 ): string | undefined => {
     if (!attribution.link) {
         return undefined;

@@ -4,7 +4,7 @@
 ///
 /// This is a map of internal icon names to icon data.
 /// Icon data should be URL to the icon. (Can be data URL)
-export type DocumentIconMap = {
+export type DocIconMap = {
     /// internal icon name (usually kebab-case)
     [id: string]: string;
 };
@@ -12,7 +12,7 @@ export type DocumentIconMap = {
 /// The metadata of the document
 ///
 /// Usually part of document.project
-export type DocumentMetadata = {
+export type DocMetadata = {
     /// Name of the project (usually kebab-case)
     name: string;
     /// Title/Display name of the project.
@@ -28,11 +28,11 @@ export type DocumentMetadata = {
 };
 
 /// Parameter for the map
-export type DocumentMapParameters = {
+export type DocMapParameters = {
     /// The map layers. First is the lowest layer.
-    layers: DocumentMapLayer[];
+    layers: DocMapLayer[];
     /// Mapping for the coordinates in the route.
-    coordMap: DocumentMapCoordMap;
+    coordMap: DocMapCoordMap;
     /// Initial coordinates
     initialCoord: GameCoord;
     /// Initial zoom level
@@ -42,12 +42,12 @@ export type DocumentMapParameters = {
 /// The mapping if 2 coordinates are specified in the route
 ///
 /// For example, ["x", "z"] will map the coordinates to the x (horizontal) and z (height) axis of the map.
-export type DocumentMapCoordMap = {
+export type DocMapCoordMap = {
     "2d": [Axis, Axis];
     "3d": [Axis, Axis, Axis];
 };
 
-export type DocumentMapLayer = {
+export type DocMapLayer = {
     /// Display name of the layer
     ///
     /// This is visible in the layer switch UI
@@ -68,16 +68,16 @@ export type DocumentMapLayer = {
     /// Coordinate transformation
     ///
     /// This should transform (x, y) from the game's coordinate space to (x, y) in the raster image.
-    transform: DocumentMapLayerTilesetTransform;
+    transform: DocMapLayerTilesetTransform;
     /// The minimum Z value this layer should be used
     ///
     /// This value is ignored for the first (lowest) layer
     startZ: number;
     /// Attribution (displayed as &copy; LINK)
-    attribution: DocumentMapLayerAttribution;
+    attribution: DocMapLayerAttribution;
 };
 
-export type DocumentMapLayerAttribution = {
+export type DocMapLayerAttribution = {
     /// Url of the attribution
     link: string;
     /// If the copyright sign should be displayed
@@ -87,7 +87,7 @@ export type DocumentMapLayerAttribution = {
 /// The tileset transform
 ///
 /// The transformed coordiante will be (x, y) -> (x * scale[0] + translate[0], y * scale[1] + translate[1])
-export type DocumentMapLayerTilesetTransform = {
+export type DocMapLayerTilesetTransform = {
     /// The scale of the transformation
     scale: [number, number];
     /// The translation of the transformation
@@ -122,4 +122,26 @@ export type MapIcon = {
     id: string;
     /// Game coordinate for the icon
     coord: GameCoord;
+    /// The corresponding line number in the document
+    lineNumber: number;
+    /// The priority of the icon (0 = primary, 1 = secondary)
+    priority: number;
 };
+
+/// Markers on the map
+export type MapMarker = {
+    /// Coordinate of the marker
+    coord: GameCoord;
+    /// The corresponding line number in the document
+    lineNumber: number;
+    /// Color of the marker
+    color: string;
+}
+
+/// Paths on the map
+export type MapLine = {
+    /// Color of the line
+    color: string;
+    /// Points on the line
+    points: GameCoord[];
+}

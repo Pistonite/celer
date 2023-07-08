@@ -1,6 +1,6 @@
 //! Map tab of the settings dialog
 
-import { Dropdown, Field, Subtitle2, Option, Switch, Label, Slider } from "@fluentui/react-components"
+import { Dropdown, Field, Option, Switch, Label, Slider } from "@fluentui/react-components"
 import { LayerMode, SectionMode, VisualSize, settingsActions, settingsSelector, useActions } from "data/store";
 import { useSelector } from "react-redux";
 import { SettingsSection } from "./SettingsSection";
@@ -58,6 +58,13 @@ export const MapSettings: React.FC = () => {
                     onChange={(_, data) => setFadeNonCurrentLayerLines(data.checked)}
                     disabled={lineSectionMode === SectionMode.None || lineLayerMode === LayerMode.CurrentOnly}
                 />
+                <VisualSizeSelector 
+                    label="Line thickness"
+                    hint="Select how thick the lines should be"
+                    strings={LineSizeStrings}
+                    value={lineSize}
+                    setValue={setLineSize}
+                />
             </SettingsSection>
             <SettingsSection title="Markers">
                 <SectionModeSelector value={markerSectionMode} setValue={setMarkerSectionMode} />
@@ -66,6 +73,13 @@ export const MapSettings: React.FC = () => {
                     checked={!!fadeNonCurrentLayerMarkers}
                     onChange={(_, data) => setFadeNonCurrentLayerMarkers(data.checked)}
                     disabled={markerSectionMode === SectionMode.None || markerLayerMode === LayerMode.CurrentOnly}
+                />
+                <VisualSizeSelector 
+                    label="Marker size"
+                    hint="Select how big the circle markers should be"
+                    strings={GraphicSizeStrings}
+                    value={markerSize}
+                    setValue={setMarkerSize}
                 />
             </SettingsSection>
         </>

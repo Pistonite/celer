@@ -6,7 +6,7 @@
 export const createLogMgr = (prefix: string) => {
     return {
         info: (msg: string) => {
-            console.log(`[${prefix}] ${msg}`); // eslint-disable-line no-console
+            console.info(`[${prefix}] ${msg}`); // eslint-disable-line no-console
         },
         warn: (msg: string) => {
             console.warn(`[${prefix}] ${msg}`); // eslint-disable-line no-console
