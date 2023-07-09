@@ -33,14 +33,15 @@ const initialState: DocumentStore = {
             },
             icons: {},
         },
-        map: []
+        map: [],
     },
 };
 
-const setDocument: ReducerDeclWithPayload<DocumentStore, ExecDoc> =
-    withPayload((state, value) => {
+const setDocument: ReducerDeclWithPayload<DocumentStore, ExecDoc> = withPayload(
+    (state, value) => {
         state.document = value;
-    });
+    },
+);
 
 /// The document store slice
 export const { documentReducer, documentActions, documentSelector } =

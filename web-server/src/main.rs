@@ -4,13 +4,13 @@
 //! It is recommended to use a reverse proxy such as nginx to handle HTTPS.
 //! Alternatively, you can use a CDN such as Cloudflare to proxy the website.
 
+use async_std::path::PathBuf as AsyncPathBuf;
 use std::io;
 use std::path::PathBuf;
-use async_std::path::PathBuf as AsyncPathBuf;
 
 use clap::Parser;
-use tide::{Redirect, Request, Response, Middleware, Body, StatusCode};
 use tide::security;
+use tide::{Body, Middleware, Redirect, Request, Response, StatusCode};
 //use surf::{Client, Config};
 
 mod state;
@@ -34,9 +34,8 @@ struct Cli {
     docs_dir: String,
 }
 
-
 #[async_std::main]
-async fn main() -> Result<(), std::io::Error>{
+async fn main() -> Result<(), std::io::Error> {
     let args = Cli::parse();
     if args.debug {
         std::env::set_var("RUST_LOG", "debug");
@@ -66,13 +65,18 @@ async fn main() -> Result<(), std::io::Error>{
     // }
     app.register(
         root()
-            .at("docs", |r| r
-                .serve_file(PathBuf::from(&args.docs_dir).join("index.html")).expect("Failed to setup /docs route")
-            )
-            .at("docs/", |r| r
-                .with(not_found_middleware, |r| r.serve_dir(&args.docs_dir).expect("Failed to setup /docs route"))
-                .serve_file(PathBuf::from(&args.docs_dir).join("index.html")).expect("Failed to setup /docs route")
-            )
+            .at("docs", |r| {
+                r.serve_file(PathBuf::from(&args.docs_dir).join("index.html"))
+                    .expect("Failed to setup /docs route")
+            })
+            .at("docs/", |r| {
+                r.with(not_found_middleware, |r| {
+                    r.serve_dir(&args.docs_dir)
+                        .expect("Failed to setup /docs route")
+                })
+                .serve_file(PathBuf::from(&args.docs_dir).join("index.html"))
+                .expect("Failed to setup /docs route")
+            }),
     );
 
     // app.at("/docs").with(NotFoundMiddleware {
@@ -80,7 +84,7 @@ async fn main() -> Result<(), std::io::Error>{
     // }).serve_dir(&args.docs_dir)?;
     // app.at("/docs").serve_file(PathBuf::from(&args.docs_dir).join("index.html"))?;
     log::info!("Serving {} at /docs", args.docs_dir);
-    
+
     // // log::info!("Setting up /icon");
     // // app.at("/icon/:icon").get(get_icon);
     // // log::info!("Setting up /icons");
@@ -89,7 +93,7 @@ async fn main() -> Result<(), std::io::Error>{
     // // app.at("/").serve_dir(static_dir)?;
     // // log::info!("Setting up index.heml");
     // // app.at("/").serve_file(format!("{}index.html", static_dir))?;
-    
+
     app.listen(address).await?;
     Ok(())
 }

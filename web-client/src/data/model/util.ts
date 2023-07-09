@@ -136,7 +136,7 @@ export type MapMarker = {
     lineNumber: number;
     /// Color of the marker
     color: string;
-}
+};
 
 /// Paths on the map
 ///
@@ -147,4 +147,4 @@ export type MapLine = {
     color: string;
     /// Points on the line
     points: GameCoord[];
-}
+};

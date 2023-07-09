@@ -7,6 +7,7 @@ import "./leaflet-tilelayer-nogap";
 import reduxWatch from "redux-watch";
 
 import {
+    SectionMode,
     ViewStore,
     documentSelector,
     settingsSelector,
@@ -80,8 +81,8 @@ class MapState {
         });
 
         // Subscribe to store updates
-        const watchSettings = reduxWatch(
-            () => settingsSelector(store.getState()),
+        const watchSettings = reduxWatch(() =>
+            settingsSelector(store.getState()),
         );
         store.subscribe(
             watchSettings((_newVal, _oldVal) => {
@@ -130,8 +131,8 @@ class MapState {
         this.recreateVisualsDebouncer = new Debouncer(200, () => {
             const state = store.getState();
             this.visualMgr.recreate(
-                this.map, 
-                this.layerMgr, 
+                this.map,
+                this.layerMgr,
                 documentSelector(state).document,
                 viewSelector(state),
                 settingsSelector(state),
@@ -157,10 +158,7 @@ class MapState {
     /// Called when the document is updated
     ///
     /// This will update the map layers if needed, and will always redraw the map visuals
-    private onDocumentUpdate(
-        newDoc: ExecDoc,
-        oldDoc: ExecDoc,
-    ) {
+    private onDocumentUpdate(newDoc: ExecDoc, oldDoc: ExecDoc) {
         if (!newDoc.loaded) {
             // do nothing if doc is not loaded
             // we should be notified again when doc loads
@@ -168,6 +166,7 @@ class MapState {
         }
         // If the project name and version is the same, assume the map layers are the same
         if (
+            newDoc.loaded !== oldDoc.loaded ||
             newDoc.project.name !== oldDoc.project.name ||
             newDoc.project.version !== oldDoc.project.version
         ) {
@@ -187,19 +186,31 @@ class MapState {
         }
 
         const state = store.getState();
+        const settings = settingsSelector(state);
+        const layerChanged = view.currentMapLayer !== oldView.currentMapLayer;
+        const sectionChanged = view.currentSection !== oldView.currentSection;
 
-        if (view.currentMapLayer !== this.layerMgr.getActiveLayerIndex()) {
+        if (layerChanged) {
             this.layerMgr.setActiveLayer(this.map, view.currentMapLayer);
-            // recreate the visuals since the map layer changed
-            this.recreateVisualsDebouncer.dispatch();
         }
 
-        // update the visuals based on the view and settings
-        this.visualMgr.update(
-            this.map,
-            view,
-            settingsSelector(state),
-        );
+        // visuals should be recreated if:
+        // 1. layer changed
+        // 2. section changed and section mode is current highlight
+        const shouldRecreateVisuals =
+            layerChanged ||
+            (sectionChanged &&
+                (settings.iconSectionMode === SectionMode.CurrentHighlight ||
+                    settings.lineSectionMode === SectionMode.CurrentHighlight ||
+                    settings.markerSectionMode ===
+                        SectionMode.CurrentHighlight));
+
+        if (shouldRecreateVisuals) {
+            this.recreateVisualsDebouncer.dispatch();
+        } else {
+            // only update the visuals based on the view and settings
+            this.visualMgr.update(this.map, view, settings);
+        }
 
         const currentMapView = view.currentMapView;
         if (Array.isArray(currentMapView)) {

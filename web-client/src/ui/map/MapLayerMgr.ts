@@ -82,6 +82,7 @@ export class MapLayerMgr {
             newLayer.layer.addTo(map);
 
             store.dispatch(viewActions.setMapZoomBounds(newLayer.zoomBounds));
+            store.dispatch(viewActions.setMapLayer(index));
         }
     }
 

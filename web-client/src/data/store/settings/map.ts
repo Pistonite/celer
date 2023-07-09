@@ -15,10 +15,18 @@ export type MapSettings = {
     markerLayerMode: LayerMode;
     fadeNonCurrentLayerMarkers: boolean;
 
+    // icon sizes
     primaryIconSize: VisualSize;
     secondaryIconSize: VisualSize;
     otherIconSize: VisualSize;
+    // line and arrow sizes
+    /// thickness
     lineSize: VisualSize;
+    /// size of the arrow
+    arrowSize: VisualSize;
+    /// Frequency of the arrow. Larger means less frequent
+    arrowFrequency: VisualSize;
+
     markerSize: VisualSize;
 };
 
@@ -26,6 +34,8 @@ export type MapSettings = {
 export enum SectionMode {
     /// Show all sections
     All = "all",
+    /// Show all sections, but grey out non-current sections
+    CurrentHighlight = "current-highlight",
     /// Only current section
     Current = "current",
     /// Hide everything
@@ -43,8 +53,12 @@ export enum LayerMode {
 }
 
 /// Enum for visual size
+///
+/// Generic enum for setting size for visuals.
+/// Depending on the context, it can mean different things.
+/// For example, icon size, line thickness, etc.
 export enum VisualSize {
-    Hidden = 0 ,
+    Hidden = 0,
     Small,
     Regular,
     Large,
@@ -67,6 +81,8 @@ export const initialMapSettings: MapSettings = {
     primaryIconSize: VisualSize.Regular,
     secondaryIconSize: VisualSize.Regular,
     otherIconSize: VisualSize.Regular,
-    lineSize: VisualSize.Regular,
+    lineSize: VisualSize.Small, // this is the same thickness as the old app
+    arrowSize: VisualSize.Regular,
+    arrowFrequency: VisualSize.Regular,
     markerSize: VisualSize.Regular,
 };

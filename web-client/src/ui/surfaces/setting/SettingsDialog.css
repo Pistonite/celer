@@ -19,10 +19,9 @@
     padding: 0 8px;
 }
 
-#settings-separator.horizontal-tabs{
+#settings-separator.horizontal-tabs {
     padding: 8px 0;
 }
-
 
 #settings-panel {
     flex: 1;
@@ -45,6 +44,10 @@ div.settings-section-inner > .fui-Field {
 div.settings-value-slider {
     display: flex;
     align-items: center;
+}
+
+div.settings-value-slider label {
+    padding-left: 8px;
 }
 
 #settings-dialog-root {

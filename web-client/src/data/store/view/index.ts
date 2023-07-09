@@ -15,10 +15,11 @@ import { DocViewStore, initialDocViewStore } from "./doc";
 import * as docViewReducers from "./docReducers";
 
 /// The toolbar slice state
-export type ViewStore = MapViewStore & DocViewStore & {
-    /// If the user is currently editing the layout
-    isEditingLayout: boolean;
-};
+export type ViewStore = MapViewStore &
+    DocViewStore & {
+        /// If the user is currently editing the layout
+        isEditingLayout: boolean;
+    };
 
 const initialState: ViewStore = {
     ...initialMapViewStore,

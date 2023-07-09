@@ -45,7 +45,10 @@ const SettingInternal: React.FC<ControlComponentProps> = ({ children }) => {
     return (
         <Dialog>
             <DialogTrigger disableButtonEnhancement>{children}</DialogTrigger>
-            <DialogSurface id="settings-dialog-root" aria-describedby={undefined}>
+            <DialogSurface
+                id="settings-dialog-root"
+                aria-describedby={undefined}
+            >
                 <DialogBody>
                     <DialogTitle>Settings</DialogTitle>
                     <DialogContent>

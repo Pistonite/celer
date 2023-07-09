@@ -5,10 +5,7 @@
 
 import { configureSlice } from "data/store/util";
 
-import {
-    LayoutSettings,
-    initialLayoutSettings,
-} from "./layout";
+import { LayoutSettings, initialLayoutSettings } from "./layout";
 import * as layoutReducers from "./layoutReducers";
 import { MapSettings, initialMapSettings } from "./map";
 import * as mapReducers from "./mapReducers";

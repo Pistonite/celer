@@ -48,6 +48,8 @@ type Icon = {
     loaded: boolean;
 };
 
+const IconCanvas = L.canvas();
+
 /// Icon marker class
 ///
 /// Hacking the CircleMarker class to draw an icon
@@ -58,18 +60,25 @@ export class IconMarker extends L.CircleMarker {
     private opacity: number;
     /// Size
     private size: number;
+    /// If the icon should be grayed out
+    private grayedOut: boolean;
 
     constructor(
         latlng: L.LatLngExpression,
         iconSrc: string,
         opacity: number,
         size: number,
+        grayedOut: boolean,
         options: L.CircleMarkerOptions = {},
     ) {
-        super( latlng, options);
+        super(latlng, {
+            ...options,
+            renderer: IconCanvas,
+        });
         this.icon = getIcon(iconSrc);
         this.opacity = opacity;
         this.size = size;
+        this.grayedOut = grayedOut;
     }
 
     /// Hacking the updatePath function to draw our icon
@@ -80,13 +89,19 @@ export class IconMarker extends L.CircleMarker {
     /// Draw the icon marker. If the icon is not loaded yet, it will retry later
     private redrawInternal(retryCount: number) {
         if (!this.icon.loaded) {
-            if (retryCount > 10) {
-                MapLog.warn(`resource from ${this.icon.img.src} is taking too long to load.`);
+            if (retryCount > 5) {
+                MapLog.warn(
+                    `resource from ${this.icon.img.src} is taking too long to load.`,
+                );
+                // give up on retrying
                 return;
             }
-            window.setTimeout(() => {
-                this.redrawInternal(retryCount + 1);
-            }, 500);
+            window.setTimeout(
+                () => {
+                    this.redrawInternal(retryCount + 1);
+                },
+                100 * (retryCount + 1),
+            );
             return;
         }
 
@@ -102,13 +117,18 @@ export class IconMarker extends L.CircleMarker {
         }
 
         // check if renderer is valid
-        const ctx  = layer._renderer?._ctx; // eslint-disable-line @typescript-eslint/no-explicit-any
+        const ctx = layer._renderer?._ctx;  
         if (!ctx) {
             MapLog.warn("invalid icon markder renderer");
             return;
         }
 
+        // Set context properties
+        if (this.grayedOut) {
+            ctx.filter = "grayscale(100%) brightness(50%)";
+        }
         ctx.globalAlpha = this.opacity;
+
         ctx.drawImage(
             this.icon.img,
             p.x - this.size / 2,
@@ -116,6 +136,9 @@ export class IconMarker extends L.CircleMarker {
             this.size,
             this.size,
         );
+
+        // Reset context properties
+        ctx.filter = "none";
         ctx.globalAlpha = 1;
     }
 }

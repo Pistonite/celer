@@ -22,7 +22,10 @@ export const SettingsDialog: React.FC = () => {
     const verticalTabs = windowWidth > 400;
 
     return (
-        <div id="settings-dialog" className={clsx(verticalTabs ? "vertical-tabs" : "horizontal-tabs")}>
+        <div
+            id="settings-dialog"
+            className={clsx(verticalTabs ? "vertical-tabs" : "horizontal-tabs")}
+        >
             <TabList
                 vertical={verticalTabs}
                 selectedValue={selectedTab}
@@ -37,7 +40,13 @@ export const SettingsDialog: React.FC = () => {
                     Info
                 </Tab>
             </TabList>
-            <Divider id="settings-separator" className={clsx(verticalTabs ? "vertical-tabs" : "horizontal-tabs")} vertical={verticalTabs} />
+            <Divider
+                id="settings-separator"
+                className={clsx(
+                    verticalTabs ? "vertical-tabs" : "horizontal-tabs",
+                )}
+                vertical={verticalTabs}
+            />
             <div id="settings-panel">
                 {selectedTab === Tabs.map && <MapSettings />}
             </div>

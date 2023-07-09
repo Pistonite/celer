@@ -18,4 +18,3 @@ export const initialLayoutSettings: LayoutSettings = {
     savedLayouts: [],
     currentLayout: -1,
 };
-

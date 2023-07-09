@@ -1,8 +1,8 @@
 //! Server state
 
 use std::collections::HashMap;
-use tide::{Body, Request, Response, StatusCode, Redirect};
 use tide::http::headers::HeaderName;
+use tide::{Body, Redirect, Request, Response, StatusCode};
 //use surf::Client;
 
 /// Runtime state of the server
@@ -22,7 +22,7 @@ pub struct State {
 //     let location = location.as_ref();
 //     let proxy_path = format!("{location}{path}");
 //     log::info!("Proxying {path} to {proxy_path}");
-    
+
 //     let mut proxy_resp = client.get(proxy_path).send().await?;
 //     let mut resp = Response::new(proxy_resp.status());
 
@@ -34,9 +34,8 @@ pub struct State {
 //         //}
 //     });
 
-
 //     resp.set_body(Body::from_bytes(proxy_resp.body_bytes().await?.to_vec()));
 
 //     Ok(resp)
-    
+
 // }
