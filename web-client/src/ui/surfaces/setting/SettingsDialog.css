@@ -1,0 +1,59 @@
+#settings-dialog {
+    display: flex;
+    height: 100%;
+}
+
+#settings-dialog.vertical-tabs {
+    flex-direction: row;
+}
+
+#settings-dialog.horizontal-tabs {
+    flex-direction: column;
+}
+
+#settings-separator {
+    flex: 0;
+}
+
+#settings-separator.vertical-tabs {
+    padding: 0 8px;
+}
+
+#settings-separator.horizontal-tabs {
+    padding: 8px 0;
+}
+
+#settings-panel {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+}
+
+div.settings-section {
+    margin-bottom: 16px;
+}
+
+div.settings-section-inner {
+    padding-left: 8px;
+}
+
+div.settings-section-inner > .fui-Field {
+    margin: 8px 0;
+}
+
+div.settings-value-slider {
+    display: flex;
+    align-items: center;
+}
+
+div.settings-value-slider label {
+    padding-left: 8px;
+}
+
+#settings-dialog-root {
+    height: min(100vh, 800px);
+}
+
+#settings-dialog-root > .fui-DialogBody {
+    height: calc(min(100vh, 800px) - 48px);
+}

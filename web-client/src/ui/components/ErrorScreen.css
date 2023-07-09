@@ -15,7 +15,7 @@ img.error-logo {
 div.error-bar {
     display: flex;
     flex-direction: column;
-    color: #FFA49D;
+    color: #ffa49d;
     max-width: 256px;
     width: 100%;
     box-sizing: border-box;

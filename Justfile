@@ -23,12 +23,12 @@ dev-pp:
     cargo watch -s "txtpp verify . -r || txtpp -r"
 
 # Start hosting the docs locally and watch for changes
-dev-docs:
-    cd docs && npm run dev
+dev-docs +FLAGS="":
+    cd docs && npm run dev -- --host {{FLAGS}}
 
 # Start the web client locally and watch for changes
 dev-client +FLAGS="":
-    cd web-client && npm run dev {{FLAGS}}
+    cd web-client && npm run dev -- --host {{FLAGS}}
 
 # Start the server locally and watch for changes
 dev-server:
@@ -43,23 +43,19 @@ dump-symbol PATH SYMBOL +FLAGS="--doc --code":
 # Format the code
 fmt:
     cargo fmt
+    cd web-client && npm run fmt -- --write
     cd web-client && npm run lint -- --fix
 
 # Lint the code
 lint:
+    cargo fmt --check
     cargo clippy --all-features --all-targets -- -D warnings
+    cd web-client && npm run fmt -- --check
     cd web-client && npm run lint
     txtpp verify . -r
 
-lint-ci: && lint
-    cargo fmt --check
-
 test:
     echo "no tests yet"
-
-# Grep TODOs
-todo:
-    grep "TODO" . -i -w -r --exclude-dir=target --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=dist | grep -v "./Justfile"
 
 # Build the project for release
 build:

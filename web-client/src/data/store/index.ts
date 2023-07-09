@@ -4,6 +4,6 @@
 
 export * from "./configureStore";
 export * from "./settings";
-export * from "./toolbar";
+export * from "./view";
 export * from "./action";
 export * from "./document";

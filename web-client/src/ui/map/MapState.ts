@@ -1,19 +1,29 @@
 //! Map logic that wraps L.Map
 
 import L from "leaflet";
-import "leaflet-rastercoords";
 import "leaflet/dist/leaflet.css";
 import "./leaflet-tilelayer-nogap";
-import { ToolbarStore, documentSelector, settingsSelector, store, toolbarSelector } from "data/store";
+
 import reduxWatch from "redux-watch";
-import { DocumentMapLayer, DocumentMapLayerAttribution, DocumentMapLayerTilesetTransform, ExecutedDocument } from "data/model";
-import { IconMarker } from "./IconMarker";
 
-const log = (msg: string) => {
-    console.log(`[Map] ${msg}`); // eslint-disable-line no-console
-};
+import {
+    SectionMode,
+    ViewStore,
+    documentSelector,
+    settingsSelector,
+    store,
+    viewActions,
+    viewSelector,
+} from "data/store";
+import { ExecDoc } from "data/model";
+import { Debouncer } from "data/util";
 
-log("loading map module");
+import { MapLog, roughlyEquals } from "./util";
+import { MapContainerMgr } from "./MapContainerMgr";
+import { MapLayerMgr } from "./MapLayerMgr";
+import { MapVisualMgr } from "./MapVisualMgr";
+
+MapLog.info("loading map module");
 
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
@@ -23,41 +33,25 @@ declare global {
 }
 
 /// Map entry point
-///
-/// This should be called when the map component is first mounted
-export const initMap = () => {
+export const initMap = (): MapState => {
     if (window.__theMapState) {
-        console.warn("[Map] found existing map instance. You are either in a dev environment or this is a bug");
-        try {
-            window.__theMapState.delete();
-        } catch (e) {
-            console.error(e);
-            console.warn("[Map] failed to remove existing map instance");
-        }
+        MapLog.warn(
+            "found existing map instance. You are either in a dev environment or this is a bug",
+        );
+        return window.__theMapState;
     }
-    log("[Map] creating map");
+    MapLog.info("creating map");
 
     const map = new MapState();
-    map.tryAttachAsyncUntilSuccess();
     window.__theMapState = map;
+
+    return map;
 };
 
-/// Container div id
-export const RootContainerId = "map-root";
-/// Leaflet map container div id
-const LMapContainerId = "lmap-container";
-
-/// Tile layer wrapper
-type TilesetLayer = {
-    /// The tile layer
-    layer: L.TileLayer,
-    /// The start Z value
-    startZ: number,
-    /// Coodinate transformation from game to map
-    transform: DocumentMapLayerTilesetTransform,
-    /// The raster coords of this layer
-    rc: L.RasterCoords,
-}
+const FlyOptions = {
+    duration: 0.2, // seconds
+    easeLinearity: 0.8,
+};
 
 /// State of the current map.
 ///
@@ -65,251 +59,215 @@ type TilesetLayer = {
 class MapState {
     /// The map
     private map: L.Map;
-    /// The attach update handle
-    private attachUpdateHandle: number | null = null;
-    /// The tileset layers
-    private tilesetLayers: TilesetLayer[] = [];
-    /// The active tileset layer
-    private activeTilesetLayerIndex = -1;
-    /// The icons
-    private icons: IconMarker[] = [];
+    /// Container Manager
+    private containerMgr: MapContainerMgr;
+    /// Layer Manager
+    private layerMgr: MapLayerMgr;
+    /// The visual (icons, lines, markers)
+    private visualMgr: MapVisualMgr;
+    /// Debouncer for recreating the visuals
+    private recreateVisualsDebouncer: Debouncer;
 
     constructor() {
-        // Create map container
-        const container = document.createElement("div");
-        container.id = LMapContainerId;
-        container.style.backgroundColor = "#000000";
+        this.containerMgr = new MapContainerMgr();
+        this.layerMgr = new MapLayerMgr();
+        this.visualMgr = new MapVisualMgr();
 
-        const map = L.map(container, {
+        // Create map
+        const map = L.map(this.containerMgr.createMapContainer(), {
             crs: L.CRS.Simple,
             renderer: L.canvas(),
             zoomControl: false,
         });
 
         // Subscribe to store updates
+        const watchSettings = reduxWatch(() =>
+            settingsSelector(store.getState()),
+        );
+        store.subscribe(
+            watchSettings((_newVal, _oldVal) => {
+                this.onSettingsUpdate();
+            }),
+        );
 
-        const watchLayout = reduxWatch(() => settingsSelector(store.getState()).currentLayout);
-        store.subscribe(watchLayout(() => {
-            this.update("switching layout");
-        }));
+        const watchView = reduxWatch(() => viewSelector(store.getState()));
+        store.subscribe(
+            watchView((newVal, oldVal) => {
+                this.onViewUpdate(newVal, oldVal);
+            }),
+        );
 
-        const watchToolbar = reduxWatch(() => toolbarSelector(store.getState()));
-        store.subscribe(watchToolbar((newVal, _oldVal) => {
-            this.update("toolbar update");
-            this.onToolbarUpdate(newVal);
-        }));
+        const watchDocument = reduxWatch(() =>
+            documentSelector(store.getState()),
+        );
+        store.subscribe(
+            watchDocument((newVal, oldVal) => {
+                this.onDocumentUpdate(newVal.document, oldVal.document);
+            }),
+        );
 
-        const watchDocument = reduxWatch(() => documentSelector(store.getState()));
-        store.subscribe(watchDocument((newVal, oldVal) => {
-            // console.log("document update");
-            this.onDocumentUpdate(newVal.document, oldVal.document);
-        }));
+        const updateView = () => {
+            const center = this.layerMgr.project(this.map.getCenter());
+            if (!center) {
+                return;
+            }
+            store.dispatch(
+                viewActions.setMapView({
+                    center,
+                    zoom: this.map.getZoom(),
+                }),
+            );
+        };
+
+        map.on("zoomend", () => {
+            updateView();
+        });
+
+        map.on("moveend", () => {
+            updateView();
+        });
+
+        // setup update debouncers
+        this.recreateVisualsDebouncer = new Debouncer(200, () => {
+            const state = store.getState();
+            this.visualMgr.recreate(
+                this.map,
+                this.layerMgr,
+                documentSelector(state).document,
+                viewSelector(state),
+                settingsSelector(state),
+            );
+        });
 
         this.map = map;
     }
 
-    /// Delete the map and free up the resources
-    delete() {
-        if (this.attachUpdateHandle) {
-            window.clearTimeout(this.attachUpdateHandle);
-            this.attachUpdateHandle = null;
-        }
-        this.map.remove();
+    /// Attach the map to the root container
+    public attach() {
+        this.containerMgr.attach(this.map);
     }
 
-    /// Attempt to attach the map to the root container until success
-    tryAttachAsyncUntilSuccess() {
-        if (this.attachUpdateHandle) {
-            // already trying
-            return;
-        }
-        if (this.attach()) {
-            // attached
-            return;
-        }
-        this.attachUpdateHandle = window.setTimeout(() => {
-            this.attachUpdateHandle = null;
-            this.tryAttachAsyncUntilSuccess();
-        }, 1000);
-    }
-
-    /// Attach the map to a container HTMLElement root
-    ///
-    /// This will add the map container as a child to the root.
-    /// If the root is not provided, it will search for the root by id
-    /// and attached to that if found.
-    ///
-    /// Return true if the map ends up being attached to a container,
-    /// either it is already attached, or newly attached.
-    private attach(root?: HTMLElement | undefined | null) {
-        if (!root) {
-            const rootInDom = document.getElementById(RootContainerId);
-            if (!rootInDom) {
-                return false;
-            }
-            root = rootInDom;
-        }
-        // see what the current container is
-        const prevContainer = root.children[0];
-        if (prevContainer === this.map.getContainer()) {
-            return true;
-        }
-
-        // remove the previous container, might not be needed
-        if (prevContainer) {
-            prevContainer.remove();
-        }
-
-        log("attaching map to container");
-
-        // Remove from the old place
-        this.map.getContainer().remove();
-        // add to new place
-        root.appendChild(this.map.getContainer());
-        this.update();
-
-        return true;
-    }
-
-    /// Update the map
-    ///
-    /// This will call invalidateSize() to refresh the map
-    private update(reason?: string) {
-        if (reason) {
-            log(`updating map due to ${reason}`);
-        }
+    /// Called when the settings is updated
+    private onSettingsUpdate() {
+        /// Update the size since the layout could have changed
         this.map.invalidateSize();
+        /// Recreate the visuals
+        this.recreateVisualsDebouncer.dispatch();
     }
 
     /// Called when the document is updated
     ///
-    /// This will update the map layers if needed, and will always redraw the map icons and lines
-    private onDocumentUpdate(newDoc: ExecutedDocument, oldDoc: ExecutedDocument) {
-        // If the project name and version is the same, assume the map layers are the same
-        if (newDoc.project.name !== oldDoc.project.name || newDoc.project.version !== oldDoc.project.version) {
-            this.initTilesetLayers(newDoc.project.map.layers);
-        }
-        // Update the current tileset layer
-        this.setActiveTilesetLayer(0);
-        // Redraw all the icons
-        this.updateIcons(newDoc);
-
-    }
-
-    /// Initialize the tileset layers, remove previous one if exists
-    private initTilesetLayers(mapLayers: DocumentMapLayer[]) {
-        this.getActiveTilesetLayer()?.layer.remove();
-        // create new tileset layers
-        this.tilesetLayers = mapLayers.map((layer) => {
-            // Create raster coords for the layer
-            const rc = new L.RasterCoords(this.map, layer.size);
-            const tilesetLayer = L.tileLayer(layer.templateUrl, {
-                noWrap: true,
-                bounds: rc.getMaxBounds(),
-                attribution: this.getAttributionHtml(layer.attribution),
-                maxNativeZoom: layer.maxNativeZoom,
-            });
-            return {
-                layer: tilesetLayer,
-                startZ: layer.startZ,
-                transform: layer.transform,
-                rc,
-            };
-        });
-    }
-
-    private setActiveTilesetLayer(index: number) {
-        this.getActiveTilesetLayer()?.layer.remove();
-        this.activeTilesetLayerIndex = index;
-        this.getActiveTilesetLayer()?.layer.addTo(this.map);
-    }
-
-    private getActiveTilesetLayer(): TilesetLayer | null {
-        if (this.activeTilesetLayerIndex < 0 || this.activeTilesetLayerIndex >= this.tilesetLayers.length) {
-            return null;
-        }
-        return this.tilesetLayers[this.activeTilesetLayerIndex];
-    }
-
-    private getAttributionHtml(attribution: DocumentMapLayerAttribution): string | undefined {
-        if (!attribution.link) {
-            return undefined;
-        }
-        return `${attribution.copyright ? "&copy;" : ""}<a href="${attribution.link}">${attribution.link}</a>`;
-    }
-
-    private onToolbarUpdate(toolbar: ToolbarStore) {
-        if (toolbar.currentMapLayer !== this.activeTilesetLayerIndex) {
-            this.setActiveTilesetLayer(toolbar.currentMapLayer);
-            // redraw icons
-            const doc = documentSelector(store.getState()).document;
-            this.updateIcons(doc);
-        }
-    }
-
-    /// Update the icons on the map
-    ///
-    /// Requires tileset layers to be up-to-date (for transforms to work)
-    /// This will filter the icons based on the layer and other settings
-    private updateIcons(doc: ExecutedDocument) {
-        const registeredIcons = doc.project.icons;
-        const mapIcons = doc.map.icons;
-        // remove existing icons
-        this.icons.forEach((icon) => icon.remove());
-        this.icons = [];
-        const activeLayer = this.getActiveTilesetLayer();
-        if (!activeLayer) {
+    /// This will update the map layers if needed, and will always redraw the map visuals
+    private onDocumentUpdate(newDoc: ExecDoc, oldDoc: ExecDoc) {
+        if (!newDoc.loaded) {
+            // do nothing if doc is not loaded
+            // we should be notified again when doc loads
             return;
         }
-        // create new icon markers
-        this.icons = mapIcons.map((icon) => {
-            const iconSrc = registeredIcons[icon.id];
-            if (!iconSrc) {
-                console.warn(`[Map] Icon ${icon.id} is not registered`);
-                return undefined;
-            }
-
-            const [x, y, z] = icon.coord;
-
-            // Get the layer the icon is on
-            let layer = this.activeTilesetLayerIndex - 1;
-            for (; layer <= this.activeTilesetLayerIndex + 1; layer++) {
-                if (this.isZOnLayer(z, layer)) {
-                    break;
-                }
-            }
-            // icon is not on current layer or adjacent layers
-            if (layer > this.activeTilesetLayerIndex + 1) {
-                return undefined;
-            }
-
-            // get the opacity of the icon
-            // current layer = 1
-            // adjacent layers = 0.5
-            const opacity = layer === this.activeTilesetLayerIndex ? 1 : 0.5;
-            const { transform, rc } = this.tilesetLayers[layer];
-            const mapX = transform.scale[0] * x + transform.translate[0];
-            const mapY = transform.scale[1] * y + transform.translate[1];
-            const latlng = rc.unproject([mapX, mapY]);
-            return new IconMarker(latlng, iconSrc, opacity);
-        }).filter(Boolean) as IconMarker[];
-        // add new icons
-        this.icons.forEach((icon) => icon.addTo(this.map));
+        // If the project name and version is the same, assume the map layers are the same
+        if (
+            newDoc.loaded !== oldDoc.loaded ||
+            newDoc.project.name !== oldDoc.project.name ||
+            newDoc.project.version !== oldDoc.project.version
+        ) {
+            const { initialCoord, initialZoom, layers } = newDoc.project.map;
+            this.layerMgr.initLayers(this.map, layers, initialCoord);
+            const [center, _] = this.layerMgr.unproject(initialCoord);
+            // initLayers above already sets the correct layer
+            this.map.setView(center, initialZoom);
+        }
+        // recreate the visuals
+        this.recreateVisualsDebouncer.dispatch();
     }
 
-    /// Check if a z level is on the i-th layer
-    private isZOnLayer(z: number, i: number) {
-        if (i < 0 || i >= this.tilesetLayers.length) {
-            return false;
+    private onViewUpdate(view: ViewStore, oldView: ViewStore) {
+        if (view.isEditingLayout !== oldView.isEditingLayout) {
+            this.map.invalidateSize();
         }
-        if (i !== 0 && z < this.tilesetLayers[i].startZ) {
-            // icon is below this layer
-            return false;
+
+        const state = store.getState();
+        const settings = settingsSelector(state);
+        const layerChanged = view.currentMapLayer !== oldView.currentMapLayer;
+        const sectionChanged = view.currentSection !== oldView.currentSection;
+
+        if (layerChanged) {
+            this.layerMgr.setActiveLayer(this.map, view.currentMapLayer);
         }
-        if (i !== this.tilesetLayers.length - 1 && z > this.tilesetLayers[i + 1].startZ) {
-            // icon is above this layer
-            return false;
+
+        // visuals should be recreated if:
+        // 1. layer changed
+        // 2. section changed and section mode is current highlight
+        const shouldRecreateVisuals =
+            layerChanged ||
+            (sectionChanged &&
+                (settings.iconSectionMode === SectionMode.CurrentHighlight ||
+                    settings.lineSectionMode === SectionMode.CurrentHighlight ||
+                    settings.markerSectionMode ===
+                        SectionMode.CurrentHighlight));
+
+        if (shouldRecreateVisuals) {
+            this.recreateVisualsDebouncer.dispatch();
+        } else {
+            // only update the visuals based on the view and settings
+            this.visualMgr.update(this.map, view, settings);
         }
-        return true;
+
+        const currentMapView = view.currentMapView;
+        if (Array.isArray(currentMapView)) {
+            if (currentMapView.length === 0) {
+                MapLog.warn("invalid map view");
+            } else if (currentMapView.length === 1) {
+                setTimeout(() => {
+                    const [center, layer] = this.layerMgr.unproject(
+                        currentMapView[0],
+                    );
+                    this.setLayerInStore(layer);
+                    this.map.flyTo(center, undefined, FlyOptions);
+                }, 0);
+            } else {
+                // find the min max x and y, and min z
+                let minX = Infinity;
+                let minY = Infinity;
+                let minZ = Infinity;
+                let maxX = -Infinity;
+                let maxY = -Infinity;
+                currentMapView.forEach((coord) => {
+                    const [x, y, z] = coord;
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    minZ = Math.min(minZ, z);
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
+                });
+                const [corner1, layer] = this.layerMgr.unproject([
+                    minX,
+                    minY,
+                    minZ,
+                ]);
+                const [corner2, _] = this.layerMgr.unproject([
+                    maxX,
+                    maxY,
+                    minZ,
+                ]);
+                const bounds = L.latLngBounds(corner1, corner2);
+                setTimeout(() => {
+                    this.setLayerInStore(layer);
+                    this.map.flyToBounds(bounds, FlyOptions);
+                });
+            }
+        } else {
+            // update map zoom
+            // we don't update center here because it will be inaccurate when zooming
+            if (!roughlyEquals(currentMapView.zoom, this.map.getZoom())) {
+                this.map.setZoom(currentMapView.zoom);
+            }
+        }
+    }
+
+    /// Change the current layer
+    private setLayerInStore(index: number) {
+        if (index !== viewSelector(store.getState()).currentMapLayer) {
+            store.dispatch(viewActions.setMapLayer(index));
+        }
     }
 }

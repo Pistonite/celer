@@ -13,45 +13,27 @@ module.exports = {
         "@typescript-eslint/no-unused-vars": [
             "warn",
             {
-                "varsIgnorePattern": "_",
-                "argsIgnorePattern": "_"
-            }
+                varsIgnorePattern: "_",
+                argsIgnorePattern: "_",
+            },
         ],
-        "indent": [
-            "warn",
-            4
-        ],
-        "quotes": [
-            "warn",
-            "double"
-        ],
-        "semi": [
-            "warn",
-            "always"
-        ],
+        // These are covered by prettier
+        // indent: ["warn", 4],
+        // quotes: ["warn", "double"],
+        // semi: ["warn", "always"],
         "no-multiple-empty-lines": [
             "warn",
             {
-                "max": 1
-            }
+                max: 1,
+            },
         ],
         "no-console": [
             "warn",
             {
-                "allow": [
-                    "error",
-                    "warn",
-                    "info",
-                ]
-            }
+                allow: ["error", "warn", "info"],
+            },
         ],
-        "no-unreachable-loop": [
-            "error"
-        ],
-        "curly": [
-            "warn",
-            "all"
-        ],
+        "no-unreachable-loop": ["error"],
+        curly: ["warn", "all"],
     },
-
-}
+};
