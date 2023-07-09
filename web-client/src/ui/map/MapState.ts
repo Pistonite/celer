@@ -7,7 +7,6 @@ import "./leaflet-tilelayer-nogap";
 import reduxWatch from "redux-watch";
 
 import {
-    SettingsStore,
     ViewStore,
     documentSelector,
     settingsSelector,
@@ -16,6 +15,7 @@ import {
     viewSelector,
 } from "data/store";
 import { ExecDoc } from "data/model";
+import { Debouncer } from "data/util";
 
 import { MapLog, roughlyEquals } from "./util";
 import { MapContainerMgr } from "./MapContainerMgr";
@@ -64,6 +64,8 @@ class MapState {
     private layerMgr: MapLayerMgr;
     /// The visual (icons, lines, markers)
     private visualMgr: MapVisualMgr;
+    /// Debouncer for recreating the visuals
+    private recreateVisualsDebouncer: Debouncer;
 
     constructor() {
         this.containerMgr = new MapContainerMgr();
@@ -82,8 +84,8 @@ class MapState {
             () => settingsSelector(store.getState()),
         );
         store.subscribe(
-            watchSettings((newVal, _oldVal) => {
-                this.onSettingsUpdate(newVal);
+            watchSettings((_newVal, _oldVal) => {
+                this.onSettingsUpdate();
             }),
         );
 
@@ -124,6 +126,18 @@ class MapState {
             updateView();
         });
 
+        // setup update debouncers
+        this.recreateVisualsDebouncer = new Debouncer(200, () => {
+            const state = store.getState();
+            this.visualMgr.recreate(
+                this.map, 
+                this.layerMgr, 
+                documentSelector(state).document,
+                viewSelector(state),
+                settingsSelector(state),
+            );
+        });
+
         this.map = map;
     }
 
@@ -133,18 +147,11 @@ class MapState {
     }
 
     /// Called when the settings is updated
-    private onSettingsUpdate(newVal: SettingsStore) {
+    private onSettingsUpdate() {
         /// Update the size since the layout could have changed
         this.map.invalidateSize();
         /// Recreate the visuals
-        const state = store.getState();
-        this.visualMgr.recreate(
-            this.map, 
-            this.layerMgr, 
-            documentSelector(state).document,
-            viewSelector(state),
-            newVal,
-        );
+        this.recreateVisualsDebouncer.dispatch();
     }
 
     /// Called when the document is updated
@@ -171,14 +178,7 @@ class MapState {
             this.map.setView(center, initialZoom);
         }
         // recreate the visuals
-        const state = store.getState();
-        this.visualMgr.recreate(
-            this.map,
-            this.layerMgr,
-            newDoc,
-            viewSelector(state),
-            settingsSelector(state),
-        );
+        this.recreateVisualsDebouncer.dispatch();
     }
 
     private onViewUpdate(view: ViewStore, oldView: ViewStore) {
@@ -191,13 +191,7 @@ class MapState {
         if (view.currentMapLayer !== this.layerMgr.getActiveLayerIndex()) {
             this.layerMgr.setActiveLayer(this.map, view.currentMapLayer);
             // recreate the visuals since the map layer changed
-            this.visualMgr.recreate(
-                this.map,
-                this.layerMgr,
-                documentSelector(state).document,
-                view,
-                settingsSelector(state),
-            );
+            this.recreateVisualsDebouncer.dispatch();
         }
 
         // update the visuals based on the view and settings

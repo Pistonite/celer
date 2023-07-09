@@ -139,6 +139,9 @@ export type MapMarker = {
 }
 
 /// Paths on the map
+///
+/// The coordinates do not have to be on the same map layer.
+/// The map will automatically split the path if it croses map layers.
 export type MapLine = {
     /// Color of the line
     color: string;

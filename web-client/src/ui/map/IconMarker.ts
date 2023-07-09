@@ -1,67 +1,64 @@
 //! IconMarker is used to draw icons on the map
 
 import L from "leaflet";
+import { LRUCache } from "lru-cache";
+
 import { MapLog } from "./util";
 
-/// Icon marker options
-export type IconMarkerOptions = L.CircleMarkerOptions & {
-    /// HTML img element with the icon
-    icon: HTMLImageElement;
-    /// Size
-    size: number;
-    /// Opacity
-    opacity: number;
-};
-
-interface LeafletLayer {
+// hacks into implementation details of leaflet
+interface LLayer {
     _empty?(): boolean;
     _point?: L.Point;
-    options?: IconMarkerOptions;
+    _renderer?: L.Canvas & {
+        _ctx?: CanvasRenderingContext2D;
+    };
 }
 
-// extend L.Canvas to include a custom function to draw our icons
-L.Canvas.include({
-    /// Draw the icon marker at its position 
-    drawIconMarker(layer: LeafletLayer, size: number, opacity: number) {
-        // eslint-disable-line @typescript-eslint/no-explicit-any
-        if (!layer) {
-            return;
-        }
-        if (layer._empty && layer._empty()) {
-            return;
-        }
-
-        const p = layer._point;
-        if (!p) {
-            return;
-        }
-        const ctx = this._ctx;
-        const img = layer.options?.icon;
-        if (!ctx || !img) {
-            return;
-        }
-        ctx.globalAlpha = opacity;
-        ctx.drawImage(
-            img,
-            p.x - size / 2,
-            p.y - size / 2,
-            size,
-            size,
-        );
-        ctx.globalAlpha = 1;
-    },
+/// Cache for the icon images. Uses LRU cache to limit memory usage
+///
+/// The URL of the icon is used as the key
+const IconCache = new LRUCache<string, Icon>({
+    max: 64,
 });
 
-interface MarkerWithRenderer {
-    _renderer?:{
-        drawIconMarker(layer: LeafletLayer, size: number, opacity: number): void;
-    } 
-}
+/// Get the icon from the cache or create a new one
+const getIcon = (iconSrc: string): Icon => {
+    const icon = IconCache.get(iconSrc);
+    if (icon) {
+        return icon;
+    }
+    const img = document.createElement("img");
+    img.src = iconSrc;
+    const newIcon = {
+        img,
+        loaded: false,
+    };
+    img.onload = () => {
+        newIcon.loaded = true;
+    };
+    IconCache.set(iconSrc, newIcon);
+    return newIcon;
+};
+
+/// Wrapper for HTMLImageElement and a load status
+type Icon = {
+    /// The image element
+    img: HTMLImageElement;
+    /// Whether the image is loaded
+    loaded: boolean;
+};
 
 /// Icon marker class
 ///
 /// Hacking the CircleMarker class to draw an icon
 export class IconMarker extends L.CircleMarker {
+    /// The icon
+    private icon: Icon;
+    /// Opacity
+    private opacity: number;
+    /// Size
+    private size: number;
+
     constructor(
         latlng: L.LatLngExpression,
         iconSrc: string,
@@ -69,25 +66,56 @@ export class IconMarker extends L.CircleMarker {
         size: number,
         options: L.CircleMarkerOptions = {},
     ) {
-        const icon = document.createElement("img");
-        icon.src = iconSrc;
-        super(
-            latlng,
-            Object.assign(options, { icon, size, opacity }) as L.CircleMarkerOptions,
-        );
+        super( latlng, options);
+        this.icon = getIcon(iconSrc);
+        this.opacity = opacity;
+        this.size = size;
     }
+
     /// Hacking the updatePath function to draw our icon
     _updatePath() {
-        const options = this.options as IconMarkerOptions;
-        if (!options || !options.icon) {
-            MapLog.warn("missing icon on icon marker");
+        this.redrawInternal(0);
+    }
+
+    /// Draw the icon marker. If the icon is not loaded yet, it will retry later
+    private redrawInternal(retryCount: number) {
+        if (!this.icon.loaded) {
+            if (retryCount > 10) {
+                MapLog.warn(`resource from ${this.icon.img.src} is taking too long to load.`);
+                return;
+            }
+            window.setTimeout(() => {
+                this.redrawInternal(retryCount + 1);
+            }, 500);
             return;
         }
-        const renderer  = (this as MarkerWithRenderer)._renderer; // eslint-disable-line @typescript-eslint/no-explicit-any
-        if (!renderer || !renderer.drawIconMarker) {
+
+        // check if layer is empty
+        const layer = this as unknown as LLayer;
+        if (layer._empty && layer._empty()) {
+            return;
+        }
+        const p = layer._point;
+        if (!p) {
+            MapLog.warn("invalid icon marker point");
+            return;
+        }
+
+        // check if renderer is valid
+        const ctx  = layer._renderer?._ctx; // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (!ctx) {
             MapLog.warn("invalid icon markder renderer");
             return;
         }
-        renderer.drawIconMarker(this as unknown as LeafletLayer, options.size, options.opacity);
+
+        ctx.globalAlpha = this.opacity;
+        ctx.drawImage(
+            this.icon.img,
+            p.x - this.size / 2,
+            p.y - this.size / 2,
+            this.size,
+            this.size,
+        );
+        ctx.globalAlpha = 1;
     }
 }

@@ -29,7 +29,6 @@ export class MapContainerMgr {
             return;
         }
         if (this.attachInternal(map)) {
-            // attached
             return;
         }
         MapLog.warn("failed to attach to root container. Will retry in 1s");
