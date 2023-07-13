@@ -5,10 +5,11 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
+        "theme": "cd ../themes && npm run build",
         "compile": "npm run compile:worker && npm run compile:console",
         "compile:worker": "tsc src/core/engine/worker.ts --lib dom,ES2020 && uglifyjs --compress --mangle --output src/core/engine/worker.min.js -- src/core/engine/worker.js",
         "compile:console": "uglifyjs --compress --mangle --output src/core/engine/console.min.js -- src/core/engine/console.js",
-        "build": "npm run compile && tsc && vite build",
+        "build": "npm run theme && npm run compile && tsc && vite build",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
         "fmt": "prettier \"./**/*.{ts,tsx,json,cjs,css,html}\""
     },
@@ -16,6 +17,7 @@
         "@fluentui/react-components": "^9.21.0",
         "@reduxjs/toolkit": "^1.9.5",
         "clsx": "^1.2.1",
+        "denque": "^2.1.0",
         "immer": "^10.0.2",
         "leaflet": "^1.9.4",
         "leaflet-arrowheads": "^1.4.0",

@@ -7,10 +7,10 @@ import {
     GameCoord,
     RouteCoord,
 } from "data/model";
-import { createLogMgr } from "data/util";
+import { Logger } from "data/util";
 
 /// Map module logger
-export const MapLog = createLogMgr("map");
+export const MapLog = new Logger("map");
 
 /// Epsilon for floating point comparison in the map
 const EPSILON = 1e-3;

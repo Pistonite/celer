@@ -46,8 +46,8 @@ fmt:
     cd web-client && npm run fmt -- --write
     cd web-client && npm run lint -- --fix
 
-# Lint the code
-lint:
+# Check the code
+check:
     cargo fmt --check
     cargo clippy --all-features --all-targets -- -D warnings
     cd web-client && npm run fmt -- --check

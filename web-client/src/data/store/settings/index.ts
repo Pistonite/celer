@@ -9,12 +9,13 @@ import { LayoutSettings, initialLayoutSettings } from "./layout";
 import * as layoutReducers from "./layoutReducers";
 import { MapSettings, initialMapSettings } from "./map";
 import * as mapReducers from "./mapReducers";
+import { DocSettings, initialDocSettings } from "./doc";
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";
 
 /// The settings slice state
-export type SettingsStore = LayoutSettings & MapSettings;
+export type SettingsStore = LayoutSettings & MapSettings & DocSettings;
 
 /// Try loading initial state from local storage
 const loadState = (): SettingsStore => {
@@ -23,6 +24,7 @@ const loadState = (): SettingsStore => {
     return {
         ...initialLayoutSettings,
         ...initialMapSettings,
+        ...initialDocSettings,
         ...loadedState,
     };
 };
