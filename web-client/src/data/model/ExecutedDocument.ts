@@ -3,9 +3,12 @@
 //! This is the object returned from the engine.
 
 import {
+    DocCounter,
     DocIconMap,
     DocMapParameters,
     DocMetadata,
+    DocTagMap,
+    ExecDocSection,
     MapIcon,
     MapLine,
     MapMarker,
@@ -29,7 +32,15 @@ export type ExecDoc = {
         map: DocMapParameters;
         /// The icon map
         icons: DocIconMap;
+        /// The tag map
+        tags: DocTagMap;
+        /// The counter map
+        ///
+        /// Maps counter type to color
+        counters: Record<string, DocCounter>;
     };
+    /// The document sections
+    route: ExecDocSection[];
     /// Map features for each document section
     map: ExecDocMapSection[];
 };

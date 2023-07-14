@@ -148,3 +148,129 @@ export type MapLine = {
     /// Points on the line
     points: GameCoord[];
 };
+
+/// Executed document section
+export type ExecDocSection = {
+    /// Name of the section
+    name: string;
+    /// The lines in the section
+    lines: ExecDocLine[];
+};
+
+/// One line in the executed document
+export type ExecDocLine = ExecDocLineSimple | ExecDocLineComplex;
+
+/// Simple line (no icon, counter, etc.)
+export type ExecDocLineSimple = {
+    /// Section number
+    section: number;
+    /// Line index in section
+    index: number;
+    /// primary text content of the line
+    text: DocRichText[];
+    /// Line color
+    lineColor: string;
+    /// Corresponding map coord
+    mapCoord: GameCoord;
+    /// Diagnostic messages
+    diagnostics: DocDiagnostic[];
+    /// The notes
+    notes: DocNote[];
+};
+
+export type ExecDocLineComplex = ExecDocLineSimple & {
+    isComplex: true;
+    /// The icon id to show on the document
+    docIcon: string;
+    /// Secondary text to show below the primary text
+    secondaryText: DocRichText[];
+    /// Counter type to display
+    ///
+    /// Note this can be displayed independently from the counter value
+    counterType: string;
+    /// Counter value to display
+    ///
+    /// Note this can be displayed without counter type
+    counterValue: string;
+}
+
+export type DocNote = DocNoteText | DocNoteImage | DocNoteVideo;
+
+/// Text as document note
+export type DocNoteText = {
+    type: "text";
+    content: DocRichText[];
+}
+
+/// Image as document note
+export type DocNoteImage = {
+    type: "image";
+    /// Image URL
+    src: string;
+}
+
+/// Embedded video as document note
+export type DocNoteVideo = {
+    type: "video";
+    /// Video URL of supported providers
+    link: string;
+}
+
+export type DocDiagnostic = {
+    /// The diagnostic message
+    message: string;
+    /// Type of the diagnostic
+    type: "warn" | "error";
+}
+
+/// Document rich text type
+export type DocRichText = {
+    /// The tag name of the text
+    ///
+    /// Each block only contains one tag
+    tag?: string;
+    /// The text content
+    text: string;
+};
+
+/// Rich text type with resolved tag
+export type RichText = {
+    /// The tag of the text
+    tag?: DocTag;
+    /// The text content
+    text: string;
+}
+
+/// Document tag map
+export type DocTagMap = {
+    /// The tag name (usually kebab-case)
+    [id: string]: DocTag;
+};
+
+/// Document tag type
+///
+/// Used to style text and provide extra function to the engine
+export type DocTag = {
+    /// Bold style
+    bold?: boolean;
+    /// Italic style
+    italic?: boolean;
+    /// Underline style
+    underline?: boolean;
+    /// Strikethrough style
+    strikethrough?: boolean;
+    /// Color of the text
+    color?: string;
+    /// Background color of the text
+    background?: string;
+    /// Link to direct to when clicked
+    link?: string;
+};
+
+/// Document counter style
+export type DocCounter = {
+    /// Counter background color
+    background: string;
+    /// Counter text color
+    color: string;
+};

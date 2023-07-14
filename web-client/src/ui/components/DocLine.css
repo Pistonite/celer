@@ -1,3 +1,44 @@
+.docline-container {
+    width: 380px;
+    display: flex;
+}
+
 .docline-head {
-    width: 100px;
+    min-width: 64px;
+    border-right: 4px solid;
+    box-sizing: border-box;
+    position: relative;
+    text-align: right;
+}
+
+.docline-counter {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: -4px;
+    height: 24px;
+    padding: 4px;
+    color: #000;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.docline-cursor {
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+}
+
+.docline-body {
+    padding: 4px;
+    flex-grow: 1;
+    background-color: #001a00;
+    display: flex;
+}
+
+.docline-icon-container {
+    min-width: 50px;
+}
+.docline-icon-container img {
+    width: 50px;
 }
