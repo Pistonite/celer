@@ -122,8 +122,10 @@ export type MapIcon = {
     id: string;
     /// Game coordinate for the icon
     coord: GameCoord;
-    /// The corresponding line number in the document
-    lineNumber: number;
+    /// The corresponding line index in section of the document
+    lineIndex: number;
+    /// The corresponding section number in the document
+    sectionIndex: number;
     /// The priority of the icon (0 = primary, 1 = secondary)
     priority: number;
 };
@@ -132,8 +134,10 @@ export type MapIcon = {
 export type MapMarker = {
     /// Coordinate of the marker
     coord: GameCoord;
-    /// The corresponding line number in the document
-    lineNumber: number;
+    /// The corresponding line index in section of the document
+    lineIndex: number;
+    /// The corresponding section number in the document
+    sectionIndex: number;
     /// Color of the marker
     color: string;
 };
@@ -148,51 +152,6 @@ export type MapLine = {
     /// Points on the line
     points: GameCoord[];
 };
-
-/// Executed document section
-export type ExecDocSection = {
-    /// Name of the section
-    name: string;
-    /// The lines in the section
-    lines: ExecDocLine[];
-};
-
-/// One line in the executed document
-export type ExecDocLine = ExecDocLineSimple | ExecDocLineComplex;
-
-/// Simple line (no icon, counter, etc.)
-export type ExecDocLineSimple = {
-    /// Section number
-    section: number;
-    /// Line index in section
-    index: number;
-    /// primary text content of the line
-    text: DocRichText[];
-    /// Line color
-    lineColor: string;
-    /// Corresponding map coord
-    mapCoord: GameCoord;
-    /// Diagnostic messages
-    diagnostics: DocDiagnostic[];
-    /// The notes
-    notes: DocNote[];
-};
-
-export type ExecDocLineComplex = ExecDocLineSimple & {
-    isComplex: true;
-    /// The icon id to show on the document
-    docIcon: string;
-    /// Secondary text to show below the primary text
-    secondaryText: DocRichText[];
-    /// Counter type to display
-    ///
-    /// Note this can be displayed independently from the counter value
-    counterType: string;
-    /// Counter value to display
-    ///
-    /// Note this can be displayed without counter type
-    counterValue: string;
-}
 
 export type DocNote = DocNoteText | DocNoteImage | DocNoteVideo;
 

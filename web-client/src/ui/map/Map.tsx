@@ -5,7 +5,7 @@ import "./Map.css";
 import { useEffect } from "react";
 import { useSelector } from "react-redux";
 
-import { LoadScreen, ErrorScreen } from "ui/components";
+import { LoadScreen, ErrorScreen } from "ui/shared";
 import { documentSelector } from "data/store";
 
 import { initMap } from "./MapState";

@@ -1,11 +1,12 @@
 //! Components for the document viewer
 
-import "./DocLine.css";
 import clsx from "clsx";
+import React from "react";
+import isEqual from "is-equal";
 
 import { Text } from "@fluentui/react-components";
 import { PersonRunning20Regular } from "@fluentui/react-icons";
-import { DocCounter, RichText } from "data/model";
+import { RichText } from "data/model";
 import { Rich } from "./Rich";
 
 /// The head of DocLine
@@ -26,24 +27,19 @@ type DocLineProps = {
     /// Secondary text
     secondaryText?: RichText[];
     /// Counter properties
-    counter?: {
-        /// Style of the counter
-        style: DocCounter;
-        /// Text of the counter
-        text: string;
-    };
-
+    counterText?: RichText;
 };
 
-export const DocLine: React.FC<DocLineProps> = ({
+const DocLineInternal: React.FC<DocLineProps> = ({
     selected,
     mode,
     lineColor,
     text,
     iconUrl,
     secondaryText,
-    counter
+    counterText,
 }) => {
+    console.log(1);
     return (
         <div className="docline-container">
             <div className={clsx(
@@ -55,13 +51,13 @@ export const DocLine: React.FC<DocLineProps> = ({
                 borderColor: lineColor,
             }}>
                 {
-                    counter &&
+                    counterText &&
                     <div className="docline-counter" style={{ 
-                            backgroundColor: counter.style.background, 
-                            color: counter.style.color 
+                            backgroundColor: counterText.tag?.background, 
+                            color: counterText.tag?.color 
                         }} >
                         <Text size={500} font="monospace">
-                            {counter.text}
+                            {counterText.text}
                         </Text>
                     </div>
                 }
@@ -93,3 +89,4 @@ export const DocLine: React.FC<DocLineProps> = ({
     );
 };
 
+export const DocLine = React.memo(DocLineInternal, () => true);

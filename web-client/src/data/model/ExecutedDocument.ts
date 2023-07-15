@@ -3,12 +3,14 @@
 //! This is the object returned from the engine.
 
 import {
-    DocCounter,
+    DocDiagnostic,
     DocIconMap,
     DocMapParameters,
     DocMetadata,
+    DocNote,
+    DocRichText,
     DocTagMap,
-    ExecDocSection,
+    GameCoord,
     MapIcon,
     MapLine,
     MapMarker,
@@ -34,15 +36,43 @@ export type ExecDoc = {
         icons: DocIconMap;
         /// The tag map
         tags: DocTagMap;
-        /// The counter map
-        ///
-        /// Maps counter type to color
-        counters: Record<string, DocCounter>;
     };
     /// The document sections
     route: ExecDocSection[];
     /// Map features for each document section
     map: ExecDocMapSection[];
+};
+
+/// Executed document section
+export type ExecDocSection = {
+    /// Name of the section
+    name: string;
+    /// The lines in the section
+    lines: ExecDocLine[];
+};
+
+/// One line in the executed document
+export type ExecDocLine = {
+    /// Section number
+    section: number;
+    /// Line index in section
+    index: number;
+    /// primary text content of the line
+    text: DocRichText[];
+    /// Line color
+    lineColor: string;
+    /// Corresponding map coord
+    mapCoord: GameCoord;
+    /// Diagnostic messages
+    diagnostics: DocDiagnostic[];
+    /// The icon id to show on the document
+    icon: string;
+    /// Secondary text to show below the primary text
+    secondaryText: DocRichText[];
+    /// Counter text to display
+    counterText?: DocRichText;
+    /// The notes
+    notes: DocNote[];
 };
 
 /// The computed map properties of a route section

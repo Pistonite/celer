@@ -6,9 +6,10 @@ import ReactGridLayout from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "./layout.css";
 
-import { Header } from "ui/surfaces";
+import { Header } from "ui/toolbar";
 const Map: React.FC = React.lazy(() => import("ui/map"));
-import { DocLine, LoadScreen } from "ui/components";
+const Doc: React.FC = React.lazy(() => import("ui/doc"));
+import { LoadScreen } from "ui/shared";
 
 import { useLayout, useWindowSize } from "core/utils";
 
@@ -59,91 +60,11 @@ export const AppRoot: React.FC = () => {
                                 <Map />
                             </Suspense>
                         )}
-                        {widget.i === "viewer" && <div>
-                            <DocLine 
-                                selected={true}
-                                mode="normal"
-                                lineColor="red"
-                                iconUrl="https://icons.pistonite.org/icon/shrine.shrine.none.69a2d5.c1fefe.69a2d5.c1fefe.69a2d5.c1fefe.png"
-                                text={[{
-                                    text: "Kaya Wan",
-                                }]}
-                                counter={{
-                                    style: {
-                                        background: "cyan",
-                                        color: "black",
-                                    },
-                                    text: "9999",
-                                }}
-                            />
-                            <DocLine 
-                                selected={false}
-                                mode="normal"
-                                lineColor="red"
-                                iconUrl="https://icons.pistonite.org/icon/shrine.shrine.none.69a2d5.c1fefe.69a2d5.c1fefe.69a2d5.c1fefe.png"
-                                text={[{
-                                    text: "Kaya Wan",
-                                }]}
-                                counter={{
-                                    style: {
-                                        background: "orange",
-                                        color: "inherit",
-                                    },
-                                    text: "split",
-                                }}
-                            />
-                            <DocLine 
-                                selected={false}
-                                mode="normal"
-                                lineColor="red"
-                                iconUrl="https://icons.pistonite.org/icon/shrine.shrine.none.69a2d5.c1fefe.69a2d5.c1fefe.69a2d5.c1fefe.png"
-                                text={[{
-                                    text: "Kaya Wan",
-                                }]}
-                                secondaryText={[{
-                                    text: "do this then do ",
-                                }, {
-                                    text: "that",
-                                    tag: {
-                                        bold: true,
-                                        italic: true,
-                                        }
-                                }, {
-                                    text: " and do this",
-                                        tag: {
-                                            color: "red",
-                                        }
-                                }]}
-                            />
-                            <DocLine 
-                                selected={true}
-                                mode="normal"
-                                lineColor="#00ff00"
-                                text={[{
-                                    text: "Kaya Wan",
-                                }]}
-                                secondaryText={[{
-                                    text: "Core inside short short speak speak talk talkt asdfasd asd lgkjalsd",
-                                }]}
-                            />
-                            <DocLine 
-                                selected={false}
-                                mode="normal"
-                                lineColor="red"
-                                text={[{
-                                    text: "Hello long long long long long long long long long long long ",
-                                    tag: {
-                                        bold: false,
-                                        italic: false,
-                                        underline: false,
-                                        strikethrough: false,
-                                        // color: "black",
-                                        // backgroundColor: "white",
-                                        link: undefined,
-                                    },
-                                }]}
-                            />
-                        </div>}
+                        {widget.i === "viewer" && (
+                            <Suspense fallback={<LoadScreen color="yellow" />}>
+                                <Doc />
+                            </Suspense>
+                        )}
                         {widget.i === "editor" && <div>I am a editor</div>}
                     </div>
                 </div>

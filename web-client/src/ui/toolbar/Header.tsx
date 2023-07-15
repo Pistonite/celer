@@ -1,3 +1,10 @@
+//! The header for the app
+//!
+//! Header consistents of a title and a toolbar.
+//! The title displays the current document name (or other page titles).
+//! The toolbar contains a list of controls available to the user.
+//!
+//! The toolbar can be below or on top of the title depending on the layout.
 import "./Header.css";
 
 import {
@@ -26,7 +33,7 @@ import { HeaderControlList } from "./util";
 import { SwitchToolbarLocation } from "./SwitchToolbarLocation";
 import { SwitchLayout } from "./SwitchLayout";
 import { SwitchMapLayer } from "./SwitchMapLayer";
-import { Setting } from "./Setting";
+import { Settings } from "./Settings";
 import { ZoomIn, ZoomOut } from "./Zoom";
 
 /// Header controls.
@@ -46,7 +53,7 @@ const HeaderControls: HeaderControlList = [
     // Setting
     {
         priority: 99,
-        controls: [Setting],
+        controls: [Settings],
     },
 ];
 

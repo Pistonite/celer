@@ -126,10 +126,7 @@ export class MapVisualMgr {
                     );
                     iconMarker.on("click", () => {
                         console.log(
-                            "clicked icon, line " +
-                                icon.lineNumber +
-                                "layer " +
-                                layer,
+                            `clicked icon, section ${icon.sectionIndex}, line ${icon.lineIndex}, layer ${layer}`,
                         );
                     });
 
@@ -198,7 +195,7 @@ export class MapVisualMgr {
                     });
                     markerLayer.on("click", () => {
                         console.log(
-                            "clicked marker, line " + marker.lineNumber,
+                            `clicked marker, section ${marker.sectionIndex}, line ${marker.lineIndex}, layer ${layer}`,
                         );
                     });
                     return markerLayer;

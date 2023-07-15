@@ -1,3 +1,4 @@
+
 .docline-container {
     width: 380px;
     display: flex;
@@ -18,7 +19,6 @@
     right: -4px;
     height: 24px;
     padding: 4px;
-    color: #000;
     text-overflow: ellipsis;
     overflow: hidden;
 }
@@ -32,13 +32,49 @@
 .docline-body {
     padding: 4px;
     flex-grow: 1;
-    background-color: #001a00;
     display: flex;
 }
 
 .docline-icon-container {
     min-width: 50px;
 }
+
 .docline-icon-container img {
     width: 50px;
+}
+
+.docsection-head {
+    padding: 16px 0px 16px 64px;
+}
+
+
+/* theme */
+#doc-container {
+    color: white;
+}
+
+.docsection-head {
+    background-color: #001a00;
+}
+
+.docline-container:nth-child(even) .docline-head {
+    background-color: transparent;
+}
+
+.docline-body {
+    background-color: #001a00;
+}
+
+/* dark theme */
+@media (prefers-color-scheme: dark) {
+.docline-container:nth-child(odd) .docline-head {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+}
+
+@media (prefers-color-scheme: light) {
+.docline-container:nth-child(odd) .docline-head {
+    background-color: rgba(0, 0, 0, 0.1);
+}
 }

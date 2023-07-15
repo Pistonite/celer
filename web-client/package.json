@@ -19,6 +19,7 @@
         "clsx": "^1.2.1",
         "denque": "^2.1.0",
         "immer": "^10.0.2",
+        "is-equal": "^1.6.4",
         "leaflet": "^1.9.4",
         "leaflet-arrowheads": "^1.4.0",
         "leaflet-rastercoords": "^1.0.5",

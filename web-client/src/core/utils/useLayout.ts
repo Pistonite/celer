@@ -83,7 +83,7 @@ export const useLayout = (): UseLayout => {
                 }
             });
 
-            setCurrentLayout({ layout });
+            setCurrentLayout(layout);
         },
         [toolbar, toolbarAnchor, setCurrentLayout],
     );

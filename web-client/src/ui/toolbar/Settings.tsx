@@ -17,30 +17,30 @@ import {
 import { Settings20Regular } from "@fluentui/react-icons";
 
 import { ControlComponentProps, ToolbarControl } from "./util";
-import { SettingsDialog } from "../setting";
+import { SettingsDialog } from "./SettingsDialog";
 
 /// The settings control
-export const Setting: ToolbarControl = {
+export const Settings: ToolbarControl = {
     ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
         return (
-            <SettingInternal>
+            <SettingsInternal>
                 <Tooltip content="Settings" relationship="label">
                     <ToolbarButton icon={<Settings20Regular />} ref={ref} />
                 </Tooltip>
-            </SettingInternal>
+            </SettingsInternal>
         );
     }),
     MenuItem: () => {
         return (
-            <SettingInternal>
+            <SettingsInternal>
                 <MenuItem icon={<Settings20Regular />}>Settings</MenuItem>
-            </SettingInternal>
+            </SettingsInternal>
         );
     },
 };
 
 /// Internal settings dialog component
-const SettingInternal: React.FC<ControlComponentProps> = ({ children }) => {
+const SettingsInternal: React.FC<ControlComponentProps> = ({ children }) => {
     // TODO: Implement the settings dialog
     return (
         <Dialog>
