@@ -13,8 +13,8 @@ const pushLog = (msg: string) => {
 
 /// Get the current log
 export const getLog = () => {
-    return LogQueue.toArray()
-}
+    return LogQueue.toArray();
+};
 
 /// A general-purpose client side logger
 ///
@@ -48,6 +48,4 @@ export class Logger {
         console.error(msgWithPrefix);
         pushLog(msgWithPrefix);
     }
-
 }
-

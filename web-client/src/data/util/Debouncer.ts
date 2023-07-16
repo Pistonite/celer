@@ -20,7 +20,7 @@ export class Debouncer {
 
     /// Trigger the callback after delay if not triggered again
     public dispatch() {
-        if (this.handle) {
+        if (this.handle !== undefined) {
             clearTimeout(this.handle);
         }
         this.handle = window.setTimeout(this.callback, this.delay);

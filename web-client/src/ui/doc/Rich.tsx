@@ -12,13 +12,14 @@ type RichProps = {
 };
 
 export const Rich: React.FC<RichProps> = ({ content, size }) => {
+    if (!content.find((t) => t.text)) {
+        return <span>{"\u00a0"}</span>;
+    }
     return (
         <>
-            {
-                content.map((richText, index) => (
-                    <RichBlock key={index} {...richText} size={size} />
-                ))
-            }
+            {content.map((richText, index) => (
+                <RichBlock key={index} {...richText} size={size} />
+            ))}
         </>
     );
 };
@@ -30,7 +31,11 @@ type RichBlockProps = RichText & {
 
 const RichBlock: React.FC<RichBlockProps> = ({ text, tag, size }) => {
     if (!tag) {
-        return <Text as="span" size={size} >{text}</Text>;
+        return (
+            <Text as="span" size={size}>
+                {text}
+            </Text>
+        );
     }
 
     return (
@@ -46,10 +51,7 @@ const RichBlock: React.FC<RichBlockProps> = ({ text, tag, size }) => {
                 backgroundColor: tag.background,
             }}
         >
-            {
-                tag.link? <a href={tag.link}>{text}</a> : text
-            }
+            {tag.link ? <a href={tag.link}>{text}</a> : text}
         </Text>
-
     );
 };

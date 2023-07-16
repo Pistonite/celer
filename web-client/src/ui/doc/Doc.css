@@ -1,6 +1,31 @@
+#doc-container {
+    display: flex;
+}
+
+#doc-scroll {
+    height: 100%;
+    /* make document scrollable */
+    overflow-y: auto;
+}
+
+#doc-main {
+    /* sizing for the main column */
+    min-width: min(calc(100% - 24px), 380px);
+    max-width: 380px;
+}
+
+#doc-side {
+    /* need this because note blocks have position: absolute */
+    position: relative;
+    flex: 1;
+}
+
+.docsection-head {
+    /* padding for section title */
+    padding: 16px 0px 16px 64px;
+}
 
 .docline-container {
-    width: 380px;
     display: flex;
 }
 
@@ -10,9 +35,15 @@
     box-sizing: border-box;
     position: relative;
     text-align: right;
+    transition-duration: 0.1s;
+}
+
+.doc-current-line .docline-head {
+    border-right: 24px solid;
 }
 
 .docline-counter {
+    /* place counter on top of the border line */
     position: absolute;
     top: 0;
     left: 0;
@@ -23,10 +54,8 @@
     overflow: hidden;
 }
 
-.docline-cursor {
-    position: absolute;
-    right: 0px;
-    bottom: 0px;
+.doc-current-line .docline-counter {
+    right: -24px;
 }
 
 .docline-body {
@@ -43,10 +72,14 @@
     width: 50px;
 }
 
-.docsection-head {
-    padding: 16px 0px 16px 64px;
+.docnote-block {
+    padding: 4px;
 }
 
+.docnote-container {
+    display: none; /* hide by default */
+    transition-duration: 0.1s;
+}
 
 /* theme */
 #doc-container {
@@ -61,20 +94,31 @@
     background-color: transparent;
 }
 
+.docnote-container {
+    color: black;
+}
+
+.docnote-container:nth-child(odd) {
+    background-color: #8888ee;
+}
+
+.docnote-container:nth-child(even) {
+    background-color: #ffcc33;
+}
+
 .docline-body {
     background-color: #001a00;
 }
 
 /* dark theme */
 @media (prefers-color-scheme: dark) {
-.docline-container:nth-child(odd) .docline-head {
-    background-color: rgba(0, 0, 0, 0.2);
-}
-
+    .docline-container:nth-child(odd) .docline-head {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
 }
 
 @media (prefers-color-scheme: light) {
-.docline-container:nth-child(odd) .docline-head {
-    background-color: rgba(0, 0, 0, 0.1);
-}
+    .docline-container:nth-child(odd) .docline-head {
+        background-color: rgba(0, 0, 0, 0.1);
+    }
 }

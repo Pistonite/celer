@@ -9,6 +9,8 @@ import {
     SettingsStore,
     ViewStore,
     VisualSize,
+    store,
+    viewActions,
 } from "data/store";
 import { ExecDoc, GameCoord, MapIcon } from "data/model";
 
@@ -125,8 +127,14 @@ export class MapVisualMgr {
                         },
                     );
                     iconMarker.on("click", () => {
-                        console.log(
+                        MapLog.info(
                             `clicked icon, section ${icon.sectionIndex}, line ${icon.lineIndex}, layer ${layer}`,
+                        );
+                        store.dispatch(
+                            viewActions.setDocLocation({
+                                section: icon.sectionIndex,
+                                line: icon.lineIndex,
+                            }),
                         );
                     });
 
@@ -194,8 +202,14 @@ export class MapVisualMgr {
                         pane: "markerPane",
                     });
                     markerLayer.on("click", () => {
-                        console.log(
+                        MapLog.info(
                             `clicked marker, section ${marker.sectionIndex}, line ${marker.lineIndex}, layer ${layer}`,
+                        );
+                        store.dispatch(
+                            viewActions.setDocLocation({
+                                section: marker.sectionIndex,
+                                line: marker.lineIndex,
+                            }),
                         );
                     });
                     return markerLayer;

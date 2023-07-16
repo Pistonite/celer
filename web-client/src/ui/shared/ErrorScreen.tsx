@@ -1,14 +1,14 @@
 //! The error screen component
 
 import "./ErrorScreen.css";
-import { Subtitle1, Text } from "@fluentui/react-components";
+import { Subtitle1 } from "@fluentui/react-components";
 
-type ErrorProps = {
+type ErrorScreenProps = {
     /// The error message to display
     message: string;
 };
 
-export const ErrorScreen: React.FC<ErrorProps> = ({ message }) => {
+export const ErrorScreen: React.FC<ErrorScreenProps> = ({ message }) => {
     return (
         <div className="error-container">
             <img className="errro-logo" src={"/static/celer-red.svg"} />

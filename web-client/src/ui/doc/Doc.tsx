@@ -1,66 +1,105 @@
 //! The doc component
 
 import "./Doc.css";
-import { documentSelector } from "data/store";
+import React from "react";
 import { useSelector } from "react-redux";
 
-import { LoadScreen } from "ui/shared";
+import { HintScreen, LoadScreen } from "ui/shared";
+import { DocumentStore, documentSelector, viewSelector } from "data/store";
 
-import { DocSection } from "./DocSection";
-import { DocRichText, DocTagMap, RichText } from "data/model";
 import { DocLine } from "./DocLine";
+import { DocSection } from "./DocSection";
+import { DocContainerId, DocLog, resolveTag, resolveTags } from "./util";
+import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
+import { DocNoteContainerId } from "./updateNotePositions";
+import { initDocController } from "./DocController";
+
+const DocController = initDocController();
+
+/// Doc wrapper component that connects to the store
+/// The underlying component is cached to avoid unnecessary re-rendering
+/// Because document is very expensive to render
+export const Doc: React.FC = () => {
+    const { isEditingLayout } = useSelector(viewSelector);
+    const documentStore = useSelector(documentSelector);
+    if (isEditingLayout) {
+        // DOM resizing is expensive, so we don't want to do it while editing
+        return <HintScreen message="Document hidden while editing layotu" />;
+    }
+    return <CachedDocInternal {...documentStore} />;
+};
 
 /// Main doc viewer component
-export const Doc: React.FC = () => {
-    const { document } = useSelector(documentSelector);
+const DocInternal: React.FC<DocumentStore> = ({ document }) => {
     if (!document.loaded) {
         return <LoadScreen color="yellow" />;
     }
+    DocLog.info("rendering document");
     const tagMap = document.project.tags;
+    const flatNotes = document.route.reduce(
+        (acc: DocNoteBlockProps[], section, i) => {
+            section.lines.forEach((line, j) => {
+                if (line.notes.length > 0) {
+                    acc.push({
+                        sectionIndex: i,
+                        lineIndex: j,
+                        notes: line.notes,
+                        tagMap,
+                    });
+                }
+            });
+            return acc;
+        },
+        [],
+    );
+
     return (
-        <div id="doc-container">
-            {
-                document.route.map(({ name, lines }, i) => (
-                    <DocSection key={i} name={name}>
-                        {
-                            lines.map((line, j) => (
+        <div
+            id="doc-scroll"
+            onScroll={() => {
+                DocController.onScroll();
+            }}
+        >
+            <div id={DocContainerId}>
+                <div id="doc-main">
+                    {document.route.map(({ name, lines }, i) => (
+                        <DocSection key={i} name={name}>
+                            {lines.map((line, j) => (
                                 <DocLine
+                                    sectionIndex={i}
+                                    lineIndex={j}
                                     key={j}
-                                    selected={false} //TODO
                                     mode={"normal"} //TODO
                                     lineColor={line.lineColor}
                                     text={resolveTags(tagMap, line.text)}
                                     iconUrl={document.project.icons[line.icon]}
-                                    secondaryText={resolveTags(tagMap, line.secondaryText)}
-                                    counterText={line.counterText ? resolveTag(tagMap, line.counterText) : undefined}
+                                    secondaryText={resolveTags(
+                                        tagMap,
+                                        line.secondaryText,
+                                    )}
+                                    counterText={
+                                        line.counterText
+                                            ? resolveTag(
+                                                  tagMap,
+                                                  line.counterText,
+                                              )
+                                            : undefined
+                                    }
                                 />
-                            ))
-                        }
-                    </DocSection>
-                ))
-            }
+                            ))}
+                        </DocSection>
+                    ))}
+                </div>
+                <div id={DocNoteContainerId}>
+                    {flatNotes.map((props, i) => (
+                        <DocNoteBlock key={i} {...props} />
+                    ))}
+                </div>
+            </div>
         </div>
     );
 };
-
-/// Helper function to resolve tag names to the tag definition
-const resolveTags = (tagMap: DocTagMap, docRichTexts: DocRichText[]): RichText[] => {
-    return docRichTexts.map(docRichText => resolveTag(tagMap, docRichText));
-}
-
-const resolveTag = (tagMap: DocTagMap, docRichText: DocRichText): RichText => {
-    const { tag, text } = docRichText;
-    if (!tag) {
-        return { text };
-    }
-
-    const tagDef = tagMap[tag];
-    if (!tagDef) {
-        // Silently ignore unknown tag because compiler will add a warning (TODO: make sure you actually you taht)
-        return { text };
-    }
-    return {
-        text,
-        tag: tagDef
-    };
-}
+const CachedDocInternal = React.memo(
+    DocInternal,
+    (prev, next) => prev.serial === next.serial,
+);

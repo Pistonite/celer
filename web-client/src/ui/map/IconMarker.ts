@@ -117,7 +117,7 @@ export class IconMarker extends L.CircleMarker {
         }
 
         // check if renderer is valid
-        const ctx = layer._renderer?._ctx;  
+        const ctx = layer._renderer?._ctx;
         if (!ctx) {
             MapLog.warn("invalid icon markder renderer");
             return;

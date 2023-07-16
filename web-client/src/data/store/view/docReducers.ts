@@ -3,8 +3,16 @@
 import { ReducerDeclWithPayload, withPayload } from "data/store/util";
 import { DocViewStore } from "./doc";
 
-/// Set the current doc section
-export const setDocSection: ReducerDeclWithPayload<DocViewStore, number> =
-    withPayload((state: DocViewStore, value: number) => {
-        state.currentSection = value;
-    });
+/// Set the current document location
+export const setDocLocation: ReducerDeclWithPayload<
+    DocViewStore,
+    {
+        /// Section index
+        section: number;
+        /// Line index in the section
+        line: number;
+    }
+> = withPayload((state: DocViewStore, { section, line }) => {
+    state.currentSection = section;
+    state.currentLine = line;
+});

@@ -7,20 +7,16 @@ type DocSectionProps = {
     name: string;
 };
 
-export const DocSection: React.FC<PropsWithChildren<DocSectionProps>> = ({ 
+export const DocSection: React.FC<PropsWithChildren<DocSectionProps>> = ({
     name,
     children,
 }) => {
     return (
         <div className="docsection-container">
             <div className="docsection-head">
-                <Text size={700}>
-                    {name}
-                </Text>
+                <Text size={700}>{name || "\u00a0"}</Text>
             </div>
-            <div className="docsection-body">
-                {children}
-            </div>
+            <div className="docsection-body">{children}</div>
         </div>
     );
 };

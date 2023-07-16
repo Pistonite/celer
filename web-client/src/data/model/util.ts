@@ -159,28 +159,28 @@ export type DocNote = DocNoteText | DocNoteImage | DocNoteVideo;
 export type DocNoteText = {
     type: "text";
     content: DocRichText[];
-}
+};
 
 /// Image as document note
 export type DocNoteImage = {
     type: "image";
     /// Image URL
     src: string;
-}
+};
 
 /// Embedded video as document note
 export type DocNoteVideo = {
     type: "video";
     /// Video URL of supported providers
     link: string;
-}
+};
 
 export type DocDiagnostic = {
     /// The diagnostic message
     message: string;
     /// Type of the diagnostic
     type: "warn" | "error";
-}
+};
 
 /// Document rich text type
 export type DocRichText = {
@@ -198,7 +198,7 @@ export type RichText = {
     tag?: DocTag;
     /// The text content
     text: string;
-}
+};
 
 /// Document tag map
 export type DocTagMap = {

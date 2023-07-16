@@ -7,13 +7,20 @@ import { ExecDoc } from "data/model";
 import { ReducerDeclWithPayload, configureSlice, withPayload } from "./util";
 
 /// The document store type
-type DocumentStore = {
+export type DocumentStore = {
+    /// Serial number of the document
+    ///
+    /// This is updated automatically with `setDocument`.
+    /// The document will only be considered "changed" if the serial number
+    /// changes, which causes rerenders, etc.
+    serial: number;
     /// The current document
     document: ExecDoc;
 };
 
 /// The initial state
 const initialState: DocumentStore = {
+    serial: 0,
     document: {
         loaded: false,
         project: {
@@ -32,13 +39,16 @@ const initialState: DocumentStore = {
                 initialZoom: 0,
             },
             icons: {},
+            tags: {},
         },
+        route: [],
         map: [],
     },
 };
 
 const setDocument: ReducerDeclWithPayload<DocumentStore, ExecDoc> = withPayload(
     (state, value) => {
+        state.serial += 1;
         state.document = value;
     },
 );

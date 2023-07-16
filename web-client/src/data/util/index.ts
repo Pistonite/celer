@@ -9,8 +9,10 @@ export * from "./Debouncer";
 
 /// If user prefers dark mode
 export function prefersDarkMode(): boolean {
-    return !!(window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
+    return !!(
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
 }
 
 /// Switch theme by switching the css file in link tag

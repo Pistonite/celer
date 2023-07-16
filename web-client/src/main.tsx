@@ -7,7 +7,11 @@ import "./index.css";
 import { Provider as ReduxProvider } from "react-redux";
 import { WindowSizeProvider } from "core/utils";
 import { prefersDarkMode } from "data/util";
-import { FluentProvider, webDarkTheme, webLightTheme } from "@fluentui/react-components";
+import {
+    FluentProvider,
+    webDarkTheme,
+    webLightTheme,
+} from "@fluentui/react-components";
 
 window.addEventListener("popstate", (event) => {
     console.log(event);
@@ -23,9 +27,12 @@ root.render(
     <React.StrictMode>
         <ReduxProvider store={store}>
             <WindowSizeProvider>
-        <FluentProvider id="style-root" theme={isDarkMode ? webDarkTheme : webLightTheme} >
+                <FluentProvider
+                    id="style-root"
+                    theme={isDarkMode ? webDarkTheme : webLightTheme}
+                >
                     <AppRoot />
-        </FluentProvider>
+                </FluentProvider>
             </WindowSizeProvider>
         </ReduxProvider>
     </React.StrictMode>,
