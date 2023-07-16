@@ -10,6 +10,7 @@ import * as layoutReducers from "./layoutReducers";
 import { MapSettings, initialMapSettings } from "./map";
 import * as mapReducers from "./mapReducers";
 import { DocSettings, initialDocSettings } from "./doc";
+import * as docReducers from "./docReducers";
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";
@@ -37,9 +38,12 @@ export const { settingsReducer, settingsActions, settingsSelector } =
         reducers: {
             ...layoutReducers,
             ...mapReducers,
+            ...docReducers,
         },
     });
 
 /// re-exports
 export * from "./layoutUtil";
 export * from "./map";
+export * from "./doc";
+export * from "./docSelectors";

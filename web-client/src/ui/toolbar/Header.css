@@ -32,3 +32,12 @@ img.celer-logo {
     width: 32px;
     height: 32px;
 }
+
+div.diagnostic-menu-item {
+    max-width: 500px !important;
+}
+div.diagnostic-menu-item span {
+    max-height: 32px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

@@ -180,6 +180,10 @@ export type DocDiagnostic = {
     message: string;
     /// Type of the diagnostic
     type: "warn" | "error";
+    /// Source of the diagnostic
+    ///
+    /// User can filter diagnostics by source
+    source: string;
 };
 
 /// Document rich text type
@@ -198,6 +202,14 @@ export type RichText = {
     tag?: DocTag;
     /// The text content
     text: string;
+};
+
+/// Function to remove the tag from the text
+export const removeTags = (text: (RichText|DocRichText)[]): string => {
+    return text.map(removeTag).join("");
+};
+export const removeTag = (text: RichText|DocRichText): string => {
+    return text.text;
 };
 
 /// Document tag map

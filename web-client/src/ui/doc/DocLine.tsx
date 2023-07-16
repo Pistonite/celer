@@ -4,8 +4,7 @@ import clsx from "clsx";
 import React from "react";
 
 import { Text } from "@fluentui/react-components";
-import { PersonRunning20Regular } from "@fluentui/react-icons";
-import { RichText } from "data/model";
+import { DocDiagnostic, RichText } from "data/model";
 import { Rich } from "./Rich";
 import { DocLineContainerClass } from "./util";
 
@@ -15,10 +14,6 @@ type DocLineProps = {
     sectionIndex: number;
     /// Line index within the section, used for tracking line position
     lineIndex: number;
-    /// If the line is selected
-    selected: boolean;
-    /// Mode
-    mode: "error" | "warning" | "normal";
     /// Color of the line
     lineColor: string;
     /// The text to display
@@ -29,72 +24,77 @@ type DocLineProps = {
     secondaryText: RichText[];
     /// Counter properties
     counterText?: RichText;
+    /// Diagnostic messages
+    diagnostics: DocDiagnostic[];
 };
 
 export const DocLine: React.FC<DocLineProps> = ({
     sectionIndex,
     lineIndex,
-    selected,
-    mode,
     lineColor,
     text,
     iconUrl,
     secondaryText,
     counterText,
+    diagnostics,
 }) => {
     return (
-        <div
-            className={DocLineContainerClass}
-            data-section={sectionIndex}
-            data-line={lineIndex}
-        >
-            <div
-                className={clsx(
+            <div className={DocLineContainerClass} data-section={sectionIndex} data-line={lineIndex}>
+            <div className="docline-main" >
+                <div className={clsx(
                     "docline-head",
-                    mode === "error" && "docline-head-error",
-                    mode === "normal" && "docline-head-normal",
-                    mode === "warning" && "docline-head-warning",
-                )}
-                style={{
-                    borderColor: lineColor,
-                }}
-            >
-                {counterText && (
-                    <div
-                        className="docline-counter"
-                        style={{
-                            backgroundColor: counterText.tag?.background,
-                            color: counterText.tag?.color,
-                        }}
-                    >
-                        <Text size={500} font="monospace">
-                            {counterText.text}
-                        </Text>
-                    </div>
-                )}
-                {selected && (
-                    <div className="docline-cursor">
-                        <PersonRunning20Regular />
-                    </div>
-                )}
-            </div>
-            <div className="docline-body">
-                {iconUrl && (
-                    <div className="docline-icon-container">
-                        <img src={iconUrl} alt="icon" />
-                    </div>
-                )}
-                <div className="docline-text-container">
-                    <div className="docline-primary-text">
-                        <Rich size={500} content={text} />
-                    </div>
-                    {secondaryText.length > 0 && (
-                        <div className="docline-secondary-text">
-                            <Rich size={400} content={secondaryText} />
+                )} style={{
+                        borderColor: lineColor,
+                    }}>
+                    {
+                        counterText &&
+                            <div className="docline-counter" style={{ 
+                                backgroundColor: counterText.tag?.background, 
+                                color: counterText.tag?.color 
+                            }} >
+                                <Text size={500} font="monospace">
+                                    {counterText.text}
+                                </Text>
+                            </div>
+                    }
+                </div>
+                <div className="docline-body">
+                    {
+                        iconUrl &&
+                            <div className="docline-icon-container">
+                                <img src={iconUrl} alt="icon" />
+                            </div>
+                    }
+                    <div className="docline-text-container">
+
+                        <div className="docline-primary-text">
+                            <Rich size={500} content={text} />
                         </div>
-                    )}
+                        {
+                            secondaryText.length > 0 && <div className="docline-secondary-text">
+                                <Rich size={400} content={secondaryText} />
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
+            {
+                diagnostics.map(({message, type, source}, i) => (
+                    <div className="docline-diagnostic" key={i}>
+                        <div className={clsx("docline-diagnostic-head", `docline-diagnostic-${type}`)}>
+                            <Text size={300} font="monospace">
+                                ^^^ {type}: {source}:
+                            </Text>
+                        </div>
+                        <div className={clsx("docline-diagnostic-body", `docline-diagnostic-${type}`)}>
+                            <Text size={300} font="monospace">
+                                {message}
+                            </Text>
+                        </div>
+                    </div>
+                ))
+            }
         </div>
     );
 };
+

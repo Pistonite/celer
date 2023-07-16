@@ -26,6 +26,9 @@
 }
 
 .docline-container {
+}
+
+.docline-main {
     display: flex;
 }
 
@@ -81,6 +84,13 @@
     transition-duration: 0.1s;
 }
 
+.docline-diagnostic-head {
+    padding: 4px 4px 0 4px;
+}
+.docline-diagnostic-body {
+    padding: 4px 0 4px 4px;
+}
+
 /* theme */
 #doc-container {
     color: white;
@@ -109,6 +119,36 @@
 .docline-body {
     background-color: #001a00;
 }
+
+.docline-diagnostic-body {
+    color: white;
+}
+
+.docline-diagnostic-body {
+    color: black;
+}
+
+.docline-diagnostic-head.docline-diagnostic-error {
+    background-color: #990000;
+}
+.docline-diagnostic-body.docline-diagnostic-error {
+    background-color: #ff6666;
+}
+.docline-diagnostic-head.docline-diagnostic-warn {
+    background-color: #883300;
+}
+.docline-diagnostic-body.docline-diagnostic-warn {
+    background-color: #ffbb00;
+}
+.docline-diagnostic-head{
+    background-color: #8888ee;
+}
+.docline-diagnostic-body{
+    background-color: #ccccff;
+}
+
+
+
 
 /* dark theme */
 @media (prefers-color-scheme: dark) {

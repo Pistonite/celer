@@ -35,6 +35,7 @@ import { SwitchLayout } from "./SwitchLayout";
 import { SwitchMapLayer } from "./SwitchMapLayer";
 import { Settings } from "./Settings";
 import { ZoomIn, ZoomOut } from "./Zoom";
+import { ViewDiagnostics } from "./ViewDiagnostics";
 
 /// Header controls.
 ///
@@ -49,6 +50,11 @@ const HeaderControls: HeaderControlList = [
     {
         priority: 0,
         controls: [SwitchMapLayer, ZoomIn, ZoomOut],
+    },
+    // Diagnostic/editor
+    {
+        priority: 0,
+        controls: [ViewDiagnostics],
     },
     // Setting
     {

@@ -52,17 +52,19 @@ export const withPayload = <S, P>(
     };
 };
 
+type ParentState<Name extends string, State> = {
+    [t in Name]: State;
+};
+
 /// Return type definition for configureSlice
 type SliceConfiguration<Name extends string, State, Actions> = {
     [t in `${Name}Reducer`]: {
         [t in Name]: Reducer<State>;
     };
 } & {
-    //
     [t in `${Name}Actions`]: Actions;
 } & {
-    //
-    [t in `${Name}Selector`]: (state: any) => Readonly<State>;
+    [t in `${Name}Selector`]: (state: ParentState<Name, State>) => Readonly<State>;
 };
 
 /// A wrapper for createSlice that defines exports directly
@@ -79,6 +81,6 @@ export const configureSlice = <
             [args.name]: slice.reducer,
         },
         [`${args.name}Actions`]: slice.actions,
-        [`${args.name}Selector`]: (state: any) => state[args.name],
+        [`${args.name}Selector`]: (state: ParentState<Name, State>) => state[args.name],
     } as SliceConfiguration<Name, State, typeof slice.actions>;
 };

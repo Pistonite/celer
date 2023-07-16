@@ -36,7 +36,7 @@ export const initMap = (): MapState => {
         MapLog.warn(
             "found existing map instance. You are either in a dev environment or this is a bug",
         );
-        return window.__theMapState;
+        window.__theMapState.delete();
     }
     MapLog.info("creating map");
 
@@ -65,6 +65,8 @@ class MapState {
     private visualMgr: MapVisualMgr;
     /// Debouncer for recreating the visuals
     private recreateVisualsDebouncer: Debouncer;
+    /// Cleanup function
+    private cleanup: (() => void);
 
     constructor() {
         this.containerMgr = new MapContainerMgr();
@@ -82,14 +84,14 @@ class MapState {
         const watchSettings = reduxWatch(() =>
             settingsSelector(store.getState()),
         );
-        store.subscribe(
+        const unwatchSettings = store.subscribe(
             watchSettings((_newVal, _oldVal) => {
                 this.onSettingsUpdate();
             }),
         );
 
         const watchView = reduxWatch(() => viewSelector(store.getState()));
-        store.subscribe(
+        const unwatchView = store.subscribe(
             watchView((newVal, oldVal) => {
                 this.onViewUpdate(newVal, oldVal);
             }),
@@ -98,7 +100,7 @@ class MapState {
         const watchDocument = reduxWatch(() =>
             documentSelector(store.getState()),
         );
-        store.subscribe(
+        const unwatchDocument = store.subscribe(
             watchDocument((newVal, oldVal) => {
                 if (newVal.serial !== oldVal.serial) {
                     this.onDocumentUpdate(newVal.document, oldVal.document);
@@ -140,6 +142,22 @@ class MapState {
         });
 
         this.map = map;
+        this.cleanup = () => {
+            unwatchSettings();
+            unwatchView();
+            unwatchDocument();
+        }
+
+        // update document initially
+        this.onDocumentUpdate(documentSelector(store.getState()).document);
+    }
+
+    /// Delete the map state
+    public delete() {
+        MapLog.warn("deleting map");
+        this.map.getContainer().remove();
+        this.map.remove();
+        this.cleanup();
     }
 
     /// Attach the map to the root container
@@ -158,7 +176,7 @@ class MapState {
     /// Called when the document is updated
     ///
     /// This will update the map layers if needed, and will always redraw the map visuals
-    private onDocumentUpdate(newDoc: ExecDoc, oldDoc: ExecDoc) {
+    private onDocumentUpdate(newDoc: ExecDoc, oldDoc?: ExecDoc) {
         if (!newDoc.loaded) {
             // do nothing if doc is not loaded
             // we should be notified again when doc loads
@@ -166,6 +184,7 @@ class MapState {
         }
         // If the project name and version is the same, assume the map layers are the same
         if (
+            !oldDoc ||
             newDoc.loaded !== oldDoc.loaded ||
             newDoc.project.name !== oldDoc.project.name ||
             newDoc.project.version !== oldDoc.project.version

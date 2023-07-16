@@ -5,6 +5,7 @@ div.error-container {
     align-items: center;
     justify-content: center;
     height: 100%;
+    color: #ffa49d;
 }
 
 img.error-logo {
@@ -12,16 +13,11 @@ img.error-logo {
     max-width: 128px;
 }
 
-div.error-bar {
-    display: flex;
-    flex-direction: column;
-    color: #ffa49d;
-    max-width: 256px;
+div.error-message {
     width: 100%;
     box-sizing: border-box;
-    height: 28px;
     position: relative;
-    background: #555;
     margin-top: 20px;
     padding: 10px;
 }
+

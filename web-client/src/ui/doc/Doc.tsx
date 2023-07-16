@@ -9,10 +9,11 @@ import { DocumentStore, documentSelector, viewSelector } from "data/store";
 
 import { DocLine } from "./DocLine";
 import { DocSection } from "./DocSection";
-import { DocContainerId, DocLog, resolveTag, resolveTags } from "./util";
+import { DocContainerId, DocLog, DocScrollId, resolveTag, resolveTags } from "./util";
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
 import { initDocController } from "./DocController";
+import { ErrorBoundary } from "ui/shared/ErrorBoundary";
 
 const DocController = initDocController();
 
@@ -24,9 +25,13 @@ export const Doc: React.FC = () => {
     const documentStore = useSelector(documentSelector);
     if (isEditingLayout) {
         // DOM resizing is expensive, so we don't want to do it while editing
-        return <HintScreen message="Document hidden while editing layotu" />;
+        return <HintScreen message="Document hidden while editing layout" />;
     }
-    return <CachedDocInternal {...documentStore} />;
+    return (
+        <ErrorBoundary>
+            <CachedDocInternal {...documentStore} />
+        </ErrorBoundary>
+    )
 };
 
 /// Main doc viewer component
@@ -55,7 +60,7 @@ const DocInternal: React.FC<DocumentStore> = ({ document }) => {
 
     return (
         <div
-            id="doc-scroll"
+        id={DocScrollId}
             onScroll={() => {
                 DocController.onScroll();
             }}
@@ -63,13 +68,13 @@ const DocInternal: React.FC<DocumentStore> = ({ document }) => {
             <div id={DocContainerId}>
                 <div id="doc-main">
                     {document.route.map(({ name, lines }, i) => (
-                        <DocSection key={i} name={name}>
+                        <DocSection index={i} key={i} name={name}>
                             {lines.map((line, j) => (
                                 <DocLine
                                     sectionIndex={i}
                                     lineIndex={j}
                                     key={j}
-                                    mode={"normal"} //TODO
+                                    diagnostics={line.diagnostics}
                                     lineColor={line.lineColor}
                                     text={resolveTags(tagMap, line.text)}
                                     iconUrl={document.project.icons[line.icon]}

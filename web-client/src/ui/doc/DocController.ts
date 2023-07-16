@@ -37,10 +37,10 @@ export const initDocController = (): DocController => {
         DocLog.warn(
             "found existing doc instance. You are either in a dev environment or this is a bug",
         );
-        return window.__theDocController;
+        window.__theDocController.delete();
     }
 
-    DocLog.info("loading doc controller");
+    DocLog.info("creating doc controller");
 
     const controller = new DocController();
     window.__theDocController = controller;
@@ -60,6 +60,8 @@ class DocController {
     private updateHandle: number | null = null;
     /// Debouncer for updating the view
     private scrollUpdateDebouncer: Debouncer;
+    /// Clean up function
+    private cleanup: (() => void);
 
     constructor() {
         this.scrollUpdateDebouncer = new Debouncer(200, () => {
@@ -68,7 +70,7 @@ class DocController {
 
         // Subscribe to store updates
         const watchStore = reduxWatch(store.getState);
-        store.subscribe(
+        const unwatchStore = store.subscribe(
             watchStore((newState, oldState) => {
                 const newDocSerial = documentSelector(newState).serial;
                 const oldDocSerial = documentSelector(oldState).serial;
@@ -80,9 +82,10 @@ class DocController {
                     store.dispatch(
                         viewActions.setDocLocation({ section: 0, line: 0 }),
                     );
-                    // also update the current line
+                    // also update the current line and note positions, and trigger a scroll update
+                    // to layout the initial view
                     setTimeout(() => {
-                        this.updateViewAsync();
+                        this.updateViewAsync(true);
                     }, 0);
                     return;
                 }
@@ -98,14 +101,23 @@ class DocController {
                     oldView.currentLine,
                 );
                 setTimeout(() => {
-                    this.updateViewAsync();
+                    this.updateViewAsync(false);
                 }, 0);
             }),
         );
+
+        this.cleanup = () => {
+            unwatchStore();
+        }
+    }
+
+    public delete() {
+        DocLog.warn("deleting doc controller");
+        this.cleanup();
     }
 
     /// Update after scrolling
-    onScroll() {
+    public onScroll() {
         // if the current line is not visible, re-get the current line
         this.scrollUpdateDebouncer.dispatch();
     }
@@ -143,7 +155,6 @@ class DocController {
             const centerLine =
                 visibleLines[Math.floor(visibleLines.length / 2)];
             const [section, line] = getLineLocationFromElement(centerLine);
-            console.log(`center line: section=${section}, line=${line}`);
             store.dispatch(viewActions.setDocLocation({ section, line }));
             currentLine = centerLine;
         }
@@ -160,27 +171,28 @@ class DocController {
     }
 
     /// Update wrapper that retries until the view is updated
-    private updateViewAsync() {
+    private updateViewAsync(forceScrollUpdate: boolean) {
         if (this.updateHandle) {
             // already trying
             return;
         }
-        if (this.onViewUpdate()) {
+        if (this.onViewUpdate(forceScrollUpdate)) {
             return;
         }
         DocLog.warn("Fail to update document view. Will retry in 1s");
         this.updateHandle = window.setTimeout(() => {
             this.updateHandle = null;
-            this.updateViewAsync();
+            this.updateViewAsync(forceScrollUpdate);
         }, 1000);
     }
 
     /// Update after store change
     ///
-    /// For example, when current line position changes
-    private onViewUpdate(): boolean {
+    /// For example, when current line position changes.
+    /// If forceScrollUpdate, will also call scroll update even if scroll didn't change.
+    private onViewUpdate(forceScrollUpdate: boolean): boolean {
         const newView = viewSelector(store.getState());
-        console.log(
+        DocLog.info(
             `update view: section=${newView.currentSection}, line=${newView.currentLine}`,
         );
         // update current line indicator
@@ -229,6 +241,10 @@ class DocController {
             setScrollView(newScrollTop);
         } else {
             setScrollView(currentLineTop);
+        }
+
+        if (forceScrollUpdate) {
+            this.scrollUpdateDebouncer.dispatch();
         }
 
         return true;
