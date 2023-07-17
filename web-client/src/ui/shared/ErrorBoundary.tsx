@@ -6,7 +6,10 @@ type ErrorState = {
 };
 
 /// Error boundary component
-export class ErrorBoundary extends React.Component<PropsWithChildren, ErrorState> {
+export class ErrorBoundary extends React.Component<
+    PropsWithChildren,
+    ErrorState
+> {
     state = { hasError: false };
     private error = "";
 
@@ -20,7 +23,7 @@ export class ErrorBoundary extends React.Component<PropsWithChildren, ErrorState
 
     render() {
         if (this.state.hasError) {
-            return <ErrorScreen message={this.error} />
+            return <ErrorScreen message={this.error} />;
         }
         return this.props.children;
     }

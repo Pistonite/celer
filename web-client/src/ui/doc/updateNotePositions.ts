@@ -64,7 +64,7 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
         }
         const noteBlock = noteContainer.children[i] as HTMLElement;
         if (!noteBlock) {
-            DocLog.info("note positions before base updated");
+            DocLog.warn(`update note position called with invalid index ${i}`);
             // index out of bound
             return;
         }
@@ -78,12 +78,18 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
                 lineElement.getBoundingClientRect().y - containerOffsetY;
             top = Math.min(top, lineTop);
         }
-        setNotePostion(noteBlock, top);
-        window.setTimeout(() => {
-            layoutNoteBeforeAsync(serial, i - 1, top);
-        }, NoteUpdateDelay);
+        const changed = setNotePostion(noteBlock, top);
+        if (changed && i > 0) {
+            window.setTimeout(() => {
+                layoutNoteBeforeAsync(serial, i - 1, top);
+            }, NoteUpdateDelay);
+        } else {
+            DocLog.info(`finished updating note positions at ${i}`);
+        }
     };
-    layoutNoteBeforeAsync(updateNotesSerial, baseIndex - 1, baseTop);
+    if (baseIndex > 0) {
+        layoutNoteBeforeAsync(updateNotesSerial, baseIndex - 1, baseTop);
+    }
 
     // Layout block after it
     const layoutNoteAfterAsync = (
@@ -93,13 +99,12 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
     ): void => {
         if (serial !== updateNotesSerial) {
             // cancelled
-            DocLog.info("canceling previous note update after base");
+            DocLog.info("cancelling previous note update after base");
             return;
         }
         const noteBlock = noteContainer.children[i] as HTMLElement;
         if (!noteBlock) {
-            DocLog.info("note positions after base updated");
-            // index out of bound
+            DocLog.warn(`update note position called with invalid index ${i}`);
             return;
         }
         const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
@@ -109,23 +114,41 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
                 lineElement.getBoundingClientRect().y - containerOffsetY;
             top = Math.max(top, lineTop);
         }
-        setNotePostion(noteBlock, top);
-        window.setTimeout(() => {
-            layoutNoteAfterAsync(serial, i + 1, top + noteBlock.clientHeight);
-        }, NoteUpdateDelay);
+        const changed = setNotePostion(noteBlock, top);
+        if (changed && i < noteContainer.children.length - 1) {
+            window.setTimeout(() => {
+                layoutNoteAfterAsync(
+                    serial,
+                    i + 1,
+                    top + noteBlock.clientHeight,
+                );
+            }, NoteUpdateDelay);
+        } else {
+            DocLog.info(`finished updating note positions at ${i}`);
+        }
     };
-    layoutNoteAfterAsync(
-        updateNotesSerial,
-        baseIndex + 1,
-        baseTop + baseNoteBlock.clientHeight,
-    );
+    if (baseIndex < noteContainer.children.length - 1) {
+        layoutNoteAfterAsync(
+            updateNotesSerial,
+            baseIndex + 1,
+            baseTop + baseNoteBlock.clientHeight,
+        );
+    }
 };
 
 /// Helper for setting the position of a note block
-const setNotePostion = (noteBlock: HTMLElement, top: number): void => {
+///
+/// Return if the position is changed
+const setNotePostion = (noteBlock: HTMLElement, top: number): boolean => {
+    const newTop = `${top}px`;
+    if (noteBlock.style.top === newTop) {
+        return false;
+    }
     noteBlock.style.display = "block";
     noteBlock.style.position = "absolute";
-    noteBlock.style.top = `${top}px`;
+    noteBlock.style.top = newTop;
+
+    return true;
 };
 
 /// Find the first note block index that is equal or after the given line

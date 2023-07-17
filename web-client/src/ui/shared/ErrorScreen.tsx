@@ -18,9 +18,7 @@ export const ErrorScreen: React.FC<ErrorScreenProps> = ({ message }) => {
             <div className="error-message">
                 <Body1>{message}</Body1>
             </div>
-            <Button appearance="primary">
-                Copy logs
-            </Button>
+            <Button appearance="primary">Copy logs</Button>
         </div>
     );
 };

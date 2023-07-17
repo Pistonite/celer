@@ -48,7 +48,10 @@ export class StoreListener<TDeps extends Array<unknown>> {
     /// The unsubscribe function
     private unsubscribe: () => void;
 
-    constructor(getDeps: () => TDeps, onChange: (newDeps: TDeps, oldDeps: TDeps) => void) {
+    constructor(
+        getDeps: () => TDeps,
+        onChange: (newDeps: TDeps, oldDeps: TDeps) => void,
+    ) {
         this.getDeps = getDeps;
         this.previousDeps = getDeps();
         this.onChange = onChange;
@@ -56,10 +59,14 @@ export class StoreListener<TDeps extends Array<unknown>> {
             const newDeps = this.getDeps(store.getState());
             if (import.meta.env.DEV) {
                 if (newDeps.length !== this.previousDeps.length) {
-                    console.error("Store dependency length changed. This is not allowed! You will not see this message in production.")
+                    console.error(
+                        "Store dependency length changed. This is not allowed! You will not see this message in production.",
+                    );
                 }
             }
-            if (newDeps.every((val, index) => val === this.previousDeps[index])) {
+            if (
+                newDeps.every((val, index) => val === this.previousDeps[index])
+            ) {
                 return;
             }
             this.onChange(newDeps, this.previousDeps);

@@ -13,7 +13,7 @@ type RichProps = {
 
 export const Rich: React.FC<RichProps> = ({ content, size }) => {
     if (!content.find((t) => t.text)) {
-        return <span>{"\u00a0"}</span>;
+        return <span>&nbsp;</span>;
     }
     return (
         <>

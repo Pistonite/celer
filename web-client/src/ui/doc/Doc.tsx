@@ -9,7 +9,13 @@ import { DocumentStore, documentSelector, viewSelector } from "data/store";
 
 import { DocLine } from "./DocLine";
 import { DocSection } from "./DocSection";
-import { DocContainerId, DocLog, DocScrollId, resolveTag, resolveTags } from "./util";
+import {
+    DocContainerId,
+    DocLog,
+    DocScrollId,
+    resolveTag,
+    resolveTags,
+} from "./util";
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
 import { initDocController } from "./DocController";
@@ -31,7 +37,7 @@ export const Doc: React.FC = () => {
         <ErrorBoundary>
             <CachedDocInternal {...documentStore} />
         </ErrorBoundary>
-    )
+    );
 };
 
 /// Main doc viewer component
@@ -60,7 +66,7 @@ const DocInternal: React.FC<DocumentStore> = ({ document }) => {
 
     return (
         <div
-        id={DocScrollId}
+            id={DocScrollId}
             onScroll={() => {
                 DocController.onScroll();
             }}

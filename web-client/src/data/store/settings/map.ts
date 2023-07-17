@@ -80,7 +80,7 @@ export const initialMapSettings: MapSettings = {
 
     primaryIconSize: VisualSize.Regular,
     secondaryIconSize: VisualSize.Regular,
-    otherIconSize: VisualSize.Regular,
+    otherIconSize: VisualSize.Small,
     lineSize: VisualSize.Small, // this is the same thickness as the old app
     arrowSize: VisualSize.Regular,
     arrowFrequency: VisualSize.Regular,

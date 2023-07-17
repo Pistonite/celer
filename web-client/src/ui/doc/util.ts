@@ -97,6 +97,16 @@ export const findLineByIndex = (
     return (e as HTMLElement) ?? undefined;
 };
 
+/// Find a section container element by its section index
+export const findSectionByIndex = (
+    sectionIndex: number,
+): HTMLElement | undefined => {
+    const e = document.querySelector(
+        `.docsection-container[data-section="${sectionIndex}"]`,
+    );
+    return (e as HTMLElement) ?? undefined;
+};
+
 /// Get a line's scroll position view
 export const getLineScrollView = (
     line: HTMLElement,

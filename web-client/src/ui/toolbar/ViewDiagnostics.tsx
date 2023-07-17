@@ -3,8 +3,19 @@
 //! Diagnostics are extracted from the document and cached
 
 import React from "react";
-import { Tooltip, Menu, MenuItem, MenuList, MenuPopover, MenuTrigger, ToolbarButton } from "@fluentui/react-components";
-import { DocumentError20Regular, DocumentCheckmark20Regular } from "@fluentui/react-icons";
+import {
+    Tooltip,
+    Menu,
+    MenuItem,
+    MenuList,
+    MenuPopover,
+    MenuTrigger,
+    ToolbarButton,
+} from "@fluentui/react-components";
+import {
+    DocumentError20Regular,
+    DocumentCheckmark20Regular,
+} from "@fluentui/react-icons";
 
 import { DiagnosticSection, useDocDiagnostics } from "core/utils";
 import { useActions, viewActions } from "data/store";
@@ -16,7 +27,7 @@ export const ViewDiagnostics: ToolbarControl = {
         const diagnostics = useDocDiagnostics();
         const { setDocLocation } = useActions(viewActions);
         return (
-            <ViewDiagnosticInternal 
+            <ViewDiagnosticInternal
                 data={diagnostics}
                 gotoDiagnostic={(section, line) => {
                     setDocLocation({ section, line });
@@ -26,10 +37,16 @@ export const ViewDiagnostics: ToolbarControl = {
                     content={getControlName(diagnostics.length > 0)}
                     relationship="label"
                 >
-                    <ToolbarButton 
+                    <ToolbarButton
                         ref={ref}
                         disabled={diagnostics.length === 0}
-                        icon={diagnostics.length > 0 ? <DocumentError20Regular /> : <DocumentCheckmark20Regular />}
+                        icon={
+                            diagnostics.length > 0 ? (
+                                <DocumentError20Regular />
+                            ) : (
+                                <DocumentCheckmark20Regular />
+                            )
+                        }
                     >
                         {diagnostics.length && diagnostics.length}
                     </ToolbarButton>
@@ -41,25 +58,31 @@ export const ViewDiagnostics: ToolbarControl = {
         const diagnostics = useDocDiagnostics();
         const { setDocLocation } = useActions(viewActions);
         return (
-            <ViewDiagnosticInternal 
+            <ViewDiagnosticInternal
                 data={diagnostics}
                 gotoDiagnostic={(section, line) => {
                     setDocLocation({ section, line });
                 }}
             >
-                <MenuItem 
-                    icon={diagnostics.length > 0 ? <DocumentError20Regular /> : <DocumentCheckmark20Regular />}
+                <MenuItem
+                    icon={
+                        diagnostics.length > 0 ? (
+                            <DocumentError20Regular />
+                        ) : (
+                            <DocumentCheckmark20Regular />
+                        )
+                    }
                     disabled={diagnostics.length === 0}
                 >
                     {getControlName(diagnostics.length > 0)}
                 </MenuItem>
             </ViewDiagnosticInternal>
         );
-    }
-
+    },
 };
 
-const getControlName = (enabled: boolean) => enabled ? "View diagnostics" : "No error";
+const getControlName = (enabled: boolean) =>
+    enabled ? "View diagnostics" : "No error";
 
 /// Internal component implementation
 type ViewDiagnosticInternalProps = ControlComponentProps & {
@@ -67,48 +90,48 @@ type ViewDiagnosticInternalProps = ControlComponentProps & {
     data: DiagnosticSection[];
     /// Callback to go to a diagnostic
     gotoDiagnostic: (sectionIndex: number, lineIndex: number) => void;
-}
-const ViewDiagnosticInternal = React.memo(({ 
-    children, 
-    data,
-    gotoDiagnostic,
-}: ViewDiagnosticInternalProps) => {
+};
+const ViewDiagnosticInternal = React.memo(
+    ({ children, data, gotoDiagnostic }: ViewDiagnosticInternalProps) => {
         return (
             <Menu>
                 <MenuTrigger>{children}</MenuTrigger>
                 <MenuPopover>
                     <MenuList>
-                        {
-                            data.map((section, i) => (
-                                <Menu key={i}>
-                                    <MenuTrigger>
-                                        <MenuItem>
-                                            {section.sectionName}
-                                        </MenuItem>
-                                    </MenuTrigger>
-                                    <MenuPopover>
-                                        <MenuList>
-                                            {
-                                                section.diagnostics.map((d, i) => (
-                                                    <Tooltip key={i} content={d.message} relationship="description">
-                                                        <MenuItem onClick={()=>{
-                                                            gotoDiagnostic(d.sectionIndex, d.lineIndex);
-                                                        }} >
-                                                            ({d.sectionIndex}-{d.lineIndex}) {d.type}: {d.source}
-                                                        </MenuItem>
-                                                    </Tooltip>
-                                                ))
-                                            }
-                                        </MenuList>
-
-                                    </MenuPopover>
-
-                                </Menu>
-
-                            ))
-                        }
-                </MenuList>
-            </MenuPopover>
-        </Menu>
-    )
-});
+                        {data.map((section, i) => (
+                            <Menu key={i}>
+                                <MenuTrigger>
+                                    <MenuItem>{section.sectionName}</MenuItem>
+                                </MenuTrigger>
+                                <MenuPopover>
+                                    <MenuList>
+                                        {section.diagnostics.map((d, i) => (
+                                            <Tooltip
+                                                key={i}
+                                                content={d.message}
+                                                relationship="description"
+                                            >
+                                                <MenuItem
+                                                    onClick={() => {
+                                                        gotoDiagnostic(
+                                                            d.sectionIndex,
+                                                            d.lineIndex,
+                                                        );
+                                                    }}
+                                                >
+                                                    ({d.sectionIndex}-
+                                                    {d.lineIndex}) {d.type}:{" "}
+                                                    {d.source}
+                                                </MenuItem>
+                                            </Tooltip>
+                                        ))}
+                                    </MenuList>
+                                </MenuPopover>
+                            </Menu>
+                        ))}
+                    </MenuList>
+                </MenuPopover>
+            </Menu>
+        );
+    },
+);

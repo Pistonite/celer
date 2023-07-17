@@ -13,7 +13,7 @@ import { useSelector } from "react-redux";
 export type DiagnosticSection = {
     sectionName: string;
     diagnostics: DiagnosticWithLocation[];
-}
+};
 export type DiagnosticWithLocation = DocDiagnostic & {
     /// Text of the line that has the diagnostic
     lineText: string;
@@ -21,7 +21,7 @@ export type DiagnosticWithLocation = DocDiagnostic & {
     sectionIndex: number;
     /// Line number
     lineIndex: number;
-}
+};
 
 /// Hook to get all diagnostics in the document
 export const useDocDiagnostics = (): DiagnosticSection[] => {
@@ -55,4 +55,3 @@ export const useDocDiagnostics = (): DiagnosticSection[] => {
 
     return diagnostics;
 };
-

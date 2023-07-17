@@ -205,10 +205,10 @@ export type RichText = {
 };
 
 /// Function to remove the tag from the text
-export const removeTags = (text: (RichText|DocRichText)[]): string => {
+export const removeTags = (text: (RichText | DocRichText)[]): string => {
     return text.map(removeTag).join("");
 };
-export const removeTag = (text: RichText|DocRichText): string => {
+export const removeTag = (text: RichText | DocRichText): string => {
     return text.text;
 };
 

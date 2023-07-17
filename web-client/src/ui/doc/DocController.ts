@@ -13,6 +13,7 @@ import {
     DocLog,
     DocScrollId,
     findLineByIndex,
+    findSectionByIndex,
     getLineLocationFromElement,
     getLineScrollView,
     getScrollContainerOffsetY,
@@ -61,7 +62,7 @@ class DocController {
     /// Debouncer for updating the view
     private scrollUpdateDebouncer: Debouncer;
     /// Clean up function
-    private cleanup: (() => void);
+    private cleanup: () => void;
 
     constructor() {
         this.scrollUpdateDebouncer = new Debouncer(200, () => {
@@ -108,7 +109,7 @@ class DocController {
 
         this.cleanup = () => {
             unwatchStore();
-        }
+        };
     }
 
     public delete() {
@@ -124,27 +125,31 @@ class DocController {
 
     /// Update the view after scrolling
     private onScrollUpdate() {
-        // check if current line is visible
         const view = viewSelector(store.getState());
-        let currentLine = findLineByIndex(
-            view.currentSection,
-            view.currentLine,
-        );
-        if (!currentLine) {
-            DocLog.warn(
-                `cannot find current line: section=${view.currentSection}, line=${view.currentLine}`,
-            );
-            return;
-        }
         const scrollView = getScrollView();
         if (!scrollView) {
             return;
         }
-        const { scrollTop, scrollBottom } = scrollView;
-        const containerOffsetY = getScrollContainerOffsetY();
-        const { scrollTop: currentLineTop, scrollBottom: currentLineBottom } =
-            getLineScrollView(currentLine, containerOffsetY);
-        if (currentLineTop < scrollTop || currentLineBottom > scrollBottom) {
+
+        // see if we need to update the current line
+        let needUpdateCurrentLine = false;
+        const currentLine = findLineByIndex(
+            view.currentSection,
+            view.currentLine,
+        );
+        if (!currentLine) {
+            needUpdateCurrentLine = true;
+        } else {
+            const { scrollTop, scrollBottom } = scrollView;
+            const containerOffsetY = getScrollContainerOffsetY();
+            const {
+                scrollTop: currentLineTop,
+                scrollBottom: currentLineBottom,
+            } = getLineScrollView(currentLine, containerOffsetY);
+            needUpdateCurrentLine =
+                currentLineTop < scrollTop || currentLineBottom > scrollBottom;
+        }
+        if (needUpdateCurrentLine) {
             // current line is not visible
             const visibleLines = findVisibleLines();
             if (visibleLines.length === 0) {
@@ -156,11 +161,11 @@ class DocController {
                 visibleLines[Math.floor(visibleLines.length / 2)];
             const [section, line] = getLineLocationFromElement(centerLine);
             store.dispatch(viewActions.setDocLocation({ section, line }));
-            currentLine = centerLine;
+            updateNotePositions(centerLine);
+        } else {
+            // Update notes based on current line
+            updateNotePositions(currentLine as HTMLElement);
         }
-
-        // Update notes based on current line
-        updateNotePositions(currentLine);
     }
 
     private removeCurrentLineIndicator(section: number, line: number) {
@@ -196,14 +201,23 @@ class DocController {
             `update view: section=${newView.currentSection}, line=${newView.currentLine}`,
         );
         // update current line indicator
-        const newCurrentLine = findLineByIndex(
+        let newCurrentLine = findLineByIndex(
             newView.currentSection,
             newView.currentLine,
         );
-        if (!newCurrentLine) {
-            return false;
+        if (newCurrentLine) {
+            newCurrentLine.classList.add(DocCurrentLineClass);
         }
-        newCurrentLine.classList.add(DocCurrentLineClass);
+        if (!newCurrentLine) {
+            // Try to scroll to the section instead if the line is not found
+            newCurrentLine = findSectionByIndex(newView.currentSection);
+            if (!newCurrentLine) {
+                DocLog.warn(
+                    `cannot find current line: section=${newView.currentSection}, line=${newView.currentLine}`,
+                );
+                return false;
+            }
+        }
 
         const scrollView = getScrollView();
         if (!scrollView) {

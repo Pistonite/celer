@@ -94,7 +94,6 @@ type SwitchToolbarLocationInternalProps = ControlComponentProps & {
 const SwitchToolbarLocationInternal: React.FC<
     SwitchToolbarLocationInternalProps
 > = ({ children, layout, locations }) => {
-    // settings store
     const { setCurrentLayout } = useActions(settingsActions);
 
     // compute which menu items should show as checked

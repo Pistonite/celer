@@ -3,7 +3,7 @@
 /// State type for doc settings
 export type DocSettings = {
     // General settings
-    
+
     /// Theme name for the doc viewer
     theme: string;
     /// Set map view to fit doc when scrolled
@@ -21,7 +21,6 @@ export type DocSettings = {
     ///
     /// The key is the name of the document
     perDoc: Record<string, PerDocSettings>;
-
 };
 
 /// Key binding type
@@ -34,14 +33,14 @@ export type DocKeyBinding = string[];
 export type PerDocSettings = {
     /// The initial current line position
     ///
-    /// Document will be scrolled to this line on load 
+    /// Document will be scrolled to this line on load
     initialCurrentSection: number;
     initialCurrentLine: number;
     /// Hide diagnostics from sources
     excludeDiagnosticSources: string[];
     /// Tags to not split on
     excludeSplitTags: string[];
-}
+};
 
 /// Default doc settings
 export const initialDocSettings: DocSettings = {
@@ -57,8 +56,8 @@ export const initialDocSettings: DocSettings = {
 };
 
 export const initialPerDocSettings = {
-        initialCurrentSection: 0,
-        initialCurrentLine: 0,
-        excludeDiagnosticSources: [],
-        excludeSplitTags: [],
-    };
+    initialCurrentSection: 0,
+    initialCurrentLine: 0,
+    excludeDiagnosticSources: [],
+    excludeSplitTags: [],
+};

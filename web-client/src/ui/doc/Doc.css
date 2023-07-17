@@ -1,16 +1,19 @@
 #doc-container {
     display: flex;
+    --note-min-width: 48px;
 }
 
 #doc-scroll {
     height: 100%;
     /* make document scrollable */
     overflow-y: auto;
+    /* smooth */
+    scroll-behavior: smooth;
 }
 
 #doc-main {
     /* sizing for the main column */
-    min-width: min(calc(100% - 24px), 380px);
+    min-width: min(calc(100% - var(--note-min-width)), 380px);
     max-width: 380px;
 }
 
@@ -18,6 +21,9 @@
     /* need this because note blocks have position: absolute */
     position: relative;
     flex: 1;
+    min-width: var(--note-min-width);
+    /* need for container query on the notes */
+    container-type: size;
 }
 
 .docsection-head {
@@ -39,6 +45,7 @@
     position: relative;
     text-align: right;
     transition-duration: 0.1s;
+    cursor: pointer;
 }
 
 .doc-current-line .docline-head {
@@ -77,11 +84,39 @@
 
 .docnote-block {
     padding: 4px;
+    box-sizing: border-box;
 }
 
 .docnote-container {
     display: none; /* hide by default */
     transition-duration: 0.1s;
+}
+
+@container (max-width: 100px) {
+    .docnote-container {
+        /* need this so 100% can be propagated to children */
+        width: 100%;
+        height: 32px;
+    }
+    .docnote-container:hover {
+        /* left: max(-380px, calc(-100vh + 24px)); */
+        right: 0px;
+        width: min(calc(100% + 380px), 100vw);
+        height: auto;
+        z-index: 100;
+    }
+    .docnote-container .docnote-block {
+        /* height: 32px; */
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .docnote-container .docnote-block span {
+        white-space: nowrap;
+    }
+    .docnote-container:hover .docnote-block span {
+        white-space: normal;
+    }
 }
 
 .docline-diagnostic-head {
@@ -140,15 +175,16 @@
 .docline-diagnostic-body.docline-diagnostic-warn {
     background-color: #ffbb00;
 }
-.docline-diagnostic-head{
+.docline-diagnostic-head {
     background-color: #8888ee;
 }
-.docline-diagnostic-body{
+.docline-diagnostic-body {
     background-color: #ccccff;
 }
 
-
-
+.docline-head:hover {
+    background-color: rgba(0, 0, 0, 0.4) !important;
+}
 
 /* dark theme */
 @media (prefers-color-scheme: dark) {

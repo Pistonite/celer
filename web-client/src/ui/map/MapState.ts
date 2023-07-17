@@ -66,7 +66,7 @@ class MapState {
     /// Debouncer for recreating the visuals
     private recreateVisualsDebouncer: Debouncer;
     /// Cleanup function
-    private cleanup: (() => void);
+    private cleanup: () => void;
 
     constructor() {
         this.containerMgr = new MapContainerMgr();
@@ -146,7 +146,7 @@ class MapState {
             unwatchSettings();
             unwatchView();
             unwatchDocument();
-        }
+        };
 
         // update document initially
         this.onDocumentUpdate(documentSelector(store.getState()).document);
