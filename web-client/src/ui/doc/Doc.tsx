@@ -66,9 +66,19 @@ const DocInternal: React.FC<DocumentStore> = ({ document }) => {
 
     return (
         <div
+            tabIndex={0}
             id={DocScrollId}
             onScroll={() => {
                 DocController.onScroll();
+            }}
+            onFocus={() => {
+                console.log("focus");
+            }}
+            onKeyDown={(e) => {
+                console.log("key up", e.key);
+            }}
+            onKeyUp={(e) => {
+                console.log("key down", e.key);
             }}
         >
             <div id={DocContainerId}>

@@ -2,7 +2,7 @@
 
 import { ReducerDeclWithPayload, withPayload } from "data/store/util";
 
-import { DocKeyBinding, DocSettings, initialPerDocSettings } from "./doc";
+import { DocKeyBinding, DocSettings, KeyBindingName, initialPerDocSettings } from "./doc";
 
 /// Set the document viewer theme
 export const setDocTheme: ReducerDeclWithPayload<DocSettings, string> =
@@ -31,29 +31,16 @@ export const setForcePopupNotes: ReducerDeclWithPayload<DocSettings, boolean> =
     });
 
 /// Set key bindings
-export const setPrevLineKey: ReducerDeclWithPayload<
+export const setDocKeyBinding: ReducerDeclWithPayload<
     DocSettings,
-    DocKeyBinding
-> = withPayload((state: DocSettings, value: DocKeyBinding) => {
-    state.prevLineKey = value;
-});
-export const setNextLineKey: ReducerDeclWithPayload<
-    DocSettings,
-    DocKeyBinding
-> = withPayload((state: DocSettings, value: DocKeyBinding) => {
-    state.nextLineKey = value;
-});
-export const setPrevSplitKey: ReducerDeclWithPayload<
-    DocSettings,
-    DocKeyBinding
-> = withPayload((state: DocSettings, value: DocKeyBinding) => {
-    state.prevSplitKey = value;
-});
-export const setNextSplitKey: ReducerDeclWithPayload<
-    DocSettings,
-    DocKeyBinding
-> = withPayload((state: DocSettings, value: DocKeyBinding) => {
-    state.nextSplitKey = value;
+    {
+        /// name of the key binding to set
+        name: KeyBindingName,
+        /// new value of the key binding
+        value: DocKeyBinding,
+    }
+> = withPayload((state: DocSettings, {name, value}) => {
+    state[name] = value;
 });
 
 // per-doc settings

@@ -12,16 +12,20 @@ export type DocSettings = {
     rememberDocPosition: boolean;
     /// Always display notes as popup
     forcePopupNotes: boolean;
-    /// Key bindings
-    prevLineKey: DocKeyBinding;
-    nextLineKey: DocKeyBinding;
-    prevSplitKey: DocKeyBinding;
-    nextSplitKey: DocKeyBinding;
     /// Per-doc settings
     ///
     /// The key is the name of the document
     perDoc: Record<string, PerDocSettings>;
-};
+} & KeyBindingSettings;
+
+export type KeyBindingSettings = {
+    prevLineKey: DocKeyBinding;
+    nextLineKey: DocKeyBinding;
+    prevSplitKey: DocKeyBinding;
+    nextSplitKey: DocKeyBinding;
+}
+
+export type KeyBindingName = keyof KeyBindingSettings;
 
 /// Key binding type
 ///

@@ -1,12 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { AppRoot } from "./AppRoot.tsx";
-import { store } from "data/store";
+import { settingsSelector, store } from "data/store";
 
 import "./index.css";
 import { Provider as ReduxProvider } from "react-redux";
 import { WindowSizeProvider } from "core/utils";
-import { prefersDarkMode } from "data/util";
+import { prefersDarkMode, switchTheme } from "data/util";
 import {
     FluentProvider,
     webDarkTheme,
@@ -22,6 +22,8 @@ const root = ReactDOM.createRoot(
 );
 
 const isDarkMode = prefersDarkMode();
+/// TODO this should be in the kernel
+switchTheme(settingsSelector(store.getState()).theme);
 
 root.render(
     <React.StrictMode>

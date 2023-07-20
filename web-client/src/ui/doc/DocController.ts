@@ -51,10 +51,6 @@ export const initDocController = (): DocController => {
 
 /// Controller class
 ///
-/// This is analogus to the MapState class. However,
-/// DocController does not own any state, and only owns the
-/// store listeners.
-///
 /// The document DOM can call the controller to update the view.
 class DocController {
     /// The update handle

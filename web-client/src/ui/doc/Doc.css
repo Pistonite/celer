@@ -11,6 +11,11 @@
     scroll-behavior: smooth;
 }
 
+#doc-scroll:focus-visible {
+    /* we have our own visual for when the doc is focused*/
+    outline: none;
+}
+
 #doc-main {
     /* sizing for the main column */
     min-width: min(calc(100% - var(--note-min-width)), 380px);
@@ -49,6 +54,10 @@
 }
 
 .doc-current-line .docline-head {
+    border-right: 12px solid;
+}
+
+#doc-scroll:focus .doc-current-line .docline-head {
     border-right: 24px solid;
 }
 
@@ -65,6 +74,10 @@
 }
 
 .doc-current-line .docline-counter {
+    right: -12px;
+}
+
+#doc-scroll:focus .doc-current-line .docline-counter {
     right: -24px;
 }
 
