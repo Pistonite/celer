@@ -3,7 +3,7 @@
 import L from "leaflet";
 import { LRUCache } from "lru-cache";
 
-import { MapLog } from "./util";
+import { MapLog } from "./utils";
 
 // hacks into implementation details of leaflet
 interface LLayer {

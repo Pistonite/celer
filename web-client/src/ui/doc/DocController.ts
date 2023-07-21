@@ -6,8 +6,8 @@
 
 import reduxWatch from "redux-watch";
 
-import { Debouncer } from "data/util";
-import { documentSelector, store, viewActions, viewSelector } from "data/store";
+import { AppStore, documentSelector, viewActions, viewSelector } from "core/store";
+import { Debouncer } from "low/utils";
 
 import {
     DocLog,
@@ -18,7 +18,7 @@ import {
     getLineScrollView,
     getScrollContainerOffsetY,
     getScrollView,
-} from "./util";
+} from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
 import { updateNotePositions } from "./updateNotePositions";
 
@@ -33,7 +33,7 @@ declare global {
 export const DocCurrentLineClass = "doc-current-line";
 
 /// Create the doc controller singleton
-export const initDocController = (): DocController => {
+export const initDocController = (store: AppStore): DocController => {
     if (window.__theDocController) {
         DocLog.warn(
             "found existing doc instance. You are either in a dev environment or this is a bug",
@@ -43,7 +43,7 @@ export const initDocController = (): DocController => {
 
     DocLog.info("creating doc controller");
 
-    const controller = new DocController();
+    const controller = new DocController(store);
     window.__theDocController = controller;
 
     return controller;
@@ -52,7 +52,9 @@ export const initDocController = (): DocController => {
 /// Controller class
 ///
 /// The document DOM can call the controller to update the view.
-class DocController {
+export class DocController {
+    /// Reference to the app store
+    private store: AppStore;
     /// The update handle
     private updateHandle: number | null = null;
     /// Debouncer for updating the view
@@ -60,7 +62,8 @@ class DocController {
     /// Clean up function
     private cleanup: () => void;
 
-    constructor() {
+    constructor(store: AppStore) {
+        this.store = store;
         this.scrollUpdateDebouncer = new Debouncer(200, () => {
             this.onScrollUpdate();
         });
@@ -121,7 +124,7 @@ class DocController {
 
     /// Update the view after scrolling
     private onScrollUpdate() {
-        const view = viewSelector(store.getState());
+        const view = viewSelector(this.store.getState());
         const scrollView = getScrollView();
         if (!scrollView) {
             return;
@@ -156,7 +159,7 @@ class DocController {
             const centerLine =
                 visibleLines[Math.floor(visibleLines.length / 2)];
             const [section, line] = getLineLocationFromElement(centerLine);
-            store.dispatch(viewActions.setDocLocation({ section, line }));
+            this.store.dispatch(viewActions.setDocLocation({ section, line }));
             updateNotePositions(centerLine);
         } else {
             // Update notes based on current line
@@ -192,7 +195,7 @@ class DocController {
     /// For example, when current line position changes.
     /// If forceScrollUpdate, will also call scroll update even if scroll didn't change.
     private onViewUpdate(forceScrollUpdate: boolean): boolean {
-        const newView = viewSelector(store.getState());
+        const newView = viewSelector(this.store.getState());
         DocLog.info(
             `update view: section=${newView.currentSection}, line=${newView.currentLine}`,
         );

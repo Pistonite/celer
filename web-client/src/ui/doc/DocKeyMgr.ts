@@ -1,16 +1,16 @@
 //! Logic for handling key events and bindings
 
-import { Store, documentSelector, settingsActions, settingsSelector, viewActions, viewSelector } from "data/store";
-import { getRelativeLocation } from "core/utils";
+import { AppStore, documentSelector, settingsActions, settingsSelector, viewActions, viewSelector } from "core/store";
+import { getRelativeLocation } from "core/doc";
 
-import { DocLog } from "./util";
+import { DocLog } from "./utils";
 
 /// Manager for key events and bindings
 ///
 /// Connects to the store for handling the key
 export class DocKeyMgr {
     /// The store to operate on
-    private store: Store;
+    private store: AppStore;
     /// The current keys that are held down
     private currentStrokes: string[] = [];
     /// The current detected key binding
@@ -20,7 +20,7 @@ export class DocKeyMgr {
     /// for it to be released.
     private lastDetected: string[] = [];
 
-    constructor(store: Store) {
+    constructor(store: AppStore) {
         this.store = store;
     }
 

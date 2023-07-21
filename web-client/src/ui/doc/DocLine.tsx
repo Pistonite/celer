@@ -2,12 +2,15 @@
 
 import clsx from "clsx";
 import React from "react";
-
 import { Text } from "@fluentui/react-components";
-import { DocDiagnostic, RichText, removeTags } from "data/model";
+
+import { RichText, removeTags } from "core/doc";
+import { viewActions } from "core/store";
+import { DocDiagnostic } from "low/compiler";
+import { useActions } from "low/store";
+
 import { Rich } from "./Rich";
-import { DocLineContainerClass } from "./util";
-import { useActions, viewActions } from "data/store";
+import { DocLineContainerClass } from "./utils";
 
 /// One line in the document
 type DocLineProps = {

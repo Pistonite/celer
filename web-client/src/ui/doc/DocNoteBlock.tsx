@@ -1,7 +1,7 @@
-import { DocNote, DocTagMap } from "data/model";
+import { DocNote, DocTagMap } from "low/compiler";
 
 import { Rich } from "./Rich";
-import { resolveTags } from "./util";
+import { resolveTags } from "./utils";
 /// Component for displaying note blocks
 export type DocNoteBlockProps = {
     /// Section index of the line, used for tracking line position

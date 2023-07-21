@@ -6,22 +6,15 @@ import "./leaflet-tilelayer-nogap";
 
 import reduxWatch from "redux-watch";
 
-import {
-    SectionMode,
-    ViewStore,
-    documentSelector,
-    settingsSelector,
-    store,
-    viewActions,
-    viewSelector,
-} from "data/store";
-import { ExecDoc } from "data/model";
-import { Debouncer } from "data/util";
+import { AppStore, ViewState, documentSelector, settingsSelector, viewActions, viewSelector } from "core/store";
+import { ExecDoc } from "low/compiler";
+import { Debouncer } from "low/utils";
 
-import { MapLog, roughlyEquals } from "./util";
+import { MapLog, roughlyEquals } from "./utils";
 import { MapContainerMgr } from "./MapContainerMgr";
 import { MapLayerMgr } from "./MapLayerMgr";
 import { MapVisualMgr } from "./MapVisualMgr";
+import { SectionMode } from "core/map";
 
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
@@ -31,7 +24,7 @@ declare global {
 }
 
 /// Map entry point
-export const initMap = (): MapState => {
+export const initMap = (store: AppStore): MapState => {
     if (window.__theMapState) {
         MapLog.warn(
             "found existing map instance. You are either in a dev environment or this is a bug",
@@ -40,7 +33,7 @@ export const initMap = (): MapState => {
     }
     MapLog.info("creating map");
 
-    const map = new MapState();
+    const map = new MapState(store);
     window.__theMapState = map;
 
     return map;
@@ -54,7 +47,9 @@ const FlyOptions = {
 /// State of the current map.
 ///
 /// Holds a reference to L.Map
-class MapState {
+export class MapState {
+    /// Reference to the app store
+    private store: AppStore;
     /// The map
     private map: L.Map;
     /// Container Manager
@@ -68,10 +63,10 @@ class MapState {
     /// Cleanup function
     private cleanup: () => void;
 
-    constructor() {
+    constructor(store: AppStore) {
         this.containerMgr = new MapContainerMgr();
-        this.layerMgr = new MapLayerMgr();
-        this.visualMgr = new MapVisualMgr();
+        this.layerMgr = new MapLayerMgr(store);
+        this.visualMgr = new MapVisualMgr(this.layerMgr, store);
 
         // Create map
         const map = L.map(this.containerMgr.createMapContainer(), {
@@ -134,7 +129,6 @@ class MapState {
             const state = store.getState();
             this.visualMgr.recreate(
                 this.map,
-                this.layerMgr,
                 documentSelector(state).document,
                 viewSelector(state),
                 settingsSelector(state),
@@ -142,6 +136,7 @@ class MapState {
         });
 
         this.map = map;
+        this.store = store;
         this.cleanup = () => {
             unwatchSettings();
             unwatchView();
@@ -199,12 +194,12 @@ class MapState {
         this.recreateVisualsDebouncer.dispatch();
     }
 
-    private onViewUpdate(view: ViewStore, oldView: ViewStore) {
+    private onViewUpdate(view: ViewState, oldView: ViewState) {
         if (view.isEditingLayout !== oldView.isEditingLayout) {
             this.map.invalidateSize();
         }
 
-        const state = store.getState();
+        const state = this.store.getState();
         const settings = settingsSelector(state);
         const layerChanged = view.currentMapLayer !== oldView.currentMapLayer;
         const sectionChanged = view.currentSection !== oldView.currentSection;
@@ -285,8 +280,8 @@ class MapState {
 
     /// Change the current layer
     private setLayerInStore(index: number) {
-        if (index !== viewSelector(store.getState()).currentMapLayer) {
-            store.dispatch(viewActions.setMapLayer(index));
+        if (index !== viewSelector(this.store.getState()).currentMapLayer) {
+            this.store.dispatch(viewActions.setMapLayer(index));
         }
     }
 }

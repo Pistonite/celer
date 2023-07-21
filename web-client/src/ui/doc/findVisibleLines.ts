@@ -4,7 +4,7 @@ import {
     getScrollView,
     getLineScrollView,
     DocLineContainerClass,
-} from "./util";
+} from "./utils";
 
 /// Find all the lines that are visible in the document container
 ///

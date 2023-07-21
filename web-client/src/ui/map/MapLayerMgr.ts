@@ -2,14 +2,10 @@
 import L from "leaflet";
 import "leaflet-rastercoords";
 
-import {
-    DocMapLayer,
-    DocMapLayerTilesetTransform,
-    GameCoord,
-} from "data/model";
+import { AppDispatcher, viewActions } from "core/store";
+import { DocMapLayer, DocMapLayerTilesetTransform, GameCoord } from "low/compiler";
 
-import { MapLog, getAttributionHtml } from "./util";
-import { store, viewActions } from "data/store";
+import { MapLog, getAttributionHtml } from "./utils";
 
 /// Tile layer wrapper
 type MapLayer = {
@@ -27,10 +23,16 @@ type MapLayer = {
 
 /// Manages the map tile layers and coordinate transformation to layers
 export class MapLayerMgr {
+    /// Reference to the app store for dispatching actions
+    private dispatcher: AppDispatcher;
     /// The tileset layers
     private layers: MapLayer[] = [];
     /// The active tileset layer
     private activeLayerIndex = -1;
+
+    constructor(dispatcher: AppDispatcher) {
+        this.dispatcher = dispatcher;
+    }
 
     /// Initialize the tileset layers, remove previous one if exists
     ///
@@ -81,8 +83,8 @@ export class MapLayerMgr {
         if (newLayer) {
             newLayer.layer.addTo(map);
 
-            store.dispatch(viewActions.setMapZoomBounds(newLayer.zoomBounds));
-            store.dispatch(viewActions.setMapLayer(index));
+            this.dispatcher.dispatch(viewActions.setMapZoomBounds(newLayer.zoomBounds));
+            this.dispatcher.dispatch(viewActions.setMapLayer(index));
         }
     }
 

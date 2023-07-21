@@ -9,7 +9,7 @@ import {
     getLineLocationFromElement,
     getScrollContainerOffsetY,
     findLineByIndex,
-} from "./util";
+} from "./utils";
 
 /// The id of the note panel
 export const DocNoteContainerId = "doc-side";

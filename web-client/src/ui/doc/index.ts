@@ -4,6 +4,6 @@
 //! This layer exposes a single Doc react component.
 //! The underlying implementation should not be accessible outside of this layer
 
-import * as DocModule from "./Doc";
+import { DocRoot } from "./DocRoot";
 
-export default DocModule.Doc;
+export default DocRoot;
