@@ -5,25 +5,15 @@ import "leaflet/dist/leaflet.css";
 import "./leaflet-tilelayer-nogap";
 
 import reduxWatch from "redux-watch";
+import { AppStore, ViewState, documentSelector, settingsSelector, viewActions, viewSelector } from "core/store";
+import { ExecDoc } from "low/compiler";
+import { Debouncer } from "low/utils";
+import { SectionMode } from "core/map";
 
-import {
-    SectionMode,
-    ViewStore,
-    documentSelector,
-    settingsSelector,
-    store,
-    viewActions,
-    viewSelector,
-} from "data/store";
-import { ExecDoc } from "data/model";
-import { Debouncer } from "data/util";
-
-import { MapLog, roughlyEquals } from "./util";
+import { MapLog, roughlyEquals } from "./utils";
 import { MapContainerMgr } from "./MapContainerMgr";
 import { MapLayerMgr } from "./MapLayerMgr";
 import { MapVisualMgr } from "./MapVisualMgr";
-
-MapLog.info("loading map module");
 
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
@@ -33,16 +23,13 @@ declare global {
 }
 
 /// Map entry point
-export const initMap = (): MapState => {
+export const initMap = (store: AppStore): MapState => {
     if (window.__theMapState) {
-        MapLog.warn(
-            "found existing map instance. You are either in a dev environment or this is a bug",
-        );
-        return window.__theMapState;
+        window.__theMapState.delete();
     }
     MapLog.info("creating map");
 
-    const map = new MapState();
+    const map = new MapState(store);
     window.__theMapState = map;
 
     return map;
@@ -56,7 +43,9 @@ const FlyOptions = {
 /// State of the current map.
 ///
 /// Holds a reference to L.Map
-class MapState {
+export class MapState {
+    /// Reference to the app store
+    private store: AppStore;
     /// The map
     private map: L.Map;
     /// Container Manager
@@ -67,11 +56,13 @@ class MapState {
     private visualMgr: MapVisualMgr;
     /// Debouncer for recreating the visuals
     private recreateVisualsDebouncer: Debouncer;
+    /// Cleanup function
+    private cleanup: () => void;
 
-    constructor() {
+    constructor(store: AppStore) {
         this.containerMgr = new MapContainerMgr();
-        this.layerMgr = new MapLayerMgr();
-        this.visualMgr = new MapVisualMgr();
+        this.layerMgr = new MapLayerMgr(store);
+        this.visualMgr = new MapVisualMgr(this.layerMgr, store);
 
         // Create map
         const map = L.map(this.containerMgr.createMapContainer(), {
@@ -84,14 +75,14 @@ class MapState {
         const watchSettings = reduxWatch(() =>
             settingsSelector(store.getState()),
         );
-        store.subscribe(
+        const unwatchSettings = store.subscribe(
             watchSettings((_newVal, _oldVal) => {
                 this.onSettingsUpdate();
             }),
         );
 
         const watchView = reduxWatch(() => viewSelector(store.getState()));
-        store.subscribe(
+        const unwatchView = store.subscribe(
             watchView((newVal, oldVal) => {
                 this.onViewUpdate(newVal, oldVal);
             }),
@@ -100,9 +91,11 @@ class MapState {
         const watchDocument = reduxWatch(() =>
             documentSelector(store.getState()),
         );
-        store.subscribe(
+        const unwatchDocument = store.subscribe(
             watchDocument((newVal, oldVal) => {
-                this.onDocumentUpdate(newVal.document, oldVal.document);
+                if (newVal.serial !== oldVal.serial) {
+                    this.onDocumentUpdate(newVal.document, oldVal.document);
+                }
             }),
         );
 
@@ -132,7 +125,6 @@ class MapState {
             const state = store.getState();
             this.visualMgr.recreate(
                 this.map,
-                this.layerMgr,
                 documentSelector(state).document,
                 viewSelector(state),
                 settingsSelector(state),
@@ -140,6 +132,23 @@ class MapState {
         });
 
         this.map = map;
+        this.store = store;
+        this.cleanup = () => {
+            unwatchSettings();
+            unwatchView();
+            unwatchDocument();
+        };
+
+        // update document initially
+        this.onDocumentUpdate(documentSelector(store.getState()).document);
+    }
+
+    /// Delete the map state
+    public delete() {
+        MapLog.info("deleting map");
+        this.map.getContainer().remove();
+        this.map.remove();
+        this.cleanup();
     }
 
     /// Attach the map to the root container
@@ -158,7 +167,7 @@ class MapState {
     /// Called when the document is updated
     ///
     /// This will update the map layers if needed, and will always redraw the map visuals
-    private onDocumentUpdate(newDoc: ExecDoc, oldDoc: ExecDoc) {
+    private onDocumentUpdate(newDoc: ExecDoc, oldDoc?: ExecDoc) {
         if (!newDoc.loaded) {
             // do nothing if doc is not loaded
             // we should be notified again when doc loads
@@ -166,6 +175,7 @@ class MapState {
         }
         // If the project name and version is the same, assume the map layers are the same
         if (
+            !oldDoc ||
             newDoc.loaded !== oldDoc.loaded ||
             newDoc.project.name !== oldDoc.project.name ||
             newDoc.project.version !== oldDoc.project.version
@@ -180,12 +190,12 @@ class MapState {
         this.recreateVisualsDebouncer.dispatch();
     }
 
-    private onViewUpdate(view: ViewStore, oldView: ViewStore) {
+    private onViewUpdate(view: ViewState, oldView: ViewState) {
         if (view.isEditingLayout !== oldView.isEditingLayout) {
             this.map.invalidateSize();
         }
 
-        const state = store.getState();
+        const state = this.store.getState();
         const settings = settingsSelector(state);
         const layerChanged = view.currentMapLayer !== oldView.currentMapLayer;
         const sectionChanged = view.currentSection !== oldView.currentSection;
@@ -266,8 +276,8 @@ class MapState {
 
     /// Change the current layer
     private setLayerInStore(index: number) {
-        if (index !== viewSelector(store.getState()).currentMapLayer) {
-            store.dispatch(viewActions.setMapLayer(index));
+        if (index !== viewSelector(this.store.getState()).currentMapLayer) {
+            this.store.dispatch(viewActions.setMapLayer(index));
         }
     }
 }

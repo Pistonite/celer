@@ -1,0 +1,60 @@
+:root {
+    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+
+    color-scheme: light dark;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    place-items: center;
+    min-width: 320px;
+    overflow: hidden;
+}
+
+div#style-root {
+    height: 100vh;
+}
+
+div.widget-container {
+    box-sizing: border-box;
+    display: flex;
+}
+
+div.widget-container.editing {
+    border: 1px solid #888;
+    border-radius: 2px;
+}
+
+div.widget-toolbar-top {
+    flex-direction: column;
+}
+
+div.widget-toolbar-bottom {
+    flex-direction: column-reverse;
+}
+
+div.widget {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* react-grid-layout drag handle */
+/* make sure its always on top */
+.react-grid-item > .react-resizable-handle::after {
+    z-index: 99999;
+}
+
+@media (prefers-color-scheme: dark) {
+    .react-grid-item > .react-resizable-handle::after {
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+}

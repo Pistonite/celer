@@ -3,7 +3,7 @@
 import L from "leaflet";
 import { LRUCache } from "lru-cache";
 
-import { MapLog } from "./util";
+import { MapLog } from "./utils";
 
 // hacks into implementation details of leaflet
 interface LLayer {
@@ -117,7 +117,7 @@ export class IconMarker extends L.CircleMarker {
         }
 
         // check if renderer is valid
-        const ctx = layer._renderer?._ctx;  
+        const ctx = layer._renderer?._ctx;
         if (!ctx) {
             MapLog.warn("invalid icon markder renderer");
             return;

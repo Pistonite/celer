@@ -1,31 +1,35 @@
 //! Part of the map that manages icons, markers and lines on the map
-
-import L from "leaflet";
 import "leaflet-arrowheads";
+import L from "leaflet";
 
-import {
-    LayerMode,
-    SectionMode,
-    SettingsStore,
-    ViewStore,
-    VisualSize,
-} from "data/store";
-import { ExecDoc, GameCoord, MapIcon } from "data/model";
+import { AppDispatcher, SettingsState, ViewState, viewActions } from "core/store";
+import { ExecDoc, GameCoord, MapIcon } from "low/compiler";
+import { LayerMode, SectionMode, VisualSize } from "core/map";
 
-import { MapLog } from "./util";
+import { MapLog } from "./utils";
 import { MapLayerMgr } from "./MapLayerMgr";
 import { IconMarker } from "./IconMarker";
 
 /// Opacity for non current layer visuals
 const NonCurrentLayerOpacity = 0.3;
 /// Color for grayed out lines and markers
-const GrayedOutColor = "#666666";
+const GrayedOutColor = "#666";
 
 /// Class to manage the state of icons, markers and lines on the map
 export class MapVisualMgr {
+    /// Reference to the map layer manager, which is used to convert the visual coordinates
+    private layerMgr: MapLayerMgr;
+    /// Dispatcher for executing actions
+    private dispatcher: AppDispatcher;
+    /// Visual groups for icons, markers and lines
     private icons: MapVisualGroup = new MapVisualGroup([]);
-    private lines: MapVisualGroup = new MapVisualGroup([]);
     private markers: MapVisualGroup = new MapVisualGroup([]);
+    private lines: MapVisualGroup = new MapVisualGroup([]);
+
+    constructor(layerMgr: MapLayerMgr, dispatcher: AppDispatcher) {
+        this.layerMgr = layerMgr;
+        this.dispatcher = dispatcher;
+    }
 
     /// Recreate the layers and update the visuals
     ///
@@ -33,20 +37,19 @@ export class MapVisualMgr {
     /// or the settings have changed.
     public recreate(
         map: L.Map,
-        layerMgr: MapLayerMgr,
         doc: ExecDoc,
-        view: ViewStore,
-        settings: SettingsStore,
+        view: ViewState,
+        settings: SettingsState,
     ) {
         MapLog.info("initializing map visuals");
-        this.initIcons(layerMgr, doc, view, settings);
-        this.initMarkers(layerMgr, doc, view, settings);
-        this.initLines(layerMgr, doc, view, settings);
+        this.initIcons(doc, view, settings);
+        this.initMarkers(doc, view, settings);
+        this.initLines(doc, view, settings);
         this.update(map, view, settings);
     }
 
     /// Update the visuals on the map according to the state without recreating the layers.
-    public update(map: L.Map, view: ViewStore, settings: SettingsStore) {
+    public update(map: L.Map, view: ViewState, settings: SettingsState) {
         // order is important here so icons are always
         // on top of markers and markers on top of lines
         this.lines.setActiveSection(
@@ -68,10 +71,9 @@ export class MapVisualMgr {
 
     /// Initialize the icons on the map
     private initIcons(
-        layerMgr: MapLayerMgr,
         doc: ExecDoc,
-        view: ViewStore,
-        settings: SettingsStore,
+        view: ViewState,
+        settings: SettingsState,
     ) {
         // remove current icons
         this.icons.removeAll();
@@ -91,9 +93,8 @@ export class MapVisualMgr {
                         return undefined;
                     }
 
-                    const layer = getLayerFromZAndMode(
+                    const layer = this.getLayerFromZAndMode(
                         icon.coord[2],
-                        layerMgr,
                         settings.iconLayerMode,
                     );
                     // note that 0 is a valid layer index
@@ -103,16 +104,15 @@ export class MapVisualMgr {
                     }
 
                     // get the opacity of the icon
-                    const opacity = getOpacityForLayer(
+                    const opacity = this.getOpacityForLayer(
                         layer,
-                        layerMgr,
                         settings.fadeNonCurrentLayerIcons,
                     );
                     const grayedOut =
                         settings.iconSectionMode ===
                             SectionMode.CurrentHighlight &&
                         sectionIndex !== currentSection;
-                    const [latlng] = layerMgr.unproject(icon.coord);
+                    const [latlng] = this.layerMgr.unproject(icon.coord);
 
                     const iconMarker = new IconMarker(
                         latlng,
@@ -125,12 +125,10 @@ export class MapVisualMgr {
                         },
                     );
                     iconMarker.on("click", () => {
-                        console.log(
-                            "clicked icon, line " +
-                                icon.lineNumber +
-                                "layer " +
-                                layer,
+                        MapLog.info(
+                            `clicked icon, section ${icon.sectionIndex}, line ${icon.lineIndex}, layer ${layer}`,
                         );
+                        this.setDocLocation(icon.sectionIndex, icon.lineIndex);
                     });
 
                     return iconMarker;
@@ -144,10 +142,9 @@ export class MapVisualMgr {
 
     /// Initialize the markers on the map
     private initMarkers(
-        layerMgr: MapLayerMgr,
         doc: ExecDoc,
-        view: ViewStore,
-        settings: SettingsStore,
+        view: ViewState,
+        settings: SettingsState,
     ) {
         // remove current markers
         this.markers.removeAll();
@@ -164,9 +161,8 @@ export class MapVisualMgr {
         const layerGroups = doc.map.map(({ markers }, sectionIndex) => {
             const markerLayers = markers
                 .map((marker) => {
-                    const layer = getLayerFromZAndMode(
+                    const layer = this.getLayerFromZAndMode(
                         marker.coord[2],
-                        layerMgr,
                         settings.markerLayerMode,
                     );
                     // note that 0 is a valid layer index
@@ -175,9 +171,8 @@ export class MapVisualMgr {
                     }
 
                     // get the opacity of the marker
-                    const strokeOpacity = getOpacityForLayer(
+                    const strokeOpacity = this.getOpacityForLayer(
                         layer,
-                        layerMgr,
                         settings.fadeNonCurrentLayerMarkers,
                     );
                     const fillOpacity = strokeOpacity === 1 ? 0.5 : 0;
@@ -186,7 +181,7 @@ export class MapVisualMgr {
                             SectionMode.CurrentHighlight &&
                         sectionIndex !== currentSection;
 
-                    const [latlng] = layerMgr.unproject(marker.coord);
+                    const [latlng] = this.layerMgr.unproject(marker.coord);
 
                     const markerLayer = L.circleMarker(latlng, {
                         radius: size,
@@ -197,9 +192,10 @@ export class MapVisualMgr {
                         pane: "markerPane",
                     });
                     markerLayer.on("click", () => {
-                        console.log(
-                            "clicked marker, line " + marker.lineNumber,
+                        MapLog.info(
+                            `clicked marker, section ${marker.sectionIndex}, line ${marker.lineIndex}, layer ${layer}`,
                         );
+                        this.setDocLocation(marker.sectionIndex, marker.lineIndex);
                     });
                     return markerLayer;
                 })
@@ -214,10 +210,9 @@ export class MapVisualMgr {
 
     /// Init the lines
     private initLines(
-        layerMgr: MapLayerMgr,
         doc: ExecDoc,
-        view: ViewStore,
-        settings: SettingsStore,
+        view: ViewState,
+        settings: SettingsState,
     ) {
         // remove current lines
         this.lines.removeAll();
@@ -248,9 +243,8 @@ export class MapVisualMgr {
                 let layer: number | undefined = undefined;
 
                 for (let i = 0; i < line.points.length; i++) {
-                    const nextLayer = getLayerFromZAndMode(
+                    const nextLayer = this.getLayerFromZAndMode(
                         line.points[i][2],
-                        layerMgr,
                         settings.lineLayerMode,
                     );
                     if (nextLayer !== layer) {
@@ -276,9 +270,8 @@ export class MapVisualMgr {
                             polylines.push({
                                 vertices: tempCoords,
                                 color: grayedOut ? GrayedOutColor : line.color,
-                                opacity: getOpacityForLayer(
+                                opacity: this.getOpacityForLayer(
                                     layer,
-                                    layerMgr,
                                     settings.fadeNonCurrentLayerLines,
                                 ),
                                 hasArrow: arrowSize > 0 && !grayedOut,
@@ -299,9 +292,8 @@ export class MapVisualMgr {
                     polylines.push({
                         vertices: tempCoords,
                         color: grayedOut ? GrayedOutColor : line.color,
-                        opacity: getOpacityForLayer(
+                        opacity: this.getOpacityForLayer(
                             layer,
-                            layerMgr,
                             settings.fadeNonCurrentLayerLines,
                         ),
                         hasArrow: arrowSize > 0 && !grayedOut,
@@ -312,7 +304,7 @@ export class MapVisualMgr {
             // convert polyline data to leaflet polylines
             const polylineLayers = polylines.map((polyline) => {
                 const latlngs = polyline.vertices.map((coord) => {
-                    return layerMgr.unproject(coord)[0];
+                    return this.layerMgr.unproject(coord)[0];
                 });
                 const layer = L.polyline(latlngs, {
                     color: polyline.color,
@@ -335,6 +327,44 @@ export class MapVisualMgr {
         });
 
         this.lines = new MapVisualGroup(layerGroups);
+    }
+
+    /// Get the layer index for z index based on the settings
+    ///
+    /// returns undefined if the layer cannot be resolved, or
+    /// the layer should not be visible based on the settings
+    private getLayerFromZAndMode(
+        z: number,
+        layerMode: LayerMode,
+    ): number | undefined {
+        switch (layerMode) {
+            case LayerMode.CurrentOnly:
+                return this.layerMgr.getLayerByZInRelativeRange(z, 0, 0);
+            case LayerMode.CurrentAndAdjacent:
+                return this.layerMgr.getLayerByZInRelativeRange(z, -1, 1);
+            case LayerMode.All:
+                return this.layerMgr.getLayerByZ(z);
+        }
+    }
+
+    /// Get the opacity of the layer based on the settings
+    private getOpacityForLayer(
+        layer: number,
+        fadeOnNonCurrent: boolean,
+    ): number {
+        if (!fadeOnNonCurrent) {
+            return 1;
+        }
+        return layer === this.layerMgr.getActiveLayerIndex()
+            ? 1
+            : NonCurrentLayerOpacity;
+    }
+
+    /// Dispatch action to set the document viewer location
+    private setDocLocation(section: number, line: number) {
+        this.dispatcher.dispatch(
+            viewActions.setDocLocation({ section, line }),
+        );
     }
 }
 
@@ -416,31 +446,12 @@ class MapVisualGroup {
     }
 }
 
-/// Get the layer index for z index based on the settings
-///
-/// returns undefined if the layer cannot be resolved, or
-/// the layer should not be visible based on the settings
-const getLayerFromZAndMode = (
-    z: number,
-    layerMgr: MapLayerMgr,
-    layerMode: LayerMode,
-): number | undefined => {
-    switch (layerMode) {
-        case LayerMode.CurrentOnly:
-            return layerMgr.getLayerByZInRelativeRange(z, 0, 0);
-        case LayerMode.CurrentAndAdjacent:
-            return layerMgr.getLayerByZInRelativeRange(z, -1, 1);
-        case LayerMode.All:
-            return layerMgr.getLayerByZ(z);
-    }
-};
-
 /// Get icon size based on the priority and the settings
 ///
 /// Returns the size in pixels, or 0 if is size is `Hidden`
 const getIconSizeWithSettings = (
     icon: MapIcon,
-    settings: SettingsStore,
+    settings: SettingsState,
 ): number => {
     let size = settings.otherIconSize;
     switch (icon.priority) {
@@ -466,7 +477,7 @@ const getIconSizeWithSettings = (
 /// Get marker size based on the settings
 ///
 /// Returns the size in pixels, or 0 if is size is `Hidden`
-const getMarkerSizeWithSettings = (settings: SettingsStore): number => {
+const getMarkerSizeWithSettings = (settings: SettingsState): number => {
     switch (settings.markerSize) {
         case VisualSize.Small:
             return 4;
@@ -482,7 +493,7 @@ const getMarkerSizeWithSettings = (settings: SettingsStore): number => {
 /// Get line size based on the settings
 ///
 /// Returns the size in pixels, or 0 if is size is `Hidden`
-const getLineSizeWithSettings = (settings: SettingsStore): number => {
+const getLineSizeWithSettings = (settings: SettingsState): number => {
     switch (settings.lineSize) {
         case VisualSize.Small:
             return 2;
@@ -498,7 +509,7 @@ const getLineSizeWithSettings = (settings: SettingsStore): number => {
 /// Get arrow size based on the settings
 ///
 /// Returns the size in pixels, or 0 if is size is `Hidden`
-const getArrowSizeWithSettings = (settings: SettingsStore): number => {
+const getArrowSizeWithSettings = (settings: SettingsState): number => {
     switch (settings.arrowSize) {
         case VisualSize.Small:
             return 6;
@@ -511,7 +522,7 @@ const getArrowSizeWithSettings = (settings: SettingsStore): number => {
     }
 };
 
-const getArrowFrequencyWithSettings = (settings: SettingsStore): number => {
+const getArrowFrequencyWithSettings = (settings: SettingsState): number => {
     switch (settings.arrowFrequency) {
         case VisualSize.Small: //dense
             return 50;
@@ -522,18 +533,4 @@ const getArrowFrequencyWithSettings = (settings: SettingsStore): number => {
         case VisualSize.Hidden: //unreachable
             return 0;
     }
-};
-
-/// Get the opacity of the layer based on the settings
-const getOpacityForLayer = (
-    layer: number,
-    layerMgr: MapLayerMgr,
-    fadeOnNonCurrent: boolean,
-): number => {
-    if (!fadeOnNonCurrent) {
-        return 1;
-    }
-    return layer === layerMgr.getActiveLayerIndex()
-        ? 1
-        : NonCurrentLayerOpacity;
 };

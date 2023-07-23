@@ -1,7 +1,7 @@
 //! MapContainerMgr
 import L from "leaflet";
 
-import { MapLog } from "./util";
+import { MapLog } from "./utils";
 
 /// Container div id
 export const RootContainerId = "map-root";

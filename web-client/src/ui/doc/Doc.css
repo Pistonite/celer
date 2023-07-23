@@ -1,0 +1,132 @@
+#doc-container {
+    display: flex;
+    --note-min-width: 48px;
+}
+
+#doc-scroll {
+    height: 100%;
+    /* make document scrollable */
+    overflow-y: auto;
+    /* smooth */
+    scroll-behavior: smooth;
+}
+
+#doc-main {
+    /* sizing for the main column */
+    min-width: min(calc(100% - var(--note-min-width)), 380px);
+    max-width: 380px;
+}
+
+#doc-side {
+    /* need this because note blocks have position: absolute */
+    position: relative;
+    flex: 1;
+    min-width: var(--note-min-width);
+    /* need for container query on the notes */
+    container-type: size;
+}
+
+.docsection-head {
+    box-sizing: border-box;
+    /* padding for section title */
+    padding: 16px 0px 16px 64px;
+    height: 68px;
+}
+
+.docline-container {
+    box-sizing: border-box;
+}
+
+.docline-main {
+    display: flex;
+}
+
+.docline-head {
+    min-width: 64px;
+    border-right: 4px solid;
+    box-sizing: border-box;
+    position: relative;
+    text-align: right;
+    transition-duration: 0.1s;
+    cursor: pointer;
+}
+
+.doc-current-line .docline-head {
+    border-right: 24px solid;
+}
+
+.docline-counter {
+    /* place counter on top of the border line */
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: -4px;
+    height: 24px;
+    padding: 4px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.doc-current-line .docline-counter {
+    right: -24px;
+}
+
+.docline-body {
+    box-sizing: border-box;
+    padding: 4px;
+    flex-grow: 1;
+    display: flex;
+}
+
+.docline-icon-container {
+    min-width: 50px;
+}
+
+.docline-icon-container img {
+    width: 50px;
+}
+
+.docnote-block {
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.docnote-container {
+    display: none; /* hide by default */
+    transition-duration: 0.1s;
+}
+
+@container (max-width: 100px) {
+    .docnote-container {
+        /* need this so 100% can be propagated to children */
+        width: 100%;
+        height: 32px;
+    }
+    .docnote-container:hover {
+        /* left: max(-380px, calc(-100vh + 24px)); */
+        right: 0px;
+        width: min(calc(100% + 380px), 100vw);
+        height: auto;
+        z-index: 100;
+    }
+    .docnote-container .docnote-block {
+        /* height: 32px; */
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .docnote-container .docnote-block span {
+        white-space: nowrap;
+    }
+    .docnote-container:hover .docnote-block span {
+        white-space: normal;
+    }
+}
+
+.docline-diagnostic-head {
+    padding: 4px 4px 0 4px;
+}
+.docline-diagnostic-body {
+    padding: 4px 0 4px 4px;
+}
+
