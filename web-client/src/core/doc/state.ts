@@ -94,7 +94,7 @@ export type DocumentState = {
     document: ExecDoc;
 };
 
-/// The initial document state for the
+/// The initial document state
 export const initialDocumentState: DocumentState = {
     serial: 0,
     document: {
