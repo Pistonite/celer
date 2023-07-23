@@ -1,3 +1,5 @@
+import reduxWatch from "redux-watch";
+
 import {
     AppStore,
     SettingsState,
@@ -5,7 +7,7 @@ import {
     settingsSelector,
 } from "core/store";
 import { Logger } from "low/utils";
-import reduxWatch from "redux-watch";
+
 import { KeyMgr } from "./KeyMgr";
 
 type InitUiFunction = (

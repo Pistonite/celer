@@ -8,7 +8,7 @@ import {
     ViewState,
     viewActions,
 } from "core/store";
-import { ExecDoc, GameCoord, MapIcon } from "low/compiler";
+import { ExecDoc, GameCoord, MapIcon } from "low/compiler.g";
 import { LayerMode, SectionMode, VisualSize } from "core/map";
 
 import { MapLog } from "./utils";
@@ -81,7 +81,7 @@ export class MapVisualMgr {
         const registeredIcons = doc.project.icons;
         const { currentSection } = view;
 
-        const layerGroups = doc.map.map(({ icons }, sectionIndex) => {
+        const layerGroups = doc.route.map(({map: { icons }}, sectionIndex) => {
             const iconMarkers = icons
                 .map((icon) => {
                     const iconSrc = registeredIcons[icon.id];
@@ -159,7 +159,7 @@ export class MapVisualMgr {
 
         const { currentSection } = view;
 
-        const layerGroups = doc.map.map(({ markers }, sectionIndex) => {
+        const layerGroups = doc.route.map(({map :{ markers }}, sectionIndex) => {
             const markerLayers = markers
                 .map((marker) => {
                     const layer = this.getLayerFromZAndMode(
@@ -226,7 +226,7 @@ export class MapVisualMgr {
         const arrowFrequency = getArrowFrequencyWithSettings(settings);
         const { currentSection } = view;
 
-        const layerGroups = doc.map.map(({ lines }, sectionIndex) => {
+        const layerGroups = doc.route.map(({map: { lines }}, sectionIndex) => {
             // input map line data may contain lines that span multiple layers
             // we need to split them into multiple lines.
             // the input should only span one section, so we don't need to check that

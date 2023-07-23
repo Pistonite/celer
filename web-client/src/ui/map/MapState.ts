@@ -13,7 +13,7 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { ExecDoc } from "low/compiler";
+import { ExecDoc } from "low/compiler.g";
 import { Debouncer } from "low/utils";
 import { SectionMode } from "core/map";
 
@@ -130,9 +130,13 @@ export class MapState {
         // setup update debouncers
         this.recreateVisualsDebouncer = new Debouncer(200, () => {
             const state = store.getState();
+            const {document} = documentSelector(state);
+            if (!document) {
+                return;
+            }
             this.visualMgr.recreate(
                 this.map,
-                documentSelector(state).document,
+                document,
                 viewSelector(state),
                 settingsSelector(state),
             );
@@ -147,7 +151,10 @@ export class MapState {
         };
 
         // update document initially
-        this.onDocumentUpdate(documentSelector(store.getState()).document);
+        const {document} = documentSelector(store.getState());
+        if (document) {
+            this.onDocumentUpdate(document);
+        }
     }
 
     /// Delete the map state
@@ -180,15 +187,9 @@ export class MapState {
     ///
     /// This will update the map layers if needed, and will always redraw the map visuals
     private onDocumentUpdate(newDoc: ExecDoc, oldDoc?: ExecDoc) {
-        if (!newDoc.loaded) {
-            // do nothing if doc is not loaded
-            // we should be notified again when doc loads
-            return;
-        }
         // If the project name and version is the same, assume the map layers are the same
         if (
             !oldDoc ||
-            newDoc.loaded !== oldDoc.loaded ||
             newDoc.project.name !== oldDoc.project.name ||
             newDoc.project.version !== oldDoc.project.version
         ) {

@@ -1,7 +1,7 @@
 //! Utilities
 
 import { RichText } from "core/doc";
-import { DocRichText, DocTagMap } from "low/compiler";
+import { DocRichText, DocTag} from "low/compiler.g";
 import { Logger } from "low/utils";
 
 export const DocLog = new Logger("doc");
@@ -17,14 +17,14 @@ export const DocLineContainerClass = "docline-container";
 
 /// Helper function to resolve tag names to the tag definition
 export const resolveTags = (
-    tagMap: DocTagMap,
+    tagMap: Record<string, DocTag>,
     docRichTexts: DocRichText[],
 ): RichText[] => {
     return docRichTexts.map((docRichText) => resolveTag(tagMap, docRichText));
 };
 
 export const resolveTag = (
-    tagMap: DocTagMap,
+    tagMap: Record<string, DocTag>,
     docRichText: DocRichText,
 ): RichText => {
     const { tag, text } = docRichText;

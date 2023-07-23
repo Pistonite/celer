@@ -37,6 +37,8 @@ import { Settings } from "./Settings";
 import { ZoomIn, ZoomOut } from "./Zoom";
 import { ViewDiagnostics } from "./ViewDiagnostics";
 import { SelectSection } from "./SelectSection";
+import { documentSelector } from "core/store";
+import { useSelector } from "react-redux";
 
 /// Header controls.
 ///
@@ -77,8 +79,8 @@ type HeaderProps = {
 
 /// The header component
 export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
-    const title =
-        "My awesome route whose title is really really really long long"; // TODO: StageStore
+    const { document } = useSelector(documentSelector);
+    const title = document?.project.title ?? "Loading...";
 
     return (
         <header className={clsx("celer-header", toolbarAnchor)}>

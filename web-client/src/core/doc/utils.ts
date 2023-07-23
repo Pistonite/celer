@@ -1,6 +1,6 @@
 //! Utilities for document
 
-import { DocTag, ExecDoc } from "low/compiler";
+import { DocTag, ExecDoc } from "low/compiler.g";
 
 import {
     DocSettingsState,

@@ -3,30 +3,31 @@
 import "./Map.css";
 
 import { useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
-import { LoadScreen, ErrorScreen, useAppStore } from "ui/shared";
-import { documentSelector } from "core/store";
+import { useSelector, useStore } from "react-redux";
+import { LoadScreen, ErrorScreen } from "ui/shared";
+import { AppStore, documentSelector } from "core/store";
 
 import { MapState, initMap } from "./MapState";
 import { RootContainerId } from "./MapContainerMgr";
 
 /// Map root container that the leaflet map instance binds to
 export const MapRoot: React.FC = () => {
-    const { document } = useSelector(documentSelector);
-    const store = useAppStore();
+    const { serial, document } = useSelector(documentSelector);
+    const store = useStore();
     const mapState = useRef<MapState | null>(null);
+    /* eslint-disable react-hooks/exhaustive-deps*/
     useEffect(() => {
         // attach the map only if doc is loaded
-        if (document.loaded) {
+        if (document) {
             // create the map if needed
             if (mapState.current === null) {
-                mapState.current = initMap(store);
+                mapState.current = initMap(store as AppStore);
             }
             mapState.current.attach();
         }
-    }, [document.loaded, store]);
+    }, [serial, store]);
 
-    if (!document.loaded) {
+    if (!document) {
         return <LoadScreen color="green" />;
     }
 

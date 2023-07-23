@@ -47,8 +47,8 @@ const RichBlock: React.FC<RichBlockProps> = ({ text, tag, size }) => {
             strikethrough={tag.strikethrough}
             italic={tag.italic}
             style={{
-                color: tag.color,
-                backgroundColor: tag.background,
+                color: tag.color || undefined,
+                backgroundColor: tag.background || undefined,
             }}
         >
             {tag.link ? <a href={tag.link}>{text}</a> : text}

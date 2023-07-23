@@ -6,7 +6,7 @@
 
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { DocDiagnostic } from "low/compiler";
+import { DocDiagnostic } from "low/compiler.g";
 import { documentSelector } from "core/store";
 
 import { removeTags } from "./utils";
@@ -33,6 +33,9 @@ export const useDocDiagnostics = (): DiagnosticSection[] => {
     /* eslint-disable react-hooks/exhaustive-deps*/
     const diagnostics = useMemo(() => {
         const output: DiagnosticSection[] = [];
+        if (!document) {
+            return output;
+        }
         document.route.forEach((section, i) => {
             const diagnosticSection: DiagnosticSection = {
                 sectionName: section.name,

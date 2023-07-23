@@ -14,7 +14,7 @@ import {
     viewSelector,
 } from "core/store";
 import { Debouncer } from "low/utils";
-import { GameCoord } from "low/compiler";
+import { GameCoord } from "low/compiler.g";
 
 import {
     DocLog,
@@ -176,16 +176,16 @@ export class DocController {
 
         const { syncMapToDoc } = settingsSelector(this.store.getState());
         const { document } = documentSelector(this.store.getState());
-        if (syncMapToDoc && document.loaded) {
+        if (syncMapToDoc && document) {
             if (!visibleLines) {
                 visibleLines = findVisibleLines();
             }
             const coords = visibleLines
-                .map((line) => {
+                .flatMap((line) => {
                     const [sectionIndex, lineIndex] =
                         getLineLocationFromElement(line);
                     return document.route[sectionIndex]?.lines[lineIndex]
-                        ?.mapCoord;
+                        ?.mapCoords;
                 })
                 .filter(Boolean) as GameCoord[];
             if (coords.length > 0) {

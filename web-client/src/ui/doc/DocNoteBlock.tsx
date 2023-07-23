@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { DocNote, DocTagMap } from "low/compiler";
+import { DocNote, DocTag } from "low/compiler.g";
 
 import { Rich } from "./Rich";
 import { DocScrollId, resolveTags } from "./utils";
@@ -17,7 +17,7 @@ export type DocNoteBlockProps = {
     /// The note blocks to display
     notes: DocNote[];
     /// Tag map used for resolving the tags
-    tagMap: DocTagMap;
+    tagMap: Record<string, DocTag>;
 };
 
 export const DocNoteBlock: React.FC<DocNoteBlockProps> = ({

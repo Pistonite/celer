@@ -1,0 +1,17 @@
+[package]
+name = "compiler-types"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0.174", features = ["derive"] }
+ts-rs = "6.2.1"
+
+[[bin]]
+name = "generate"
+path = "src/build.rs"
+
+[lib]
+name = "celerctypes"
+path = "src/lib.rs"
+

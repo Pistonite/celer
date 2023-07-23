@@ -1,6 +1,6 @@
 //! Reducers for the document state
 
-import { ExecDoc } from "low/compiler";
+import { ExecDoc } from "low/compiler.g";
 import { ReducerDeclWithPayload, withPayload } from "low/store";
 
 import { DocumentState } from "./state";

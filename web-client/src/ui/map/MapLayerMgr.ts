@@ -4,10 +4,10 @@ import "leaflet-rastercoords";
 
 import { AppDispatcher, viewActions } from "core/store";
 import {
-    DocMapLayer,
-    DocMapLayerTilesetTransform,
+    MapLayerAttr,
+    MapTilesetTransform,
     GameCoord,
-} from "low/compiler";
+} from "low/compiler.g";
 
 import { MapLog, getAttributionHtml } from "./utils";
 
@@ -18,7 +18,7 @@ type MapLayer = {
     /// The start Z value
     startZ: number;
     /// Coodinate transformation from game to map
-    transform: DocMapLayerTilesetTransform;
+    transform: MapTilesetTransform;
     /// The raster coords of this layer
     rc: L.RasterCoords;
     /// Zoom bound of this layer
@@ -43,7 +43,7 @@ export class MapLayerMgr {
     /// This will also set the map to the initial coord
     public initLayers(
         map: L.Map,
-        mapLayers: DocMapLayer[],
+        mapLayers: MapLayerAttr[],
         initialCoord: GameCoord,
     ) {
         MapLog.info("initializing map layers");
