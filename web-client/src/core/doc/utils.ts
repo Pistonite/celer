@@ -1,8 +1,8 @@
 //! Utilities for document
 
-import { DocSettingsState, PerDocSettings, initialPerDocSettings } from "./state";
-
 import { DocTag, ExecDoc } from "low/compiler";
+
+import { DocSettingsState, PerDocSettings, initialPerDocSettings } from "./state";
 
 /// Get per-doc settings by doc id
 export const getPerDocSettings = (

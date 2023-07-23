@@ -3,7 +3,6 @@
 import clsx from "clsx";
 import React from "react";
 import { Text } from "@fluentui/react-components";
-
 import { RichText, removeTags } from "core/doc";
 import { viewActions } from "core/store";
 import { DocDiagnostic } from "low/compiler";
@@ -28,6 +27,8 @@ type DocLineProps = {
     secondaryText: RichText[];
     /// Counter properties
     counterText?: RichText;
+    /// Counter type if any
+    counterType?: string;
     /// Diagnostic messages
     diagnostics: DocDiagnostic[];
 };
@@ -40,6 +41,7 @@ export const DocLine: React.FC<DocLineProps> = ({
     iconUrl,
     secondaryText,
     counterText,
+    counterType,
     diagnostics,
 }) => {
     const { setDocLocation } = useActions(viewActions);
@@ -76,7 +78,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                         </div>
                     )}
                 </div>
-                <div className="docline-body">
+                <div className={clsx("docline-body", counterType && `docline-body-${counterType}`)}>
                     {iconUrl && (
                         <div className="docline-icon-container">
                             <img src={iconUrl} alt="icon" />

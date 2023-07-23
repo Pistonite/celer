@@ -1,8 +1,8 @@
 //! Reducers for doc view state
 
-import { DocViewState, KeyBindingName } from "./state";
-
 import { ReducerDeclWithPayload, withPayload } from "low/store";
+
+import { DocViewState, KeyBindingName } from "./state";
 
 /// Set the current document location
 export const setDocLocation: ReducerDeclWithPayload<

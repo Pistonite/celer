@@ -16,9 +16,9 @@ import {
     DocumentError20Regular,
     DocumentCheckmark20Regular,
 } from "@fluentui/react-icons";
-
-import { DiagnosticSection, useDocDiagnostics } from "core/utils";
-import { useActions, viewActions } from "data/store";
+import { DiagnosticSection, useDocDiagnostics } from "core/doc";
+import { useActions } from "low/store";
+import { viewActions } from "core/store";
 
 import { ControlComponentProps, ToolbarControl } from "./util";
 

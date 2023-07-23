@@ -1,7 +1,7 @@
 //! Rich text component
 
 import { Text, TextProps } from "@fluentui/react-components";
-import { RichText } from "data/model";
+import { RichText } from "core/doc";
 
 /// Rich text display component
 type RichProps = {

@@ -1,11 +1,8 @@
 //! Setup the store
-
 import { configureStore } from "@reduxjs/toolkit";
-import reduxWatch from "redux-watch";
-import { SettingsState, settingsReducer, settingsSelector } from "./settings";
+import { settingsReducer } from "./settings";
 import { viewReducer } from "./view";
 import { documentReducer } from "./document";
-import { switchTheme } from "low/utils";
 
 /// Create the store and return it
 export const initStore = () => {
@@ -16,23 +13,6 @@ export const initStore = () => {
             ...documentReducer,
         },
     });
-
-    // TODO: this should be in the kernel
-    const watchSettings = reduxWatch(() => settingsSelector(store.getState()));
-    store.subscribe(
-        watchSettings((newVal: SettingsState, oldVal: SettingsState) => {
-            console.log({
-                message: "settings changed",
-                new: newVal,
-                old: oldVal,
-            });
-
-            // switch theme
-            if (newVal.theme !== oldVal.theme) {
-                switchTheme(newVal.theme);
-            }
-        }),
-    );
 
     return store;
 };

@@ -1,9 +1,9 @@
 //! Reducers for the document state
 
-import { DocumentState } from "./state";
-
 import { ExecDoc } from "low/compiler";
 import { ReducerDeclWithPayload, withPayload } from "low/store";
+
+import { DocumentState } from "./state";
 
 /// Set the document
 ///

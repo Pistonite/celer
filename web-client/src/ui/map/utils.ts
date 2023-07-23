@@ -1,13 +1,7 @@
 //! Utility for the map logic
 
-import {
-    Axis,
-    DocMapCoordMap,
-    DocMapLayerAttribution,
-    GameCoord,
-    RouteCoord,
-} from "data/model";
-import { Logger } from "data/util";
+import { Axis, DocMapCoordMap, DocMapLayerAttribution, GameCoord, RouteCoord } from "low/compiler";
+import { Logger } from "low/utils";
 
 /// Map module logger
 export const MapLog = new Logger("map");

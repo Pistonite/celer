@@ -17,9 +17,9 @@ import { ListBarTree20Regular } from "@fluentui/react-icons";
 import isEqual from "is-equal";
 import React from "react";
 import { useSelector } from "react-redux";
-
-import { useDocSections } from "core/utils";
-import { useActions, viewActions, viewSelector } from "data/store";
+import { useDocSections } from "core/doc";
+import { viewActions, viewSelector } from "core/store";
+import { useActions } from "low/store";
 
 import {
     ControlComponentProps,
@@ -134,3 +134,4 @@ const SelectSectionInternal = React.memo(
         );
     },
 );
+

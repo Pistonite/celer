@@ -16,13 +16,8 @@ import {
     Tooltip,
 } from "@fluentui/react-components";
 import { Layer20Regular } from "@fluentui/react-icons";
-
-import {
-    documentSelector,
-    viewActions,
-    viewSelector,
-    useActions,
-} from "data/store";
+import { documentSelector, viewActions, viewSelector } from "core/store";
+import { useActions } from "low/store";
 
 import {
     ControlComponentProps,

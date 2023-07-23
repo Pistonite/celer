@@ -10,15 +10,11 @@ import {
     SliderProps,
     DropdownProps,
 } from "@fluentui/react-components";
-import {
-    LayerMode,
-    SectionMode,
-    VisualSize,
-    settingsActions,
-    settingsSelector,
-    useActions,
-} from "data/store";
 import { useSelector } from "react-redux";
+import { settingsActions, settingsSelector } from "core/store";
+import { LayerMode, SectionMode, VisualSize } from "core/map";
+import { useActions } from "low/store";
+
 import { SettingsSection } from "./SettingsSection";
 
 export const MapSettings: React.FC = () => {

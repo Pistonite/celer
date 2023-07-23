@@ -30,7 +30,6 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
     if (!noteContainer) {
         return;
     }
-    DocLog.info("updating note positions");
 
     const baseIndex = findBaseNoteIndex(noteContainer.children, baseLine);
     if (baseIndex >= noteContainer.children.length) {
@@ -59,7 +58,6 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
     ): void => {
         if (serial !== updateNotesSerial) {
             // cancelled
-            DocLog.info("cancelling previous note update before base");
             return;
         }
         const noteBlock = noteContainer.children[i] as HTMLElement;
@@ -99,7 +97,6 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
     ): void => {
         if (serial !== updateNotesSerial) {
             // cancelled
-            DocLog.info("cancelling previous note update after base");
             return;
         }
         const noteBlock = noteContainer.children[i] as HTMLElement;

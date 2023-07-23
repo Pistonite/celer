@@ -1,7 +1,6 @@
 //! Hook for controlling map zoom from react
 
 import { useSelector } from "react-redux";
-
 import { viewActions, viewSelector } from "core/store";
 import { useActions } from "low/store";
 

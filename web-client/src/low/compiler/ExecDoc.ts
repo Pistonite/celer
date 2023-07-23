@@ -14,7 +14,7 @@ import {
     MapIcon,
     MapLine,
     MapMarker,
-} from "./util";
+} from "./utils";
 
 /// The executed document
 ///

@@ -1,8 +1,9 @@
-import { createMockStore, getAttr, setAttr } from "test";
+// @ts-expect-error importing test utils
+import { createMockStore, getAttr, setAttr } from "@test";
 
-import { DocKeyMgr } from "./DocKeyMgr";
+import { KeyMgr } from "./KeyMgr";
 
-describe("ui/doc/DocKeyMgr", () => {
+describe("ui/doc/KeyMgr", () => {
     const setupTest = (editingKeyBinding?: string) => {
         const mockStore = createMockStore({
             view: { 
@@ -12,6 +13,7 @@ describe("ui/doc/DocKeyMgr", () => {
             },
             document: {
                 document: {
+                    loaded: true,
                     route: [
                         { lines: { length: 5 } },
                         { lines: { length: 6 } },
@@ -28,11 +30,23 @@ describe("ui/doc/DocKeyMgr", () => {
         });
         return {
             store: mockStore,
-            keyMgr: new DocKeyMgr(mockStore),
+            keyMgr: new KeyMgr(mockStore),
         }
     };
 
     describe("onKeyDown", () => {
+        it("should not add to current stroke if repeat" , () => {
+            const { keyMgr } = setupTest();
+            keyMgr.onKeyDown("x");
+            keyMgr.onKeyDown("x");
+            expect(getAttr(keyMgr, "currentStrokes")).toEqual(["x"]);
+
+            const { keyMgr: keyMgr2 } = setupTest("editing");
+            keyMgr2.onKeyDown("x");
+            keyMgr2.onKeyDown("x");
+            expect(getAttr(keyMgr2, "currentStrokes")).toEqual(["x"]);
+        });
+
         it("editing: should add to current strokes", () => {
             const { keyMgr } = setupTest("editing");
             expect(getAttr(keyMgr, "currentStrokes")).toEqual([]);

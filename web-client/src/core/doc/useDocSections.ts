@@ -6,7 +6,6 @@
 
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-
 import { documentSelector } from "core/store";
 
 /// Hook to get section names from document

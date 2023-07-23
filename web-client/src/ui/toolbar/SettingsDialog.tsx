@@ -5,20 +5,25 @@ import "./SettingsDialog.css";
 import clsx from "clsx";
 import { useState } from "react";
 import { TabList, Tab, Divider } from "@fluentui/react-components";
-import { Map20Regular } from "@fluentui/react-icons";
+import { Document20Regular, Map20Regular } from "@fluentui/react-icons";
 
-import { useWindowSize } from "core/utils";
+import { useWindowSize } from "ui/shared";
+import { useActions } from "low/store";
+import { viewActions } from "core/store";
 
 import { MapSettings } from "./MapSettings";
+import { DocSettings } from "./DocSettings";
 
 const Tabs = {
+    doc: "doc",
     map: "map",
     info: "info",
 };
 
 export const SettingsDialog: React.FC = () => {
-    const [selectedTab, setSelectedTab] = useState<string>(Tabs.map);
+    const [selectedTab, setSelectedTab] = useState<string>(Tabs.doc);
     const { windowWidth } = useWindowSize();
+    const { setEditingKeyBinding } = useActions(viewActions);
     const verticalTabs = windowWidth > 400;
 
     return (
@@ -30,9 +35,14 @@ export const SettingsDialog: React.FC = () => {
                 vertical={verticalTabs}
                 selectedValue={selectedTab}
                 onTabSelect={(_, data) => {
+                    // cancel editing key binding when switching tabs
+                    setEditingKeyBinding(undefined);
                     setSelectedTab(data.value as string);
                 }}
             >
+                <Tab id={Tabs.doc} value={Tabs.doc} icon={<Document20Regular />}>
+                    Document
+                </Tab>
                 <Tab id={Tabs.map} value={Tabs.map} icon={<Map20Regular />}>
                     Map
                 </Tab>
@@ -48,7 +58,8 @@ export const SettingsDialog: React.FC = () => {
                 vertical={verticalTabs}
             />
             <div id="settings-panel">
-                {selectedTab === Tabs.map && <MapSettings />}
+                {selectedTab === Tabs.doc && <DocSettings key={Tabs.doc} />}
+                {selectedTab === Tabs.map && <MapSettings key={Tabs.map} />}
             </div>
         </div>
     );

@@ -1,14 +1,9 @@
-//! useLayout hook
-//!
-//! This binds the layout store and layout editing/switching UI
-
-import { useCallback, useMemo } from "react";
+//! Hooks for managing the layout of the application
 import { useSelector } from "react-redux";
-import { settingsActions, settingsSelector } from "core/store";
-import { useActions } from "low/store";
+import { settingsSelector } from "core/store";
 
 import { Layout, WidgetType } from "./state";
-import { getDefaultLayout } from "./utils";
+import { isCurrentLayoutDefault } from "./utils";
 
 /// Return type of useLayout hook
 export type UseLayout = {
@@ -24,69 +19,12 @@ export type UseLayout = {
     isDefaultLayout: boolean;
 };
 
-const WidgetTypes: WidgetType[] = ["viewer", "editor", "map"];
-
-export const useLayout = (windowWidth: number, windowHeight: number): UseLayout => {
-    const { currentLayout, savedLayouts } = useSelector(settingsSelector);
-    const { setCurrentLayout } = useActions(settingsActions);
-    const isDefaultLayout =
-        currentLayout < 0 || currentLayout >= savedLayouts.length;
-
-    // convert layout to ReactGridLayout
-    const [layout, widgets, availableToolbarLocations] = useMemo(() => {
-        const theLayout = isDefaultLayout
-            ? getDefaultLayout(windowWidth, windowHeight)
-            : savedLayouts[currentLayout];
-        const widgets: ReactGridLayout.Layout[] = [];
-        const locations: WidgetType[] = [];
-        WidgetTypes.forEach((type) => {
-            const dim = theLayout[type];
-            if (dim) {
-                widgets.push({ i: type, ...dim });
-                locations.push(type);
-            }
-        });
-        return [theLayout, widgets, locations];
-    }, [
-        isDefaultLayout,
-        currentLayout,
-        savedLayouts,
-        windowWidth,
-        windowHeight,
-    ]);
-
-    const { toolbar, toolbarAnchor } = layout;
-
-    const setLayout = useCallback(
-        (widgets: ReactGridLayout.Layout[]) => {
-            const layout: Layout = {
-                toolbar,
-                toolbarAnchor,
-            };
-
-            widgets.forEach((widget) => {
-                const type = widget.i;
-                if ((WidgetTypes as string[]).includes(type)) {
-                    layout[type as WidgetType] = {
-                        x: widget.x,
-                        y: widget.y,
-                        w: widget.w,
-                        h: widget.h,
-                    };
-                }
-            });
-
-            setCurrentLayout(layout);
-        },
-        [toolbar, toolbarAnchor, setCurrentLayout],
-    );
-
-    return {
-        layout,
-        widgets,
-        availableToolbarLocations,
-        setLayout,
-        isDefaultLayout,
-    };
-};
-
+/// Hook for getting the current layout, or undefined if the layout is the default layout
+export const useCurrentUserLayout = (): Layout | undefined => {
+    const settings = useSelector(settingsSelector);
+    if (isCurrentLayoutDefault(settings)) {
+        return undefined;
+    }
+    const { currentLayout, savedLayouts } = settings;
+    return savedLayouts[currentLayout];
+}

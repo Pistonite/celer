@@ -1,4 +1,5 @@
 import { ExecDoc } from "low/compiler";
+
 import { getRelativeLocation } from "./utils.ts";
 
 describe("core/doc/utils/getRelativeLocation", () => {

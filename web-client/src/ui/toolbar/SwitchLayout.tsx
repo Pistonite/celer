@@ -27,15 +27,9 @@ import {
     Copy20Regular,
     Edit20Regular,
 } from "@fluentui/react-icons";
-
-import { useLayout } from "core/utils";
-import {
-    settingsActions,
-    settingsSelector,
-    viewActions,
-    viewSelector,
-    useActions,
-} from "data/store";
+import { isCurrentLayoutDefault } from "core/layout";
+import { settingsActions, settingsSelector, viewActions, viewSelector } from "core/store";
+import { useActions } from "low/store";
 
 import {
     ControlComponentProps,
@@ -70,11 +64,11 @@ const LayoutRadioName = "Select a layout";
 const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
     children,
 }) => {
-    // layout api
-    const { layout, isDefaultLayout } = useLayout();
     // settings store
-    const { currentLayout, savedLayouts } = useSelector(settingsSelector);
-    const { addAndSwitchLayout, deleteCurrentLayout, switchLayout } =
+    const settings = useSelector(settingsSelector);
+    const isDefaultLayout = isCurrentLayoutDefault(settings);
+    const { currentLayout, savedLayouts } = settings;
+    const { duplicateLayout, deleteCurrentLayout, switchLayout } =
         useActions(settingsActions);
     // view store
     const { isEditingLayout } = useSelector(viewSelector);
@@ -147,18 +141,14 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
 
                     <MenuItem
                         icon={<Copy20Regular />}
-                        onClick={() => {
-                            addAndSwitchLayout(layout);
-                        }}
+                        onClick={duplicateLayout}
                     >
                         Duplicate
                     </MenuItem>
 
                     <MenuItem
                         icon={<Delete20Regular />}
-                        onClick={() => {
-                            deleteCurrentLayout();
-                        }}
+                        onClick={deleteCurrentLayout}
                     >
                         Delete
                     </MenuItem>

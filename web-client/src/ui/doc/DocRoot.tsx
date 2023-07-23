@@ -1,10 +1,11 @@
 //! The doc component
 
 import "./Doc.css";
-import React, { useEffect } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
-
-import { HintScreen, LoadScreen, useAppStore } from "ui/shared";
+import { ErrorBoundary, HintScreen, LoadScreen, useAppStore } from "ui/shared";
+import { ExecDoc } from "low/compiler";
+import { documentSelector, viewSelector } from "core/store";
 
 import { DocLine } from "./DocLine";
 import { DocSection } from "./DocSection";
@@ -17,21 +18,23 @@ import {
 } from "./utils";
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
-import { initDocController, DocController } from "./DocController";
-import { ErrorBoundary } from "ui/shared/ErrorBoundary";
-import { ExecDoc } from "low/compiler";
-import { documentSelector, viewSelector } from "core/store";
+import { DocController, initDocController } from "./DocController";
+// import { initDocController, DocController } from "./DocController";
 
 /// Doc wrapper component that connects to the store
 /// The underlying component is cached to avoid unnecessary re-rendering
 /// Because document is very expensive to render
 type DocRootProps = {
     /// The controller for user actions on the viewer
-    controller: DocController,
+    // controller: DocController,
 };
-export const DocRoot: React.FC<DocRootProps> = ({ controller }) => {
+export const DocRoot: React.FC<DocRootProps> = () => {
     const { isEditingLayout } = useSelector(viewSelector);
     const { document, serial } = useSelector(documentSelector);
+    const store = useAppStore();
+    const controller = React.useMemo(() => {
+        return initDocController(store);
+    }, [store]);
 
     if (!document.loaded) {
         return <LoadScreen color="yellow" />;
@@ -60,10 +63,10 @@ type DocInternalProps = {
     serial: number,
     /// The document to render
     document: ExecDoc,
-    /// The controller for user actions on the viewer
+    /// The controller
     controller: DocController,
 }
-const DocInternal: React.FC<DocInternalProps> = ({ controller, document }) => {
+const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
     DocLog.info("rendering document");
     const tagMap = document.project.tags;
     const flatNotes = document.route.reduce(
@@ -85,19 +88,14 @@ const DocInternal: React.FC<DocInternalProps> = ({ controller, document }) => {
 
     return (
         <div
-            tabIndex={0}
             id={DocScrollId}
             onScroll={() => {
                 controller.onScroll();
             }}
-            onFocus={() => {
-                console.log("focus");
-            }}
             onKeyDown={(e) => {
-                console.log("key up", e.key);
-            }}
-            onKeyUp={(e) => {
-                console.log("key down", e.key);
+                // prevent default scrolling behavior
+                // because we have our own
+                e.preventDefault();
             }}
         >
             <div id={DocContainerId}>
@@ -125,6 +123,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ controller, document }) => {
                                               )
                                             : undefined
                                     }
+                                    counterType={line.counterText?.tag}
                                 />
                             ))}
                         </DocSection>
@@ -141,5 +140,5 @@ const DocInternal: React.FC<DocInternalProps> = ({ controller, document }) => {
 };
 const CachedDocInternal = React.memo(
     DocInternal,
-    (prev, next) => prev.serial === next.serial,
+    (prev, next) => prev.serial === next.serial && prev.controller === next.controller,
 );

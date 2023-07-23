@@ -11,11 +11,6 @@
     scroll-behavior: smooth;
 }
 
-#doc-scroll:focus-visible {
-    /* we have our own visual for when the doc is focused*/
-    outline: none;
-}
-
 #doc-main {
     /* sizing for the main column */
     min-width: min(calc(100% - var(--note-min-width)), 380px);
@@ -32,11 +27,14 @@
 }
 
 .docsection-head {
+    box-sizing: border-box;
     /* padding for section title */
     padding: 16px 0px 16px 64px;
+    height: 68px;
 }
 
 .docline-container {
+    box-sizing: border-box;
 }
 
 .docline-main {
@@ -54,10 +52,6 @@
 }
 
 .doc-current-line .docline-head {
-    border-right: 12px solid;
-}
-
-#doc-scroll:focus .doc-current-line .docline-head {
     border-right: 24px solid;
 }
 
@@ -74,14 +68,11 @@
 }
 
 .doc-current-line .docline-counter {
-    right: -12px;
-}
-
-#doc-scroll:focus .doc-current-line .docline-counter {
     right: -24px;
 }
 
 .docline-body {
+    box-sizing: border-box;
     padding: 4px;
     flex-grow: 1;
     display: flex;
@@ -139,75 +130,3 @@
     padding: 4px 0 4px 4px;
 }
 
-/* theme */
-#doc-container {
-    color: white;
-}
-
-.docsection-head {
-    background-color: #001a00;
-}
-
-.docline-container:nth-child(even) .docline-head {
-    background-color: transparent;
-}
-
-.docnote-container {
-    color: black;
-}
-
-.docnote-container:nth-child(odd) {
-    background-color: #8888ee;
-}
-
-.docnote-container:nth-child(even) {
-    background-color: #ffcc33;
-}
-
-.docline-body {
-    background-color: #001a00;
-}
-
-.docline-diagnostic-body {
-    color: white;
-}
-
-.docline-diagnostic-body {
-    color: black;
-}
-
-.docline-diagnostic-head.docline-diagnostic-error {
-    background-color: #990000;
-}
-.docline-diagnostic-body.docline-diagnostic-error {
-    background-color: #ff6666;
-}
-.docline-diagnostic-head.docline-diagnostic-warn {
-    background-color: #883300;
-}
-.docline-diagnostic-body.docline-diagnostic-warn {
-    background-color: #ffbb00;
-}
-.docline-diagnostic-head {
-    background-color: #8888ee;
-}
-.docline-diagnostic-body {
-    background-color: #ccccff;
-}
-
-.docline-head:hover {
-    background-color: rgba(0, 0, 0, 0.4) !important;
-}
-
-/* dark theme */
-@media (prefers-color-scheme: dark) {
-    .docline-container:nth-child(odd) .docline-head {
-        background-color: rgba(0, 0, 0, 0.2);
-    }
-}
-
-@media (prefers-color-scheme: light) {
-    .docline-container:nth-child(odd) .docline-head {
-        background-color: rgba(0, 0, 0, 0.1);
-    }
-}

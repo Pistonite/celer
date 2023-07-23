@@ -19,9 +19,9 @@ import {
     Tooltip,
 } from "@fluentui/react-components";
 import { Window20Regular } from "@fluentui/react-icons";
-
-import { useLayout } from "core/utils";
-import { Layout, WidgetType, settingsActions, useActions } from "data/store";
+import { WidgetType, getAvailableToolbarLocations, useCurrentUserLayout } from "core/layout";
+import { useActions } from "low/store";
+import { settingsActions } from "core/store";
 
 import {
     ControlComponentProps,
@@ -32,23 +32,19 @@ import {
 /// Switch toolbar location control
 export const SwitchToolbarLocation: ToolbarControl = {
     ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
-        const { layout, availableToolbarLocations, isDefaultLayout } =
-            useLayout();
+        const { disabled, props } = useControlPropsInternal();
         return (
-            <SwitchToolbarLocationInternal
-                layout={layout}
-                locations={availableToolbarLocations}
-            >
+            <SwitchToolbarLocationInternal {...props}>
                 <Tooltip
                     content={
-                        isDefaultLayout
+                        disabled
                             ? "You cannot change the toolbar location in the default layout"
                             : "Change toolbar location"
                     }
                     relationship="label"
                 >
                     <ToolbarButton
-                        disabled={isDefaultLayout}
+                        disabled={disabled}
                         icon={<Window20Regular />}
                         ref={ref}
                     />
@@ -57,19 +53,28 @@ export const SwitchToolbarLocation: ToolbarControl = {
         );
     }),
     MenuItem: () => {
-        const { layout, availableToolbarLocations, isDefaultLayout } =
-            useLayout();
+        const {disabled, props} = useControlPropsInternal();
         return (
-            <SwitchToolbarLocationInternal
-                layout={layout}
-                locations={availableToolbarLocations}
-            >
-                <MenuItem disabled={isDefaultLayout} icon={<Window20Regular />}>
+            <SwitchToolbarLocationInternal {...props} >
+                <MenuItem disabled={disabled} icon={<Window20Regular />}>
                     Toolbar Location
                 </MenuItem>
             </SwitchToolbarLocationInternal>
         );
     },
+};
+
+/// Helper to compute props
+const useControlPropsInternal = () => {
+    const userLayout = useCurrentUserLayout();
+    return {
+        disabled: !userLayout, // disable changing toolbar in default layout
+        props: {
+            locations: getAvailableToolbarLocations(userLayout),
+            location: userLayout?.toolbar,
+            anchor: userLayout?.toolbarAnchor,
+        }
+    }
 };
 
 /// Mapping for widget type to display name
@@ -84,8 +89,10 @@ const ToolbarAnchorRadioName = "Select a toolbar anchor";
 
 /// Internal props for switch toolbar location control
 type SwitchToolbarLocationInternalProps = ControlComponentProps & {
-    /// The current layout
-    layout: Layout;
+    /// The current location
+    location?: WidgetType;
+    /// The current anchor
+    anchor?: "top" | "bottom";
     /// The available toolbar locations
     locations: WidgetType[];
 };
@@ -93,13 +100,16 @@ type SwitchToolbarLocationInternalProps = ControlComponentProps & {
 /// Internal switch toolbar location control logic
 const SwitchToolbarLocationInternal: React.FC<
     SwitchToolbarLocationInternalProps
-> = ({ children, layout, locations }) => {
-    const { setCurrentLayout } = useActions(settingsActions);
+> = ({ children, location, anchor, locations }) => {
+    const { 
+        setCurrentLayoutToolbarAnchor,
+        setCurrentLayoutToolbarLocation,
+    } = useActions(settingsActions);
 
     // compute which menu items should show as checked
     const toolbarMenuCheckedItems = {
-        [ToolbarLocationRadioName]: [layout.toolbar],
-        [ToolbarAnchorRadioName]: [layout.toolbarAnchor],
+        [ToolbarLocationRadioName]: [location || ""],
+        [ToolbarAnchorRadioName]: [anchor || ""],
     };
 
     // callback to update current layout with new toolbar location
@@ -107,16 +117,14 @@ const SwitchToolbarLocationInternal: React.FC<
         _,
         { name, checkedItems },
     ) => {
-        const newLayout = { ...layout };
         switch (name) {
             case ToolbarLocationRadioName:
-                newLayout.toolbar = checkedItems[0] as WidgetType;
+                setCurrentLayoutToolbarLocation(checkedItems[0] as WidgetType);
                 break;
             case ToolbarAnchorRadioName:
-                newLayout.toolbarAnchor = checkedItems[0] as "top" | "bottom";
+                setCurrentLayoutToolbarAnchor(checkedItems[0] as "top" | "bottom");
                 break;
         }
-        setCurrentLayout(newLayout);
     };
     return (
         <Menu

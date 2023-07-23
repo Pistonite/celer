@@ -1,14 +1,14 @@
 //! Part of the map that manages icons, markers and lines on the map
-
-import L from "leaflet";
 import "leaflet-arrowheads";
+import L from "leaflet";
+
+import { AppDispatcher, SettingsState, ViewState, viewActions } from "core/store";
+import { ExecDoc, GameCoord, MapIcon } from "low/compiler";
+import { LayerMode, SectionMode, VisualSize } from "core/map";
 
 import { MapLog } from "./utils";
 import { MapLayerMgr } from "./MapLayerMgr";
 import { IconMarker } from "./IconMarker";
-import { AppDispatcher, SettingsState, ViewState, viewActions } from "core/store";
-import { ExecDoc, GameCoord, MapIcon } from "low/compiler";
-import { LayerMode, SectionMode, VisualSize } from "core/map";
 
 /// Opacity for non current layer visuals
 const NonCurrentLayerOpacity = 0.3;

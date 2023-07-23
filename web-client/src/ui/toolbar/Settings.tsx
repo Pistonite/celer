@@ -16,6 +16,9 @@ import {
 } from "@fluentui/react-components";
 import { Settings20Regular } from "@fluentui/react-icons";
 
+import { viewActions } from "core/store";
+import { useActions } from "low/store";
+
 import { ControlComponentProps, ToolbarControl } from "./util";
 import { SettingsDialog } from "./SettingsDialog";
 
@@ -41,9 +44,9 @@ export const Settings: ToolbarControl = {
 
 /// Internal settings dialog component
 const SettingsInternal: React.FC<ControlComponentProps> = ({ children }) => {
-    // TODO: Implement the settings dialog
+    const { setEditingKeyBinding } = useActions(viewActions);
     return (
-        <Dialog>
+        <Dialog onOpenChange={() => setEditingKeyBinding(undefined) }>
             <DialogTrigger disableButtonEnhancement>{children}</DialogTrigger>
             <DialogSurface
                 id="settings-dialog-root"

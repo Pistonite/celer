@@ -5,16 +5,15 @@ import "leaflet/dist/leaflet.css";
 import "./leaflet-tilelayer-nogap";
 
 import reduxWatch from "redux-watch";
-
 import { AppStore, ViewState, documentSelector, settingsSelector, viewActions, viewSelector } from "core/store";
 import { ExecDoc } from "low/compiler";
 import { Debouncer } from "low/utils";
+import { SectionMode } from "core/map";
 
 import { MapLog, roughlyEquals } from "./utils";
 import { MapContainerMgr } from "./MapContainerMgr";
 import { MapLayerMgr } from "./MapLayerMgr";
 import { MapVisualMgr } from "./MapVisualMgr";
-import { SectionMode } from "core/map";
 
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
@@ -26,9 +25,6 @@ declare global {
 /// Map entry point
 export const initMap = (store: AppStore): MapState => {
     if (window.__theMapState) {
-        MapLog.warn(
-            "found existing map instance. You are either in a dev environment or this is a bug",
-        );
         window.__theMapState.delete();
     }
     MapLog.info("creating map");
@@ -149,7 +145,7 @@ export class MapState {
 
     /// Delete the map state
     public delete() {
-        MapLog.warn("deleting map");
+        MapLog.info("deleting map");
         this.map.getContainer().remove();
         this.map.remove();
         this.cleanup();

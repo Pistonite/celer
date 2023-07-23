@@ -5,8 +5,7 @@
 //! rerender when the view updates.
 
 import reduxWatch from "redux-watch";
-
-import { AppStore, documentSelector, viewActions, viewSelector } from "core/store";
+import { AppStore, documentSelector, settingsSelector, viewActions, viewSelector } from "core/store";
 import { Debouncer } from "low/utils";
 
 import {
@@ -21,6 +20,7 @@ import {
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
 import { updateNotePositions } from "./updateNotePositions";
+import { GameCoord } from "low/compiler";
 
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
@@ -35,9 +35,6 @@ export const DocCurrentLineClass = "doc-current-line";
 /// Create the doc controller singleton
 export const initDocController = (store: AppStore): DocController => {
     if (window.__theDocController) {
-        DocLog.warn(
-            "found existing doc instance. You are either in a dev environment or this is a bug",
-        );
         window.__theDocController.delete();
     }
 
@@ -112,7 +109,7 @@ export class DocController {
     }
 
     public delete() {
-        DocLog.warn("deleting doc controller");
+        DocLog.info("deleting doc controller");
         this.cleanup();
     }
 
@@ -148,9 +145,13 @@ export class DocController {
             needUpdateCurrentLine =
                 currentLineTop < scrollTop || currentLineBottom > scrollBottom;
         }
+
+        // don't know if we need to find the visible lines yet, so leave this undefined
+        let visibleLines: HTMLElement[] | undefined = undefined;
+
         if (needUpdateCurrentLine) {
             // current line is not visible
-            const visibleLines = findVisibleLines();
+            visibleLines = findVisibleLines();
             if (visibleLines.length === 0) {
                 DocLog.warn("cannot find any visible lines");
                 return;
@@ -164,6 +165,21 @@ export class DocController {
         } else {
             // Update notes based on current line
             updateNotePositions(currentLine as HTMLElement);
+        }
+
+        const { syncMapToDoc } = settingsSelector(this.store.getState());
+        const { document } = documentSelector(this.store.getState());
+        if (syncMapToDoc && document.loaded) {
+            if (!visibleLines) {
+                visibleLines = findVisibleLines();
+            }
+            const coords = visibleLines.map((line) => {
+                const [sectionIndex, lineIndex] = getLineLocationFromElement(line);
+                return document.route[sectionIndex]?.lines[lineIndex]?.mapCoord;
+            }).filter(Boolean) as GameCoord[];
+            if (coords.length > 0) {
+                this.store.dispatch(viewActions.setMapView(coords));
+            }
         }
     }
 
@@ -196,9 +212,6 @@ export class DocController {
     /// If forceScrollUpdate, will also call scroll update even if scroll didn't change.
     private onViewUpdate(forceScrollUpdate: boolean): boolean {
         const newView = viewSelector(this.store.getState());
-        DocLog.info(
-            `update view: section=${newView.currentSection}, line=${newView.currentLine}`,
-        );
         // update current line indicator
         let newCurrentLine = findLineByIndex(
             newView.currentSection,

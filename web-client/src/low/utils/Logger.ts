@@ -1,7 +1,6 @@
 //! Client side log util
 
 import Denque from "denque";
-
 /// Global log queue
 const LogQueue = new Denque<string>();
 const pushLog = (msg: string) => {

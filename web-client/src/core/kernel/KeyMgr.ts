@@ -3,12 +3,10 @@
 import { AppStore, documentSelector, settingsActions, settingsSelector, viewActions, viewSelector } from "core/store";
 import { getRelativeLocation } from "core/doc";
 
-import { DocLog } from "./utils";
-
 /// Manager for key events and bindings
 ///
 /// Connects to the store for handling the key
-export class DocKeyMgr {
+export class KeyMgr {
     /// The store to operate on
     private store: AppStore;
     /// The current keys that are held down
@@ -24,6 +22,24 @@ export class DocKeyMgr {
         this.store = store;
     }
 
+    /// Add listeners to the window
+    ///
+    /// Returns a function to unlisten
+    public listen(): () => void {
+        const onKeyDown = (e: KeyboardEvent) => {
+            this.onKeyDown(e.key);
+        };
+        const onKeyUp = (e: KeyboardEvent) => {
+            this.onKeyUp(e.key);
+        };
+        window.addEventListener("keydown", onKeyDown);
+        window.addEventListener("keyup", onKeyUp);
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+            window.removeEventListener("keyup", onKeyUp);
+        };
+    }
+
     /// Handle when a key is pressed
     ///
     /// This will add to the current pressed strokes.
@@ -31,10 +47,10 @@ export class DocKeyMgr {
     /// match an action, it will execute that action
     public onKeyDown(key: string) {
         if (this.isEditingKeyBinding()) {
-            this.currentStrokes.push(key);
+            this.handleAddKey(key);
         } else if (this.lastDetected.length === 0) {
             // detecting mode
-            this.currentStrokes.push(key);
+            this.handleAddKey(key);
             const {
                 prevLineKey,
                 nextLineKey,
@@ -50,8 +66,16 @@ export class DocKeyMgr {
             }
         } else {
             // waiting for release
-            this.currentStrokes.push(key);
+            this.handleAddKey(key);
         }
+    }
+
+    /// Add key to current stroke if it's not already in it
+    private handleAddKey(key: string) {
+        if (this.currentStrokes.includes(key)) {
+            return;
+        }
+        this.currentStrokes.push(key);
     }
 
     /// Handle when a key is released
@@ -102,6 +126,9 @@ export class DocKeyMgr {
     /// Handle document location key binding action
     private handleDocLocationAction(delta: number) {
         const { document } = documentSelector(this.store.getState());
+        if (!document.loaded) {
+            return;
+        }
         const { currentSection, currentLine } = viewSelector(this.store.getState());
         const nextLocation = getRelativeLocation(document, currentSection, currentLine, delta);
         this.store.dispatch(viewActions.setDocLocation(nextLocation));
@@ -111,12 +138,10 @@ export class DocKeyMgr {
     private updateKeyBinding() {
         if (this.currentStrokes.length === 0) {
             // safety check since we want to avoid having empty key bindings
-            DocLog.error("Trying to update key binding with no strokes");
             return;
         }
         const editingKeyBinding = viewSelector(this.store.getState()).editingKeyBinding;
         if (editingKeyBinding === undefined) {
-            DocLog.error("Trying to update key binding when not editing");
             return;
         }
 

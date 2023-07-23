@@ -6,7 +6,6 @@
 
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-
 import { DocDiagnostic } from "low/compiler";
 import { documentSelector } from "core/store";
 

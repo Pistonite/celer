@@ -4,7 +4,6 @@ import "./Map.css";
 
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-
 import { LoadScreen, ErrorScreen, useAppStore } from "ui/shared";
 import { documentSelector } from "core/store";
 

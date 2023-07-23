@@ -1,8 +1,8 @@
 //! Reducers for the document settings
 
-import { DocSettingsState, KeyBinding, KeyBindingName, initialPerDocSettings } from "./state";
-
 import { ReducerDeclWithPayload, withPayload } from "low/store";
+
+import { DocSettingsState, KeyBinding, KeyBindingName, initialPerDocSettings } from "./state";
 
 /// Set the document viewer theme
 export const setDocTheme: ReducerDeclWithPayload<DocSettingsState, string> =

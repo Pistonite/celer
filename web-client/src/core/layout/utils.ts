@@ -2,7 +2,7 @@
 
 import { Draft, produce } from "immer";
 
-import { Layout, LayoutDim } from "./state";
+import { Layout, LayoutDim, LayoutSettingsState, WidgetType } from "./state";
 
 /// The Grid size
 ///
@@ -16,6 +16,8 @@ export const GridThird = GridFull / 3;
 export const GridMajor = 20;
 /// The smaller widget size where 2 parts are about the same
 export const GridMinor = GridFull - GridMajor;
+/// Widget types. Key of the layout object
+export const WidgetTypes: WidgetType[] = ["viewer", "editor", "map"];
 
 /// Returns a new layout fitted to the grid
 ///
@@ -200,3 +202,20 @@ export const getDefaultLayout = (
     }
     return getDefaultPortraitViewerLayout();
 };
+
+/// If the current layout is the default layout
+export const isCurrentLayoutDefault = (state: LayoutSettingsState): boolean => {
+    return state.currentLayout < 0 || state.currentLayout >= state.savedLayouts.length;
+};
+
+/// Get available toolbar locations for a layout
+///
+/// Returns empty array if layout is undefined
+export const getAvailableToolbarLocations = (layout: Layout | undefined): WidgetType[] => {
+    if (!layout) {
+        return [];
+    }
+    return WidgetTypes.map(type => {
+        return layout[type] ? null : type;
+    }).filter(Boolean) as WidgetType[];
+}

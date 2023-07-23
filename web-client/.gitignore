@@ -25,3 +25,6 @@ dist-ssr
 
 # Prebuilt files
 *.min.css
+
+# cache
+.eslintcache

@@ -1,30 +1,26 @@
+import "react-grid-layout/css/styles.css";
+import "./AppRoot.css";
+
 import clsx from "clsx";
-import React, { Suspense } from "react";
+import React, { Suspense, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import ReactGridLayout from "react-grid-layout";
-
-import "react-grid-layout/css/styles.css";
-import "./layout.css";
-
 import { Header } from "ui/toolbar";
+import { LoadScreen, useWindowSize } from "ui/shared";
+import { settingsActions, viewSelector } from "core/store";
+import { GridFull, Layout, WidgetType, WidgetTypes, getDefaultLayout, useCurrentUserLayout } from "core/layout";
+import { useActions } from "low/store";
 const Map: React.FC = React.lazy(() => import("ui/map"));
 const Doc: React.FC = React.lazy(() => import("ui/doc"));
-import { LoadScreen } from "ui/shared";
-
-import { useLayout, useWindowSize } from "core/utils";
-
-import { GridFull, viewSelector } from "data/store";
 
 /// Margin to show when editing the layout
 const LayoutEditingMargin = 5;
 
 /// Root of the application
-///
-/// This handles things like layout and routing
 export const AppRoot: React.FC = () => {
     const { isEditingLayout } = useSelector(viewSelector);
-    const { widgets, layout, setLayout } = useLayout();
     const { windowWidth, windowHeight } = useWindowSize();
+    const { widgets, layout, setLayout } = useReactGridLayout(windowWidth, windowHeight);
     const margin = isEditingLayout ? LayoutEditingMargin : 0;
 
     // compute layout numbers
@@ -71,4 +67,56 @@ export const AppRoot: React.FC = () => {
             ))}
         </ReactGridLayout>
     );
+};
+
+/// Helper hook for converting between internal layout data and react-grid-layout data
+const useReactGridLayout = (windowWidth: number, windowHeight: number) => {
+    const userLayout = useCurrentUserLayout();
+    const { setCurrentLayout } = useActions(settingsActions);
+
+    // convert layout to ReactGridLayout
+    const [layout, widgets] = useMemo(() => {
+        const layout = userLayout || getDefaultLayout(windowWidth, windowHeight);
+        const widgets = WidgetTypes.map((type) => {
+            return layout[type] && { i: type, ...layout[type] };
+
+        }).filter(Boolean) as ReactGridLayout.Layout[];
+        return [layout, widgets];
+    }, [
+        userLayout,
+        windowWidth,
+        windowHeight,
+    ]);
+
+    const { toolbar, toolbarAnchor } = layout;
+
+    const setLayout = useCallback(
+        (widgets: ReactGridLayout.Layout[]) => {
+            const layout: Layout = {
+                toolbar,
+                toolbarAnchor,
+            };
+
+            widgets.forEach((widget) => {
+                const type = widget.i;
+                if ((WidgetTypes as string[]).includes(type)) {
+                    layout[type as WidgetType] = {
+                        x: widget.x,
+                        y: widget.y,
+                        w: widget.w,
+                        h: widget.h,
+                    };
+                }
+            });
+
+            setCurrentLayout(layout);
+        },
+        [toolbar, toolbarAnchor, setCurrentLayout],
+    );
+
+    return {
+        layout,
+        widgets,
+        setLayout,
+    };
 };
