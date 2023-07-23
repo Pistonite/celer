@@ -13,7 +13,9 @@ describe("core/doc/utils/getRelativeLocation", () => {
 
     it("should return the same location if delta is 0", () => {
         const loc = { section: 1, line: 2 };
-        expect(getRelativeLocation(mockDoc, loc.section, loc.line, 0)).toEqual(loc);
+        expect(getRelativeLocation(mockDoc, loc.section, loc.line, 0)).toEqual(
+            loc,
+        );
     });
 
     it("should return previous location, same section", () => {
@@ -145,5 +147,4 @@ describe("core/doc/utils/getRelativeLocation", () => {
             line: 6,
         });
     });
-
 });

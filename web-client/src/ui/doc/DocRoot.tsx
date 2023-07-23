@@ -60,12 +60,12 @@ type DocInternalProps = {
     /// Serial number of the document
     ///
     /// Will only re-render if the serial number changes
-    serial: number,
+    serial: number;
     /// The document to render
-    document: ExecDoc,
+    document: ExecDoc;
     /// The controller
-    controller: DocController,
-}
+    controller: DocController;
+};
 const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
     DocLog.info("rendering document");
     const tagMap = document.project.tags;
@@ -140,5 +140,6 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
 };
 const CachedDocInternal = React.memo(
     DocInternal,
-    (prev, next) => prev.serial === next.serial && prev.controller === next.controller,
+    (prev, next) =>
+        prev.serial === next.serial && prev.controller === next.controller,
 );

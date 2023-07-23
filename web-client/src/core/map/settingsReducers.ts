@@ -13,10 +13,12 @@ export const setLineSectionMode: ReducerDeclWithPayload<
 });
 
 /// Set the current line layer mode
-export const setLineLayerMode: ReducerDeclWithPayload<MapSettingsState, LayerMode> =
-    withPayload((state: MapSettingsState, value: LayerMode) => {
-        state.lineLayerMode = value;
-    });
+export const setLineLayerMode: ReducerDeclWithPayload<
+    MapSettingsState,
+    LayerMode
+> = withPayload((state: MapSettingsState, value: LayerMode) => {
+    state.lineLayerMode = value;
+});
 
 /// Set if lines not on current layer should fade
 export const setFadeNonCurrentLayerLines: ReducerDeclWithPayload<
@@ -35,10 +37,12 @@ export const setIconSectionMode: ReducerDeclWithPayload<
 });
 
 /// Set the current icon layer mode
-export const setIconLayerMode: ReducerDeclWithPayload<MapSettingsState, LayerMode> =
-    withPayload((state: MapSettingsState, value: LayerMode) => {
-        state.iconLayerMode = value;
-    });
+export const setIconLayerMode: ReducerDeclWithPayload<
+    MapSettingsState,
+    LayerMode
+> = withPayload((state: MapSettingsState, value: LayerMode) => {
+    state.iconLayerMode = value;
+});
 
 /// Set if icons not on current layer should fade
 export const setFadeNonCurrentLayerIcons: ReducerDeclWithPayload<
@@ -89,10 +93,12 @@ export const setSecondaryIconSize: ReducerDeclWithPayload<
 });
 
 /// Set other icon size
-export const setOtherIconSize: ReducerDeclWithPayload<MapSettingsState, VisualSize> =
-    withPayload((state: MapSettingsState, value: VisualSize) => {
-        state.otherIconSize = value;
-    });
+export const setOtherIconSize: ReducerDeclWithPayload<
+    MapSettingsState,
+    VisualSize
+> = withPayload((state: MapSettingsState, value: VisualSize) => {
+    state.otherIconSize = value;
+});
 
 /// Set line size (thickness)
 export const setLineSize: ReducerDeclWithPayload<MapSettingsState, VisualSize> =
@@ -101,10 +107,12 @@ export const setLineSize: ReducerDeclWithPayload<MapSettingsState, VisualSize> =
     });
 
 /// Set arrow size
-export const setArrowSize: ReducerDeclWithPayload<MapSettingsState, VisualSize> =
-    withPayload((state: MapSettingsState, value: VisualSize) => {
-        state.arrowSize = value;
-    });
+export const setArrowSize: ReducerDeclWithPayload<
+    MapSettingsState,
+    VisualSize
+> = withPayload((state: MapSettingsState, value: VisualSize) => {
+    state.arrowSize = value;
+});
 
 /// Set arrow frequency
 export const setArrowFrequency: ReducerDeclWithPayload<
@@ -115,7 +123,9 @@ export const setArrowFrequency: ReducerDeclWithPayload<
 });
 
 /// Set marker size
-export const setMarkerSize: ReducerDeclWithPayload<MapSettingsState, VisualSize> =
-    withPayload((state: MapSettingsState, value: VisualSize) => {
-        state.markerSize = value;
-    });
+export const setMarkerSize: ReducerDeclWithPayload<
+    MapSettingsState,
+    VisualSize
+> = withPayload((state: MapSettingsState, value: VisualSize) => {
+    state.markerSize = value;
+});

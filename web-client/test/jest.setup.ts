@@ -10,7 +10,7 @@ export const createMockStore = (initialState: unknown): any => {
         subscribe: jest.fn(),
         dispatch: jest.fn(),
     } as any;
-}
+};
 
 /// Access a member of an object, asserting that it exists
 ///
@@ -18,4 +18,4 @@ export const createMockStore = (initialState: unknown): any => {
 export const getAttr = (obj: unknown, member: string) => {
     expect(obj).toHaveProperty(member);
     return (obj as any)[member];
-}
+};

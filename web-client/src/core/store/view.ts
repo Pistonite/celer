@@ -4,7 +4,11 @@
 //! Such as toolbar, map view, and other UI states.
 
 import { DocViewState, docViewReducers, initialDocViewState } from "core/doc";
-import { LayoutViewState, initialLayoutViewState, layoutViewReducers } from "core/layout";
+import {
+    LayoutViewState,
+    initialLayoutViewState,
+    layoutViewReducers,
+} from "core/layout";
 import { MapViewState, initialMapViewState, mapViewReducers } from "core/map";
 import { configureSlice } from "low/store";
 

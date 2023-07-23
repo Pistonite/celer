@@ -46,7 +46,7 @@ export const Settings: ToolbarControl = {
 const SettingsInternal: React.FC<ControlComponentProps> = ({ children }) => {
     const { setEditingKeyBinding } = useActions(viewActions);
     return (
-        <Dialog onOpenChange={() => setEditingKeyBinding(undefined) }>
+        <Dialog onOpenChange={() => setEditingKeyBinding(undefined)}>
             <DialogTrigger disableButtonEnhancement>{children}</DialogTrigger>
             <DialogSurface
                 id="settings-dialog-root"

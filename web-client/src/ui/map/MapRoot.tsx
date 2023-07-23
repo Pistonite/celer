@@ -14,7 +14,7 @@ import { RootContainerId } from "./MapContainerMgr";
 export const MapRoot: React.FC = () => {
     const { document } = useSelector(documentSelector);
     const store = useAppStore();
-    const mapState = useRef<MapState|null>(null);
+    const mapState = useRef<MapState | null>(null);
     useEffect(() => {
         // attach the map only if doc is loaded
         if (document.loaded) {

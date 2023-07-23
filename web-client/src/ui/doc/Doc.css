@@ -96,21 +96,23 @@
     transition-duration: 0.1s;
 }
 
+.docnote-container-expanded {
+    /* make the notes stick to the right side*/
+    right: 0px;
+    z-index: 100;
+}
+
+.docnote-container.docnote-container-expanded .docnote-block {
+    height: auto;
+}
+
 @container (max-width: 100px) {
     .docnote-container {
         /* need this so 100% can be propagated to children */
         width: 100%;
-        height: 32px;
-    }
-    .docnote-container:hover {
-        /* left: max(-380px, calc(-100vh + 24px)); */
-        right: 0px;
-        width: min(calc(100% + 380px), 100vw);
-        height: auto;
-        z-index: 100;
     }
     .docnote-container .docnote-block {
-        /* height: 32px; */
+        height: 32px;
         width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -129,4 +131,3 @@
 .docline-diagnostic-body {
     padding: 4px 0 4px 4px;
 }
-

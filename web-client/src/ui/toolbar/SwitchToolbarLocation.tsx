@@ -19,7 +19,11 @@ import {
     Tooltip,
 } from "@fluentui/react-components";
 import { Window20Regular } from "@fluentui/react-icons";
-import { WidgetType, getAvailableToolbarLocations, useCurrentUserLayout } from "core/layout";
+import {
+    WidgetType,
+    getAvailableToolbarLocations,
+    useCurrentUserLayout,
+} from "core/layout";
 import { useActions } from "low/store";
 import { settingsActions } from "core/store";
 
@@ -53,9 +57,9 @@ export const SwitchToolbarLocation: ToolbarControl = {
         );
     }),
     MenuItem: () => {
-        const {disabled, props} = useControlPropsInternal();
+        const { disabled, props } = useControlPropsInternal();
         return (
-            <SwitchToolbarLocationInternal {...props} >
+            <SwitchToolbarLocationInternal {...props}>
                 <MenuItem disabled={disabled} icon={<Window20Regular />}>
                     Toolbar Location
                 </MenuItem>
@@ -73,8 +77,8 @@ const useControlPropsInternal = () => {
             locations: getAvailableToolbarLocations(userLayout),
             location: userLayout?.toolbar,
             anchor: userLayout?.toolbarAnchor,
-        }
-    }
+        },
+    };
 };
 
 /// Mapping for widget type to display name
@@ -101,10 +105,8 @@ type SwitchToolbarLocationInternalProps = ControlComponentProps & {
 const SwitchToolbarLocationInternal: React.FC<
     SwitchToolbarLocationInternalProps
 > = ({ children, location, anchor, locations }) => {
-    const { 
-        setCurrentLayoutToolbarAnchor,
-        setCurrentLayoutToolbarLocation,
-    } = useActions(settingsActions);
+    const { setCurrentLayoutToolbarAnchor, setCurrentLayoutToolbarLocation } =
+        useActions(settingsActions);
 
     // compute which menu items should show as checked
     const toolbarMenuCheckedItems = {
@@ -122,7 +124,9 @@ const SwitchToolbarLocationInternal: React.FC<
                 setCurrentLayoutToolbarLocation(checkedItems[0] as WidgetType);
                 break;
             case ToolbarAnchorRadioName:
-                setCurrentLayoutToolbarAnchor(checkedItems[0] as "top" | "bottom");
+                setCurrentLayoutToolbarAnchor(
+                    checkedItems[0] as "top" | "bottom",
+                );
                 break;
         }
     };

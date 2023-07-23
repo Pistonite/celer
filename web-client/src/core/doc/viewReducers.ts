@@ -22,6 +22,8 @@ export const setDocLocation: ReducerDeclWithPayload<
 export const setEditingKeyBinding: ReducerDeclWithPayload<
     DocViewState,
     KeyBindingName | undefined
-> = withPayload((state: DocViewState, editingKeyBinding: KeyBindingName | undefined) => {
-    state.editingKeyBinding = editingKeyBinding;
-});
+> = withPayload(
+    (state: DocViewState, editingKeyBinding: KeyBindingName | undefined) => {
+        state.editingKeyBinding = editingKeyBinding;
+    },
+);

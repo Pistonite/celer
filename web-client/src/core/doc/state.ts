@@ -39,7 +39,7 @@ export type KeyBindingSettings = {
     nextLineKey: KeyBinding;
     prevSplitKey: KeyBinding;
     nextSplitKey: KeyBinding;
-}
+};
 
 export type KeyBindingName = keyof KeyBindingSettings;
 
@@ -94,7 +94,7 @@ export type DocumentState = {
     document: ExecDoc;
 };
 
-/// The initial document state for the 
+/// The initial document state
 export const initialDocumentState: DocumentState = {
     serial: 0,
     document: {
@@ -121,4 +121,3 @@ export const initialDocumentState: DocumentState = {
         map: [],
     },
 };
-

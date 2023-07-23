@@ -2,7 +2,11 @@
 
 import { DocTag, ExecDoc } from "low/compiler";
 
-import { DocSettingsState, PerDocSettings, initialPerDocSettings } from "./state";
+import {
+    DocSettingsState,
+    PerDocSettings,
+    initialPerDocSettings,
+} from "./state";
 
 /// Get per-doc settings by doc id
 export const getPerDocSettings = (
@@ -19,7 +23,12 @@ export const getPerDocSettings = (
 ///
 /// If the new location is out of bound, the first or last line is returned.
 /// The return value is always a valid line location
-export const getRelativeLocation = (doc: ExecDoc, section: number, line: number, delta: number): { section: number, line: number} => {
+export const getRelativeLocation = (
+    doc: ExecDoc,
+    section: number,
+    line: number,
+    delta: number,
+): { section: number; line: number } => {
     // Convert to absolute line index
     let absLineIndex = line;
     for (let i = section - 1; i >= 0; i--) {
@@ -42,7 +51,7 @@ export const getRelativeLocation = (doc: ExecDoc, section: number, line: number,
         section: doc.route.length - 1,
         line: doc.route[doc.route.length - 1].lines.length - 1,
     };
-}
+};
 
 /// Rich text type with resolved tag
 export type RichText = {

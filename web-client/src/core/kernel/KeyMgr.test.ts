@@ -6,7 +6,7 @@ import { KeyMgr } from "./KeyMgr";
 describe("ui/doc/KeyMgr", () => {
     const setupTest = (editingKeyBinding?: string) => {
         const mockStore = createMockStore({
-            view: { 
+            view: {
                 editingKeyBinding,
                 currentSection: 1,
                 currentLine: 2,
@@ -18,24 +18,24 @@ describe("ui/doc/KeyMgr", () => {
                         { lines: { length: 5 } },
                         { lines: { length: 6 } },
                         { lines: { length: 7 } },
-                    ]
-                }
+                    ],
+                },
             },
             settings: {
                 prevLineKey: ["a"],
                 nextLineKey: ["d", "e"],
                 prevSplitKey: ["a", "b", "c"],
                 nextSplitKey: ["d", "e", "f"],
-            }
+            },
         });
         return {
             store: mockStore,
             keyMgr: new KeyMgr(mockStore),
-        }
+        };
     };
 
     describe("onKeyDown", () => {
-        it("should not add to current stroke if repeat" , () => {
+        it("should not add to current stroke if repeat", () => {
             const { keyMgr } = setupTest();
             keyMgr.onKeyDown("x");
             keyMgr.onKeyDown("x");
@@ -71,9 +71,9 @@ describe("ui/doc/KeyMgr", () => {
             keyMgr.onKeyDown("a");
             expect(getAttr(keyMgr, "currentStrokes")).toEqual(["a"]);
             expect(getAttr(keyMgr, "lastDetected")).toEqual(["a"]);
-            expect(store.dispatch).toHaveBeenCalledWith({ 
-                type: "view/setDocLocation", 
-                payload: { section: 1, line: 1 } 
+            expect(store.dispatch).toHaveBeenCalledWith({
+                type: "view/setDocLocation",
+                payload: { section: 1, line: 1 },
             });
         });
 
@@ -83,9 +83,9 @@ describe("ui/doc/KeyMgr", () => {
             expect(store.dispatch).not.toHaveBeenCalled();
             keyMgr.onKeyDown("e");
             expect(getAttr(keyMgr, "lastDetected")).toEqual(["d", "e"]);
-            expect(store.dispatch).toHaveBeenCalledWith({ 
-                type: "view/setDocLocation", 
-                payload: { section: 1, line: 3 } 
+            expect(store.dispatch).toHaveBeenCalledWith({
+                type: "view/setDocLocation",
+                payload: { section: 1, line: 3 },
             });
         });
     });
@@ -95,48 +95,48 @@ describe("ui/doc/KeyMgr", () => {
             const { store, keyMgr } = setupTest("editing");
             setAttr(keyMgr, "currentStrokes", ["a"]);
             keyMgr.onKeyUp("a");
-            expect(store.dispatch).toHaveBeenCalledWith({ 
-                type: "view/setEditingKeyBinding", 
-                payload: undefined, 
+            expect(store.dispatch).toHaveBeenCalledWith({
+                type: "view/setEditingKeyBinding",
+                payload: undefined,
             });
-            expect(store.dispatch).toHaveBeenCalledWith({ 
-                type: "settings/setDocKeyBinding", 
+            expect(store.dispatch).toHaveBeenCalledWith({
+                type: "settings/setDocKeyBinding",
                 payload: {
                     name: "editing",
                     value: ["a"],
-                } 
+                },
             });
         });
         it("editing: should set binding, multiple keys, release last", () => {
             const { store, keyMgr } = setupTest("editing");
             setAttr(keyMgr, "currentStrokes", ["a", "b"]);
             keyMgr.onKeyUp("b");
-            expect(store.dispatch).toHaveBeenCalledWith({ 
-                type: "view/setEditingKeyBinding", 
-                payload: undefined, 
+            expect(store.dispatch).toHaveBeenCalledWith({
+                type: "view/setEditingKeyBinding",
+                payload: undefined,
             });
-            expect(store.dispatch).toHaveBeenCalledWith({ 
-                type: "settings/setDocKeyBinding", 
+            expect(store.dispatch).toHaveBeenCalledWith({
+                type: "settings/setDocKeyBinding",
                 payload: {
                     name: "editing",
                     value: ["a", "b"],
-                } 
+                },
             });
         });
         it("editing: should set binding, multiple keys, release non last", () => {
             const { store, keyMgr } = setupTest("editing");
             setAttr(keyMgr, "currentStrokes", ["a", "b"]);
             keyMgr.onKeyUp("a");
-            expect(store.dispatch).toHaveBeenCalledWith({ 
-                type: "view/setEditingKeyBinding", 
-                payload: undefined, 
+            expect(store.dispatch).toHaveBeenCalledWith({
+                type: "view/setEditingKeyBinding",
+                payload: undefined,
             });
-            expect(store.dispatch).toHaveBeenCalledWith({ 
-                type: "settings/setDocKeyBinding", 
+            expect(store.dispatch).toHaveBeenCalledWith({
+                type: "settings/setDocKeyBinding",
                 payload: {
                     name: "editing",
                     value: ["a", "b"],
-                } 
+                },
             });
         });
         it("editing: should update current strokes", () => {

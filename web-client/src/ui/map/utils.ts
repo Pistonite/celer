@@ -1,6 +1,12 @@
 //! Utility for the map logic
 
-import { Axis, DocMapCoordMap, DocMapLayerAttribution, GameCoord, RouteCoord } from "low/compiler";
+import {
+    Axis,
+    DocMapCoordMap,
+    DocMapLayerAttribution,
+    GameCoord,
+    RouteCoord,
+} from "low/compiler";
 import { Logger } from "low/utils";
 
 /// Map module logger

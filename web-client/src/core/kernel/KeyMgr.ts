@@ -1,6 +1,13 @@
 //! Logic for handling key events and bindings
 
-import { AppStore, documentSelector, settingsActions, settingsSelector, viewActions, viewSelector } from "core/store";
+import {
+    AppStore,
+    documentSelector,
+    settingsActions,
+    settingsSelector,
+    viewActions,
+    viewSelector,
+} from "core/store";
 import { getRelativeLocation } from "core/doc";
 
 /// Manager for key events and bindings
@@ -12,7 +19,7 @@ export class KeyMgr {
     /// The current keys that are held down
     private currentStrokes: string[] = [];
     /// The current detected key binding
-    /// 
+    ///
     /// The key manager behaves differently when detecting a key binding
     /// vs. a key binding is already detected, and currently is waiting
     /// for it to be released.
@@ -85,7 +92,7 @@ export class KeyMgr {
     public onKeyUp(key: string) {
         if (this.isEditingKeyBinding()) {
             this.updateKeyBinding();
-        } 
+        }
         // remove the release key from the current strokes
         const i = this.currentStrokes.indexOf(key);
         if (i !== -1) {
@@ -102,7 +109,9 @@ export class KeyMgr {
     }
 
     private isEditingKeyBinding() {
-        return viewSelector(this.store.getState()).editingKeyBinding !== undefined;
+        return (
+            viewSelector(this.store.getState()).editingKeyBinding !== undefined
+        );
     }
 
     /// Check if the current key sequence matches the expected sequence
@@ -129,8 +138,15 @@ export class KeyMgr {
         if (!document.loaded) {
             return;
         }
-        const { currentSection, currentLine } = viewSelector(this.store.getState());
-        const nextLocation = getRelativeLocation(document, currentSection, currentLine, delta);
+        const { currentSection, currentLine } = viewSelector(
+            this.store.getState(),
+        );
+        const nextLocation = getRelativeLocation(
+            document,
+            currentSection,
+            currentLine,
+            delta,
+        );
         this.store.dispatch(viewActions.setDocLocation(nextLocation));
     }
 
@@ -140,7 +156,9 @@ export class KeyMgr {
             // safety check since we want to avoid having empty key bindings
             return;
         }
-        const editingKeyBinding = viewSelector(this.store.getState()).editingKeyBinding;
+        const editingKeyBinding = viewSelector(
+            this.store.getState(),
+        ).editingKeyBinding;
         if (editingKeyBinding === undefined) {
             return;
         }
@@ -148,10 +166,12 @@ export class KeyMgr {
         // stop editing key binding
         this.store.dispatch(viewActions.setEditingKeyBinding(undefined));
         // update the binding
-        this.store.dispatch(settingsActions.setDocKeyBinding({
-            name: editingKeyBinding,
-            // create a copy to avoid reference bugs
-            value: [...this.currentStrokes]
-        }));
+        this.store.dispatch(
+            settingsActions.setDocKeyBinding({
+                name: editingKeyBinding,
+                // create a copy to avoid reference bugs
+                value: [...this.currentStrokes],
+            }),
+        );
     }
 }
