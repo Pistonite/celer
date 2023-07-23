@@ -5,7 +5,14 @@ import "leaflet/dist/leaflet.css";
 import "./leaflet-tilelayer-nogap";
 
 import reduxWatch from "redux-watch";
-import { AppStore, ViewState, documentSelector, settingsSelector, viewActions, viewSelector } from "core/store";
+import {
+    AppStore,
+    ViewState,
+    documentSelector,
+    settingsSelector,
+    viewActions,
+    viewSelector,
+} from "core/store";
 import { ExecDoc } from "low/compiler";
 import { Debouncer } from "low/utils";
 import { SectionMode } from "core/map";
@@ -156,6 +163,11 @@ export class MapState {
         this.containerMgr.attach(this.map);
     }
 
+    /// If the map is currently attached
+    private isAttached() {
+        return this.map.getContainer().isConnected;
+    }
+
     /// Called when the settings is updated
     private onSettingsUpdate() {
         /// Update the size since the layout could have changed
@@ -262,7 +274,10 @@ export class MapState {
                 const bounds = L.latLngBounds(corner1, corner2);
                 setTimeout(() => {
                     this.setLayerInStore(layer);
-                    this.map.flyToBounds(bounds, FlyOptions);
+                    if (this.isAttached()) {
+                        // only fly to bounds if map is attached
+                        this.map.flyToBounds(bounds, FlyOptions);
+                    }
                 });
             }
         } else {

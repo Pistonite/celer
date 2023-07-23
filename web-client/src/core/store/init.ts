@@ -23,4 +23,4 @@ export type AppState = ReturnType<AppStore["getState"]>;
 /// Interface for only dispatching actions
 export type AppDispatcher = {
     dispatch: AppStore["dispatch"];
-}
+};

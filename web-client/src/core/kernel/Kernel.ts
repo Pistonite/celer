@@ -1,9 +1,18 @@
-import { AppStore, SettingsState, initStore, settingsSelector } from "core/store";
+import {
+    AppStore,
+    SettingsState,
+    initStore,
+    settingsSelector,
+} from "core/store";
 import { Logger } from "low/utils";
 import reduxWatch from "redux-watch";
 import { KeyMgr } from "./KeyMgr";
 
-type InitUiFunction = (kernel: Kernel, store: AppStore, isDarkMode: boolean) => (() => void);
+type InitUiFunction = (
+    kernel: Kernel,
+    store: AppStore,
+    isDarkMode: boolean,
+) => () => void;
 
 /// The kernel class
 ///
@@ -49,7 +58,9 @@ export class Kernel {
         // switch theme base on store settings
         this.switchTheme(settingsSelector(store.getState()).theme);
 
-        const watchSettings = reduxWatch(() => settingsSelector(store.getState()));
+        const watchSettings = reduxWatch(() =>
+            settingsSelector(store.getState()),
+        );
         // persist settings to local storage TODO
         const unwatchSettings = store.subscribe(
             watchSettings((newVal: SettingsState, oldVal: SettingsState) => {
@@ -81,7 +92,7 @@ export class Kernel {
         }
         const isDarkMode = !!(
             window.matchMedia &&
-                window.matchMedia("(prefers-color-scheme: dark)").matches
+            window.matchMedia("(prefers-color-scheme: dark)").matches
         );
         const unmountReact = this.initReact(this, store, isDarkMode);
 
@@ -115,4 +126,3 @@ export class Kernel {
         this.themeLinkTag.href = `/themes/${theme}.min.css`;
     }
 }
-

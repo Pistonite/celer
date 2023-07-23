@@ -23,7 +23,7 @@ export const initAppRoot = (
     /// The kernel
     kernel: Kernel,
     /// The redux store
-    store: AppStore, 
+    store: AppStore,
     /// Whether the ui should render in dark mode
     isDarkMode: boolean,
 ) => {
@@ -47,4 +47,3 @@ export const initAppRoot = (
 
     return () => root.unmount();
 };
-

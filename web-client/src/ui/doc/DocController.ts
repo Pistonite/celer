@@ -5,8 +5,16 @@
 //! rerender when the view updates.
 
 import reduxWatch from "redux-watch";
-import { AppStore, documentSelector, settingsSelector, viewActions, viewSelector } from "core/store";
+
+import {
+    AppStore,
+    documentSelector,
+    settingsSelector,
+    viewActions,
+    viewSelector,
+} from "core/store";
 import { Debouncer } from "low/utils";
+import { GameCoord } from "low/compiler";
 
 import {
     DocLog,
@@ -20,7 +28,6 @@ import {
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
 import { updateNotePositions } from "./updateNotePositions";
-import { GameCoord } from "low/compiler";
 
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
@@ -173,10 +180,14 @@ export class DocController {
             if (!visibleLines) {
                 visibleLines = findVisibleLines();
             }
-            const coords = visibleLines.map((line) => {
-                const [sectionIndex, lineIndex] = getLineLocationFromElement(line);
-                return document.route[sectionIndex]?.lines[lineIndex]?.mapCoord;
-            }).filter(Boolean) as GameCoord[];
+            const coords = visibleLines
+                .map((line) => {
+                    const [sectionIndex, lineIndex] =
+                        getLineLocationFromElement(line);
+                    return document.route[sectionIndex]?.lines[lineIndex]
+                        ?.mapCoord;
+                })
+                .filter(Boolean) as GameCoord[];
             if (coords.length > 0) {
                 this.store.dispatch(viewActions.setMapView(coords));
             }

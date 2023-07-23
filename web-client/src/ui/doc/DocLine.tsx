@@ -78,7 +78,12 @@ export const DocLine: React.FC<DocLineProps> = ({
                         </div>
                     )}
                 </div>
-                <div className={clsx("docline-body", counterType && `docline-body-${counterType}`)}>
+                <div
+                    className={clsx(
+                        "docline-body",
+                        counterType && `docline-body-${counterType}`,
+                    )}
+                >
                     {iconUrl && (
                         <div className="docline-icon-container">
                             <img src={iconUrl} alt="icon" />

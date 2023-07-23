@@ -3,16 +3,30 @@
 //! This is used for user settings, such as theme, layout, map settings, etc.
 //! These settings need to be persisted to local storage.
 
-import { DocSettingsState, docSettingsReducers, initialDocSettingsState } from "core/doc";
-import { LayoutSettingsState, initialLayoutSettingsState, layoutSettingsReducers } from "core/layout";
-import { MapSettingsState, initialMapSettingsState, mapSettingsReducers } from "core/map";
+import {
+    DocSettingsState,
+    docSettingsReducers,
+    initialDocSettingsState,
+} from "core/doc";
+import {
+    LayoutSettingsState,
+    initialLayoutSettingsState,
+    layoutSettingsReducers,
+} from "core/layout";
+import {
+    MapSettingsState,
+    initialMapSettingsState,
+    mapSettingsReducers,
+} from "core/map";
 import { configureSlice } from "low/store";
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";
 
 /// The settings slice state
-export type SettingsState = LayoutSettingsState & MapSettingsState & DocSettingsState;
+export type SettingsState = LayoutSettingsState &
+    MapSettingsState &
+    DocSettingsState;
 
 /// Try loading initial state from local storage on store init
 const loadState = (): SettingsState => {

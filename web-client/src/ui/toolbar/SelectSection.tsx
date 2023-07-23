@@ -134,4 +134,3 @@ const SelectSectionInternal = React.memo(
         );
     },
 );
-

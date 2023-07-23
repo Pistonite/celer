@@ -28,7 +28,12 @@ import {
     Edit20Regular,
 } from "@fluentui/react-icons";
 import { isCurrentLayoutDefault } from "core/layout";
-import { settingsActions, settingsSelector, viewActions, viewSelector } from "core/store";
+import {
+    settingsActions,
+    settingsSelector,
+    viewActions,
+    viewSelector,
+} from "core/store";
 import { useActions } from "low/store";
 
 import {
@@ -141,14 +146,14 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
 
                     <MenuItem
                         icon={<Copy20Regular />}
-                        onClick={duplicateLayout}
+                        onClick={() => duplicateLayout()}
                     >
                         Duplicate
                     </MenuItem>
 
                     <MenuItem
                         icon={<Delete20Regular />}
-                        onClick={deleteCurrentLayout}
+                        onClick={() => deleteCurrentLayout()}
                     >
                         Delete
                     </MenuItem>

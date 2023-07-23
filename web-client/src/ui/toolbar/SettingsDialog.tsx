@@ -40,7 +40,11 @@ export const SettingsDialog: React.FC = () => {
                     setSelectedTab(data.value as string);
                 }}
             >
-                <Tab id={Tabs.doc} value={Tabs.doc} icon={<Document20Regular />}>
+                <Tab
+                    id={Tabs.doc}
+                    value={Tabs.doc}
+                    icon={<Document20Regular />}
+                >
                     Document
                 </Tab>
                 <Tab id={Tabs.map} value={Tabs.map} icon={<Map20Regular />}>

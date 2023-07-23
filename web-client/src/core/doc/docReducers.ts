@@ -9,9 +9,8 @@ import { DocumentState } from "./state";
 ///
 /// Also automatically increment the serial number so that
 /// the application re-renders the document and does necessary updates
-export const setDocument: ReducerDeclWithPayload<DocumentState, ExecDoc> = withPayload(
-    (state, value) => {
+export const setDocument: ReducerDeclWithPayload<DocumentState, ExecDoc> =
+    withPayload((state, value) => {
         state.serial += 1;
         state.document = value;
-    },
-);
+    });

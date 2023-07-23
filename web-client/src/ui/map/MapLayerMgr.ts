@@ -3,7 +3,11 @@ import L from "leaflet";
 import "leaflet-rastercoords";
 
 import { AppDispatcher, viewActions } from "core/store";
-import { DocMapLayer, DocMapLayerTilesetTransform, GameCoord } from "low/compiler";
+import {
+    DocMapLayer,
+    DocMapLayerTilesetTransform,
+    GameCoord,
+} from "low/compiler";
 
 import { MapLog, getAttributionHtml } from "./utils";
 
@@ -83,7 +87,9 @@ export class MapLayerMgr {
         if (newLayer) {
             newLayer.layer.addTo(map);
 
-            this.dispatcher.dispatch(viewActions.setMapZoomBounds(newLayer.zoomBounds));
+            this.dispatcher.dispatch(
+                viewActions.setMapZoomBounds(newLayer.zoomBounds),
+            );
             this.dispatcher.dispatch(viewActions.setMapLayer(index));
         }
     }

@@ -11,21 +11,15 @@ module.exports = {
     ],
     parser: "@typescript-eslint/parser",
     parserOptions: { ecmaVersion: "latest", sourceType: "module" },
-    plugins: [
-        "react-refresh",
-        "import",
-    ],
+    plugins: ["react-refresh", "import"],
     settings: {
         "import/resolver": {
             typescript: {},
             node: {
                 extensions: [".js", ".jsx", ".ts", ".tsx"],
-            }
+            },
         },
-        "import/external-module-folders": [
-            "node_modules",
-            "src",
-        ],
+        "import/external-module-folders": ["node_modules", "src"],
     },
     rules: {
         "react-refresh/only-export-components": "warn",
@@ -60,8 +54,8 @@ module.exports = {
         "import/no-unresolved": [
             "error",
             {
-                ignore: ["^@test$"]
-            }
+                ignore: ["^@test$"],
+            },
         ],
         "import/no-restricted-paths": [
             "error",
@@ -71,44 +65,35 @@ module.exports = {
                     {
                         target: "./core",
                         from: ["./ui"],
-                        message: "Cannot import ui from core layer. Please refactor to keep the layers clean.",
+                        message:
+                            "Cannot import ui from core layer. Please refactor to keep the layers clean.",
                     },
                     {
                         target: "./low",
                         from: ["./ui", "./core"],
-                        message: "Cannot import other layers from the low layer. Please refactor to keep the layers clean.",
+                        message:
+                            "Cannot import other layers from the low layer. Please refactor to keep the layers clean.",
                     },
-                ]
-            }
+                ],
+            },
         ],
         "import/order": [
             "warn",
             {
-                groups: [
-                    "builtin",
-                    "external",
-                    "internal",
-                    "sibling",
-                ],
+                groups: ["builtin", "external", "internal", "sibling"],
                 pathGroups: [
                     {
                         pattern: "leaflet",
                         group: "external",
                     },
-                ]   
-            }
-
+                ],
+            },
         ],
         "import/no-internal-modules": [
             "warn",
             {
-                allow: [
-                    "*/*", 
-                    "leaflet/**/*",
-                    "react-grid-layout/**/*",
-                ]
-            }
+                allow: ["*/*", "leaflet/**/*", "react-grid-layout/**/*"],
+            },
         ],
-
     },
 };

@@ -8,7 +8,14 @@ import ReactGridLayout from "react-grid-layout";
 import { Header } from "ui/toolbar";
 import { LoadScreen, useWindowSize } from "ui/shared";
 import { settingsActions, viewSelector } from "core/store";
-import { GridFull, Layout, WidgetType, WidgetTypes, getDefaultLayout, useCurrentUserLayout } from "core/layout";
+import {
+    GridFull,
+    Layout,
+    WidgetType,
+    WidgetTypes,
+    getDefaultLayout,
+    useCurrentUserLayout,
+} from "core/layout";
 import { useActions } from "low/store";
 const Map: React.FC = React.lazy(() => import("ui/map"));
 const Doc: React.FC = React.lazy(() => import("ui/doc"));
@@ -20,7 +27,10 @@ const LayoutEditingMargin = 5;
 export const AppRoot: React.FC = () => {
     const { isEditingLayout } = useSelector(viewSelector);
     const { windowWidth, windowHeight } = useWindowSize();
-    const { widgets, layout, setLayout } = useReactGridLayout(windowWidth, windowHeight);
+    const { widgets, layout, setLayout } = useReactGridLayout(
+        windowWidth,
+        windowHeight,
+    );
     const margin = isEditingLayout ? LayoutEditingMargin : 0;
 
     // compute layout numbers
@@ -76,17 +86,13 @@ const useReactGridLayout = (windowWidth: number, windowHeight: number) => {
 
     // convert layout to ReactGridLayout
     const [layout, widgets] = useMemo(() => {
-        const layout = userLayout || getDefaultLayout(windowWidth, windowHeight);
+        const layout =
+            userLayout || getDefaultLayout(windowWidth, windowHeight);
         const widgets = WidgetTypes.map((type) => {
             return layout[type] && { i: type, ...layout[type] };
-
         }).filter(Boolean) as ReactGridLayout.Layout[];
         return [layout, widgets];
-    }, [
-        userLayout,
-        windowWidth,
-        windowHeight,
-    ]);
+    }, [userLayout, windowWidth, windowHeight]);
 
     const { toolbar, toolbarAnchor } = layout;
 

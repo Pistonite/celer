@@ -2,7 +2,12 @@
 import "leaflet-arrowheads";
 import L from "leaflet";
 
-import { AppDispatcher, SettingsState, ViewState, viewActions } from "core/store";
+import {
+    AppDispatcher,
+    SettingsState,
+    ViewState,
+    viewActions,
+} from "core/store";
 import { ExecDoc, GameCoord, MapIcon } from "low/compiler";
 import { LayerMode, SectionMode, VisualSize } from "core/map";
 
@@ -70,11 +75,7 @@ export class MapVisualMgr {
     }
 
     /// Initialize the icons on the map
-    private initIcons(
-        doc: ExecDoc,
-        view: ViewState,
-        settings: SettingsState,
-    ) {
+    private initIcons(doc: ExecDoc, view: ViewState, settings: SettingsState) {
         // remove current icons
         this.icons.removeAll();
         const registeredIcons = doc.project.icons;
@@ -195,7 +196,10 @@ export class MapVisualMgr {
                         MapLog.info(
                             `clicked marker, section ${marker.sectionIndex}, line ${marker.lineIndex}, layer ${layer}`,
                         );
-                        this.setDocLocation(marker.sectionIndex, marker.lineIndex);
+                        this.setDocLocation(
+                            marker.sectionIndex,
+                            marker.lineIndex,
+                        );
                     });
                     return markerLayer;
                 })
@@ -209,11 +213,7 @@ export class MapVisualMgr {
     }
 
     /// Init the lines
-    private initLines(
-        doc: ExecDoc,
-        view: ViewState,
-        settings: SettingsState,
-    ) {
+    private initLines(doc: ExecDoc, view: ViewState, settings: SettingsState) {
         // remove current lines
         this.lines.removeAll();
 
@@ -362,9 +362,7 @@ export class MapVisualMgr {
 
     /// Dispatch action to set the document viewer location
     private setDocLocation(section: number, line: number) {
-        this.dispatcher.dispatch(
-            viewActions.setDocLocation({ section, line }),
-        );
+        this.dispatcher.dispatch(viewActions.setDocLocation({ section, line }));
     }
 }
 

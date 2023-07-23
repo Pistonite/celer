@@ -27,4 +27,4 @@ export const useCurrentUserLayout = (): Layout | undefined => {
     }
     const { currentLayout, savedLayouts } = settings;
     return savedLayouts[currentLayout];
-}
+};

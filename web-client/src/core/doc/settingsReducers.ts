@@ -2,7 +2,12 @@
 
 import { ReducerDeclWithPayload, withPayload } from "low/store";
 
-import { DocSettingsState, KeyBinding, KeyBindingName, initialPerDocSettings } from "./state";
+import {
+    DocSettingsState,
+    KeyBinding,
+    KeyBindingName,
+    initialPerDocSettings,
+} from "./state";
 
 /// Set the document viewer theme
 export const setDocTheme: ReducerDeclWithPayload<DocSettingsState, string> =
@@ -11,10 +16,12 @@ export const setDocTheme: ReducerDeclWithPayload<DocSettingsState, string> =
     });
 
 /// Set whether to sync map view to doc
-export const setSyncMapToDoc: ReducerDeclWithPayload<DocSettingsState, boolean> =
-    withPayload((state: DocSettingsState, syncMapToDoc: boolean) => {
-        state.syncMapToDoc = syncMapToDoc;
-    });
+export const setSyncMapToDoc: ReducerDeclWithPayload<
+    DocSettingsState,
+    boolean
+> = withPayload((state: DocSettingsState, syncMapToDoc: boolean) => {
+    state.syncMapToDoc = syncMapToDoc;
+});
 
 /// Set whether position should be remembered on close
 export const setRememberDocPosition: ReducerDeclWithPayload<
@@ -25,21 +32,23 @@ export const setRememberDocPosition: ReducerDeclWithPayload<
 });
 
 /// Set whether to force notes to be popups
-export const setForcePopupNotes: ReducerDeclWithPayload<DocSettingsState, boolean> =
-    withPayload((state: DocSettingsState, value: boolean) => {
-        state.forcePopupNotes = value;
-    });
+export const setForcePopupNotes: ReducerDeclWithPayload<
+    DocSettingsState,
+    boolean
+> = withPayload((state: DocSettingsState, value: boolean) => {
+    state.forcePopupNotes = value;
+});
 
 /// Set key bindings
 export const setDocKeyBinding: ReducerDeclWithPayload<
     DocSettingsState,
     {
         /// name of the key binding to set
-        name: KeyBindingName,
+        name: KeyBindingName;
         /// new value of the key binding
-        value: KeyBinding,
+        value: KeyBinding;
     }
-> = withPayload((state: DocSettingsState, {name, value}) => {
+> = withPayload((state: DocSettingsState, { name, value }) => {
     state[name] = value;
 });
 

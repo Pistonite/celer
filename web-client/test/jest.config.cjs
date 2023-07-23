@@ -4,15 +4,13 @@ const path = require("path");
 module.exports = {
     rootDir: path.resolve(__dirname, "../"),
     testEnvironment: "jsdom",
-    setupFilesAfterEnv: [
-        "<rootDir>/test/jest.setup.ts"
-    ],
+    setupFilesAfterEnv: ["<rootDir>/test/jest.setup.ts"],
     moduleNameMapper: {
         "\\.(css|less|scss|sass)$": "identity-obj-proxy",
         "^ui/(.*)": "<rootDir>/src/ui/$1",
         "^core/(.*)": "<rootDir>/src/core/$1",
         "^low/(.*)": "<rootDir>/src/low/$1",
-        "^@test$": "<rootDir>/test"
+        "^@test$": "<rootDir>/test",
     },
     transform: {
         "\\.[jt]sx?$": [
@@ -23,14 +21,14 @@ module.exports = {
                         "@babel/preset-env",
                         {
                             targets: {
-                                node: "current"
-                            }
-                        }
+                                node: "current",
+                            },
+                        },
                     ],
                     "@babel/preset-react",
                     "@babel/preset-typescript",
-                ]
-            }
-        ]
+                ],
+            },
+        ],
     },
 };
