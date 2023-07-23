@@ -47,6 +47,15 @@
     }
 }
 
+/* Diagnostic blocks */
+/* Text color */
+.docline-diagnostic-head {
+    color: white;
+}
+.docline-diagnostic-body {
+    color: black;
+}
+
 /* Different colors for different diagnostic types*/
 /* Error */
 .docline-diagnostic-head.docline-diagnostic-error {
