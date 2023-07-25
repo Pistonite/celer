@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "compiler-core/",
     "compiler-types/",
     "web-server/",
 ]

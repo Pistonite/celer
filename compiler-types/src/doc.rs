@@ -1,11 +1,11 @@
 //! Types for the doc
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use ts_rs::TS;
 
 use crate::map::{GameCoord, MapIcon, MapLine, MapMarker};
 
 /// A section in the executed document
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ExecSection {
@@ -18,7 +18,7 @@ pub struct ExecSection {
 }
 
 /// Map items in a section
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ExecMapSection {
@@ -31,7 +31,7 @@ pub struct ExecMapSection {
 }
 
 /// A line in the executed document
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ExecLine {
@@ -39,7 +39,7 @@ pub struct ExecLine {
     pub section: usize,
     /// Line index in section
     pub index: usize,
-    /// primary text content of the line
+    /// Primary text content of the line
     pub text: Vec<DocRichText>,
     /// Line color
     pub line_color: String,
@@ -48,7 +48,7 @@ pub struct ExecLine {
     /// Diagnostic messages
     pub diagnostics: Vec<DocDiagnostic>,
     /// The icon id to show on the document
-    pub icon: String,
+    pub icon: Option<String>,
     /// Secondary text to show below the primary text
     pub secondary_text: Vec<DocRichText>,
     /// Counter text to display
@@ -58,7 +58,7 @@ pub struct ExecLine {
 }
 
 /// Diagnostic message
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct DocDiagnostic {
@@ -74,7 +74,7 @@ pub struct DocDiagnostic {
 }
 
 /// Document rich text type
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct DocRichText {
@@ -87,7 +87,7 @@ pub struct DocRichText {
 }
 
 /// Document note block
-#[derive(Serialize, TS)]
+#[derive(Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(tag = "type", rename_all = "camelCase")]
 #[ts(export)]
 pub enum DocNote {

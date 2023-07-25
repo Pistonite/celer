@@ -1,11 +1,11 @@
 //! Map types
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use ts_rs::TS;
 
 /// Metadata of the map
 ///
 /// This includes configuration like map layers, coordinates, etc.
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapMetadata {
@@ -25,7 +25,7 @@ pub struct MapMetadata {
 /// to the x (horizontal) and z (height) axis of the map.
 ///
 /// Default value of 0 will be assigned to the unmapped axis.
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct MapCoordMap {
     /// Mapping for 2d coordinates in the route.
@@ -37,7 +37,7 @@ pub struct MapCoordMap {
 }
 
 /// Attribute (definition) of a map layer in the route
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapLayerAttr {
@@ -77,7 +77,7 @@ pub struct MapLayerAttr {
 /// ```no-compile
 /// (x, y) -> (x * scale[0] + translate[0], y * scale[1] + translate[1])
 /// ```
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapTilesetTransform {
@@ -90,7 +90,7 @@ pub struct MapTilesetTransform {
 /// Attribution to display on the map
 ///
 /// (displayed as &copy; LINK)
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapAttribution {
@@ -101,11 +101,12 @@ pub struct MapAttribution {
 }
 
 /// Axis of the map
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum Axis {
     /// Horizontal axis
+    #[default]
     X,
     /// Vertical axis
     Y,
@@ -114,7 +115,7 @@ pub enum Axis {
 }
 
 /// Icon on the map
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapIcon {
@@ -131,7 +132,7 @@ pub struct MapIcon {
 }
 
 /// Markers on the map
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapMarker {
@@ -148,7 +149,7 @@ pub struct MapMarker {
 ///
 /// The coordinates do not have to be on the same map layer.
 /// The map will automatically split the path if it croses map layers.
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapLine {
@@ -159,6 +160,6 @@ pub struct MapLine {
 }
 
 /// Coordinates representing a point (x, y, z) in the game
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct GameCoord(f32, f32, f32);

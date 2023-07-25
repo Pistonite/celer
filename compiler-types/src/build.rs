@@ -23,31 +23,17 @@ fn main_internal() -> io::Result<()> {
         }
     }
     generate_bindings()?;
-    // // create the output folder
-    // if let Err(e) = fs::remove_dir_all(OUTPUT_FOLDER) {
-    //     if e.kind() != io::ErrorKind::NotFound {
-    //         return Err(e);
-    //     }
-    // }
-    // fs::create_dir_all(OUTPUT_FOLDER)?;
 
     // scan the bindings 
     let mut output_chunks = vec![];
     for entry in fs::read_dir("bindings")? {
         let entry = entry?;
         let entry_path = entry.path();
-        // let path = entry.file_name().to_str().unwrap().to_owned(); 
 
         // copy the file to the web-client folder
         println!("transforming {}", entry_path.display());
         let transformed = transform_file(&entry_path)?;
         output_chunks.push(transformed);
-        // let out_path = path.replace(".ts", ".g.ts");
-        // fs::copy(
-        //     format!("bindings/{path}"), 
-        //     format!("{OUTPUT_FOLDER}/{out_path}"))?;
-
-        // files.push(format!("export * from \"./{out_path}\";"));
     }
 
     // create the index file

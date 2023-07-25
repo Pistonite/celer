@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use ts_rs::TS;
 
 // this is only so that LSP server can detect the script
@@ -17,7 +17,7 @@ pub use doc::*;
 /// map items separated from doc items
 ///
 /// All coordinates should be [`GameCoord`] at this point
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ExecDoc {
@@ -30,7 +30,7 @@ pub struct ExecDoc {
 /// Metadata of the route project
 ///
 /// This is produced by the bundling process and will not change afterwards
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct RouteMetadata {
@@ -51,7 +51,7 @@ pub struct RouteMetadata {
 /// Document tag type
 ///
 /// Used to style text and provide extra function to the engine
-#[derive(Serialize, TS)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct DocTag {

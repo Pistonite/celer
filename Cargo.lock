@@ -477,22 +477,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50d30906286121d95be3d479533b458f87493b30a4b5f79a607db8f5d11aa91f"
 
 [[package]]
-name = "celer-web-server"
-version = "0.0.0"
-dependencies = [
- "async-std",
- "async-trait",
- "clap",
- "driftwood",
- "env_logger",
- "http-client",
- "log",
- "surf",
- "tide",
- "tide-fluent-routes",
-]
-
-[[package]]
 name = "cfg-if"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -586,6 +570,15 @@ dependencies = [
  "atty",
  "lazy_static",
  "winapi",
+]
+
+[[package]]
+name = "compiler-core"
+version = "0.0.0"
+dependencies = [
+ "compiler-types",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2357,6 +2350,22 @@ name = "wasm-bindgen-shared"
 version = "0.2.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca6ad05a4870b2bf5fe995117d3728437bd27d7cd5f06f13c17443ef369775a1"
+
+[[package]]
+name = "web-server"
+version = "0.0.0"
+dependencies = [
+ "async-std",
+ "async-trait",
+ "clap",
+ "driftwood",
+ "env_logger",
+ "http-client",
+ "log",
+ "surf",
+ "tide",
+ "tide-fluent-routes",
+]
 
 [[package]]
 name = "web-sys"
