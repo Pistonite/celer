@@ -114,8 +114,21 @@ pub enum Axis {
     Z,
 }
 
+/// Map features for one section
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ExecMapSection {
+    /// The icons
+    pub icons: Vec<MapIcon>,
+    /// The markers
+    pub markers: Vec<MapMarker>,
+    /// The lines
+    pub lines: Vec<MapLine>,
+}
+
 /// Icon on the map
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapIcon {
@@ -124,23 +137,23 @@ pub struct MapIcon {
     /// Game coordinate for the icon
     pub coord: GameCoord,
     /// The corresponding line index in section of the document
-    pub line_index: u32,
+    pub line_index: usize,
     /// The corresponding section number in the document
-    pub section_index: u32,
+    pub section_index: usize,
     /// The priority of the icon (0 = primary, 1 = secondary)
-    pub priority: u32,
+    pub priority: i32,
 }
 
 /// Markers on the map
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapMarker {
     pub coord: GameCoord,
     /// The corresponding line index in section of the document
-    pub line_index: u32,
+    pub line_index: usize,
     /// The corresponding section number in the document
-    pub section_index: u32,
+    pub section_index: usize,
     /// Color of the marker
     pub color: String,
 }
@@ -149,7 +162,7 @@ pub struct MapMarker {
 ///
 /// The coordinates do not have to be on the same map layer.
 /// The map will automatically split the path if it croses map layers.
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapLine {
@@ -160,6 +173,6 @@ pub struct MapLine {
 }
 
 /// Coordinates representing a point (x, y, z) in the game
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
-pub struct GameCoord(f32, f32, f32);
+pub struct GameCoord(pub f32, pub f32, pub f32);

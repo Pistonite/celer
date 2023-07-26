@@ -2,7 +2,7 @@
 use serde::{Serialize, Deserialize};
 use ts_rs::TS;
 
-use crate::map::{GameCoord, MapIcon, MapLine, MapMarker};
+use crate::{GameCoord, ExecMapSection};
 
 /// A section in the executed document
 #[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
@@ -17,18 +17,6 @@ pub struct ExecSection {
     pub map: ExecMapSection,
 }
 
-/// Map items in a section
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct ExecMapSection {
-    /// The icons
-    icons: Vec<MapIcon>,
-    /// The lines
-    lines: Vec<MapLine>,
-    /// The markers
-    markers: Vec<MapMarker>,
-}
 
 /// A line in the executed document
 #[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
@@ -58,7 +46,7 @@ pub struct ExecLine {
 }
 
 /// Diagnostic message
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct DocDiagnostic {
@@ -74,20 +62,20 @@ pub struct DocDiagnostic {
 }
 
 /// Document rich text type
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct DocRichText {
     /// The tag name of the text
     ///
     /// Each block only contains one tag
-    tag: Option<String>,
+    pub tag: Option<String>,
     /// The text content
-    text: String,
+    pub text: String,
 }
 
 /// Document note block
-#[derive(Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(tag = "type", rename_all = "camelCase")]
 #[ts(export)]
 pub enum DocNote {

@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
-use celerctypes::{ExecDoc, RouteMetadata, DocRichText, GameCoord, DocDiagnostic, DocNote, MapIcon, MapMarker, MapLine, ExecLine, ExecMapSection};
+use celerctypes::{ExecDoc, RouteMetadata, DocRichText, GameCoord, DocDiagnostic, MapIcon, MapMarker, MapLine, ExecLine, ExecMapSection, DocNote};
+
+mod exec;
 
 /// Compiled Document
 pub struct CompDoc {
@@ -19,6 +21,7 @@ impl From<CompDoc> for ExecDoc {
 }
 
 /// Compiled Section
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct CompSection {
     /// Name of the section
     name: String,
@@ -26,6 +29,7 @@ pub struct CompSection {
     lines: Vec<CompLine>,
 }
 
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct CompLine {
     /// Primary text content of the line
     text: Vec<DocRichText>,
@@ -41,34 +45,26 @@ pub struct CompLine {
     doc_icon: Option<String>,
     /// Icon id to show on the map
     map_icon: Option<String>,
+    /// Coordinate of the map icon
+    map_coord: GameCoord,
     /// Map icon priority. 0=primary, 1=secondary, >2=other
-    map_icon_priority: u32,
+    map_icon_priority: i32,
+    /// Map markers
     markers: Vec<CompMarker>,
     /// Secondary text to show below the primary text
-    pub secondary_text: Vec<DocRichText>,
+    secondary_text: Vec<DocRichText>,
     /// Counter text to display
-    pub counter_text: Option<DocRichText>,
+    counter_text: Option<DocRichText>,
     /// The notes
-    pub notes: Vec<DocNote>,
+    notes: Vec<DocNote>,
     /// The rest of the properties as json blobs
     ///
     /// These are ignored by ExecDoc, but the transformers can use them
-    pub properties: HashMap<String, Value>,
+    #[serde(skip)]
+    properties: HashMap<String, Value>,
 }
 
-impl CompLine {
-    /// Execute the line.
-    ///
-    /// Map features will be added to the ExecMapSection
-    pub fn exec(
-        &self, 
-        section_number: usize, 
-        line_number: usize, 
-        map_section: &mut ExecMapSection
-    ) -> ExecLine {
-    }
-}
-
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct CompMarker {
     /// The coord of the marker
     at: GameCoord,
@@ -77,7 +73,7 @@ pub struct CompMarker {
 }
 
 /// Compiled map movement
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct CompMovement {
     /// The target coord to move to
     to: GameCoord,
@@ -86,7 +82,7 @@ pub struct CompMovement {
 }
 
 /// Compiled map movement with color
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct CompMovementWithColor {
     /// The color of the movement
     color: String,
@@ -94,3 +90,5 @@ pub struct CompMovementWithColor {
     #[serde(flatten)]
     movement: CompMovement,
 }
+const DEFAULT_LINE_COLOR: &str = "#38f";
+const DEFAULT_MARKER_COLOR: &str = "#f00";
