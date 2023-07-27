@@ -108,7 +108,7 @@ const ViewDiagnosticInternal = React.memo(
                                         {section.diagnostics.map((d, i) => (
                                             <Tooltip
                                                 key={i}
-                                                content={d.message}
+                                                content={d.msg}
                                                 relationship="description"
                                             >
                                                 <MenuItem

@@ -2,10 +2,10 @@
 
 import "./Doc.css";
 import React from "react";
-import { useSelector } from "react-redux";
-import { ErrorBoundary, HintScreen, LoadScreen, useAppStore } from "ui/shared";
-import { ExecDoc } from "low/compiler";
-import { documentSelector, viewSelector } from "core/store";
+import { useSelector, useStore } from "react-redux";
+import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";
+import { ExecDoc } from "low/compiler.g";
+import { AppStore, documentSelector, viewSelector } from "core/store";
 
 import { DocLine } from "./DocLine";
 import { DocSection } from "./DocSection";
@@ -19,24 +19,16 @@ import {
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
 import { DocController, initDocController } from "./DocController";
-// import { initDocController, DocController } from "./DocController";
 
-/// Doc wrapper component that connects to the store
-/// The underlying component is cached to avoid unnecessary re-rendering
-/// Because document is very expensive to render
-type DocRootProps = {
-    /// The controller for user actions on the viewer
-    // controller: DocController,
-};
-export const DocRoot: React.FC<DocRootProps> = () => {
+export const DocRoot: React.FC = () => {
     const { isEditingLayout } = useSelector(viewSelector);
     const { document, serial } = useSelector(documentSelector);
-    const store = useAppStore();
+    const store = useStore();
     const controller = React.useMemo(() => {
-        return initDocController(store);
+        return initDocController(store as AppStore);
     }, [store]);
 
-    if (!document.loaded) {
+    if (!document) {
         return <LoadScreen color="yellow" />;
     }
 
@@ -123,7 +115,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                               )
                                             : undefined
                                     }
-                                    counterType={line.counterText?.tag}
+                                    counterType={line.counterText?.tag || undefined}
                                 />
                             ))}
                         </DocSection>

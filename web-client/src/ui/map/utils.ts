@@ -1,12 +1,6 @@
 //! Utility for the map logic
 
-import {
-    Axis,
-    DocMapCoordMap,
-    DocMapLayerAttribution,
-    GameCoord,
-    RouteCoord,
-} from "low/compiler";
+import { MapAttribution } from "low/compiler.g";
 import { Logger } from "low/utils";
 
 /// Map module logger
@@ -20,32 +14,33 @@ export const roughlyEquals = (a: number, b: number): boolean => {
     return Math.abs(a - b) < EPSILON;
 };
 
-/// Convert a route coordinate to a game coordinate using the coordMap
-export const toGameCoord = (
-    routeCoord: RouteCoord,
-    coordMap: DocMapCoordMap,
-): GameCoord => {
-    const coord: Record<Axis, number> = {
-        x: 0,
-        y: 0,
-        z: 0,
-    };
-
-    const mapper =
-        routeCoord[2] === undefined ? coordMap["2d"] : coordMap["3d"];
-
-    mapper.forEach((axis, i) => {
-        coord[axis] = routeCoord[i] as number;
-    });
-
-    return [coord.x, coord.y, coord.z];
-};
+// This should be part of the compiler TODO
+// Convert a route coordinate to a game coordinate using the coordMap
+// export const toGameCoord = (
+//     routeCoord: number[],
+//     coordMap: MapCoordMap,
+// ): GameCoord => {
+//     const coord: Record<Axis, number> = {
+//         x: 0,
+//         y: 0,
+//         z: 0,
+//     };
+//
+//     const mapper =
+//         routeCoord[2] === undefined ? coordMap["2d"] : coordMap["3d"];
+//
+//     mapper.forEach((axis, i) => {
+//         coord[axis] = routeCoord[i] as number;
+//     });
+//
+//     return [coord.x, coord.y, coord.z];
+// };
 
 /// Get attribution html to be used in the map
 ///
 /// This uses `innerText` to sanitize the link.
 export const getAttributionHtml = (
-    attribution: DocMapLayerAttribution,
+    attribution: MapAttribution,
 ): string | undefined => {
     if (!attribution.link) {
         return undefined;

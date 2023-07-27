@@ -1,8 +1,11 @@
 [workspace]
 
 members = [
-    # "core-viewer/",
-    # "core-engine/",
-    # "core-graphics/",
+    "compiler-core/",
+    "compiler-types/",
+    "compiler-wasm/",
     "web-server/",
 ]
+
+[profile.release]
+lto = true # Link-time optimization

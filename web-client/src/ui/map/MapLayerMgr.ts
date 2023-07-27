@@ -4,10 +4,10 @@ import "leaflet-rastercoords";
 
 import { AppDispatcher, viewActions } from "core/store";
 import {
-    DocMapLayer,
-    DocMapLayerTilesetTransform,
+    MapLayerAttr,
+    MapTilesetTransform,
     GameCoord,
-} from "low/compiler";
+} from "low/compiler.g";
 
 import { MapLog, getAttributionHtml } from "./utils";
 
@@ -18,7 +18,7 @@ type MapLayer = {
     /// The start Z value
     startZ: number;
     /// Coodinate transformation from game to map
-    transform: DocMapLayerTilesetTransform;
+    transform: MapTilesetTransform;
     /// The raster coords of this layer
     rc: L.RasterCoords;
     /// Zoom bound of this layer
@@ -43,7 +43,7 @@ export class MapLayerMgr {
     /// This will also set the map to the initial coord
     public initLayers(
         map: L.Map,
-        mapLayers: DocMapLayer[],
+        mapLayers: MapLayerAttr[],
         initialCoord: GameCoord,
     ) {
         MapLog.info("initializing map layers");
@@ -103,10 +103,16 @@ export class MapLayerMgr {
     ///
     /// The (x, y) of the game coord will be unprojected using the layer's coordinate transformation.
     /// Z will be used to find the layer.
+    ///
+    /// Returns [[0, 0], 0] if there are no layers
     public unproject(coord: GameCoord): [L.LatLng, number] {
         const [x, y, z] = coord;
         const layerIndex = this.getLayerByZ(z);
-        const { transform, rc } = this.layers[layerIndex];
+        const layer = this.layers[layerIndex];
+        if (!layer) {
+            return [L.latLng(0, 0), 0];
+        }
+        const { transform, rc } = layer;
         const mapX = transform.scale[0] * x + transform.translate[0];
         const mapY = transform.scale[1] * y + transform.translate[1];
         return [rc.unproject([mapX, mapY]), layerIndex];

@@ -135,7 +135,7 @@ export class KeyMgr {
     /// Handle document location key binding action
     private handleDocLocationAction(delta: number) {
         const { document } = documentSelector(this.store.getState());
-        if (!document.loaded) {
+        if (!document) {
             return;
         }
         const { currentSection, currentLine } = viewSelector(

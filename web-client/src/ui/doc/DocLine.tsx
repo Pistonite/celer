@@ -5,7 +5,7 @@ import React from "react";
 import { Text } from "@fluentui/react-components";
 import { RichText, removeTags } from "core/doc";
 import { viewActions } from "core/store";
-import { DocDiagnostic } from "low/compiler";
+import { DocDiagnostic } from "low/compiler.g";
 import { useActions } from "low/store";
 
 import { Rich } from "./Rich";
@@ -68,8 +68,8 @@ export const DocLine: React.FC<DocLineProps> = ({
                         <div
                             className="docline-counter"
                             style={{
-                                backgroundColor: counterText.tag?.background,
-                                color: counterText.tag?.color,
+                                backgroundColor: counterText.tag?.background || undefined,
+                                color: counterText.tag?.color || undefined,
                             }}
                         >
                             <Text size={500} font="monospace">
@@ -105,7 +105,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                     </div>
                 </div>
             </div>
-            {diagnostics.map(({ message, type, source }, i) => (
+            {diagnostics.map(({ msg, type, source }, i) => (
                 <div className="docline-diagnostic" key={i}>
                     <div
                         className={clsx(
@@ -124,7 +124,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                         )}
                     >
                         <Text size={300} font="monospace">
-                            {message}
+                            {msg}
                         </Text>
                     </div>
                 </div>

@@ -59,6 +59,9 @@ export const SwitchMapLayer: ToolbarControl = {
 /// Internal convenience hook to get the layer names
 const useMapLayerNames = () => {
     const { document } = useSelector(documentSelector);
+    if (!document) {
+        return [];
+    }
     return document.project.map.layers.map(
         (layer) => layer.name || "(Unnamed layer)",
     );

@@ -15,6 +15,9 @@ export const useDocSections = (): string[] => {
     // to know the document is updated
     /* eslint-disable react-hooks/exhaustive-deps*/
     return useMemo(() => {
+        if (!document) {
+            return [];
+        }
         return document.route.map((section) => section.name);
     }, [serial]);
 };

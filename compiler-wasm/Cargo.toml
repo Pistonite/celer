@@ -1,0 +1,26 @@
+[package]
+name = "compiler-wasm"
+version = "0.0.0"
+description = "WASM interface of the compiler"
+edition = "2021"
+default-run = "generate"
+
+[dependencies]
+compiler-types = { path = "../compiler-types" }
+compiler-core = { path = "../compiler-core" }
+serde = { version = "1.0.174", features = ["derive"] }
+serde_json = "1.0.103"
+serde-wasm-bindgen = "0.5.0"
+wasm-bindgen = "0.2.87"
+wasm-bindgen-futures = "0.4.37"
+js-sys = "0.3.64"
+
+[lib]
+name = "celercwasm"
+path = "src/lib.rs"
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "generate"
+path = "src/build.rs"
+

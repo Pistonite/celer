@@ -1,6 +1,6 @@
 //! Document view, setting, and route document state
 
-import { ExecDoc } from "low/compiler";
+import { ExecDoc } from "low/compiler.g";
 
 /// View state for the document
 export type DocViewState = {
@@ -91,33 +91,11 @@ export type DocumentState = {
     /// changes, which causes rerenders, etc.
     serial: number;
     /// The current document
-    document: ExecDoc;
+    document: ExecDoc | undefined;
 };
 
 /// The initial document state
 export const initialDocumentState: DocumentState = {
     serial: 0,
-    document: {
-        loaded: false,
-        project: {
-            name: "",
-            title: "",
-            version: "",
-            authors: [],
-            url: "",
-            map: {
-                layers: [],
-                coordMap: {
-                    "2d": ["x", "y"],
-                    "3d": ["x", "y", "z"],
-                },
-                initialCoord: [0, 0, 0],
-                initialZoom: 0,
-            },
-            icons: {},
-            tags: {},
-        },
-        route: [],
-        map: [],
-    },
+    document: undefined,
 };
