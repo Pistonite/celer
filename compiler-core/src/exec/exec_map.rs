@@ -17,17 +17,8 @@ pub struct MapSectionBuilder {
 impl MapSectionBuilder {
 
     /// Add a new point in the main movement
-    pub fn add_main_movement(&mut self, color: &str, coord: &GameCoord) {
-        // if let Some(color) = color.as_ref() {
-            if let Some(current_line) = self.current_line.as_ref() {
-                if current_line.color.as_str() != color {
-                    self.commit_line(true);
-                    if let Some(line) = self.current_line.as_mut() {
-                        line.color = color.to_string();
-                    }
-                }
-            }
-        // }
+    pub async fn add_main_movement(&mut self, color: &str, coord: &GameCoord) {
+        self.change_color(color).await;
         match self.current_line.as_mut() {
             None => self.current_line = Some(MapLine {
                 color: color.to_owned(),
@@ -39,11 +30,25 @@ impl MapSectionBuilder {
         }
     }
 
+    /// Change the color of the current line
+    ///
+    /// No-op if the current color is the same as the new color, or if there's no current line
+    pub async fn change_color(&mut self, color: &str) {
+        if let Some(current_line) = self.current_line.as_ref() {
+            if current_line.color.as_str() != color {
+                self.commit_line(true).await;
+                if let Some(line) = self.current_line.as_mut() {
+                    line.color = color.to_string();
+                }
+            }
+        }
+    }
+
     /// Finish the current line. Add it if there is more than one point
     ///
     /// If continue_current, a new main movement will be added with the current point, if it
     /// exists.
-    pub fn commit_line(&mut self, continue_current: bool) {
+    pub async fn commit_line(&mut self, continue_current: bool) {
         if let Some(line) = self.current_line.take() {
             if continue_current {
                 self.current_line = Some(MapLine {
@@ -59,7 +64,7 @@ impl MapSectionBuilder {
 
     /// Add another movement branch starting from current point (or none), without affecting
     /// current line
-    pub fn add_other_movement(&mut self, movements: &[CompMovementWithColor]) {
+    pub async fn add_other_movement(&mut self, movements: &[CompMovementWithColor]) {
         let mut delegate_builder = MapSectionBuilder::default();
         if let Some(line) = self.current_line.as_ref() {
             delegate_builder.current_line = Some(MapLine {
@@ -69,18 +74,18 @@ impl MapSectionBuilder {
         }
         for m in movements {
             if m.movement.warp {
-                delegate_builder.commit_line(false);
+                delegate_builder.commit_line(false).await;
             }
-            delegate_builder.add_main_movement(&m.color, &m.movement.to);
+            delegate_builder.add_main_movement(&m.color, &m.movement.to).await;
         }
-        delegate_builder.commit_line(false);
+        delegate_builder.commit_line(false).await;
         self.lines.extend(delegate_builder.lines);
     }
 
     /// Create a map section. Remove the current icons, markers and lines.
     /// Keep the current line color and the last point.
-    pub fn build(&mut self) -> ExecMapSection {
-        self.commit_line(true);
+    pub async fn build(&mut self) -> ExecMapSection {
+        self.commit_line(true).await;
         ExecMapSection {
             icons: std::mem::take(&mut self.icons),
             markers: std::mem::take(&mut self.markers),
@@ -95,10 +100,10 @@ mod ut {
 
     use super::*;
 
-    #[test]
-    fn test_add_coord_when_empty() {
+    #[tokio::test]
+    async fn test_add_coord_when_empty() {
         let mut builder = MapSectionBuilder::default();
-        builder.add_main_movement("blue", &GameCoord(1.2, 55.0, 37.8));
+        builder.add_main_movement("blue", &GameCoord(1.2, 55.0, 37.8)).await;
         assert_eq!(builder.current_line, Some(
             MapLine {
                 color: "blue".to_string(),
@@ -108,11 +113,11 @@ mod ut {
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[test]
-    fn test_add_coord_to_current_line() {
+    #[tokio::test]
+    async fn test_add_coord_to_current_line() {
         let mut builder = MapSectionBuilder::default();
-        builder.add_main_movement("red", &GameCoord(1.2, 55.0, 37.8));
-        builder.add_main_movement("red", &GameCoord(1.2, 65.0, 37.8));
+        builder.add_main_movement("red", &GameCoord(1.2, 55.0, 37.8)).await;
+        builder.add_main_movement("red", &GameCoord(1.2, 65.0, 37.8)).await;
         assert_eq!(builder.current_line, Some(
             MapLine {
                 color: "red".to_string(),
@@ -125,11 +130,11 @@ mod ut {
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[test]
-    fn test_add_coord_different_color_no_add_line() {
+    #[tokio::test]
+    async fn test_add_coord_different_color_no_add_line() {
         let mut builder = MapSectionBuilder::default();
-        builder.add_main_movement("blue", &GameCoord(1.2, 55.0, 37.8));
-        builder.add_main_movement("red", &GameCoord(1.2, 65.0, 37.8));
+        builder.add_main_movement("blue", &GameCoord(1.2, 55.0, 37.8)).await;
+        builder.add_main_movement("red", &GameCoord(1.2, 65.0, 37.8)).await;
         assert_eq!(builder.current_line, Some(
             MapLine {
                 color: "red".to_string(),
@@ -142,16 +147,67 @@ mod ut {
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[test]
-    fn test_commit_none() {
+    #[tokio::test]
+    async fn test_change_color_no_current() {
         let mut builder = MapSectionBuilder::default();
-        builder.commit_line(false);
+        builder.change_color("red").await;
         assert_eq!(builder.current_line, None);
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[test]
-    fn test_commit_one_coord_no_add() {
+    #[tokio::test]
+    async fn test_change_color_same() {
+        let mut builder = MapSectionBuilder::default();
+        builder.add_main_movement("red", &GameCoord(1.2, 55.0, 37.8)).await;
+        builder.add_main_movement("red", &GameCoord(1.2, 56.0, 37.8)).await;
+        builder.change_color("red").await;
+        assert_eq!(builder.current_line, Some(
+            MapLine {
+                color: "red".to_string(),
+                points: vec![
+                    GameCoord(1.2, 55.0, 37.8),
+                    GameCoord(1.2, 56.0, 37.8)
+                ],
+            }
+        ));
+        assert_eq!(builder.lines, vec![]);
+    }
+
+    #[tokio::test]
+    async fn test_change_color_different_should_commit() {
+        let mut builder = MapSectionBuilder::default();
+        builder.add_main_movement("red", &GameCoord(1.2, 55.0, 37.8)).await;
+        builder.add_main_movement("red", &GameCoord(1.2, 56.0, 37.8)).await;
+        builder.change_color("blue").await;
+        assert_eq!(builder.current_line, Some(
+            MapLine {
+                color: "blue".to_string(),
+                points: vec![
+                    GameCoord(1.2, 56.0, 37.8),
+                ],
+            }
+        ));
+        assert_eq!(builder.lines, vec![
+            MapLine {
+                color: "red".to_string(),
+                points: vec![
+                    GameCoord(1.2, 55.0, 37.8),
+                    GameCoord(1.2, 56.0, 37.8),
+                ],
+            }
+        ]);
+    }
+
+    #[tokio::test]
+    async fn test_commit_none() {
+        let mut builder = MapSectionBuilder::default();
+        builder.commit_line(false).await;
+        assert_eq!(builder.current_line, None);
+        assert_eq!(builder.lines, vec![]);
+    }
+
+    #[tokio::test]
+    async fn test_commit_one_coord_no_add() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -162,13 +218,13 @@ mod ut {
             current_line: Some(test_line.clone()),
             ..Default::default()
         };
-        builder.commit_line(false);
+        builder.commit_line(false).await;
         assert_eq!(builder.current_line, None);
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[test]
-    fn test_commit_many_coords_add() {
+    #[tokio::test]
+    async fn test_commit_many_coords_add() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -180,13 +236,13 @@ mod ut {
             current_line: Some(test_line.clone()),
             ..Default::default()
         };
-        builder.commit_line(false);
+        builder.commit_line(false).await;
         assert_eq!(builder.current_line, None);
         assert_eq!(builder.lines, vec![test_line]);
     }
 
-    #[test]
-    fn test_commit_many_coords_continue_current() {
+    #[tokio::test]
+    async fn test_commit_many_coords_continue_current() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -198,7 +254,7 @@ mod ut {
             current_line: Some(test_line.clone()),
             ..Default::default()
         };
-        builder.commit_line(true);
+        builder.commit_line(true).await;
         assert_eq!(builder.current_line, Some(
             MapLine {
                 color: "blue".to_string(),
@@ -210,8 +266,8 @@ mod ut {
         assert_eq!(builder.lines, vec![test_line]);
     }
 
-    #[test]
-    fn test_other_movement_from_none_no_add() {
+    #[tokio::test]
+    async fn test_other_movement_from_none_no_add() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -232,13 +288,13 @@ mod ut {
                     warp: false,
                 }
             }
-        ]);
+        ]).await;
         assert_eq!(builder.current_line, None);
         assert_eq!(builder.lines, vec![test_line]);
     }
     
-    #[test]
-    fn test_other_movement_from_none_add() {
+    #[tokio::test]
+    async fn test_other_movement_from_none_add() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -266,7 +322,7 @@ mod ut {
                     warp: false,
                 }
             }
-        ]);
+        ]).await;
         assert_eq!(builder.current_line, None);
         assert_eq!(builder.lines, vec![test_line, MapLine {
             color: "red".to_string(),
@@ -277,8 +333,8 @@ mod ut {
         }]);
     }
 
-    #[test]
-    fn test_other_movement_from_none_add_change_color() {
+    #[tokio::test]
+    async fn test_other_movement_from_none_add_change_color() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -306,7 +362,7 @@ mod ut {
                     warp: false,
                 }
             }
-        ]);
+        ]).await;
         assert_eq!(builder.current_line, None);
         assert_eq!(builder.lines, vec![test_line, MapLine {
             color: "yellow".to_string(),
@@ -317,8 +373,8 @@ mod ut {
         }]);
     }
 
-    #[test]
-    fn test_other_movement_from_existing_add_empty() {
+    #[tokio::test]
+    async fn test_other_movement_from_existing_add_empty() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -338,13 +394,13 @@ mod ut {
             current_line: Some(test_current_line.clone()),
             ..Default::default()
         };
-        builder.add_other_movement(&[]);
+        builder.add_other_movement(&[]).await;
         assert_eq!(builder.current_line, Some(test_current_line));
         assert_eq!(builder.lines, vec![test_line]);
     }
 
-    #[test]
-    fn test_other_movement_from_existing_add_one_no_color() {
+    #[tokio::test]
+    async fn test_other_movement_from_existing_add_one_no_color() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -370,7 +426,7 @@ mod ut {
                 to: GameCoord(1.2, 68.0, 37.8),
                 warp: false,
             }
-        }]);
+        }]).await;
         assert_eq!(builder.current_line, Some(test_current_line));
         assert_eq!(builder.lines, vec![test_line, MapLine {
             color: "red".to_string(),
@@ -381,8 +437,8 @@ mod ut {
         }]);
     }
 
-    #[test]
-    fn test_other_movement_from_existing_add_one_color() {
+    #[tokio::test]
+    async fn test_other_movement_from_existing_add_one_color() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -408,7 +464,7 @@ mod ut {
                 to: GameCoord(1.2, 68.0, 37.8),
                 warp: false,
             }
-        }]);
+        }]).await;
         assert_eq!(builder.current_line, Some(test_current_line));
         assert_eq!(builder.lines, vec![test_line, MapLine {
             color: "green".to_string(),
@@ -419,8 +475,8 @@ mod ut {
         }]);
     }
 
-    #[test]
-    fn test_other_movement_from_existing_add_more_than_one() {
+    #[tokio::test]
+    async fn test_other_movement_from_existing_add_more_than_one() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -452,7 +508,7 @@ mod ut {
                 to: GameCoord(1.2, 69.0, 37.8),
                 warp: false,
             }
-        }]);
+        }]).await;
         assert_eq!(builder.current_line, Some(test_current_line));
         assert_eq!(builder.lines, vec![test_line, MapLine {
             color: "red".to_string(),
@@ -469,8 +525,8 @@ mod ut {
         }]);
     }
 
-    #[test]
-    fn test_other_movement_from_existing_warp() {
+    #[tokio::test]
+    async fn test_other_movement_from_existing_warp() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -508,7 +564,7 @@ mod ut {
                 to: GameCoord(1.2, 70.0, 37.8),
                 warp: false,
             }
-        }]);
+        }]).await;
         assert_eq!(builder.current_line, Some(test_current_line));
         assert_eq!(builder.lines, vec![test_line, MapLine {
             color: "red".to_string(),
@@ -525,8 +581,8 @@ mod ut {
         }]);
     }
 
-    #[test]
-    fn test_build_icons_and_markers() {
+    #[tokio::test]
+    async fn test_build_icons_and_markers() {
         let test_icons = vec![
             MapIcon {
                 id: "test".to_string(),
@@ -552,15 +608,15 @@ mod ut {
             markers: test_markers.clone(),
             ..Default::default()
         };
-        let section = builder.build();
+        let section = builder.build().await;
         assert_eq!(section.icons, test_icons);
         assert_eq!(section.markers, test_markers);
         assert_eq!(builder.icons, vec![]);
         assert_eq!(builder.markers, vec![]);
     }
 
-    #[test]
-    fn test_build_commit_line() {
+    #[tokio::test]
+    async fn test_build_commit_line() {
         let test_line = MapLine {
                     color: "blue".to_string(),
                     points: vec![
@@ -580,7 +636,7 @@ mod ut {
             current_line: Some(test_current_line.clone()),
             ..Default::default()
         };
-        let section = builder.build();
+        let section = builder.build().await;
         assert_eq!(section.lines, vec![test_line, test_current_line]);
         assert_eq!(builder.current_line, Some(
             MapLine {

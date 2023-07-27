@@ -5,7 +5,7 @@ use ts_rs::TS;
 /// Metadata of the map
 ///
 /// This includes configuration like map layers, coordinates, etc.
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapMetadata {
@@ -25,7 +25,7 @@ pub struct MapMetadata {
 /// to the x (horizontal) and z (height) axis of the map.
 ///
 /// Default value of 0 will be assigned to the unmapped axis.
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
 pub struct MapCoordMap {
     /// Mapping for 2d coordinates in the route.
@@ -37,7 +37,7 @@ pub struct MapCoordMap {
 }
 
 /// Attribute (definition) of a map layer in the route
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapLayerAttr {
@@ -77,7 +77,7 @@ pub struct MapLayerAttr {
 /// ```no-compile
 /// (x, y) -> (x * scale[0] + translate[0], y * scale[1] + translate[1])
 /// ```
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapTilesetTransform {
@@ -90,18 +90,18 @@ pub struct MapTilesetTransform {
 /// Attribution to display on the map
 ///
 /// (displayed as &copy; LINK)
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct MapAttribution {
     /// Url of the attribution
     pub link: String,
     /// If the copyright sign should be displayed
-    pub copyright: bool,
+    pub copyright: Option<bool>,
 }
 
 /// Axis of the map
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub enum Axis {

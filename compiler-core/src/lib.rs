@@ -2,11 +2,19 @@ use std::collections::HashMap;
 
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
-use celerctypes::{ExecDoc, RouteMetadata, DocRichText, GameCoord, DocDiagnostic, MapIcon, MapMarker, MapLine, ExecLine, ExecMapSection, DocNote};
+use celerctypes::{RouteMetadata, DocRichText, GameCoord, DocDiagnostic, DocNote};
 
 mod exec;
 
+#[derive(Default, Debug, Clone)]
+pub struct CompilerOptions {
+    /// Initial color for the map line
+    pub initial_color: String,
+}
+
 /// Compiled Document
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct CompDoc {
     /// Project metadata
     project: RouteMetadata,
@@ -14,14 +22,9 @@ pub struct CompDoc {
     route: Vec<CompSection>,
 }
 
-impl From<CompDoc> for ExecDoc {
-    fn from(comp_doc: CompDoc) -> Self {
-        Default::default()
-    }
-}
-
 /// Compiled Section
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct CompSection {
     /// Name of the section
     name: String,
@@ -30,6 +33,7 @@ pub struct CompSection {
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct CompLine {
     /// Primary text content of the line
     text: Vec<DocRichText>,
@@ -65,6 +69,7 @@ pub struct CompLine {
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct CompMarker {
     /// The coord of the marker
     at: GameCoord,
@@ -74,6 +79,7 @@ pub struct CompMarker {
 
 /// Compiled map movement
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct CompMovement {
     /// The target coord to move to
     to: GameCoord,
@@ -83,6 +89,7 @@ pub struct CompMovement {
 
 /// Compiled map movement with color
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct CompMovementWithColor {
     /// The color of the movement
     color: String,

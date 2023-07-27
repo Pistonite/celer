@@ -3,6 +3,7 @@ import reduxWatch from "redux-watch";
 import {
     AppStore,
     SettingsState,
+    documentActions,
     initStore,
     settingsSelector,
 } from "core/store";
@@ -48,6 +49,20 @@ export class Kernel {
         this.log.info("starting application");
         const store = this.initStore();
         this.initUi(store);
+
+        this.test(store);
+    }
+
+    private async test(store: AppStore) {
+        const wasm = await import("low/celerc");
+        const testFn = async (test: any) => {
+            const result = await wasm.tryCompileFromCompDoc(test);
+            store.dispatch(
+                documentActions.setDocument(result)
+            );
+        }
+        (window as any).testFn = testFn;
+        console.log("window api ready");
     }
 
     /// Initialize the store

@@ -21,6 +21,7 @@ module.exports = {
         },
         "import/external-module-folders": ["node_modules", "src"],
     },
+    ignorePatterns: ["*.d.ts"],
     rules: {
         "react-refresh/only-export-components": "warn",
         "@typescript-eslint/no-unused-vars": [

@@ -103,10 +103,16 @@ export class MapLayerMgr {
     ///
     /// The (x, y) of the game coord will be unprojected using the layer's coordinate transformation.
     /// Z will be used to find the layer.
+    ///
+    /// Returns [[0, 0], 0] if there are no layers
     public unproject(coord: GameCoord): [L.LatLng, number] {
         const [x, y, z] = coord;
         const layerIndex = this.getLayerByZ(z);
-        const { transform, rc } = this.layers[layerIndex];
+        const layer = this.layers[layerIndex];
+        if (!layer) {
+            return [L.latLng(0, 0), 0];
+        }
+        const { transform, rc } = layer;
         const mapX = transform.scale[0] * x + transform.translate[0];
         const mapY = transform.scale[1] * y + transform.translate[1];
         return [rc.unproject([mapX, mapY]), layerIndex];

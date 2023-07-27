@@ -1,4 +1,5 @@
 use celerctypes::{ExecLine, MapIcon, MapMarker};
+use tokio_stream::StreamExt;
 
 use crate::CompLine;
 
@@ -8,7 +9,7 @@ impl CompLine {
     /// Execute the line.
     ///
     /// Map features will be added to the builder
-    pub fn exec(
+    pub async fn exec(
         self, 
         section_number: usize, 
         line_number: usize, 
@@ -24,7 +25,8 @@ impl CompLine {
             })
         }
 
-        for marker in self.markers {
+        let mut marker_iter = tokio_stream::iter(self.markers);
+        while let Some(marker) = marker_iter.next().await {
             map_builder.markers.push(MapMarker {
                 coord: marker.at,
                 line_index: line_number,
@@ -35,16 +37,17 @@ impl CompLine {
 
         let mut map_coords = vec![];
         for other_movement in self.other_movements {
-            map_builder.add_other_movement(&other_movement);
-            for movement in other_movement {
+            map_builder.add_other_movement(&other_movement).await;
+            let mut m_iter = tokio_stream::iter(other_movement);
+            while let Some(movement) = m_iter.next().await {
                 map_coords.push(movement.movement.to.clone());
             }
         }
         for movement in self.movements {
             if movement.warp {
-                map_builder.commit_line(false);
+                map_builder.commit_line(false).await;
             }
-            map_builder.add_main_movement(&self.line_color, &movement.to);
+            map_builder.add_main_movement(&self.line_color, &movement.to).await;
             map_coords.push(movement.to.clone());
         }
         ExecLine {
@@ -89,9 +92,8 @@ mod ut {
         ]
     }
 
-
-    #[test]
-    fn test_copy() {
+    #[tokio::test]
+    async fn test_copy() {
         let mut map_section = Default::default();
         let test_text = vec![DocRichText {
             tag: None,
@@ -148,7 +150,7 @@ mod ut {
             notes: test_notes.clone(),
             ..Default::default()
         };
-        let exec_line = line.exec(3, 4, &mut map_section);
+        let exec_line = line.exec(3, 4, &mut map_section).await;
         assert_eq!(exec_line.section, 3);
         assert_eq!(exec_line.index, 4);
         assert_eq!(exec_line.text, test_text);
@@ -160,15 +162,15 @@ mod ut {
         assert_eq!(exec_line.notes, test_notes);
     }
 
-    #[test]
-    fn test_map_coords() {
+    #[tokio::test]
+    async fn test_map_coords() {
         let test_line = CompLine {
             movements: create_test_movements(),
             other_movements: create_test_other_movements(),
             ..Default::default()
         };
         let mut map_section = Default::default();
-        let exec_line = test_line.exec(0, 0, &mut map_section);
+        let exec_line = test_line.exec(0, 0, &mut map_section).await;
         let expected = vec![
             GameCoord(3.4, 5.0, 6.0),
             GameCoord(3.4, 7.0, 6.0),
@@ -181,8 +183,8 @@ mod ut {
         assert_eq!(exec_line.map_coords, expected);
     }
 
-    #[test]
-    fn test_add_map_icon_and_markers() {
+    #[tokio::test]
+    async fn test_add_map_icon_and_markers() {
         let test_line = CompLine {
             map_icon: Some("test icon".to_string()),
             map_icon_priority: 3,
@@ -200,7 +202,7 @@ mod ut {
             ..Default::default()
         };
         let mut builder = Default::default();
-        test_line.exec(4, 5, &mut builder);
+        test_line.exec(4, 5, &mut builder).await;
         assert_eq!(builder.icons, vec![
             MapIcon {
                 id: "test icon".to_string(),
@@ -226,8 +228,8 @@ mod ut {
         ]);
     }
 
-    #[test]
-    fn test_map_lines() {
+    #[tokio::test]
+    async fn test_map_lines() {
         let test_line = CompLine {
             line_color: "test color".to_string(),
             movements: create_test_movements(),
@@ -235,9 +237,9 @@ mod ut {
             ..Default::default()
         };
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_main_movement("blue", &GameCoord::default());
-        test_line.exec(0, 0, &mut map_builder);
-        let map_section = map_builder.build();
+        map_builder.add_main_movement("blue", &GameCoord::default()).await;
+        test_line.exec(0, 0, &mut map_builder).await;
+        let map_section = map_builder.build().await;
         assert_eq!(map_section.lines, vec![
             MapLine {
                 color: "blue".to_string(),
@@ -284,5 +286,34 @@ mod ut {
         ]);
     }
 
+    #[tokio::test]
+    async fn test_change_color_no_movement() {
+        let test_line = CompLine {
+            line_color: "test color".to_string(),
+            ..Default::default()
+        };
+        let mut map_builder = MapSectionBuilder::default();
+        map_builder.add_main_movement("blue", &GameCoord::default()).await;
+        map_builder.add_main_movement("blue", &GameCoord::default()).await;
+        test_line.exec(0, 0, &mut map_builder).await;
 
+        map_builder.add_main_movement("test color", &GameCoord::default()).await;
+        let map = map_builder.build().await;
+        assert_eq!(map.lines, vec![
+            MapLine {
+                color: "blue".to_string(),
+                points: vec![
+                    GameCoord::default(),
+                    GameCoord::default()
+                ],
+            },
+            MapLine {
+                color: "test color".to_string(),
+                points: vec![
+                    GameCoord::default(),
+                    GameCoord::default()
+                ],
+            },
+        ]);
+    }
 }

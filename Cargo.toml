@@ -3,5 +3,9 @@
 members = [
     "compiler-core/",
     "compiler-types/",
+    "compiler-wasm/",
     "web-server/",
 ]
+
+[profile.release]
+lto = true # Link-time optimization

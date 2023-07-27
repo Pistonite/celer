@@ -5,7 +5,7 @@ use ts_rs::TS;
 use crate::{GameCoord, ExecMapSection};
 
 /// A section in the executed document
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ExecSection {
@@ -19,7 +19,7 @@ pub struct ExecSection {
 
 
 /// A line in the executed document
-#[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct ExecLine {
