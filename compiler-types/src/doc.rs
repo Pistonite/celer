@@ -43,6 +43,8 @@ pub struct ExecLine {
     pub counter_text: Option<DocRichText>,
     /// The notes
     pub notes: Vec<DocNote>,
+    /// The split name, if different from text
+    pub split_name: Option<String>,
 }
 
 /// Diagnostic message

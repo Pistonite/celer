@@ -1,0 +1,27 @@
+"./grammar.rs.pp";
+token Text;
+token Symbol;
+token Number;
+
+Symbol /[$()]/;
+Text   /[^$()0-9][^$]+/;
+Number /[0-9]+/;
+
+semantic Literal;
+semantic Variable;
+
+rule Block = Dollar | NonDollar;
+
+rule ("parse_dollar":"TempStrBlock") Dollar(_: token Symbol"$", tail: optional DollarTail);
+rule DollarTail = Escape | Variable;
+rule Escape((Variable) _: token Symbol"$");
+rule Variable(
+        (Variable)_: token Symbol"(",
+        (Variable)arg: token Number,
+        (Variable)_: token Symbol")"
+        );
+
+rule ("parse_non_dollar":"String") NonDollar = Text | Number | Symbol;
+rule Text((Literal)t: token Text);
+rule Symbol((Literal)t: token Symbol);
+rule Number((Literal)t: token Number);

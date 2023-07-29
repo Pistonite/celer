@@ -5,6 +5,7 @@ use serde_json::Value;
 use celerctypes::{RouteMetadata, DocRichText, GameCoord, DocDiagnostic, DocNote};
 
 mod exec;
+mod lang;
 
 #[derive(Default, Debug, Clone)]
 pub struct CompilerOptions {
@@ -61,6 +62,8 @@ pub struct CompLine {
     counter_text: Option<DocRichText>,
     /// The notes
     notes: Vec<DocNote>,
+    /// The split name, if different from text
+    split_name: Option<Vec<DocRichText>>,
     /// The rest of the properties as json blobs
     ///
     /// These are ignored by ExecDoc, but the transformers can use them
@@ -99,3 +102,9 @@ pub struct CompMovementWithColor {
 }
 const DEFAULT_LINE_COLOR: &str = "#38f";
 const DEFAULT_MARKER_COLOR: &str = "#f00";
+
+
+pub struct Preset {
+
+}
+
