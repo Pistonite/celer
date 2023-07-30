@@ -1,3 +1,4 @@
+//! Rich string
 mod grammar;
 mod parse;
-use parse::*;
+pub use parse::parse_rich;

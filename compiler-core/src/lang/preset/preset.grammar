@@ -4,7 +4,7 @@ token Symbol;
 
 Symbol /[:,<>]/;
 Text /[^:,<>\\]+/;
-Escape /\\[\\,\\>]/;
+Escape /\\[\\,>]?/;
 
 semantic Namespace;
 semantic Arg;
@@ -26,7 +26,7 @@ rule Args(
     first: ArgText,
     rest: optional ArgListTail+,
     trailing_comma: optional token Symbol",",
-    _: token Symbol">",
+    _: token Symbol">"
 );
 
 rule ArgListTail(
@@ -35,6 +35,7 @@ rule ArgListTail(
 );
 
 rule ArgText(blocks: ArgBlock+);
-rule ArgBlock = Arg | Escape;
+rule ArgBlock = Arg | ArgEscape | ArgSymbol;
 rule Arg((Arg) t: token Text);
-rule Escape(t: token Escape);
+rule ArgEscape(t: token Escape);
+rule ArgSymbol((Arg) t: token Symbol":");

@@ -4,7 +4,7 @@ token Symbol;
 token Number;
 
 Symbol /[$()]/;
-Text   /[^$()0-9][^$]+/;
+Text   /[^$()0-9][^$]*/;
 Number /[0-9]+/;
 
 semantic Literal;
@@ -21,7 +21,7 @@ rule Variable(
         (Variable)_: token Symbol")"
         );
 
-rule ("parse_non_dollar":"String") NonDollar = Text | Number | Symbol;
+rule NonDollar = Text | Number | Symbol;
 rule Text((Literal)t: token Text);
 rule Symbol((Literal)t: token Symbol);
 rule Number((Literal)t: token Number);

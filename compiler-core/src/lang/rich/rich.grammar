@@ -5,7 +5,7 @@ token Space;
 
 Space /\s+/;
 Symbol /[\.()]/;
-Escape /\\[\\\.)]/;
+Escape /\\[\\\.)]?/;
 Identifier /[^\\\.()\s]+/;
 
 semantic Text;

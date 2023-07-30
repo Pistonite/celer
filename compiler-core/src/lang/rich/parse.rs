@@ -1,8 +1,8 @@
 use celerctypes::DocRichText;
 use regen::sdk::{TokenStream, ASTParser, CreateParseTree, ParseTreeResult};
-use super::grammar::{self, pt, Ctx};
+use super::grammar::{self, pt};
 
-pub fn parse_rich_text(s: &str) -> Vec<DocRichText> {
+pub fn parse_rich(s: &str) -> Vec<DocRichText> {
     let lex_output = grammar::tokenize(s);
     let mut ts = TokenStream::new(&lex_output.tokens, 16);
     let asts = match grammar::Parser.parse_ast_all(&mut ts) {
@@ -102,7 +102,11 @@ fn append_unit_to_string(pt: &pt::Unit, out: &mut String) {
         pt::Unit::UnitEscape(pt_escape) => {
             // remove the leading backslash
             debug_assert!(pt_escape.m_t.starts_with("\\"));
-            out.push_str(&pt_escape.m_t[1..]);
+            if pt_escape.m_t == "\\" {
+                out.push('\\');
+            } else {
+                out.push_str(&pt_escape.m_t[1..]);
+            }
             if let Some(str) = &pt_escape.m_s {
                 out.push_str(str);
             }
@@ -116,20 +120,20 @@ mod ut {
 
     #[test]
     fn test_empty() {
-        assert_eq!(parse_rich_text(""), vec![]);
+        assert_eq!(parse_rich(""), vec![]);
     }
 
     #[test]
     fn test_words() {
         assert_eq!(
-            parse_rich_text("hello"),
+            parse_rich("hello"),
             vec![DocRichText { 
                 tag: None,
                 text: "hello".to_string()
             }]
         );
         assert_eq!(
-            parse_rich_text("hello world"),
+            parse_rich("hello world"),
             vec![DocRichText { 
                 tag: None,
                 text: "hello world".to_string()
@@ -140,7 +144,7 @@ mod ut {
     #[test]
     fn test_tags() {
         assert_eq!(
-            parse_rich_text(".tag(hello)"),
+            parse_rich(".tag(hello)"),
             vec![
                 DocRichText { 
                     tag: Some("tag".to_string()),
@@ -149,7 +153,7 @@ mod ut {
             ]
         );
         assert_eq!(
-            parse_rich_text(".tag(hello).tag2-zzz(world foo bar)"),
+            parse_rich(".tag(hello).tag2-zzz(world foo bar)"),
             vec![
                 DocRichText { 
                     tag: Some("tag".to_string()),
@@ -166,7 +170,7 @@ mod ut {
     #[test]
     fn test_non_tags() {
         assert_eq!(
-            parse_rich_text("this is a normal sentence. this is normal"),
+            parse_rich("this is a normal sentence. this is normal"),
             vec![
                 DocRichText { 
                     tag: None,
@@ -175,7 +179,7 @@ mod ut {
             ]
         );
         assert_eq!(
-            parse_rich_text("this is a (normal sentence). this (is) normal"),
+            parse_rich("this is a (normal sentence). this (is) normal"),
             vec![
                 DocRichText { 
                     tag: None,
@@ -188,7 +192,7 @@ mod ut {
     #[test]
     fn test_escape() {
         assert_eq!(
-            parse_rich_text("\\.tag(hello)"),
+            parse_rich("\\.tag(hello)"),
             vec![
                 DocRichText { 
                     tag: None,
@@ -197,7 +201,7 @@ mod ut {
             ]
         );
         assert_eq!(
-            parse_rich_text(".tag(hello\\) continue)"),
+            parse_rich(".tag(hello\\) continue)"),
             vec![
                 DocRichText { 
                     tag: Some("tag".to_string()),
@@ -206,7 +210,16 @@ mod ut {
             ]
         );
         assert_eq!(
-            parse_rich_text(".\\\\tag(hellocontinue)"),
+            parse_rich(".tag(hello\\continue)"),
+            vec![
+                DocRichText { 
+                    tag: Some("tag".to_string()),
+                    text: "hello\\continue".to_string()
+                }
+            ]
+        );
+        assert_eq!(
+            parse_rich(".\\\\tag(hellocontinue)"),
             vec![
                 DocRichText { 
                     tag: None,

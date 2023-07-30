@@ -1,3 +1,4 @@
 grammar:
     regen emit src/lang/tempstr/tempstr.grammar -t rust -o src/lang/tempstr/grammar.rs
     regen emit src/lang/rich/rich.grammar -t rust -o src/lang/rich/grammar.rs
+    regen emit src/lang/preset/preset.grammar -t rust -o src/lang/preset/grammar.rs
