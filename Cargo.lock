@@ -1621,9 +1621,9 @@ dependencies = [
 
 [[package]]
 name = "regen-lang"
-version = "0.0.5"
+version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "896de93fdc1e31abc1a464d83af591af86ca09d2e2c566d282c6aea7a6fe0e98"
+checksum = "86465e9fbebea9a637c71329acec352acb2eb54883d791bb10551c35fe8f0361"
 dependencies = [
  "clap",
  "codize",

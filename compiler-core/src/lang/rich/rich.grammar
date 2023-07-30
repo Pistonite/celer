@@ -1,0 +1,32 @@
+token Symbol;
+token Escape;
+token Identifier;
+token Space;
+
+Space /\s+/;
+Symbol /[\.()]/;
+Escape /\\[\\\.)]/;
+Identifier /[^\\\.()\s]+/;
+
+semantic Text;
+semantic Tag;
+semantic Paren;
+semantic Arg;
+
+rule Block = Text | TagExp | Symbol | Space;
+
+rule Text((Text) t: Unit+);
+rule TagExp(
+    _: token Symbol".",
+    (Tag) tag: token Identifier,
+    _: token Symbol"(",
+    space: optional token Space,
+    (Arg) arg: Unit+,
+    _: token Symbol")"
+);
+
+rule Unit = UnitId | UnitEscape;
+rule UnitId(t: token Identifier, s: optional token Space);
+rule UnitEscape(t: token Escape, s: optional token Space);
+rule Symbol((Text)t: token Symbol);
+rule Space(t: token Space);

@@ -5,6 +5,10 @@ mod parse;
 use parse::*;
 mod grammar;
 
+/// A template string
+///
+/// Template string can have variables in it represented by $(number),
+/// where number is the index of the variable in the list of variables (starts from 0)
 pub struct TempStr(Vec<TempStrBlock>);
 
 impl From<&str> for TempStr {
