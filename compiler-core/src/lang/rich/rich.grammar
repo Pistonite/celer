@@ -21,7 +21,7 @@ rule TagExp(
     (Tag) tag: token Identifier,
     _: token Symbol"(",
     space: optional token Space,
-    (Arg) arg: Unit+,
+    (Arg) arg: optional Unit+,
     _: token Symbol")"
 );
 

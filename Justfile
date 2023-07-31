@@ -51,7 +51,7 @@ fmt:
 # Check the code
 check:
     cargo fmt --check
-    cargo clippy --all-features --all-targets -- -D warnings
+    cargo clippy --all-features --all-targets -- -D warnings -D clippy::todo
     cd web-client && npm run fmt -- --check
     cd web-client && npm run lint
     txtpp verify . -r

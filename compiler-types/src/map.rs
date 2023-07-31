@@ -17,6 +17,8 @@ pub struct MapMetadata {
     pub initial_coord: GameCoord,
     /// Initial zoom level
     pub initial_zoom: u32,
+    /// Initial map line color
+    pub initial_color: String,
 }
 
 /// The mapping if 2 coordinates are specified in the route
@@ -141,7 +143,7 @@ pub struct MapIcon {
     /// The corresponding section number in the document
     pub section_index: usize,
     /// The priority of the icon (0 = primary, 1 = secondary)
-    pub priority: i32,
+    pub priority: i64,
 }
 
 /// Markers on the map

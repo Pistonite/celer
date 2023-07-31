@@ -168,6 +168,23 @@ mod ut {
     }
 
     #[test]
+    fn test_empty_tagged_string() {
+        assert_eq!(
+            parse_rich("something.tag()"),
+            vec![
+                DocRichText { 
+                    tag: None,
+                    text: "something".to_string()
+                },
+                DocRichText { 
+                    tag: Some("tag".to_string()),
+                    text: "".to_string()
+                }
+            ]
+        );
+    }
+
+    #[test]
     fn test_non_tags() {
         assert_eq!(
             parse_rich("this is a normal sentence. this is normal"),

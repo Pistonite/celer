@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde_json::{json, Value};
 
 use super::{Preset, PresetBlob};
@@ -6,10 +8,10 @@ impl Preset {
     /// Hydrate a preset with the given arguments
     ///
     /// Return a new json blob with all template strings hydrated with the arguments
-    pub async fn hydrate<S>(&self, args: &[S]) -> Value where S: AsRef<str> + Sync {
-        let mut out = json!({});
+    pub async fn hydrate<S>(&self, args: &[S]) -> BTreeMap<String, Value> where S: AsRef<str> + Sync {
+        let mut out = BTreeMap::new();
         for (key, value) in self.0.iter() {
-            out[key] = value.hydrate(args).await;
+            out.insert(key.clone(), value.hydrate(args).await);
         }
         out
     }
@@ -55,7 +57,7 @@ mod ut {
 
         assert_eq!(
             preset.hydrate(ARGS).await,
-            json!({})
+            [].into_iter().collect()
         );
     }
 
@@ -69,11 +71,11 @@ mod ut {
 
         assert_eq!(
             preset.hydrate(ARGS).await,
-            json!({
-                "a": "fooworld",
-                "b": "world",
-                "c": "tehellomp"
-            })
+            [
+                ("a".to_string(), json!("fooworld")),
+                ("b".to_string(), json!("world")),
+                ("c".to_string(), json!("tehellomp")),
+            ].into_iter().collect()
         );
     }
 
@@ -89,13 +91,13 @@ mod ut {
 
         assert_eq!(
             preset.hydrate(ARGS).await,
-            json!({
-                "a": "fooworld",
-                "b": ["worldtemp", {
+            [
+                ("a".to_string(), json!("fooworld")),
+                ("b".to_string(), json!(["worldtemp", {
                     "c": "tehellomp"
-                }],
-                "c": "temphelloworld"
-            })
+                }])),
+                ("c".to_string(), json!("temphelloworld")),
+            ].into_iter().collect()
         );
     }
 }
