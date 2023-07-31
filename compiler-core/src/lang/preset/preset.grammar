@@ -1,0 +1,41 @@
+token Text;
+token Escape;
+token Symbol;
+
+Symbol /[:,<>]/;
+Text /[^:,<>\\]+/;
+Escape /\\[\\,>]?/;
+
+semantic Namespace;
+semantic Arg;
+
+rule Preset(
+    (Namespace) namespace: token Text,
+    sub_namespaces: optional SubNamespace+,
+    args: optional Args
+);
+
+rule SubNamespace(
+    _: token Symbol":",
+    _: token Symbol":",
+    (Namespace) name: token Text
+);
+
+rule Args(
+    _: token Symbol"<",
+    first: ArgText,
+    rest: optional ArgListTail+,
+    trailing_comma: optional token Symbol",",
+    _: token Symbol">"
+);
+
+rule ArgListTail(
+    _: token Symbol",",
+    arg: ArgText
+);
+
+rule ArgText(blocks: ArgBlock+);
+rule ArgBlock = Arg | ArgEscape | ArgSymbol;
+rule Arg((Arg) t: token Text);
+rule ArgEscape(t: token Escape);
+rule ArgSymbol((Arg) t: token Symbol":");

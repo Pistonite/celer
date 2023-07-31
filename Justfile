@@ -10,6 +10,7 @@ install:
     cargo install cross --git https://github.com/cross-rs/cross
     cargo install txtpp --features cli
     cargo install wasm-pack
+    cargo install regen-lang
     cd docs && npm i
     cd web-client && npm i
 
@@ -50,7 +51,7 @@ fmt:
 # Check the code
 check:
     cargo fmt --check
-    cargo clippy --all-features --all-targets -- -D warnings
+    cargo clippy --all-features --all-targets -- -D warnings -D clippy::todo
     cd web-client && npm run fmt -- --check
     cd web-client && npm run lint
     txtpp verify . -r

@@ -3,13 +3,18 @@ use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 use celerctypes::{RouteMetadata, DocRichText, GameCoord, DocDiagnostic, DocNote};
+use derivative::Derivative;
 
 mod exec;
+mod lang;
+mod comp;
+mod json;
+
+use lang::Preset;
 
 #[derive(Default, Debug, Clone)]
-pub struct CompilerOptions {
-    /// Initial color for the map line
-    pub initial_color: String,
+pub struct CompilerContext {
+    pub presets: HashMap<String, Preset>,
 }
 
 /// Compiled Document
@@ -32,7 +37,8 @@ pub struct CompSection {
     lines: Vec<CompLine>,
 }
 
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Derivative, Serialize, Deserialize, Debug, Clone)]
+#[derivative(Default)]
 #[serde(rename_all = "camelCase")]
 pub struct CompLine {
     /// Primary text content of the line
@@ -52,7 +58,8 @@ pub struct CompLine {
     /// Coordinate of the map icon
     map_coord: GameCoord,
     /// Map icon priority. 0=primary, 1=secondary, >2=other
-    map_icon_priority: i32,
+    #[derivative(Default(value = "2"))]
+    map_icon_priority: i64,
     /// Map markers
     markers: Vec<CompMarker>,
     /// Secondary text to show below the primary text
@@ -61,6 +68,8 @@ pub struct CompLine {
     counter_text: Option<DocRichText>,
     /// The notes
     notes: Vec<DocNote>,
+    /// The split name, if different from text
+    split_name: Option<Vec<DocRichText>>,
     /// The rest of the properties as json blobs
     ///
     /// These are ignored by ExecDoc, but the transformers can use them
@@ -68,7 +77,7 @@ pub struct CompLine {
     properties: HashMap<String, Value>,
 }
 
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CompMarker {
     /// The coord of the marker
@@ -78,7 +87,7 @@ pub struct CompMarker {
 }
 
 /// Compiled map movement
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CompMovement {
     /// The target coord to move to
@@ -88,7 +97,7 @@ pub struct CompMovement {
 }
 
 /// Compiled map movement with color
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CompMovementWithColor {
     /// The color of the movement
@@ -99,3 +108,4 @@ pub struct CompMovementWithColor {
 }
 const DEFAULT_LINE_COLOR: &str = "#38f";
 const DEFAULT_MARKER_COLOR: &str = "#f00";
+

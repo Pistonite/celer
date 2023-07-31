@@ -50,6 +50,8 @@ impl CompLine {
             map_builder.add_main_movement(&self.line_color, &movement.to).await;
             map_coords.push(movement.to.clone());
         }
+
+        let split_name = self.split_name.map(|v|v.into_iter().map(|v|v.text).collect::<Vec<_>>().join(""));
         ExecLine {
             section: section_number,
             index: line_number,
@@ -61,6 +63,7 @@ impl CompLine {
             counter_text: self.counter_text,
             notes: self.notes,
             map_coords,
+            split_name,
         }
     }
 }
@@ -315,5 +318,31 @@ mod ut {
                 ],
             },
         ]);
+    }
+
+    #[tokio::test]
+    async fn test_split_name() {
+        let test_split_name = vec![
+            DocRichText {
+                tag: None,
+                text: "test1".to_string(),
+            },
+            DocRichText {
+                tag: Some("something".to_string()),
+                text: " test ".to_string(),
+            },
+            DocRichText {
+                tag: None,
+                text: "test3".to_string(),
+            },
+        ];
+
+        let test_line = CompLine {
+            split_name: Some(test_split_name.clone()),
+            ..Default::default()
+        };
+
+        let exec_line = test_line.exec(0, 0, &mut MapSectionBuilder::default()).await;
+        assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
     }
 }
