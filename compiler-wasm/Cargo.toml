@@ -7,7 +7,7 @@ default-run = "generate"
 
 [dependencies]
 compiler-types = { path = "../compiler-types" }
-compiler-core = { path = "../compiler-core" }
+compiler-core = { path = "../compiler-core", features = ["wasm"], default-features = false }
 serde = { version = "1.0.174", features = ["derive"] }
 serde_json = "1.0.103"
 serde-wasm-bindgen = "0.5.0"

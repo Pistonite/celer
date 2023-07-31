@@ -71,7 +71,10 @@ pub fn parse_dollar(pt: &pt::Dollar, ctx: &mut Ctx) -> Option<TempStrBlock> {
         }
         Some(pt_tail) => {
             // set the semantic of first dollar sign to be variable
+            // only need to enable for wasm
+            #[cfg(feature = "wasm")]
             ctx.tbs.set(&pt.ast.m_0, Tok::SVariable);
+
             match pt_tail.as_ref() {
                 pt::DollarTail::Escape(_) => {
                     // double dollar sign

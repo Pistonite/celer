@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use celerctypes::RouteMetadata;
+use celerctypes::{RouteMetadata, GameCoord};
 use serde::{Deserialize, Serialize};
 
 use crate::{lang::Preset, CompLine};
@@ -13,6 +13,10 @@ mod comp_line;
 pub struct Compiler {
     project: RouteMetadata,
     presets: HashMap<String, Preset>,
+    /// Current color of the map line
+    color: String,
+    /// Current position on the map
+    coord: GameCoord,
 }
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
