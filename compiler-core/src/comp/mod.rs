@@ -8,6 +8,11 @@ use crate::{lang::Preset, CompLine};
 mod builder;
 pub use builder::*;
 mod comp_line;
+mod comp_movement;
+pub use comp_movement::*;
+mod comp_coord;
+mod desugar;
+use desugar::*;
 
 #[derive(Default, Debug, Clone)]
 pub struct Compiler {
@@ -31,8 +36,15 @@ pub enum CompilerError {
     InvalidPresetString(String),
     PresetNotFound(String),
     MaxPresetDepthExceeded(String),
-    UnusedProperty(String),
+    UnusedProperty {
+        prop: String,
+        trace: Vec<String>,
+    },
     TooManyTagsInCounter,
+    InvalidMovementType,
+    InvalidCoordinateType(String),
+    InvalidCoordinateArray,
+    InvalidCoordinateValue(String),
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]

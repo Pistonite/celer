@@ -70,7 +70,7 @@ fn parse_arg(pt: &pt::ArgText) -> String {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use super::*;
 
     #[test]

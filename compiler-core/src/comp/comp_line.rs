@@ -247,7 +247,10 @@ impl Compiler {
                                 }
                             }
                             key => {
-                                errors.push(CompilerError::UnusedProperty(format!("icon.{key}")));
+                                errors.push(CompilerError::UnusedProperty {
+                                    prop: key.to_string(),
+                                    trace: vec!["icon".to_string()],
+                                });
                             }
                         }
                     }
@@ -314,11 +317,11 @@ fn convert_line_to_object(
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use celerctypes::{DocRichText, GameCoord};
     use serde_json::json;
 
-    use crate::{comp::CompilerBuilder, lang::Preset, CompMovement};
+    use crate::{comp::{CompilerBuilder, CompMovement}, lang::Preset};
 
     use super::*;
 
@@ -1246,7 +1249,10 @@ mod ut {
                     ..Default::default()
                 },
                 vec![
-                    CompilerError::UnusedProperty("icon.boo".to_string()),
+                    CompilerError::UnusedProperty{
+                        prop: "boo".to_string(), 
+                        trace: vec!["icon".to_string()]
+                    },
                     CompilerError::InvalidLinePropertyType("icon.doc".to_string()),
                     CompilerError::InvalidLinePropertyType("icon.map".to_string()),
                     CompilerError::InvalidLinePropertyType("icon.priority".to_string()),
@@ -1400,7 +1406,7 @@ mod ut {
 
     #[tokio::test]
     async fn test_inherit_color_coord() {
-        let builder = CompilerBuilder::new("color".to_string(), GameCoord(1.0, 2.0, 3.0));
+        let builder = CompilerBuilder::new(Default::default(), "color".to_string(), GameCoord(1.0, 2.0, 3.0));
         let mut compiler = builder.build();
 
         let result = compiler
@@ -1423,7 +1429,7 @@ mod ut {
 
     #[tokio::test]
     async fn test_change_color() {
-        let builder = CompilerBuilder::new("color".to_string(), GameCoord(1.0, 2.0, 3.0));
+        let builder = CompilerBuilder::new(Default::default(), "color".to_string(), GameCoord(1.0, 2.0, 3.0));
         let mut compiler = builder.build();
 
         let result = compiler
@@ -1474,7 +1480,7 @@ mod ut {
 
     #[tokio::test]
     async fn test_change_coord() {
-        let builder = CompilerBuilder::new("".to_string(), GameCoord(1.0, 2.0, 3.0));
+        let builder = CompilerBuilder::new(Default::default(), "".to_string(), GameCoord(1.0, 2.0, 3.0));
         let mut compiler = builder.build();
 
         let result = compiler.comp_line(json!({
@@ -1489,10 +1495,7 @@ mod ut {
             }],
             map_coord: GameCoord(4.0, 5.0, 6.0),
             movements: vec![
-                CompMovement {
-                    to: GameCoord(4.0, 5.0, 6.0),
-                    warp: false
-                }
+                CompMovement::to(GameCoord(4.0, 5.0, 6.0))
             ],
             ..Default::default()
         });

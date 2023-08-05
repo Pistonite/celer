@@ -1,7 +1,7 @@
 use celerctypes::{ExecLine, MapIcon, MapMarker};
 use tokio_stream::StreamExt;
 
-use crate::CompLine;
+use crate::{CompLine, comp::CompMovement};
 
 use super::MapSectionBuilder;
 
@@ -36,19 +36,25 @@ impl CompLine {
         }
 
         let mut map_coords = vec![];
-        for other_movement in self.other_movements {
-            map_builder.add_other_movement(&other_movement).await;
-            let mut m_iter = tokio_stream::iter(other_movement);
-            while let Some(movement) = m_iter.next().await {
-                map_coords.push(movement.movement.to.clone());
-            }
-        }
         for movement in self.movements {
-            if movement.warp {
-                map_builder.commit_line(false).await;
+            match movement {
+                CompMovement::To {to, warp, exclude, color} => {
+                    if warp {
+                        map_builder.commit(false).await;
+                    }
+                    map_builder.add_coord(color.as_ref().unwrap_or(&self.line_color), &to).await;
+
+                    if !exclude {
+                        map_coords.push(to.clone());
+                    }
+                },
+                CompMovement::Push => {
+                    map_builder.push().await;
+                },
+                CompMovement::Pop => {
+                    map_builder.commit(false).await;
+                },
             }
-            map_builder.add_main_movement(&self.line_color, &movement.to).await;
-            map_coords.push(movement.to.clone());
         }
 
         let split_name = self.split_name.map(|v|v.into_iter().map(|v|v.text).collect::<Vec<_>>().join(""));
@@ -69,29 +75,47 @@ impl CompLine {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use celerctypes::{DocRichText, DocDiagnostic, DocNote, GameCoord, MapLine};
-    use crate::{CompMovement, CompMovementWithColor, CompMarker};
+    use crate::CompMarker;
+    use crate::comp::CompMovement;
 
     use super::*;
 
     fn create_test_movements() -> Vec<CompMovement> {
         vec![
-            CompMovement { to: GameCoord(1.2, 55.0, 37.8), warp: false },
-            CompMovement { to: GameCoord(100.2, -3.0, 7.8), warp: true },
-            CompMovement { to: GameCoord(1.2, 55.0, 37.8), warp: false },
-        ]
-    }
-    fn create_test_other_movements() -> Vec<Vec<CompMovementWithColor>> {
-        vec![
-            vec![
-                CompMovementWithColor { color: "blue".to_string(), movement: CompMovement { to: GameCoord(3.4, 5.0, 6.0), warp: false } },
-                CompMovementWithColor { color: "red".to_string(), movement: CompMovement { to: GameCoord(3.4, 7.0, 6.0), warp: false } },
-            ],
-            vec![
-                CompMovementWithColor { color: "blue".to_string(), movement: CompMovement { to: GameCoord(3.5, 5.0, 6.1), warp: false } },
-                CompMovementWithColor { color: "red".to_string(), movement: CompMovement { to: GameCoord(3.5, 7.4, 6.2), warp: false } },
-            ],
+            CompMovement::Push,
+            CompMovement::To {to: GameCoord(3.4, 5.0, 6.0),
+                warp: false,
+                exclude: false,
+                color: Some("blue".to_string()),
+            },
+            CompMovement::To {to: GameCoord(3.4, 7.0, 6.0),
+                warp: false,
+                exclude: false,
+                color: Some("red".to_string()),
+            },
+            CompMovement::Pop,
+            CompMovement::Push,
+            CompMovement::To {to: GameCoord(3.5, 5.0, 6.1),
+                warp: false,
+                exclude: false,
+                color: Some("blue".to_string()),
+            },
+            CompMovement::To {to: GameCoord(3.5, 7.4, 6.2),
+                warp: false,
+                exclude: true,
+                color: Some("red".to_string()),
+            },
+            CompMovement::Pop,
+            CompMovement::to(GameCoord(1.2, 55.0, 37.8)),
+            CompMovement::To { 
+                to: GameCoord(100.2, -3.0, 7.8), 
+                warp: true,
+                exclude: false,
+                color: None,
+            },
+            CompMovement::to(GameCoord(1.2, 55.0, 37.8)),
         ]
     }
 
@@ -169,7 +193,6 @@ mod ut {
     async fn test_map_coords() {
         let test_line = CompLine {
             movements: create_test_movements(),
-            other_movements: create_test_other_movements(),
             ..Default::default()
         };
         let mut map_section = Default::default();
@@ -178,7 +201,6 @@ mod ut {
             GameCoord(3.4, 5.0, 6.0),
             GameCoord(3.4, 7.0, 6.0),
             GameCoord(3.5, 5.0, 6.1),
-            GameCoord(3.5, 7.4, 6.2),
             GameCoord(1.2, 55.0, 37.8),
             GameCoord(100.2, -3.0, 7.8),
             GameCoord(1.2, 55.0, 37.8),
@@ -236,11 +258,10 @@ mod ut {
         let test_line = CompLine {
             line_color: "test color".to_string(),
             movements: create_test_movements(),
-            other_movements: create_test_other_movements(),
             ..Default::default()
         };
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_main_movement("blue", &GameCoord::default()).await;
+        map_builder.add_coord("blue", &GameCoord::default()).await;
         test_line.exec(0, 0, &mut map_builder).await;
         let map_section = map_builder.build().await;
         assert_eq!(map_section.lines, vec![
@@ -296,11 +317,11 @@ mod ut {
             ..Default::default()
         };
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_main_movement("blue", &GameCoord::default()).await;
-        map_builder.add_main_movement("blue", &GameCoord::default()).await;
+        map_builder.add_coord("blue", &GameCoord::default()).await;
+        map_builder.add_coord("blue", &GameCoord::default()).await;
         test_line.exec(0, 0, &mut map_builder).await;
 
-        map_builder.add_main_movement("test color", &GameCoord::default()).await;
+        map_builder.add_coord("test color", &GameCoord::default()).await;
         let map = map_builder.build().await;
         assert_eq!(map.lines, vec![
             MapLine {

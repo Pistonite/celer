@@ -8,7 +8,7 @@ impl CompDoc {
     /// Execute the document
     pub async fn exec(self) -> ExecDoc {
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_main_movement("", &self.project.map.initial_coord).await;
+        map_builder.add_coord("", &self.project.map.initial_coord).await;
         let mut sections = vec![];
         for (index, section) in self.route.into_iter().enumerate() {
             let exec_section = section.exec(index, &mut map_builder).await;
@@ -22,10 +22,10 @@ impl CompDoc {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use celerctypes::{RouteMetadata, ExecSection, MapMetadata, GameCoord, ExecLine, ExecMapSection, MapLine};
 
-    use crate::{CompSection, CompMovement, CompLine};
+    use crate::{CompSection, CompLine, comp::CompMovement};
 
     use super::*;
 
@@ -54,10 +54,7 @@ mod ut {
                 lines: vec![
                     CompLine {
                         movements: vec![
-                            CompMovement {
-                                to: GameCoord(1.2, 2.2, 3.3),
-                                warp: false,
-                            }
+                            CompMovement::to(GameCoord(1.2, 2.2, 3.3)),
                         ],
                         line_color: "color".to_string(),
                         ..Default::default()
@@ -70,10 +67,7 @@ mod ut {
                 lines: vec![
                     CompLine {
                         movements: vec![
-                            CompMovement {
-                                to: GameCoord(1.3, 2.2, 3.3),
-                                warp: false,
-                            }
+                            CompMovement::to(GameCoord(1.3, 2.2, 3.3)),
                         ],
                         line_color: "color".to_string(),
                         ..Default::default()

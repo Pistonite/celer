@@ -115,7 +115,7 @@ fn append_unit_to_string(pt: &pt::Unit, out: &mut String) {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use super::*;
 
     #[test]

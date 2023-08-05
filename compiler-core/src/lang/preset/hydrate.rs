@@ -46,7 +46,7 @@ impl PresetBlob {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use super::*;
 
     const ARGS: &[&str] = &["hello", "world", "temp"];

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use comp::CompMovement;
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 use celerctypes::{RouteMetadata, DocRichText, GameCoord, DocDiagnostic, DocNote};
@@ -47,8 +48,6 @@ pub struct CompLine {
     line_color: String,
     /// Main movements of this line
     movements: Vec<CompMovement>,
-    /// Other movements of the line
-    other_movements: Vec<Vec<CompMovementWithColor>>,
     /// Diagnostic messages
     diagnostics: Vec<DocDiagnostic>,
     /// Icon id to show on the document
@@ -86,26 +85,16 @@ pub struct CompMarker {
     color: String,
 }
 
-/// Compiled map movement
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CompMovement {
-    /// The target coord to move to
-    to: GameCoord,
-    /// If the movement is a warp
-    warp: bool,
-}
-
-/// Compiled map movement with color
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CompMovementWithColor {
-    /// The color of the movement
-    color: String,
-    /// The movement
-    #[serde(flatten)]
-    movement: CompMovement,
-}
+// /// Compiled map movement with color
+// #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+// #[serde(rename_all = "camelCase")]
+// pub struct CompMovementWithColor {
+//     /// The color of the movement
+//     color: String,
+//     /// The movement
+//     #[serde(flatten)]
+//     movement: CompMovement,
+// }
 const DEFAULT_LINE_COLOR: &str = "#38f";
 const DEFAULT_MARKER_COLOR: &str = "#f00";
 

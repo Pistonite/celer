@@ -21,7 +21,7 @@ impl TempStr {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use super::*;
     
     #[test]

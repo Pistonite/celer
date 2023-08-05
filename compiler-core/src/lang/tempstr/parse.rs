@@ -107,7 +107,7 @@ fn append_non_dollar(pt: &pt::NonDollar, out: &mut String) {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use super::*;
 
     #[test]

@@ -27,10 +27,10 @@ impl CompSection {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use celerctypes::{MapIcon, MapMarker, GameCoord, MapLine};
 
-    use crate::{CompLine, CompMarker, CompMovement};
+    use crate::{CompLine, CompMarker, comp::CompMovement} ;
 
     use super::*;
 
@@ -156,28 +156,16 @@ mod ut {
                 CompLine {
                     line_color: "test".to_string(),
                     movements: vec![
-                        CompMovement {
-                            to: GameCoord(1.0, 2.0, 3.0),
-                            warp: false
-                        },
-                        CompMovement {
-                            to: GameCoord(1.0, 3.0, 3.0),
-                            warp: false
-                        },
+                        CompMovement::to(GameCoord(1.0, 2.0, 3.0)),
+                        CompMovement::to(GameCoord(1.0, 3.0, 3.0)),
                     ],
                     ..Default::default()
                 },
                 CompLine {
                     line_color: "test".to_string(),
                     movements: vec![
-                        CompMovement {
-                            to: GameCoord(1.0, 4.0, 3.0),
-                            warp: false
-                        },
-                        CompMovement {
-                            to: GameCoord(1.0, 5.0, 3.0),
-                            warp: false
-                        },
+                        CompMovement::to(GameCoord(1.0, 4.0, 3.0)),
+                        CompMovement::to(GameCoord(1.0, 5.0, 3.0)),
                     ],
                     ..Default::default()
                 },
@@ -186,7 +174,7 @@ mod ut {
         };
 
         let mut builder = MapSectionBuilder::default();
-        builder.add_main_movement("test", &GameCoord(1.0, 1.0, 3.0)).await;
+        builder.add_coord("test", &GameCoord(1.0, 1.0, 3.0)).await;
 
         let exec_section = test_section.exec(4, &mut builder).await;
 
