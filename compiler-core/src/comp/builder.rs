@@ -34,6 +34,7 @@ impl CompilerBuilder {
             presets: self.presets,
             color: self.color,
             coord: self.coord,
+            ..Default::default()
         }
     }
 }

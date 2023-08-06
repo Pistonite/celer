@@ -8,46 +8,7 @@ use crate::lang;
 use crate::lang::PresetInst;
 use crate::CompLine;
 
-use super::{Compiler, CompilerError, CompilerResult};
-
-const MAX_PRESET_DEPTH: usize = 10;
-
-/// Convenience macro for making a compiler error
-macro_rules! make_error {
-    ($text:expr, $error:expr) => {
-        Err((
-            CompLine {
-                text: lang::parse_rich($text),
-                ..Default::default()
-            },
-            vec![$error],
-        ))
-    };
-}
-
-/// Convenience macro for validating a json value and add error
-macro_rules! validate_not_array_or_object {
-    ($value:expr, $errors:ident, $property:literal) => {{
-        let v = $value;
-        if v.is_array() || v.is_object() {
-            $errors.push(CompilerError::InvalidLinePropertyType(
-                $property.to_string(),
-            ));
-            false
-        } else {
-            true
-        }
-    }};
-    ($value:expr, $errors:ident, $property:expr) => {{
-        let v = $value;
-        if v.is_array() || v.is_object() {
-            $errors.push(CompilerError::InvalidLinePropertyType($property));
-            false
-        } else {
-            true
-        }
-    }};
-}
+use super::{Compiler, CompilerError, CompilerResult, validate_not_array_or_object};
 
 impl Compiler {
     /// Compile a line
@@ -62,12 +23,25 @@ impl Compiler {
     /// Errors are returned as an Err variant with the line and the errors.
     /// Diagnostics are not added to the line.
     pub async fn comp_line(&mut self, value: Value) -> CompilerResult<CompLine> {
+        let mut errors = vec![];
+
         // Convert line into object form
-        let (text, mut line_obj) = convert_line_to_object(value)?;
+        let (text, mut line_obj) = match super::desugar_line(value).await {
+            Ok(line) => line,
+            Err((text, error)) => {
+                errors.push(error);
+                let output = 
+                CompLine {
+                    text: lang::parse_rich(&text),
+                    ..Default::default()
+                };
+                return Err((output, errors));
+            }
+        };
+
+        let mut properties = BTreeMap::new();
 
         // Process the presets
-        let mut errors = vec![];
-        let mut properties = BTreeMap::new();
         if let Some(presets) = line_obj.remove("presets") {
             self.process_presets(0, presets, &mut properties, &mut errors)
                 .await;
@@ -83,12 +57,13 @@ impl Compiler {
                 // At this level, we will only process the preset if it exists
                 // otherwise treat the string as a regular string
                 if self.presets.contains_key(&inst.name) {
-                    self.process_preset(0, &inst, &mut properties, &mut errors)
+                    self.apply_preset(0, &inst, &mut properties, &mut errors)
                         .await;
                 }
             }
         }
         properties.extend(line_obj);
+
         let mut output = self.create_line().await;
 
         // Process each property
@@ -104,74 +79,6 @@ impl Compiler {
         }
     }
 
-    /// Find the preset and fill output with the hydrated values from the preset
-    async fn process_preset(
-        &self,
-        depth: usize,
-        inst: &PresetInst,
-        output: &mut BTreeMap<String, Value>,
-        errors: &mut Vec<CompilerError>,
-    ) {
-        if depth > MAX_PRESET_DEPTH {
-            errors.push(CompilerError::MaxPresetDepthExceeded(inst.name.to_string()));
-            return;
-        }
-        let preset = match self.presets.get(&inst.name) {
-            None => {
-                errors.push(CompilerError::PresetNotFound(inst.name.to_string()));
-                return;
-            }
-            Some(preset) => preset,
-        };
-
-        let mut properties = preset.hydrate(&inst.args).await;
-        if let Some(presets) = properties.remove("presets") {
-            self.process_presets(depth, presets, output, errors).await;
-        }
-        output.extend(properties);
-    }
-
-    /// Process the "presets" property in the line object
-    ///
-    /// Saves the properties from the preset to the output map
-    #[async_recursion::async_recursion]
-    async fn process_presets(
-        &self,
-        depth: usize,
-        presets: Value,
-        output: &mut BTreeMap<String, Value>,
-        errors: &mut Vec<CompilerError>,
-    ) {
-        match presets {
-            Value::Array(arr) => {
-                for (i, preset_value) in arr.into_iter().enumerate() {
-                    if validate_not_array_or_object!(&preset_value, errors, format!("presets[{i}]"))
-                    {
-                        let preset_string = preset_value.coerce_to_string();
-                        if !preset_string.starts_with('_') {
-                            errors.push(CompilerError::InvalidPresetString(preset_string))
-                        } else {
-                            let preset_inst = PresetInst::try_parse(&preset_string);
-                            match preset_inst {
-                                None => {
-                                    errors.push(CompilerError::InvalidPresetString(preset_string));
-                                }
-                                Some(inst) => {
-                                    self.process_preset(depth + 1, &inst, output, errors).await;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            _ => {
-                errors.push(CompilerError::InvalidLinePropertyType(
-                    "presets".to_string(),
-                ));
-            }
-        }
-    }
-
     async fn create_line(&self) -> CompLine {
         CompLine {
             line_color: self.color.clone(),
@@ -179,6 +86,7 @@ impl Compiler {
             ..Default::default()
         }
     }
+
     /// Process a property and save it to the output line
     async fn process_property(
         &mut self,
@@ -247,10 +155,7 @@ impl Compiler {
                                 }
                             }
                             key => {
-                                errors.push(CompilerError::UnusedProperty {
-                                    prop: key.to_string(),
-                                    trace: vec!["icon".to_string()],
-                                });
+                                errors.push(CompilerError::UnusedProperty(format!("icon.{key}")));
                             }
                         }
                     }
@@ -284,35 +189,6 @@ impl Compiler {
             }
             _ => todo!(),
         }
-    }
-}
-
-fn convert_line_to_object(
-    value: Value,
-) -> Result<(String, serde_json::Map<String, Value>), (CompLine, Vec<CompilerError>)> {
-    let text = value.coerce_to_string();
-    match value {
-        Value::Array(_) => make_error!(&text, CompilerError::ArrayCannotBeLine),
-        Value::Object(obj) => {
-            let mut iter = obj.into_iter();
-            let (key, obj) = match iter.next() {
-                None => {
-                    return make_error!(&text, CompilerError::EmptyObjectCannotBeLine);
-                }
-                Some(first) => first,
-            };
-            if iter.next().is_some() {
-                return make_error!(&text, CompilerError::TooManyKeysInObjectLine);
-            }
-            let properties = match obj {
-                Value::Object(map) => map,
-                _ => {
-                    return make_error!(&text, CompilerError::LinePropertiesMustBeObject);
-                }
-            };
-            Ok((key, properties))
-        }
-        _ => Ok((value.coerce_to_string(), serde_json::Map::new())),
     }
 }
 
@@ -1249,10 +1125,7 @@ mod test {
                     ..Default::default()
                 },
                 vec![
-                    CompilerError::UnusedProperty{
-                        prop: "boo".to_string(), 
-                        trace: vec!["icon".to_string()]
-                    },
+                    CompilerError::UnusedProperty("icon.boo".to_string()),
                     CompilerError::InvalidLinePropertyType("icon.doc".to_string()),
                     CompilerError::InvalidLinePropertyType("icon.map".to_string()),
                     CompilerError::InvalidLinePropertyType("icon.priority".to_string()),

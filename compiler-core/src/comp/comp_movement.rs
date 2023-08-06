@@ -48,6 +48,7 @@ impl Compiler {
     /// - string `pop`
     pub fn comp_movement(
         &self,
+        prop_name: &str,
         prop: Value,
         errors: &mut Vec<CompilerError>,
     ) -> Option<CompMovement> {
@@ -76,50 +77,52 @@ impl Compiler {
                 let mut warp = false;
                 let mut exclude = false;
                 let mut color = None;
+                
+                let mut should_fail = false;
 
                 for (key, value) in props.into_iter() {
                     match key.as_ref() {
-                        "to" => {
-                            match self.transform_coord(value) {
-                                Ok(coord) => to = Some(coord),
-                                Err(e) => errors.push(e),
+                        "to" => match self.transform_coord(value) {
+                            Ok(coord) => to = Some(coord),
+                            Err(e) => {
+                                should_fail = true;
+                                errors.push(e);
                             }
                         },
-                        "warp" => {
-                            match value.try_coerce_to_bool() {
-                                Some(b) => warp = b,
-                                None => {
-                                    errors.push(CompilerError::InvalidMovementType);
-                                }
+                        "warp" => match value.try_coerce_to_bool() {
+                            Some(b) => warp = b,
+                            None => {
+                                should_fail = true;
+                                errors.push(CompilerError::InvalidMovementType);
                             }
-                        }
-                        "exclude" => {
-                            match value.try_coerce_to_bool() {
-                                Some(b) => exclude = b,
-                                None => {
-                                    errors.push(CompilerError::InvalidMovementType);
-                                }
+                        },
+                        "exclude" => match value.try_coerce_to_bool() {
+                            Some(b) => exclude = b,
+                            None => {
+                                should_fail = true;
+                                errors.push(CompilerError::InvalidMovementType);
                             }
-                        }
-                        "color" => {
-                            match value {
-                                Value::Null => color = None,
-                                Value::String(s) => color = Some(s),
-                                _ => {
-                                    errors.push(CompilerError::InvalidMovementType);
-                                }
+                        },
+                        "color" => match value {
+                            Value::Null => color = None,
+                            Value::String(s) => color = Some(s),
+                            _ => {
+                                should_fail = true;
+                                errors.push(CompilerError::InvalidMovementType);
                             }
+                        },
+                        _ => {
+                            errors.push(CompilerError::UnusedProperty(format!("{prop_name}.{key}")));
                         }
-                        _ => todo!()
                     }
                 }
                 match to {
                     None => {
                         errors.push(CompilerError::InvalidMovementType);
                         None
-                    },
+                    }
                     Some(to) => {
-                        if !errors.is_empty() {
+                        if should_fail {
                             None
                         } else {
                             Some(CompMovement::To {
@@ -129,9 +132,9 @@ impl Compiler {
                                 color,
                             })
                         }
-                    },
+                    }
                 }
-            }, 
+            }
             _ => {
                 errors.push(CompilerError::InvalidMovementType);
                 None
@@ -165,7 +168,7 @@ mod test {
 
         for v in vals.into_iter() {
             let mut errors = vec![];
-            assert_eq!(compiler.comp_movement(v, &mut errors), None,);
+            assert_eq!(compiler.comp_movement("", v, &mut errors), None,);
             assert_eq!(errors, vec![CompilerError::InvalidMovementType]);
         }
     }
@@ -175,7 +178,7 @@ mod test {
         let compiler = Compiler::default();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_movement(json!([1, 2, 3, 4]), &mut errors),
+            compiler.comp_movement("", json!([1, 2, 3, 4]), &mut errors),
             None
         );
         assert_eq!(errors, vec![CompilerError::InvalidCoordinateArray]);
@@ -201,7 +204,7 @@ mod test {
         let compiler = create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_movement(json!([1, 2, 4]), &mut errors),
+            compiler.comp_movement("", json!([1, 2, 4]), &mut errors),
             Some(CompMovement::to(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
@@ -213,6 +216,7 @@ mod test {
         let mut errors = vec![];
         assert_eq!(
             compiler.comp_movement(
+                "",
                 json!({
                     "to": [1, 2, 4],
                 }),
@@ -224,6 +228,7 @@ mod test {
 
         assert_eq!(
             compiler.comp_movement(
+                "",
                 json!({
                     "to": [1, 2, 4],
                     "warp": true,
@@ -241,6 +246,7 @@ mod test {
 
         assert_eq!(
             compiler.comp_movement(
+                "",
                 json!({
                     "to": [1, 2, 4],
                     "warp": true,
@@ -260,6 +266,7 @@ mod test {
 
         assert_eq!(
             compiler.comp_movement(
+                "",
                 json!({
                     "to": [1, 2, 4],
                     "warp": "false",
@@ -280,6 +287,7 @@ mod test {
         errors.clear();
         assert_eq!(
             compiler.comp_movement(
+                "",
                 json!({
                     "to": [1, 2, 4],
                     "warp": 0,
@@ -298,6 +306,7 @@ mod test {
         errors.clear();
         assert_eq!(
             compiler.comp_movement(
+                "",
                 json!({
                     "to": [1, 2, 4],
                     "exclude": "something",
@@ -311,6 +320,7 @@ mod test {
         errors.clear();
         assert_eq!(
             compiler.comp_movement(
+                "",
                 json!({
                     "to": [1, 2, 4],
                     "color": [],
@@ -320,7 +330,6 @@ mod test {
             None
         );
         assert_eq!(errors, vec![CompilerError::InvalidMovementType]);
-
     }
 
     #[test]
@@ -329,11 +338,11 @@ mod test {
 
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_movement(json!("push"), &mut errors),
+            compiler.comp_movement("", json!("push"), &mut errors),
             Some(CompMovement::Push)
         );
         assert_eq!(
-            compiler.comp_movement(json!("pop"), &mut errors),
+            compiler.comp_movement("", json!("pop"), &mut errors),
             Some(CompMovement::Pop)
         );
         assert_eq!(errors, vec![]);
@@ -341,7 +350,19 @@ mod test {
 
     #[test]
     fn test_unused_property() {
-        todo!()
+        let compiler = create_test_compiler_with_coord_transform();
+        let mut errors = vec![];
+        assert_eq!(
+            compiler.comp_movement(
+                "test",
+                json!({
+                    "to": [1, 2, 4],
+                    "unused": 1,
+                }),
+                &mut errors
+            ),
+            Some(CompMovement::to(GameCoord(1.0, 2.0, 4.0)))
+        );
+        assert_eq!(errors, vec![CompilerError::UnusedProperty("test.unused".to_string())]);
     }
-
 }
