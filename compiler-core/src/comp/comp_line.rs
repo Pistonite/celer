@@ -8,7 +8,9 @@ use crate::lang;
 use crate::lang::PresetInst;
 use crate::CompLine;
 
-use super::{Compiler, CompilerError, CompilerResult, validate_not_array_or_object};
+use super::{
+    prop, validate_not_array_or_object, CompMovement, Compiler, CompilerError, CompilerResult,
+};
 
 impl Compiler {
     /// Compile a line
@@ -30,8 +32,7 @@ impl Compiler {
             Ok(line) => line,
             Err((text, error)) => {
                 errors.push(error);
-                let output = 
-                CompLine {
+                let output = CompLine {
                     text: lang::parse_rich(&text),
                     ..Default::default()
                 };
@@ -63,6 +64,14 @@ impl Compiler {
             }
         }
         properties.extend(line_obj);
+        super::desugar_properties(&mut properties).await;
+        if let Some(movements) = properties.remove(prop::PROP_MOVEMENTS) {
+            properties.insert(
+                prop::PROP_MOVEMENTS.to_string(),
+                self.expand_presets_in_movements(0, movements, &mut errors)
+                    .await,
+            );
+        }
 
         let mut output = self.create_line().await;
 
@@ -187,6 +196,49 @@ impl Compiler {
                     self.color = new_color;
                 }
             }
+            prop::PROP_MOVEMENTS => {
+                match value {
+                    Value::Array(array) => {
+                        // need to track the coordinate of the final position with a stack
+                        let mut ref_stack = vec![];
+                        let mut movements = vec![];
+                        for (i, v) in array.into_iter().enumerate() {
+                            if let Some(m) = self.comp_movement(
+                                &format!("{p}[{i}]", p = prop::PROP_MOVEMENTS),
+                                v,
+                                errors,
+                            ) {
+                                match &m {
+                                    CompMovement::Push => {
+                                        if let Some(i) = ref_stack.last() {
+                                            ref_stack.push(*i);
+                                        }
+                                    }
+                                    CompMovement::Pop => {
+                                        ref_stack.pop();
+                                    }
+                                    _ => match ref_stack.last_mut() {
+                                        Some(i) => *i = movements.len(),
+                                        None => ref_stack.push(movements.len()),
+                                    },
+                                }
+                                movements.push(m);
+                            }
+                        }
+                        if let Some(i) = ref_stack.last() {
+                            if let CompMovement::To { to, .. } = &movements[*i] {
+                                output.map_coord = to.clone();
+                            } else {
+                                unreachable!();
+                            }
+                        }
+                        output.movements = movements;
+                    }
+                    _ => errors.push(CompilerError::InvalidLinePropertyType(
+                        prop::PROP_MOVEMENTS.to_string(),
+                    )),
+                }
+            }
             _ => todo!(),
         }
     }
@@ -194,10 +246,13 @@ impl Compiler {
 
 #[cfg(test)]
 mod test {
-    use celerctypes::{DocRichText, GameCoord};
+    use celerctypes::{Axis, DocRichText, GameCoord, MapCoordMap, MapMetadata, RouteMetadata};
     use serde_json::json;
 
-    use crate::{comp::{CompilerBuilder, CompMovement}, lang::Preset};
+    use crate::{
+        comp::{CompMovement, CompilerBuilder},
+        lang::Preset,
+    };
 
     use super::*;
 
@@ -1279,7 +1334,11 @@ mod test {
 
     #[tokio::test]
     async fn test_inherit_color_coord() {
-        let builder = CompilerBuilder::new(Default::default(), "color".to_string(), GameCoord(1.0, 2.0, 3.0));
+        let builder = CompilerBuilder::new(
+            Default::default(),
+            "color".to_string(),
+            GameCoord(1.0, 2.0, 3.0),
+        );
         let mut compiler = builder.build();
 
         let result = compiler
@@ -1302,7 +1361,11 @@ mod test {
 
     #[tokio::test]
     async fn test_change_color() {
-        let builder = CompilerBuilder::new(Default::default(), "color".to_string(), GameCoord(1.0, 2.0, 3.0));
+        let builder = CompilerBuilder::new(
+            Default::default(),
+            "color".to_string(),
+            GameCoord(1.0, 2.0, 3.0),
+        );
         let mut compiler = builder.build();
 
         let result = compiler
@@ -1353,24 +1416,148 @@ mod test {
 
     #[tokio::test]
     async fn test_change_coord() {
-        let builder = CompilerBuilder::new(Default::default(), "".to_string(), GameCoord(1.0, 2.0, 3.0));
+        let builder = CompilerBuilder::new(
+            RouteMetadata {
+                map: MapMetadata {
+                    coord_map: MapCoordMap {
+                        mapping_3d: (Axis::X, Axis::Y, Axis::Z),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            "".to_string(),
+            GameCoord(1.0, 2.0, 3.0),
+        );
         let mut compiler = builder.build();
 
+        let result = compiler
+            .comp_line(json!({
+                "change coord": {
+                    "coord": [4.0, 5.0, 6.0],
+                }
+            }))
+            .await
+            .unwrap();
+        assert_eq!(
+            result,
+            CompLine {
+                text: vec![DocRichText {
+                    tag: None,
+                    text: "change coord".to_string(),
+                }],
+                map_coord: GameCoord(4.0, 5.0, 6.0),
+                movements: vec![CompMovement::to(GameCoord(4.0, 5.0, 6.0))],
+                ..Default::default()
+            }
+        );
+
+        let result = compiler
+            .comp_line(json!({
+                "push pop": {
+                    "movements": [
+                        "push",
+                        [4.0, 5.0, 6.0],
+                        "pop",
+                    ]
+                }
+            }))
+            .await
+            .unwrap();
+        assert_eq!(
+            result,
+            CompLine {
+                text: vec![DocRichText {
+                    tag: None,
+                    text: "push pop".to_string(),
+                }],
+                map_coord: GameCoord(1.0, 2.0, 3.0),
+                movements: vec![
+                    CompMovement::Push,
+                    CompMovement::to(GameCoord(4.0, 5.0, 6.0)),
+                    CompMovement::Pop,
+                ],
+                ..Default::default()
+            }
+        );
+
+        let result = compiler
+            .comp_line(json!({
+                "invalid": {
+                    "movements": {}
+                }
+            }))
+            .await
+            .unwrap_err();
+        assert_eq!(
+            result,
+            (
+                CompLine {
+                    text: vec![DocRichText {
+                        tag: None,
+                        text: "invalid".to_string(),
+                    }],
+                    map_coord: GameCoord(1.0, 2.0, 3.0),
+                    ..Default::default()
+                },
+                vec![CompilerError::InvalidLinePropertyType(
+                    "movements".to_string()
+                ),]
+            )
+        );
+    }
+
+    #[tokio::test]
+    async fn test_movements_preset() {
+        let mut builder = CompilerBuilder::new(
+            RouteMetadata {
+                map: MapMetadata {
+                    coord_map: MapCoordMap {
+                        mapping_3d: (Axis::X, Axis::Y, Axis::Z),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            "".to_string(),
+            GameCoord(1.0, 2.0, 3.0),
+        );
+        builder
+            .add_preset(
+                "_preset::one",
+                Preset::compile(json!({
+                    "movements": [
+                        [7, "8", 9],
+                        [7, "8", 9],
+                    ]
+                }))
+                    .await
+                    .unwrap(),
+            );
+        let mut compiler = builder.build();
+        
         let result = compiler.comp_line(json!({
-            "change coord": {
-                "coord": [4.0, 5.0, 6.0],
+            "preset": {
+                "movements": [
+                    [3, 4, 5],
+                    "_preset::one",
+                ]
             }
         })).await.unwrap();
         assert_eq!(result, CompLine {
-            text: vec![DocRichText {
-                tag: None,
-                text: "change coord".to_string(),
-            }],
-            map_coord: GameCoord(4.0, 5.0, 6.0),
-            movements: vec![
-                CompMovement::to(GameCoord(4.0, 5.0, 6.0))
-            ],
-            ..Default::default()
+                text: vec![DocRichText {
+                    tag: None,
+                    text: "preset".to_string(),
+                }],
+                map_coord: GameCoord(7.0, 8.0, 9.0),
+                movements: vec![
+                    CompMovement::to(GameCoord(3.0, 4.0, 5.0)),
+                    CompMovement::to(GameCoord(7.0, 8.0, 9.0)),
+                    CompMovement::to(GameCoord(7.0, 8.0, 9.0)),
+                ],
+                ..Default::default()
         });
     }
 }

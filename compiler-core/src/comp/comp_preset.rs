@@ -93,7 +93,8 @@ impl Compiler {
         }
     }
 
-    async fn expand_presets_in_movements(
+    /// Expand presets in the movements array
+    pub async fn expand_presets_in_movements(
         &self,
         depth: usize,
         movements: Value,
