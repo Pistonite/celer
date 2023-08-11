@@ -28,6 +28,7 @@ pub enum CompMovement {
 }
 
 impl CompMovement {
+    /// Create movement to a coord without any special properties
     pub fn to(coord: GameCoord) -> Self {
         Self::To {
             to: coord,
@@ -93,14 +94,14 @@ impl Compiler {
                             Some(b) => warp = b,
                             None => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidMovementType);
+                                errors.push(CompilerError::InvalidLinePropertyType(format!("{prop_name}.warp")));
                             }
                         },
                         "exclude" => match value.try_coerce_to_bool() {
                             Some(b) => exclude = b,
                             None => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidMovementType);
+                                errors.push(CompilerError::InvalidLinePropertyType(format!("{prop_name}.exclude")));
                             }
                         },
                         "color" => match value {
@@ -108,7 +109,7 @@ impl Compiler {
                             Value::String(s) => color = Some(s),
                             _ => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidMovementType);
+                                errors.push(CompilerError::InvalidLinePropertyType(format!("{prop_name}.color")));
                             }
                         },
                         _ => {
@@ -145,10 +146,9 @@ impl Compiler {
 
 #[cfg(test)]
 mod test {
-    use celerctypes::{Axis, MapCoordMap, MapMetadata, RouteMetadata};
     use serde_json::json;
 
-    use crate::comp::CompilerBuilder;
+    use crate::comp::test_utils;
 
     use super::*;
 
@@ -184,24 +184,10 @@ mod test {
         assert_eq!(errors, vec![CompilerError::InvalidCoordinateArray]);
     }
 
-    fn create_test_compiler_with_coord_transform() -> Compiler {
-        let project = RouteMetadata {
-            map: MapMetadata {
-                coord_map: MapCoordMap {
-                    mapping_3d: (Axis::X, Axis::Y, Axis::Z),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-        let builder = CompilerBuilder::new(project, Default::default(), Default::default());
-        builder.build()
-    }
 
     #[test]
     fn test_valid_coord() {
-        let compiler = create_test_compiler_with_coord_transform();
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
             compiler.comp_movement("", json!([1, 2, 4]), &mut errors),
@@ -212,7 +198,7 @@ mod test {
 
     #[test]
     fn test_object() {
-        let compiler = create_test_compiler_with_coord_transform();
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
             compiler.comp_movement(
@@ -306,7 +292,7 @@ mod test {
         errors.clear();
         assert_eq!(
             compiler.comp_movement(
-                "",
+                "te",
                 json!({
                     "to": [1, 2, 4],
                     "exclude": "something",
@@ -315,12 +301,26 @@ mod test {
             ),
             None
         );
-        assert_eq!(errors, vec![CompilerError::InvalidMovementType]);
+        assert_eq!(errors, vec![CompilerError::InvalidLinePropertyType("te.exclude".to_string())]);
 
         errors.clear();
         assert_eq!(
             compiler.comp_movement(
-                "",
+                "te",
+                json!({
+                    "to": [1, 2, 4],
+                    "warp": "something",
+                }),
+                &mut errors
+            ),
+            None
+        );
+        assert_eq!(errors, vec![CompilerError::InvalidLinePropertyType("te.warp".to_string())]);
+
+        errors.clear();
+        assert_eq!(
+            compiler.comp_movement(
+                "test",
                 json!({
                     "to": [1, 2, 4],
                     "color": [],
@@ -329,7 +329,7 @@ mod test {
             ),
             None
         );
-        assert_eq!(errors, vec![CompilerError::InvalidMovementType]);
+        assert_eq!(errors, vec![CompilerError::InvalidLinePropertyType("test.color".to_string())]);
     }
 
     #[test]
@@ -350,7 +350,7 @@ mod test {
 
     #[test]
     fn test_unused_property() {
-        let compiler = create_test_compiler_with_coord_transform();
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
             compiler.comp_movement(

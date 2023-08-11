@@ -4,15 +4,18 @@ use celerctypes::{RouteMetadata, GameCoord};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
-use crate::{lang::Preset, CompLine};
+use crate::lang::Preset;
 
 mod builder;
 pub use builder::*;
 mod comp_coord;
 mod comp_line;
+mod comp_marker;
+pub use comp_marker::*;
 mod comp_movement;
 pub use comp_movement::*;
 mod comp_preset;
+mod comp_section;
 mod desugar;
 use desugar::*;
 mod prop;
@@ -74,6 +77,8 @@ pub enum CompilerError {
     InvalidCoordinateValue(String),
     /// When a preset specified as part of a movement does not contain the `movements` property
     InvalidMovementPreset(String),
+    /// When the value specified as part of marker is invalid
+    InvalidMarkerType,
 }
 
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -86,17 +91,6 @@ pub struct CompilerDiagnostic {
 
 /// Convenience macro for validating a json value and add error
 macro_rules! validate_not_array_or_object {
-    ($value:expr, $errors:ident, $property:literal) => {{
-        let v = $value;
-        if v.is_array() || v.is_object() {
-            $errors.push(CompilerError::InvalidLinePropertyType(
-                $property.to_string(),
-            ));
-            false
-        } else {
-            true
-        }
-    }};
     ($value:expr, $errors:ident, $property:expr) => {{
         let v = $value;
         if v.is_array() || v.is_object() {
@@ -108,3 +102,25 @@ macro_rules! validate_not_array_or_object {
     }};
 }
 pub(crate) use validate_not_array_or_object;
+
+#[cfg(test)]
+mod test_utils {
+    use celerctypes::{MapMetadata, MapCoordMap, Axis};
+
+    use super::*;
+
+    pub fn create_test_compiler_with_coord_transform() -> Compiler {
+        let project = RouteMetadata {
+            map: MapMetadata {
+                coord_map: MapCoordMap {
+                    mapping_3d: (Axis::X, Axis::Y, Axis::Z),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        let builder = CompilerBuilder::new(project, Default::default(), Default::default());
+        builder.build()
+    }
+}

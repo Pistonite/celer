@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use celerctypes::DocNote;
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 use crate::json::Coerce;
 use crate::lang;
@@ -43,13 +43,13 @@ impl Compiler {
         let mut properties = BTreeMap::new();
 
         // Process the presets
-        if let Some(presets) = line_obj.remove("presets") {
+        if let Some(presets) = line_obj.remove(prop::PRESETS) {
             self.process_presets(0, presets, &mut properties, &mut errors)
                 .await;
         }
 
-        if !properties.contains_key("text") {
-            properties.insert("text".to_string(), Value::String(text.clone()));
+        if !properties.contains_key(prop::TEXT) {
+            properties.insert(prop::TEXT.to_string(), Value::String(text.clone()));
         }
 
         if text.starts_with('_') {
@@ -65,9 +65,9 @@ impl Compiler {
         }
         properties.extend(line_obj);
         super::desugar_properties(&mut properties).await;
-        if let Some(movements) = properties.remove(prop::PROP_MOVEMENTS) {
+        if let Some(movements) = properties.remove(prop::MOVEMENTS) {
             properties.insert(
-                prop::PROP_MOVEMENTS.to_string(),
+                prop::MOVEMENTS.to_string(),
                 self.expand_presets_in_movements(0, movements, &mut errors)
                     .await,
             );
@@ -105,19 +105,19 @@ impl Compiler {
         errors: &mut Vec<CompilerError>,
     ) {
         match key {
-            "text" => {
-                validate_not_array_or_object!(&value, errors, "text");
+            prop::TEXT => {
+                validate_not_array_or_object!(&value, errors, prop::TEXT.to_string());
                 output.text = lang::parse_rich(&value.coerce_to_string());
             }
-            "comment" => {
-                validate_not_array_or_object!(&value, errors, "comment");
+            prop::COMMENT => {
+                validate_not_array_or_object!(&value, errors, prop::COMMENT.to_string());
                 output.secondary_text = lang::parse_rich(&value.coerce_to_string());
             }
-            "notes" => {
+            prop::NOTES => {
                 let iter = match value {
                     Value::Array(arr) => arr.into_iter(),
                     Value::Object(_) => {
-                        errors.push(CompilerError::InvalidLinePropertyType("notes".to_string()));
+                        errors.push(CompilerError::InvalidLinePropertyType(prop::NOTES.to_string()));
                         vec![].into_iter()
                     }
                     _ => vec![value].into_iter(),
@@ -125,32 +125,32 @@ impl Compiler {
 
                 let mut notes = vec![];
                 for (i, note_value) in iter.enumerate() {
-                    validate_not_array_or_object!(&note_value, errors, format!("notes[{i}]"));
+                    validate_not_array_or_object!(&note_value, errors, format!("{p}[{i}]", p = prop::NOTES));
                     notes.push(DocNote::Text {
                         content: lang::parse_rich(&note_value.coerce_to_string()),
                     });
                 }
                 output.notes = notes;
             }
-            "split-name" => {
-                if validate_not_array_or_object!(&value, errors, "split-name") {
+            prop::SPLIT_NAME => {
+                if validate_not_array_or_object!(&value, errors, prop::SPLIT_NAME.to_string()) {
                     output.split_name = Some(lang::parse_rich(&value.coerce_to_string()));
                 }
             }
-            "icon" => match value {
+            prop::ICON => match value {
                 Value::Array(_) => {
-                    errors.push(CompilerError::InvalidLinePropertyType("icon".to_string()));
+                    errors.push(CompilerError::InvalidLinePropertyType(prop::ICON.to_string()));
                 }
                 Value::Object(obj) => {
                     for (key, value) in obj {
                         match key.as_str() {
                             "doc" => {
-                                if validate_not_array_or_object!(&value, errors, "icon.doc") {
+                                if validate_not_array_or_object!(&value, errors, format!("{p}.doc", p = prop::ICON)) {
                                     output.doc_icon = Some(value.coerce_to_string());
                                 }
                             }
                             "map" => {
-                                if validate_not_array_or_object!(&value, errors, "icon.map") {
+                                if validate_not_array_or_object!(&value, errors, format!("{p}.map", p = prop::ICON)) {
                                     output.map_icon = Some(value.coerce_to_string());
                                 }
                             }
@@ -159,12 +159,12 @@ impl Compiler {
                                     output.map_icon_priority = i;
                                 } else {
                                     errors.push(CompilerError::InvalidLinePropertyType(
-                                        "icon.priority".to_string(),
+                                        format!("{p}.priority", p = prop::ICON)
                                     ));
                                 }
                             }
                             key => {
-                                errors.push(CompilerError::UnusedProperty(format!("icon.{key}")));
+                                errors.push(CompilerError::UnusedProperty(format!("{p}.{key}", p = prop::ICON)));
                             }
                         }
                     }
@@ -175,8 +175,8 @@ impl Compiler {
                     output.map_icon = Some(icon);
                 }
             },
-            "counter" => {
-                if validate_not_array_or_object!(&value, errors, "counter") {
+            prop::COUNTER => {
+                if validate_not_array_or_object!(&value, errors, prop::COUNTER.to_string()) {
                     let text = value.coerce_to_string();
                     if !text.is_empty() {
                         let mut blocks = lang::parse_rich(&text).into_iter();
@@ -189,22 +189,21 @@ impl Compiler {
                     }
                 }
             }
-            "color" => {
-                if validate_not_array_or_object!(&value, errors, "color") {
+            prop::COLOR => {
+                if validate_not_array_or_object!(&value, errors, prop::COLOR.to_string()) {
                     let new_color = value.coerce_to_string();
                     output.line_color = new_color.clone();
                     self.color = new_color;
                 }
             }
-            prop::PROP_MOVEMENTS => {
+            prop::MOVEMENTS => {
                 match value {
                     Value::Array(array) => {
                         // need to track the coordinate of the final position with a stack
                         let mut ref_stack = vec![];
-                        let mut movements = vec![];
                         for (i, v) in array.into_iter().enumerate() {
                             if let Some(m) = self.comp_movement(
-                                &format!("{p}[{i}]", p = prop::PROP_MOVEMENTS),
+                                &format!("{p}[{i}]", p = prop::MOVEMENTS),
                                 v,
                                 errors,
                             ) {
@@ -218,25 +217,40 @@ impl Compiler {
                                         ref_stack.pop();
                                     }
                                     _ => match ref_stack.last_mut() {
-                                        Some(i) => *i = movements.len(),
-                                        None => ref_stack.push(movements.len()),
+                                        Some(i) => *i = output.movements.len(),
+                                        None => ref_stack.push(output.movements.len()),
                                     },
                                 }
-                                movements.push(m);
+                                output.movements.push(m);
                             }
                         }
                         if let Some(i) = ref_stack.last() {
-                            if let CompMovement::To { to, .. } = &movements[*i] {
+                            if let CompMovement::To { to, .. } = &output.movements[*i] {
                                 output.map_coord = to.clone();
                             } else {
                                 unreachable!();
                             }
                         }
-                        output.movements = movements;
                     }
                     _ => errors.push(CompilerError::InvalidLinePropertyType(
-                        prop::PROP_MOVEMENTS.to_string(),
+                        prop::MOVEMENTS.to_string(),
                     )),
+                }
+            }
+            prop::MARKERS => {
+                match value {
+                    Value::Array(array) => {
+                        for (i, v) in array.into_iter().enumerate() {
+                            if let Some(m) = self.comp_marker(
+                                &format!("{p}[{i}]", p = prop::MARKERS),
+                                v,
+                                errors,
+                            ) {
+                                output.markers.push(m);
+                            }
+                        }
+                    }
+                    _ => errors.push(CompilerError::InvalidLinePropertyType(prop::MARKERS.to_string()))
                 }
             }
             _ => todo!(),
@@ -250,7 +264,7 @@ mod test {
     use serde_json::json;
 
     use crate::{
-        comp::{CompMovement, CompilerBuilder},
+        comp::{CompMarker, CompMovement, CompilerBuilder, test_utils},
         lang::Preset,
     };
 
@@ -1524,29 +1538,33 @@ mod test {
             "".to_string(),
             GameCoord(1.0, 2.0, 3.0),
         );
-        builder
-            .add_preset(
-                "_preset::one",
-                Preset::compile(json!({
-                    "movements": [
-                        [7, "8", 9],
-                        [7, "8", 9],
-                    ]
-                }))
-                    .await
-                    .unwrap(),
-            );
-        let mut compiler = builder.build();
-        
-        let result = compiler.comp_line(json!({
-            "preset": {
+        builder.add_preset(
+            "_preset::one",
+            Preset::compile(json!({
                 "movements": [
-                    [3, 4, 5],
-                    "_preset::one",
+                    [7, "8", 9],
+                    [7, "8", 9],
                 ]
-            }
-        })).await.unwrap();
-        assert_eq!(result, CompLine {
+            }))
+            .await
+            .unwrap(),
+        );
+        let mut compiler = builder.build();
+
+        let result = compiler
+            .comp_line(json!({
+                "preset": {
+                    "movements": [
+                        [3, 4, 5],
+                        "_preset::one",
+                    ]
+                }
+            }))
+            .await
+            .unwrap();
+        assert_eq!(
+            result,
+            CompLine {
                 text: vec![DocRichText {
                     tag: None,
                     text: "preset".to_string(),
@@ -1558,6 +1576,88 @@ mod test {
                     CompMovement::to(GameCoord(7.0, 8.0, 9.0)),
                 ],
                 ..Default::default()
-        });
+            }
+        );
+    }
+
+    #[tokio::test]
+    async fn test_markers() {
+        let mut compiler = test_utils::create_test_compiler_with_coord_transform();
+        let result = compiler
+            .comp_line(json!({
+                "test markers": {
+                    "markers": [
+                        {"at": [1, 2, 4], "color": "marker 1"},
+                        [1, "2", 3]
+                    ]
+                }
+            }))
+            .await
+            .unwrap();
+        assert_eq!(
+            result,
+            CompLine {
+                text: vec![DocRichText {
+                    tag: None,
+                    text: "test markers".to_string(),
+                }],
+                markers: vec![
+                    CompMarker {
+                        at: GameCoord(1.0, 2.0, 4.0),
+                        color: Some("marker 1".to_string()),
+                    },
+                    CompMarker::at(GameCoord(1.0, 2.0, 3.0))
+                ],
+                ..Default::default()
+            }
+        );
+
+        let result = compiler
+            .comp_line(json!({
+                "test markers invalid type": {
+                    "markers": {}
+                }
+            }))
+            .await
+            .unwrap_err();
+        assert_eq!(
+            result,
+            (
+                CompLine {
+                    text: vec![DocRichText {
+                        tag: None,
+                        text: "test markers invalid type".to_string(),
+                    }],
+                    ..Default::default()
+                },
+                vec![CompilerError::InvalidLinePropertyType(
+                    "markers".to_string()
+                )]
+            )
+        );
+
+        let result = compiler
+            .comp_line(json!({
+                "test markers invalid marker type": {
+                    "markers": [
+                        "hello"
+                    ] 
+                }
+            }))
+            .await
+            .unwrap_err();
+        assert_eq!(
+            result,
+            (
+                CompLine {
+                    text: vec![DocRichText {
+                        tag: None,
+                        text: "test markers invalid marker type".to_string(),
+                    }],
+                    ..Default::default()
+                },
+                vec![CompilerError::InvalidMarkerType]
+            )
+        );
     }
 }

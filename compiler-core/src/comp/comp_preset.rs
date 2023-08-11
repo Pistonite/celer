@@ -30,15 +30,15 @@ impl Compiler {
             Some(preset) => preset,
         };
         let mut properties = preset.hydrate(&inst.args).await;
-        if let Some(presets) = properties.remove(prop::PROP_PRESETS) {
+        if let Some(presets) = properties.remove(prop::PRESETS) {
             self.process_presets(depth, presets, output, errors).await;
         }
 
         super::desugar_properties(&mut properties).await;
 
-        if let Some(movements) = properties.remove(prop::PROP_MOVEMENTS) {
+        if let Some(movements) = properties.remove(prop::MOVEMENTS) {
             properties.insert(
-                prop::PROP_MOVEMENTS.to_string(),
+                prop::MOVEMENTS.to_string(),
                 self.expand_presets_in_movements(depth, movements, errors)
                     .await,
             );
@@ -63,7 +63,7 @@ impl Compiler {
                     if !validate_not_array_or_object!(
                         &preset_value,
                         errors,
-                        format!("presets[{i}]")
+                        format!("{p}[{i}]", p = prop::PRESETS)
                     ) {
                         continue;
                     }
@@ -87,7 +87,7 @@ impl Compiler {
             }
             _ => {
                 errors.push(CompilerError::InvalidLinePropertyType(
-                    "presets".to_string(),
+                    prop::PRESETS.to_string(),
                 ));
             }
         }
@@ -125,7 +125,7 @@ impl Compiler {
             self.apply_preset(depth + 1, &preset_inst, &mut map, errors)
                 .await;
 
-            match map.remove(prop::PROP_MOVEMENTS).and_then(|m| match m {
+            match map.remove(prop::MOVEMENTS).and_then(|m| match m {
                 Value::Array(x) => Some(x),
                 _ => None,
             }) {

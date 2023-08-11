@@ -31,7 +31,7 @@ impl CompLine {
                 coord: marker.at,
                 line_index: line_number,
                 section_index: section_number,
-                color: marker.color,
+                color: marker.color.unwrap_or_else(||self.line_color.clone()),
             });
         }
 
@@ -77,8 +77,7 @@ impl CompLine {
 #[cfg(test)]
 mod test {
     use celerctypes::{DocRichText, DocDiagnostic, DocNote, GameCoord, MapLine};
-    use crate::CompMarker;
-    use crate::comp::CompMovement;
+    use crate::comp::{CompMarker, CompMovement};
 
     use super::*;
 
@@ -211,16 +210,14 @@ mod test {
     #[tokio::test]
     async fn test_add_map_icon_and_markers() {
         let test_line = CompLine {
+            line_color: "test color".to_string(),
             map_icon: Some("test icon".to_string()),
             map_icon_priority: 3,
             markers: vec![
-                CompMarker {
-                    at: GameCoord(1.2, 55.0, 37.8),
-                    color: "test color".to_string(),
-                },
+                CompMarker::at(GameCoord(1.2, 55.0, 37.8)),
                 CompMarker {
                     at: GameCoord(1.2, 85.0, 37.8),
-                    color: "test color 2".to_string(),
+                    color: Some("test marker override".to_string()),
                 }
             ],
             map_coord: GameCoord(1.2, 0.0, 87.8),
@@ -246,7 +243,7 @@ mod test {
             },
             MapMarker {
                 coord: GameCoord(1.2, 85.0, 37.8),
-                color: "test color 2".to_string(),
+                color: "test marker override".to_string(),
                 line_index: 5,
                 section_index: 4,
             }

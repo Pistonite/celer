@@ -30,7 +30,8 @@ impl CompSection {
 mod test {
     use celerctypes::{MapIcon, MapMarker, GameCoord, MapLine};
 
-    use crate::{CompLine, CompMarker, comp::CompMovement} ;
+    use crate::CompLine;
+    use crate::comp::{CompMarker, CompMovement};
 
     use super::*;
 
@@ -103,11 +104,11 @@ mod test {
                 CompLine {
                     markers: vec![
                         CompMarker {
-                            color: "test 1".to_string(),
+                            color: Some("test 1".to_string()),
                             ..Default::default()
                         },
                         CompMarker {
-                            color: "test 2".to_string(),
+                            color: Some("test 2".to_string()),
                             ..Default::default()
                         },
                     ],
@@ -115,11 +116,9 @@ mod test {
                 },
                 CompLine {
                     markers: vec![
-                        CompMarker {
-                            color: "test 3".to_string(),
-                            ..Default::default()
-                        },
+                        CompMarker::default(),
                     ],
+                    line_color: "test".to_string(),
                     ..Default::default()
                 }
             ],
@@ -143,7 +142,7 @@ mod test {
             MapMarker {
                 section_index: 4,
                 line_index: 1,
-                color: "test 3".to_string(),
+                color: "test".to_string(),
                 ..Default::default()
             },
         ]);

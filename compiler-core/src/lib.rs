@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use comp::CompMovement;
+use comp::{CompMovement, CompMarker};
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 use celerctypes::{RouteMetadata, DocRichText, GameCoord, DocDiagnostic, DocNote};
@@ -76,25 +76,6 @@ pub struct CompLine {
     properties: HashMap<String, Value>,
 }
 
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CompMarker {
-    /// The coord of the marker
-    at: GameCoord,
-    /// The color of the marker
-    color: String,
-}
-
-// /// Compiled map movement with color
-// #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-// #[serde(rename_all = "camelCase")]
-// pub struct CompMovementWithColor {
-//     /// The color of the movement
-//     color: String,
-//     /// The movement
-//     #[serde(flatten)]
-//     movement: CompMovement,
-// }
 const DEFAULT_LINE_COLOR: &str = "#38f";
 const DEFAULT_MARKER_COLOR: &str = "#f00";
 
