@@ -1,16 +1,56 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 
-use celerctypes::DocNote;
+use celerctypes::{DocNote, DocRichText, DocDiagnostic, GameCoord};
+use derivative::Derivative;
+use serde::{Serialize, Deserialize};
 use serde_json::Value;
 
 use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
-use crate::CompLine;
 
 use super::{
-    prop, validate_not_array_or_object, CompMovement, Compiler, CompilerError, CompilerResult,
+    prop, validate_not_array_or_object, CompMovement, Compiler, CompilerError, CompilerResult, CompMarker,
 };
+
+#[derive(PartialEq, Derivative, Serialize, Deserialize, Debug, Clone)]
+#[derivative(Default)]
+#[serde(rename_all = "camelCase")]
+pub struct CompLine {
+    /// Primary text content of the line
+    pub text: Vec<DocRichText>,
+    /// Main line color
+    pub line_color: String,
+    /// Main movements of this line
+    pub movements: Vec<CompMovement>,
+    /// Diagnostic messages
+    pub diagnostics: Vec<DocDiagnostic>,
+    /// Icon id to show on the document
+    pub doc_icon: Option<String>,
+    /// Icon id to show on the map
+    pub map_icon: Option<String>,
+    /// Coordinate of the map icon
+    pub map_coord: GameCoord,
+    /// Map icon priority. 0=primary, 1=secondary, >2=other
+    #[derivative(Default(value = "2"))]
+    pub map_icon_priority: i64,
+    /// Map markers
+    pub markers: Vec<CompMarker>,
+    /// Secondary text to show below the primary text
+    pub secondary_text: Vec<DocRichText>,
+    /// Counter text to display
+    pub counter_text: Option<DocRichText>,
+    /// The notes
+    pub notes: Vec<DocNote>,
+    /// The split name, if different from text
+    pub split_name: Option<Vec<DocRichText>>,
+    /// The rest of the properties as json blobs
+    ///
+    /// These are ignored by ExecDoc, but the transformers can use them
+    #[serde(skip)]
+    pub properties: HashMap<String, Value>,
+}
+
 
 impl Compiler {
     /// Compile a line
@@ -253,7 +293,9 @@ impl Compiler {
                     _ => errors.push(CompilerError::InvalidLinePropertyType(prop::MARKERS.to_string()))
                 }
             }
-            _ => todo!(),
+            _ => {
+                output.properties.insert(key.to_string(), value);
+            }
         }
     }
 }
@@ -1658,6 +1700,31 @@ mod test {
                 },
                 vec![CompilerError::InvalidMarkerType]
             )
+        );
+    }
+
+    #[tokio::test]
+    async fn test_unused_properties() {
+        let mut compiler = Compiler::default();
+
+        let result = compiler.comp_line(json!({
+            "test": {
+                "unused": "property"
+            }
+        })).await.unwrap();
+
+        assert_eq!(
+            result,
+            CompLine {
+                text: vec![DocRichText {
+                    tag: None,
+                    text: "test".to_string(),
+                }],
+                properties: [
+                    ("unused".to_string(), json!("property"))
+                ].into_iter().collect(),
+                ..Default::default()
+            }
         );
     }
 }
