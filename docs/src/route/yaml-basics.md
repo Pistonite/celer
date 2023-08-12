@@ -60,6 +60,17 @@ foo: "30"
 ```
 Without the quotes, `foo` would be a number.
 
+Long strings can also be broken into multiple lines. They will be joined together:
+```yaml
+notes:
+  This note is very long.
+  So I made it multiple lines.
+```
+This is the same as:
+```yaml
+notes: This note is very long. So I made it multiple lines.
+```
+
 ## Nested Data
 YAML use indentation to signify nesting, for example:
 ```yaml
