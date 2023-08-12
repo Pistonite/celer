@@ -31,6 +31,7 @@ pub struct Compiler {
     coord: GameCoord,
     #[derivative(Default(value = "10"))]
     max_preset_depth: usize,
+    default_icon_priority: i64,
 }
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;

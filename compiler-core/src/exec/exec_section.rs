@@ -89,14 +89,14 @@ mod test {
                     id: "test 1".to_string(),
                     section_index: 4,
                     line_index: 0,
-                    priority: 2,
+                    priority: 0,
                     ..Default::default()
                 },
                 MapIcon {
                     id: "test 2".to_string(),
                     section_index: 4,
                     line_index: 1,
-                    priority: 2,
+                    priority: 0,
                     ..Default::default()
                 }
             ]

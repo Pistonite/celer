@@ -36,12 +36,6 @@ dev-client +FLAGS="":
 dev-server:
     cargo watch -B 1 -s "cargo run -- --debug --docs-dir docs/src/.vitepress/dist"
 
-check-docs PACKAGE VERBOSE="":
-    node docs/scripts/checkDocCompletion.js {{PACKAGE}} {{VERBOSE}}
-
-dump-symbol PATH SYMBOL +FLAGS="--doc --code":
-    node docs/scripts/dumpSymbol.js {{PATH}} '{{SYMBOL}}' {{FLAGS}}
-
 # Format the code
 fmt:
     cargo fmt
@@ -63,7 +57,7 @@ test:
 build:
     mkdir -p dist
     rm -rf dist/*
-    txtpp -r
+    #txtpp -r
     @echo "Building docs"
     cd docs && npm run build
     mkdir dist/docs
@@ -78,7 +72,7 @@ build:
 server PORT="8080":
     cd dist && ./start-server --port {{PORT}}
 
-build-container: build
+container: 
     docker build -t pistonite/celer . --no-cache
     @echo "Run with:"
     @echo

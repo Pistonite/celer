@@ -2,9 +2,11 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-use crate::{json::Coerce, lang::PresetInst};
+use crate::json::Coerce;
+use crate::lang::PresetInst;
 
-use super::{prop, validate_not_array_or_object, Compiler, CompilerError};
+use super::prop;
+use super::{validate_not_array_or_object, Compiler, CompilerError};
 
 impl Compiler {
     /// Apply the preset to the output.

@@ -9,13 +9,12 @@ use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
 
+use super::prop;
 use super::{
-    prop, validate_not_array_or_object, CompMarker, CompMovement, Compiler, CompilerError,
-    CompilerResult,
+    validate_not_array_or_object, CompMarker, CompMovement, Compiler, CompilerError, CompilerResult,
 };
 
-#[derive(PartialEq, Derivative, Serialize, Deserialize, Debug, Clone)]
-#[derivative(Default)]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CompLine {
     /// Primary text content of the line
@@ -33,7 +32,6 @@ pub struct CompLine {
     /// Coordinate of the map icon
     pub map_coord: GameCoord,
     /// Map icon priority. 0=primary, 1=secondary, >2=other
-    #[derivative(Default(value = "2"))]
     pub map_icon_priority: i64,
     /// Map markers
     pub markers: Vec<CompMarker>,
@@ -132,6 +130,7 @@ impl Compiler {
         CompLine {
             line_color: self.color.clone(),
             map_coord: self.coord.clone(),
+            map_icon_priority: self.default_icon_priority,
             ..Default::default()
         }
     }
@@ -323,10 +322,9 @@ mod test {
     use celerctypes::{Axis, DocRichText, GameCoord, MapCoordMap, MapMetadata, RouteMetadata};
     use serde_json::json;
 
-    use crate::{
-        comp::{test_utils, CompMarker, CompMovement, CompilerBuilder},
-        lang::Preset,
-    };
+    use crate::comp::test_utils;
+    use crate::comp::{CompMarker, CompMovement, CompilerBuilder};
+    use crate::lang::Preset;
 
     use super::*;
 
@@ -1120,6 +1118,7 @@ mod test {
     #[tokio::test]
     async fn test_icon_overrides() {
         let mut compiler = Compiler::default();
+
         let result = compiler
             .comp_line(json!({
                 "icon is string": {
@@ -1260,6 +1259,37 @@ mod test {
                     CompilerError::InvalidLinePropertyType("icon.priority".to_string()),
                 ]
             )
+        );
+    }
+    
+    #[tokio::test]
+    async fn test_default_icon_priority() {
+        let mut builder = CompilerBuilder::default();
+        builder.set_default_icon_priority(10);
+        let mut compiler = builder.build();
+
+        let result = compiler
+            .comp_line(json!({
+                "icon is partial": {
+                    "icon": {
+                        "map": "my-map-icon",
+                    },
+                },
+            }))
+            .await
+            .unwrap();
+        assert_eq!(
+            result,
+            CompLine {
+                text: vec![DocRichText {
+                    tag: None,
+                    text: "icon is partial".to_string(),
+                }],
+                doc_icon: None,
+                map_icon: Some("my-map-icon".to_string()),
+                map_icon_priority: 10,
+                ..Default::default()
+            }
         );
     }
 
