@@ -73,11 +73,7 @@ impl Compiler {
                         color = Some(value.coerce_to_string())
                     }
                 }
-                _ => {
-                    errors.push(CompilerError::UnusedProperty(format!(
-                        "{prop_name}.{key}"
-                    )))
-                }
+                _ => errors.push(CompilerError::UnusedProperty(format!("{prop_name}.{key}"))),
             }
         }
 
@@ -196,6 +192,9 @@ mod test {
             ),
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
-        assert_eq!(errors, vec![CompilerError::UnusedProperty("test.unused".to_string())]);
+        assert_eq!(
+            errors,
+            vec![CompilerError::UnusedProperty("test.unused".to_string())]
+        );
     }
 }

@@ -1,4 +1,4 @@
-use celerctypes::{GameCoord, Axis};
+use celerctypes::{Axis, GameCoord};
 use serde_json::Value;
 
 use crate::json::Coerce;
@@ -6,22 +6,22 @@ use crate::json::Coerce;
 use super::{Compiler, CompilerError};
 
 macro_rules! map_coord {
-    ($mapping:ident, $array:ident, $output:ident, $i:tt) => {
-        {
-            let i = $i;
-            match $array[i].try_coerce_to_f64() {
-                Some(n) => {
-                    match $mapping.$i {
-                        Axis::X => $output.0 = n,
-                        Axis::Y => $output.1 = n,
-                        Axis::Z => $output.2 = n,
-                    }
-                    Ok(())
-                },
-                None => Err(CompilerError::InvalidCoordinateValue($array[i].coerce_to_repl())),
+    ($mapping:ident, $array:ident, $output:ident, $i:tt) => {{
+        let i = $i;
+        match $array[i].try_coerce_to_f64() {
+            Some(n) => {
+                match $mapping.$i {
+                    Axis::X => $output.0 = n,
+                    Axis::Y => $output.1 = n,
+                    Axis::Z => $output.2 = n,
+                }
+                Ok(())
             }
+            None => Err(CompilerError::InvalidCoordinateValue(
+                $array[i].coerce_to_repl(),
+            )),
         }
-    };
+    }};
 }
 
 impl Compiler {
@@ -31,7 +31,11 @@ impl Compiler {
         }
         let array = match prop {
             Value::Array(array) => array,
-            _ => return Err(CompilerError::InvalidCoordinateType(prop.coerce_to_string())),
+            _ => {
+                return Err(CompilerError::InvalidCoordinateType(
+                    prop.coerce_to_string(),
+                ))
+            }
         };
         let mut output = GameCoord::default();
         match array.len() {
@@ -39,13 +43,13 @@ impl Compiler {
                 let mapping = &self.project.map.coord_map.mapping_2d;
                 map_coord!(mapping, array, output, 0)?;
                 map_coord!(mapping, array, output, 1)?;
-            },
+            }
             3 => {
                 let mapping = &self.project.map.coord_map.mapping_3d;
                 map_coord!(mapping, array, output, 0)?;
                 map_coord!(mapping, array, output, 1)?;
                 map_coord!(mapping, array, output, 2)?;
-            },
+            }
             _ => return Err(CompilerError::InvalidCoordinateArray),
         }
 
@@ -55,7 +59,7 @@ impl Compiler {
 
 #[cfg(test)]
 mod test {
-    use celerctypes::{RouteMetadata, MapMetadata, MapCoordMap};
+    use celerctypes::{MapCoordMap, MapMetadata, RouteMetadata};
     use serde_json::json;
 
     use crate::comp::CompilerBuilder;
@@ -80,7 +84,10 @@ mod test {
 
         for (prop, text) in vals {
             let res = compiler.transform_coord(prop);
-            assert_eq!(res, Err(CompilerError::InvalidCoordinateType(text.to_string())));
+            assert_eq!(
+                res,
+                Err(CompilerError::InvalidCoordinateType(text.to_string()))
+            );
         }
     }
 
@@ -101,11 +108,22 @@ mod test {
     fn test_array_invalid_value() {
         let compiler = Compiler::default();
         let res2 = compiler.transform_coord(json!([1, true]));
-        assert_eq!(res2, Err(CompilerError::InvalidCoordinateValue("true".to_string())));
+        assert_eq!(
+            res2,
+            Err(CompilerError::InvalidCoordinateValue("true".to_string()))
+        );
         let res3 = compiler.transform_coord(json!(["1", [], "hello"]));
-        assert_eq!(res3, Err(CompilerError::InvalidCoordinateValue("[object array]".to_string())));
+        assert_eq!(
+            res3,
+            Err(CompilerError::InvalidCoordinateValue(
+                "[object array]".to_string()
+            ))
+        );
         let res2 = compiler.transform_coord(json!([null, 0]));
-        assert_eq!(res2, Err(CompilerError::InvalidCoordinateValue("null".to_string())));
+        assert_eq!(
+            res2,
+            Err(CompilerError::InvalidCoordinateValue("null".to_string()))
+        );
     }
 
     #[test]
@@ -124,13 +142,24 @@ mod test {
         let compiler = builder.build();
 
         let input = json!([1, 2]);
-        assert_eq!(Ok(GameCoord(1.0, 0.0, 2.0)), compiler.transform_coord(input));
+        assert_eq!(
+            Ok(GameCoord(1.0, 0.0, 2.0)),
+            compiler.transform_coord(input)
+        );
         let input = json!([1, 2, 3]);
-        assert_eq!(Ok(GameCoord(0.0, 3.0, 2.0)), compiler.transform_coord(input));
+        assert_eq!(
+            Ok(GameCoord(0.0, 3.0, 2.0)),
+            compiler.transform_coord(input)
+        );
         let input = json!(["1", "2.3", 3]);
-        assert_eq!(Ok(GameCoord(0.0, 3.0, 2.3)), compiler.transform_coord(input));
+        assert_eq!(
+            Ok(GameCoord(0.0, 3.0, 2.3)),
+            compiler.transform_coord(input)
+        );
         let input = json!(["-1", "0.000"]);
-        assert_eq!(Ok(GameCoord(-1.0, 0.0, 0.0)), compiler.transform_coord(input));
+        assert_eq!(
+            Ok(GameCoord(-1.0, 0.0, 0.0)),
+            compiler.transform_coord(input)
+        );
     }
-
 }

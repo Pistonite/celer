@@ -78,7 +78,7 @@ impl Compiler {
                 let mut warp = false;
                 let mut exclude = false;
                 let mut color = None;
-                
+
                 let mut should_fail = false;
 
                 for (key, value) in props.into_iter() {
@@ -94,14 +94,18 @@ impl Compiler {
                             Some(b) => warp = b,
                             None => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidLinePropertyType(format!("{prop_name}.warp")));
+                                errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                    "{prop_name}.warp"
+                                )));
                             }
                         },
                         "exclude" => match value.try_coerce_to_bool() {
                             Some(b) => exclude = b,
                             None => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidLinePropertyType(format!("{prop_name}.exclude")));
+                                errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                    "{prop_name}.exclude"
+                                )));
                             }
                         },
                         "color" => match value {
@@ -109,11 +113,14 @@ impl Compiler {
                             Value::String(s) => color = Some(s),
                             _ => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidLinePropertyType(format!("{prop_name}.color")));
+                                errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                    "{prop_name}.color"
+                                )));
                             }
                         },
                         _ => {
-                            errors.push(CompilerError::UnusedProperty(format!("{prop_name}.{key}")));
+                            errors
+                                .push(CompilerError::UnusedProperty(format!("{prop_name}.{key}")));
                         }
                     }
                 }
@@ -183,7 +190,6 @@ mod test {
         );
         assert_eq!(errors, vec![CompilerError::InvalidCoordinateArray]);
     }
-
 
     #[test]
     fn test_valid_coord() {
@@ -301,7 +307,12 @@ mod test {
             ),
             None
         );
-        assert_eq!(errors, vec![CompilerError::InvalidLinePropertyType("te.exclude".to_string())]);
+        assert_eq!(
+            errors,
+            vec![CompilerError::InvalidLinePropertyType(
+                "te.exclude".to_string()
+            )]
+        );
 
         errors.clear();
         assert_eq!(
@@ -315,7 +326,12 @@ mod test {
             ),
             None
         );
-        assert_eq!(errors, vec![CompilerError::InvalidLinePropertyType("te.warp".to_string())]);
+        assert_eq!(
+            errors,
+            vec![CompilerError::InvalidLinePropertyType(
+                "te.warp".to_string()
+            )]
+        );
 
         errors.clear();
         assert_eq!(
@@ -329,7 +345,12 @@ mod test {
             ),
             None
         );
-        assert_eq!(errors, vec![CompilerError::InvalidLinePropertyType("test.color".to_string())]);
+        assert_eq!(
+            errors,
+            vec![CompilerError::InvalidLinePropertyType(
+                "test.color".to_string()
+            )]
+        );
     }
 
     #[test]
@@ -363,6 +384,9 @@ mod test {
             ),
             Some(CompMovement::to(GameCoord(1.0, 2.0, 4.0)))
         );
-        assert_eq!(errors, vec![CompilerError::UnusedProperty("test.unused".to_string())]);
+        assert_eq!(
+            errors,
+            vec![CompilerError::UnusedProperty("test.unused".to_string())]
+        );
     }
 }

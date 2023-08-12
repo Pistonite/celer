@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
-use comp::CompLine;
-use serde::{Serialize, Deserialize};
 use celerctypes::RouteMetadata;
+use comp::CompLine;
+use serde::{Deserialize, Serialize};
 
-mod exec;
-mod lang;
 mod comp;
+mod exec;
 mod json;
+mod lang;
 
 use lang::Preset;
 
@@ -38,4 +38,3 @@ pub struct CompSection {
 
 const DEFAULT_LINE_COLOR: &str = "#38f";
 const DEFAULT_MARKER_COLOR: &str = "#f00";
-

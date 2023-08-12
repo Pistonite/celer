@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 
 use crate::json::Coerce;
 
@@ -42,7 +42,6 @@ pub async fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError>
         _ => Ok((text, Map::new())),
     }
 }
-
 
 /// Desugar properties on a line
 ///
@@ -86,7 +85,10 @@ mod test {
     async fn test_line_array() {
         assert_eq!(
             desugar_line(json!([])).await,
-            Err(("[object array]".to_string(), CompilerError::ArrayCannotBeLine))
+            Err((
+                "[object array]".to_string(),
+                CompilerError::ArrayCannotBeLine
+            ))
         );
     }
 
@@ -112,10 +114,15 @@ mod test {
         assert_eq!(
             desugar_line(json!({"one": {
                 "two": "three"
-            }})).await,
-            Ok(("one".to_string(), [{("two".to_string(), json!("three"))}].into_iter().collect()))
+            }}))
+            .await,
+            Ok((
+                "one".to_string(),
+                [{ ("two".to_string(), json!("three")) }]
+                    .into_iter()
+                    .collect()
+            ))
         );
-
     }
 
     #[tokio::test]

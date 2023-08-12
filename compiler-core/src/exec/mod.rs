@@ -4,7 +4,6 @@
 //! The [`CompDoc`] will be transformed into a [`ExecDoc`]
 //! for rendering
 
-
 mod exec_line;
 pub use exec_line::*;
 mod exec_map;
@@ -13,4 +12,3 @@ mod exec_section;
 pub use exec_section::*;
 mod exec_doc;
 pub use exec_doc::*;
-

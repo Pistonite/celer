@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use celerctypes::{RouteMetadata, GameCoord};
+use celerctypes::{GameCoord, RouteMetadata};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
@@ -105,7 +105,7 @@ pub(crate) use validate_not_array_or_object;
 
 #[cfg(test)]
 mod test_utils {
-    use celerctypes::{MapMetadata, MapCoordMap, Axis};
+    use celerctypes::{Axis, MapCoordMap, MapMetadata};
 
     use super::*;
 

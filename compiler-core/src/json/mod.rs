@@ -23,14 +23,19 @@ pub trait Coerce {
 
     /// Interpret a null, number (0 or 1), boolean, or string ("true" or "false") as bool
     fn try_coerce_to_bool(&self) -> Option<bool>;
-
 }
 
 impl Coerce for Value {
     fn coerce_to_string(&self) -> String {
         match self {
             Value::Null => "".to_string(),
-            Value::Bool(b) => if *b { "true".to_string() } else { "false".to_string() },
+            Value::Bool(b) => {
+                if *b {
+                    "true".to_string()
+                } else {
+                    "false".to_string()
+                }
+            }
             Value::Number(n) => n.to_string(),
             Value::String(s) => s.to_string(),
             Value::Array(_) => "[object array]".to_string(),
@@ -71,7 +76,7 @@ impl Coerce for Value {
                 "true" => Some(true),
                 "false" => Some(false),
                 _ => None,
-            }
+            },
             _ => None,
         }
     }
@@ -112,6 +117,4 @@ mod test {
         assert_eq!(None, json!([]).try_coerce_to_bool());
         assert_eq!(None, json!({}).try_coerce_to_bool());
     }
-
 }
-

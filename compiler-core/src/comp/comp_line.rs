@@ -1,8 +1,8 @@
 use std::collections::{BTreeMap, HashMap};
 
-use celerctypes::{DocNote, DocRichText, DocDiagnostic, GameCoord};
+use celerctypes::{DocDiagnostic, DocNote, DocRichText, GameCoord};
 use derivative::Derivative;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::Coerce;
@@ -10,7 +10,8 @@ use crate::lang;
 use crate::lang::PresetInst;
 
 use super::{
-    prop, validate_not_array_or_object, CompMovement, Compiler, CompilerError, CompilerResult, CompMarker,
+    prop, validate_not_array_or_object, CompMarker, CompMovement, Compiler, CompilerError,
+    CompilerResult,
 };
 
 #[derive(PartialEq, Derivative, Serialize, Deserialize, Debug, Clone)]
@@ -50,7 +51,6 @@ pub struct CompLine {
     #[serde(skip)]
     pub properties: HashMap<String, Value>,
 }
-
 
 impl Compiler {
     /// Compile a line
@@ -157,7 +157,9 @@ impl Compiler {
                 let iter = match value {
                     Value::Array(arr) => arr.into_iter(),
                     Value::Object(_) => {
-                        errors.push(CompilerError::InvalidLinePropertyType(prop::NOTES.to_string()));
+                        errors.push(CompilerError::InvalidLinePropertyType(
+                            prop::NOTES.to_string(),
+                        ));
                         vec![].into_iter()
                     }
                     _ => vec![value].into_iter(),
@@ -165,7 +167,11 @@ impl Compiler {
 
                 let mut notes = vec![];
                 for (i, note_value) in iter.enumerate() {
-                    validate_not_array_or_object!(&note_value, errors, format!("{p}[{i}]", p = prop::NOTES));
+                    validate_not_array_or_object!(
+                        &note_value,
+                        errors,
+                        format!("{p}[{i}]", p = prop::NOTES)
+                    );
                     notes.push(DocNote::Text {
                         content: lang::parse_rich(&note_value.coerce_to_string()),
                     });
@@ -179,18 +185,28 @@ impl Compiler {
             }
             prop::ICON => match value {
                 Value::Array(_) => {
-                    errors.push(CompilerError::InvalidLinePropertyType(prop::ICON.to_string()));
+                    errors.push(CompilerError::InvalidLinePropertyType(
+                        prop::ICON.to_string(),
+                    ));
                 }
                 Value::Object(obj) => {
                     for (key, value) in obj {
                         match key.as_str() {
                             "doc" => {
-                                if validate_not_array_or_object!(&value, errors, format!("{p}.doc", p = prop::ICON)) {
+                                if validate_not_array_or_object!(
+                                    &value,
+                                    errors,
+                                    format!("{p}.doc", p = prop::ICON)
+                                ) {
                                     output.doc_icon = Some(value.coerce_to_string());
                                 }
                             }
                             "map" => {
-                                if validate_not_array_or_object!(&value, errors, format!("{p}.map", p = prop::ICON)) {
+                                if validate_not_array_or_object!(
+                                    &value,
+                                    errors,
+                                    format!("{p}.map", p = prop::ICON)
+                                ) {
                                     output.map_icon = Some(value.coerce_to_string());
                                 }
                             }
@@ -198,13 +214,17 @@ impl Compiler {
                                 if let Some(i) = value.as_i64() {
                                     output.map_icon_priority = i;
                                 } else {
-                                    errors.push(CompilerError::InvalidLinePropertyType(
-                                        format!("{p}.priority", p = prop::ICON)
-                                    ));
+                                    errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                        "{p}.priority",
+                                        p = prop::ICON
+                                    )));
                                 }
                             }
                             key => {
-                                errors.push(CompilerError::UnusedProperty(format!("{p}.{key}", p = prop::ICON)));
+                                errors.push(CompilerError::UnusedProperty(format!(
+                                    "{p}.{key}",
+                                    p = prop::ICON
+                                )));
                             }
                         }
                     }
@@ -277,22 +297,20 @@ impl Compiler {
                     )),
                 }
             }
-            prop::MARKERS => {
-                match value {
-                    Value::Array(array) => {
-                        for (i, v) in array.into_iter().enumerate() {
-                            if let Some(m) = self.comp_marker(
-                                &format!("{p}[{i}]", p = prop::MARKERS),
-                                v,
-                                errors,
-                            ) {
-                                output.markers.push(m);
-                            }
+            prop::MARKERS => match value {
+                Value::Array(array) => {
+                    for (i, v) in array.into_iter().enumerate() {
+                        if let Some(m) =
+                            self.comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
+                        {
+                            output.markers.push(m);
                         }
                     }
-                    _ => errors.push(CompilerError::InvalidLinePropertyType(prop::MARKERS.to_string()))
                 }
-            }
+                _ => errors.push(CompilerError::InvalidLinePropertyType(
+                    prop::MARKERS.to_string(),
+                )),
+            },
             _ => {
                 output.properties.insert(key.to_string(), value);
             }
@@ -306,7 +324,7 @@ mod test {
     use serde_json::json;
 
     use crate::{
-        comp::{CompMarker, CompMovement, CompilerBuilder, test_utils},
+        comp::{test_utils, CompMarker, CompMovement, CompilerBuilder},
         lang::Preset,
     };
 
@@ -1683,7 +1701,7 @@ mod test {
                 "test markers invalid marker type": {
                     "markers": [
                         "hello"
-                    ] 
+                    ]
                 }
             }))
             .await
@@ -1707,11 +1725,14 @@ mod test {
     async fn test_unused_properties() {
         let mut compiler = Compiler::default();
 
-        let result = compiler.comp_line(json!({
-            "test": {
-                "unused": "property"
-            }
-        })).await.unwrap();
+        let result = compiler
+            .comp_line(json!({
+                "test": {
+                    "unused": "property"
+                }
+            }))
+            .await
+            .unwrap();
 
         assert_eq!(
             result,
@@ -1720,9 +1741,9 @@ mod test {
                     tag: None,
                     text: "test".to_string(),
                 }],
-                properties: [
-                    ("unused".to_string(), json!("property"))
-                ].into_iter().collect(),
+                properties: [("unused".to_string(), json!("property"))]
+                    .into_iter()
+                    .collect(),
                 ..Default::default()
             }
         );

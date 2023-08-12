@@ -2,7 +2,10 @@ use super::grammar::{self, pt, Ctx, Tok};
 use super::{TempStr, TempStrBlock};
 use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
-impl<S> From<S> for TempStr where S: AsRef<str>{
+impl<S> From<S> for TempStr
+where
+    S: AsRef<str>,
+{
     fn from(s: S) -> Self {
         let lex_output = grammar::tokenize(s.as_ref());
         let mut ts = TokenStream::new(&lex_output.tokens, 16);
@@ -237,7 +240,8 @@ mod test {
                 TempStrBlock::Var(0),
             ]
         );
-        assert_eq!(TempStr::from("bar$(3)$(3) $(2)$(1)$(2)").0,
+        assert_eq!(
+            TempStr::from("bar$(3)$(3) $(2)$(1)$(2)").0,
             vec![
                 TempStrBlock::Lit("bar".to_string()),
                 TempStrBlock::Var(3),

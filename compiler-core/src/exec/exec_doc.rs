@@ -8,7 +8,9 @@ impl CompDoc {
     /// Execute the document
     pub async fn exec(self) -> ExecDoc {
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("", &self.project.map.initial_coord).await;
+        map_builder
+            .add_coord("", &self.project.map.initial_coord)
+            .await;
         let mut sections = vec![];
         for (index, section) in self.route.into_iter().enumerate() {
             let exec_section = section.exec(index, &mut map_builder).await;
@@ -23,9 +25,11 @@ impl CompDoc {
 
 #[cfg(test)]
 mod test {
-    use celerctypes::{RouteMetadata, ExecSection, MapMetadata, GameCoord, ExecLine, ExecMapSection, MapLine};
+    use celerctypes::{
+        ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine, MapMetadata, RouteMetadata,
+    };
 
-    use crate::{CompSection, CompLine, comp::CompMovement};
+    use crate::{comp::CompMovement, CompLine, CompSection};
 
     use super::*;
 
@@ -51,28 +55,20 @@ mod test {
         let test_sections = vec![
             CompSection {
                 name: "test1".to_string(),
-                lines: vec![
-                    CompLine {
-                        movements: vec![
-                            CompMovement::to(GameCoord(1.2, 2.2, 3.3)),
-                        ],
-                        line_color: "color".to_string(),
-                        ..Default::default()
-                    },
-                ],
+                lines: vec![CompLine {
+                    movements: vec![CompMovement::to(GameCoord(1.2, 2.2, 3.3))],
+                    line_color: "color".to_string(),
+                    ..Default::default()
+                }],
                 ..Default::default()
             },
             CompSection {
                 name: "test2".to_string(),
-                lines: vec![
-                    CompLine {
-                        movements: vec![
-                            CompMovement::to(GameCoord(1.3, 2.2, 3.3)),
-                        ],
-                        line_color: "color".to_string(),
-                        ..Default::default()
-                    },
-                ],
+                lines: vec![CompLine {
+                    movements: vec![CompMovement::to(GameCoord(1.3, 2.2, 3.3))],
+                    line_color: "color".to_string(),
+                    ..Default::default()
+                }],
                 ..Default::default()
             },
         ];
@@ -89,59 +85,44 @@ mod test {
         };
 
         let exec_doc = test_doc.exec().await;
-        assert_eq!(exec_doc.route, vec![
-            ExecSection {
-                name: "test1".to_string(),
-                lines: vec![
-                    ExecLine {
+        assert_eq!(
+            exec_doc.route,
+            vec![
+                ExecSection {
+                    name: "test1".to_string(),
+                    lines: vec![ExecLine {
                         section: 0,
                         index: 0,
-                        map_coords: vec![
-                            GameCoord(1.2, 2.2, 3.3),
-                        ],
+                        map_coords: vec![GameCoord(1.2, 2.2, 3.3),],
                         line_color: "color".to_string(),
                         ..Default::default()
-                    }
-                ],
-                map: ExecMapSection {
-                    lines: vec![
-                        MapLine {
+                    }],
+                    map: ExecMapSection {
+                        lines: vec![MapLine {
                             color: "color".to_string(),
-                            points: vec![
-                                GameCoord(1.1, 2.2, 3.3),
-                                GameCoord(1.2, 2.2, 3.3),
-                            ]
-                        }
-                    ],
-                    ..Default::default()
-                }
-            },
-            ExecSection {
-                name: "test2".to_string(),
-                lines: vec![
-                    ExecLine {
+                            points: vec![GameCoord(1.1, 2.2, 3.3), GameCoord(1.2, 2.2, 3.3),]
+                        }],
+                        ..Default::default()
+                    }
+                },
+                ExecSection {
+                    name: "test2".to_string(),
+                    lines: vec![ExecLine {
                         section: 1,
                         index: 0,
-                        map_coords: vec![
-                            GameCoord(1.3, 2.2, 3.3),
-                        ],
+                        map_coords: vec![GameCoord(1.3, 2.2, 3.3),],
                         line_color: "color".to_string(),
                         ..Default::default()
-                    }
-                ],
-                map: ExecMapSection {
-                    lines: vec![
-                        MapLine {
+                    }],
+                    map: ExecMapSection {
+                        lines: vec![MapLine {
                             color: "color".to_string(),
-                            points: vec![
-                                GameCoord(1.2, 2.2, 3.3),
-                                GameCoord(1.3, 2.2, 3.3),
-                            ]
-                        }
-                    ],
-                    ..Default::default()
-                }
-            },
-        ]);
+                            points: vec![GameCoord(1.2, 2.2, 3.3), GameCoord(1.3, 2.2, 3.3),]
+                        }],
+                        ..Default::default()
+                    }
+                },
+            ]
+        );
     }
 }
