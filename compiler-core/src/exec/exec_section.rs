@@ -9,9 +9,9 @@ impl CompSection {
     ///
     /// Map features will be added to the builder
     pub async fn exec(
-        self, 
+        self,
         section_number: usize,
-        map_builder: &mut MapSectionBuilder
+        map_builder: &mut MapSectionBuilder,
     ) -> ExecSection {
         let mut lines = vec![];
         for (index, line) in self.lines.into_iter().enumerate() {
@@ -27,10 +27,11 @@ impl CompSection {
 }
 
 #[cfg(test)]
-mod ut {
-    use celerctypes::{MapIcon, MapMarker, GameCoord, MapLine};
+mod test {
+    use celerctypes::{GameCoord, MapIcon, MapLine, MapMarker};
 
-    use crate::{CompLine, CompMarker, CompMovement};
+    use crate::comp::{CompMarker, CompMovement};
+    use crate::CompLine;
 
     use super::*;
 
@@ -40,7 +41,9 @@ mod ut {
             name: "test".to_string(),
             ..Default::default()
         };
-        let exec_section = test_section.exec(1, &mut MapSectionBuilder::default()).await;
+        let exec_section = test_section
+            .exec(1, &mut MapSectionBuilder::default())
+            .await;
 
         assert_eq!(exec_section.name, "test");
     }
@@ -48,13 +51,12 @@ mod ut {
     #[tokio::test]
     async fn test_section_and_line_index() {
         let test_section = CompSection {
-            lines: vec![
-                Default::default(),
-                Default::default(),
-            ],
+            lines: vec![Default::default(), Default::default()],
             ..Default::default()
         };
-        let exec_section = test_section.exec(3, &mut MapSectionBuilder::default()).await;
+        let exec_section = test_section
+            .exec(3, &mut MapSectionBuilder::default())
+            .await;
         assert_eq!(exec_section.lines[0].section, 3);
         assert_eq!(exec_section.lines[0].index, 0);
         assert_eq!(exec_section.lines[1].section, 3);
@@ -72,28 +74,33 @@ mod ut {
                 CompLine {
                     map_icon: Some("test 2".to_string()),
                     ..Default::default()
-                }
+                },
             ],
             ..Default::default()
         };
 
-        let exec_section = test_section.exec(4, &mut MapSectionBuilder::default()).await;
-        assert_eq!(exec_section.map.icons, vec![
-            MapIcon {
-                id: "test 1".to_string(),
-                section_index: 4,
-                line_index: 0,
-                priority: 2,
-                ..Default::default()
-            },
-            MapIcon {
-                id: "test 2".to_string(),
-                section_index: 4,
-                line_index: 1,
-                priority: 2,
-                ..Default::default()
-            }
-        ]);
+        let exec_section = test_section
+            .exec(4, &mut MapSectionBuilder::default())
+            .await;
+        assert_eq!(
+            exec_section.map.icons,
+            vec![
+                MapIcon {
+                    id: "test 1".to_string(),
+                    section_index: 4,
+                    line_index: 0,
+                    priority: 2,
+                    ..Default::default()
+                },
+                MapIcon {
+                    id: "test 2".to_string(),
+                    section_index: 4,
+                    line_index: 1,
+                    priority: 2,
+                    ..Default::default()
+                }
+            ]
+        );
     }
 
     #[tokio::test]
@@ -103,50 +110,51 @@ mod ut {
                 CompLine {
                     markers: vec![
                         CompMarker {
-                            color: "test 1".to_string(),
+                            color: Some("test 1".to_string()),
                             ..Default::default()
                         },
                         CompMarker {
-                            color: "test 2".to_string(),
+                            color: Some("test 2".to_string()),
                             ..Default::default()
                         },
                     ],
                     ..Default::default()
                 },
                 CompLine {
-                    markers: vec![
-                        CompMarker {
-                            color: "test 3".to_string(),
-                            ..Default::default()
-                        },
-                    ],
+                    markers: vec![CompMarker::default()],
+                    line_color: "test".to_string(),
                     ..Default::default()
-                }
+                },
             ],
             ..Default::default()
         };
 
-        let exec_section = test_section.exec(4, &mut MapSectionBuilder::default()).await;
-        assert_eq!(exec_section.map.markers, vec![
-            MapMarker {
-                section_index: 4,
-                line_index: 0,
-                color: "test 1".to_string(),
-                ..Default::default()
-            },
-            MapMarker {
-                section_index: 4,
-                line_index: 0,
-                color: "test 2".to_string(),
-                ..Default::default()
-            },
-            MapMarker {
-                section_index: 4,
-                line_index: 1,
-                color: "test 3".to_string(),
-                ..Default::default()
-            },
-        ]);
+        let exec_section = test_section
+            .exec(4, &mut MapSectionBuilder::default())
+            .await;
+        assert_eq!(
+            exec_section.map.markers,
+            vec![
+                MapMarker {
+                    section_index: 4,
+                    line_index: 0,
+                    color: "test 1".to_string(),
+                    ..Default::default()
+                },
+                MapMarker {
+                    section_index: 4,
+                    line_index: 0,
+                    color: "test 2".to_string(),
+                    ..Default::default()
+                },
+                MapMarker {
+                    section_index: 4,
+                    line_index: 1,
+                    color: "test".to_string(),
+                    ..Default::default()
+                },
+            ]
+        );
     }
 
     #[tokio::test]
@@ -156,28 +164,16 @@ mod ut {
                 CompLine {
                     line_color: "test".to_string(),
                     movements: vec![
-                        CompMovement {
-                            to: GameCoord(1.0, 2.0, 3.0),
-                            warp: false
-                        },
-                        CompMovement {
-                            to: GameCoord(1.0, 3.0, 3.0),
-                            warp: false
-                        },
+                        CompMovement::to(GameCoord(1.0, 2.0, 3.0)),
+                        CompMovement::to(GameCoord(1.0, 3.0, 3.0)),
                     ],
                     ..Default::default()
                 },
                 CompLine {
                     line_color: "test".to_string(),
                     movements: vec![
-                        CompMovement {
-                            to: GameCoord(1.0, 4.0, 3.0),
-                            warp: false
-                        },
-                        CompMovement {
-                            to: GameCoord(1.0, 5.0, 3.0),
-                            warp: false
-                        },
+                        CompMovement::to(GameCoord(1.0, 4.0, 3.0)),
+                        CompMovement::to(GameCoord(1.0, 5.0, 3.0)),
                     ],
                     ..Default::default()
                 },
@@ -186,12 +182,13 @@ mod ut {
         };
 
         let mut builder = MapSectionBuilder::default();
-        builder.add_main_movement("test", &GameCoord(1.0, 1.0, 3.0)).await;
+        builder.add_coord("test", &GameCoord(1.0, 1.0, 3.0)).await;
 
         let exec_section = test_section.exec(4, &mut builder).await;
 
-        assert_eq!(exec_section.map.lines, vec![
-            MapLine {
+        assert_eq!(
+            exec_section.map.lines,
+            vec![MapLine {
                 color: "test".to_string(),
                 points: vec![
                     GameCoord(1.0, 1.0, 3.0),
@@ -200,8 +197,7 @@ mod ut {
                     GameCoord(1.0, 4.0, 3.0),
                     GameCoord(1.0, 5.0, 3.0),
                 ],
-            }
-        ]);
-
+            }]
+        );
     }
 }

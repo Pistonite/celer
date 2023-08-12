@@ -1,7 +1,7 @@
-use regen::sdk::{ASTParser, TokenStream, CreateParseTree, ParseTreeResult};
+use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
-use super::PresetInst;
 use super::grammar::{self, pt};
+use super::PresetInst;
 
 impl PresetInst {
     /// Parse a string to a preset instantiation
@@ -35,10 +35,7 @@ fn from_pt(pt: &pt::Preset) -> PresetInst {
         }
     }
 
-    PresetInst {
-        name,
-        args,
-    }
+    PresetInst { name, args }
 }
 
 fn append_sub_namespace(pt: &pt::SubNamespace, out: &mut String) {
@@ -52,7 +49,7 @@ fn parse_arg(pt: &pt::ArgText) -> String {
         match pt_block {
             pt::ArgBlock::Arg(pt_arg) => {
                 out.push_str(&pt_arg.m_t);
-            },
+            }
             pt::ArgBlock::ArgEscape(pt_escape) => {
                 if pt_escape.m_t == "\\" {
                     out.push('\\');
@@ -60,17 +57,17 @@ fn parse_arg(pt: &pt::ArgText) -> String {
                     // remove the leading backslash
                     out.push_str(&pt_escape.m_t[1..]);
                 }
-            },
+            }
             pt::ArgBlock::ArgSymbol(pt_symbol) => {
                 out.push(':');
-            },
+            }
         }
     }
     out
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use super::*;
 
     #[test]
@@ -133,22 +130,34 @@ mod ut {
 
     #[test]
     fn test_args() {
-        assert_eq!(PresetInst::try_parse("hello<world>").unwrap(), PresetInst {
-            name: "hello".to_string(),
-            args: vec!["world".to_string()],
-        });
-        assert_eq!(PresetInst::try_parse("hello<wo\\\\rld\\,>").unwrap(), PresetInst {
-            name: "hello".to_string(),
-            args: vec!["wo\\rld,".to_string()],
-        });
-        assert_eq!(PresetInst::try_parse("hello::world<foo,bar>").unwrap(), PresetInst {
-            name: "hello::world".to_string(),
-            args: vec!["foo".to_string(), "bar".to_string()],
-        });
-        assert_eq!(PresetInst::try_parse("hello::world<f\\o:o\\,bar, biz\\>>").unwrap(), PresetInst {
-            name: "hello::world".to_string(),
-            args: vec!["f\\o:o,bar".to_string(), " biz>".to_string()],
-        });
+        assert_eq!(
+            PresetInst::try_parse("hello<world>").unwrap(),
+            PresetInst {
+                name: "hello".to_string(),
+                args: vec!["world".to_string()],
+            }
+        );
+        assert_eq!(
+            PresetInst::try_parse("hello<wo\\\\rld\\,>").unwrap(),
+            PresetInst {
+                name: "hello".to_string(),
+                args: vec!["wo\\rld,".to_string()],
+            }
+        );
+        assert_eq!(
+            PresetInst::try_parse("hello::world<foo,bar>").unwrap(),
+            PresetInst {
+                name: "hello::world".to_string(),
+                args: vec!["foo".to_string(), "bar".to_string()],
+            }
+        );
+        assert_eq!(
+            PresetInst::try_parse("hello::world<f\\o:o\\,bar, biz\\>>").unwrap(),
+            PresetInst {
+                name: "hello::world".to_string(),
+                args: vec!["f\\o:o,bar".to_string(), " biz>".to_string()],
+            }
+        );
     }
 
     #[test]
@@ -156,5 +165,4 @@ mod ut {
         assert_eq!(PresetInst::try_parse("hello<world> "), None);
         assert_eq!(PresetInst::try_parse("hello<world>a"), None);
     }
-
 }

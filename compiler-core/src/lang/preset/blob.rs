@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 use crate::lang::TempStr;
 
@@ -108,7 +108,7 @@ impl PresetBlob {
 }
 
 #[cfg(test)]
-mod ut {
+mod test {
     use serde_json::json;
 
     use crate::lang::TempStr;

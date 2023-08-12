@@ -13,7 +13,6 @@ mod hydrate;
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 pub struct TempStr(Vec<TempStrBlock>);
 
-
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
 pub enum TempStrBlock {
@@ -30,4 +29,3 @@ impl TempStr {
         self.0.is_empty()
     }
 }
-

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use celerctypes::{GameCoord, MapCoordMap};
+use celerctypes::{GameCoord, MapCoordMap, RouteMetadata};
 
 use crate::lang::Preset;
 
@@ -8,18 +8,19 @@ use super::Compiler;
 
 #[derive(Default, Debug, Clone)]
 pub struct CompilerBuilder {
+    project: RouteMetadata,
     presets: HashMap<String, Preset>,
     color: String,
     coord: GameCoord,
-    coord_transform: Option<MapCoordMap>,
 }
 
 impl CompilerBuilder {
-    pub fn new(color: String, coord: GameCoord) -> Self {
+    pub fn new(project: RouteMetadata, color: String, coord: GameCoord) -> Self {
         CompilerBuilder {
             color,
             coord,
-            ..Default::default()
+            project,
+            presets: HashMap::new(),
         }
     }
     pub fn add_preset(&mut self, name: &str, preset: Preset) -> &mut Self {
@@ -29,10 +30,11 @@ impl CompilerBuilder {
 
     pub fn build(self) -> Compiler {
         Compiler {
+            project: self.project,
             presets: self.presets,
             color: self.color,
             coord: self.coord,
-            ..Default::default() //TODO do the thing
+            ..Default::default()
         }
     }
 }

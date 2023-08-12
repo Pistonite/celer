@@ -177,4 +177,4 @@ pub struct MapLine {
 /// Coordinates representing a point (x, y, z) in the game
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[ts(export)]
-pub struct GameCoord(pub f32, pub f32, pub f32);
+pub struct GameCoord(pub f64, pub f64, pub f64);

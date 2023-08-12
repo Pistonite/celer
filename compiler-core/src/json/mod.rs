@@ -1,7 +1,5 @@
 //! Utility for interacting with json data
 
-// mod loose_str;
-
 use serde_json::Value;
 
 /// Loosely interpret a json value as a type
@@ -17,13 +15,27 @@ pub trait Coerce {
     /// `Object` -> `[object object]`
     fn coerce_to_string(&self) -> String;
 
+    /// Same as `coerce_to_string`, but `null` is `"null"` instead of empty string.
+    fn coerce_to_repl(&self) -> String;
+
+    /// Interpret a number or string as f64
+    fn try_coerce_to_f64(&self) -> Option<f64>;
+
+    /// Interpret a null, number (0 or 1), boolean, or string ("true" or "false") as bool
+    fn try_coerce_to_bool(&self) -> Option<bool>;
 }
 
 impl Coerce for Value {
     fn coerce_to_string(&self) -> String {
         match self {
             Value::Null => "".to_string(),
-            Value::Bool(b) => if *b { "true".to_string() } else { "false".to_string() },
+            Value::Bool(b) => {
+                if *b {
+                    "true".to_string()
+                } else {
+                    "false".to_string()
+                }
+            }
             Value::Number(n) => n.to_string(),
             Value::String(s) => s.to_string(),
             Value::Array(_) => "[object array]".to_string(),
@@ -31,5 +43,78 @@ impl Coerce for Value {
         }
     }
 
+    fn coerce_to_repl(&self) -> String {
+        if self.is_null() {
+            "null".to_string()
+        } else {
+            self.coerce_to_string()
+        }
+    }
+
+    fn try_coerce_to_f64(&self) -> Option<f64> {
+        match self {
+            Value::Number(n) => n.as_f64(),
+            Value::String(s) => s.parse::<f64>().ok(),
+            _ => None,
+        }
+    }
+
+    fn try_coerce_to_bool(&self) -> Option<bool> {
+        match self {
+            Value::Null => Some(false),
+            Value::Bool(b) => Some(*b),
+            Value::Number(n) => n.as_f64().and_then(|x| {
+                if x == 0.0 {
+                    Some(false)
+                } else if x == 1.0 {
+                    Some(true)
+                } else {
+                    None
+                }
+            }),
+            Value::String(s) => match s.as_ref() {
+                "true" => Some(true),
+                "false" => Some(false),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_to_f64() {
+        assert_eq!(Some(1.0), json!("1.0").try_coerce_to_f64());
+        assert_eq!(Some(13.0), json!("13").try_coerce_to_f64());
+        assert_eq!(None, json!("").try_coerce_to_f64());
+        assert_eq!(None, json!(null).try_coerce_to_f64());
+        assert_eq!(None, json!(true).try_coerce_to_f64());
+        assert_eq!(None, json!(false).try_coerce_to_f64());
+        assert_eq!(Some(13.0), json!(13).try_coerce_to_f64());
+        assert_eq!(Some(13.0), json!(13.0).try_coerce_to_f64());
+        assert_eq!(None, json!([]).try_coerce_to_f64());
+        assert_eq!(None, json!({}).try_coerce_to_f64());
+    }
+
+    #[test]
+    fn test_to_bool() {
+        assert_eq!(None, json!("1.0").try_coerce_to_bool());
+        assert_eq!(None, json!("0").try_coerce_to_bool());
+        assert_eq!(None, json!("").try_coerce_to_bool());
+        assert_eq!(Some(true), json!("true").try_coerce_to_bool());
+        assert_eq!(Some(false), json!("false").try_coerce_to_bool());
+        assert_eq!(Some(false), json!(null).try_coerce_to_bool());
+        assert_eq!(Some(true), json!(true).try_coerce_to_bool());
+        assert_eq!(Some(false), json!(false).try_coerce_to_bool());
+        assert_eq!(None, json!(13).try_coerce_to_bool());
+        assert_eq!(Some(false), json!(0).try_coerce_to_bool());
+        assert_eq!(Some(true), json!(1.0).try_coerce_to_bool());
+        assert_eq!(None, json!([]).try_coerce_to_bool());
+        assert_eq!(None, json!({}).try_coerce_to_bool());
+    }
+}
