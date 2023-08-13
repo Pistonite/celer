@@ -138,10 +138,12 @@ mod test {
             DocRichText {
                 tag: None,
                 text: "test1".to_string(),
+                link: None,
             },
             DocRichText {
                 tag: Some("test tag".to_string()),
                 text: "test2".to_string(),
+                link: Some("test link".to_string()),
             },
         ];
         let test_color = "test color".to_string();
@@ -155,15 +157,18 @@ mod test {
             DocRichText {
                 tag: None,
                 text: "secondary test1".to_string(),
+                link: None,
             },
             DocRichText {
                 tag: Some("secondary test tag".to_string()),
                 text: "secondary test2".to_string(),
+                link: Some("secondary test link".to_string()),
             },
         ];
         let test_counter_text = Some(DocRichText {
             tag: Some("counter test tag".to_string()),
             text: "counter test".to_string(),
+            link: None,
         });
         let test_notes = vec![
             DocNote::Text {
@@ -171,10 +176,12 @@ mod test {
                     DocRichText {
                         tag: None,
                         text: "note test1".to_string(),
+                        link: None,
                     },
                     DocRichText {
                         tag: Some("note test tag".to_string()),
                         text: "note test2".to_string(),
+                        link: Some("note test link".to_string()),
                     },
                 ],
             },
@@ -352,14 +359,17 @@ mod test {
             DocRichText {
                 tag: None,
                 text: "test1".to_string(),
+                link: None,
             },
             DocRichText {
                 tag: Some("something".to_string()),
                 text: " test ".to_string(),
+                link: None,
             },
             DocRichText {
                 tag: None,
                 text: "test3".to_string(),
+                link: None,
             },
         ];
 

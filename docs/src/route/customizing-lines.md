@@ -142,9 +142,9 @@ See [Customizing Movements](./customizing-movements)
 Use this property to set the split name.
 |Property|Type|Description|
 |-|-|-|
-|`split-name`|`string`|Name to be used when exporting to compatible software, such as livesplit|
+|`split-name`|Rich Text|Name to be used when exporting to compatible software, such as livesplit|
 
-If not specified, the primary text (without the tags) will be the split name.
+If not specified, the primary text will be the split name.
 
 ## Other Properties
 Built-in and third-party plugins may let you set additional properties. Check the

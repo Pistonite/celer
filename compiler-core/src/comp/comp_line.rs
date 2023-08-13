@@ -1,7 +1,6 @@
 use std::collections::{BTreeMap, HashMap};
 
 use celerctypes::{DocDiagnostic, DocNote, DocRichText, GameCoord};
-use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -328,605 +327,455 @@ mod test {
 
     use super::*;
 
+    async fn test_comp_ok(compiler: &mut Compiler, input: Value, expected: CompLine) {
+        let result = compiler.comp_line(input).await;
+        assert_eq!(result, Ok(expected));
+    }
+
+    async fn test_comp_err(
+        compiler: &mut Compiler,
+        input: Value,
+        expected: CompLine,
+        errors: Vec<CompilerError>,
+    ) {
+        let result = compiler.comp_line(input).await;
+        assert_eq!(result, Err((expected, errors)));
+    }
+
     #[tokio::test]
     async fn test_primitive() {
         let mut compiler = Compiler::default();
-        let result = compiler.comp_line(json!(null)).await.unwrap();
-        assert_eq!(result, CompLine::default());
+        test_comp_ok(&mut compiler, json!(null), CompLine::default()).await;
 
-        let result = compiler.comp_line(json!(true)).await.unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!(true),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "true".to_string()
-                }],
+                text: vec![DocRichText::text("true")],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler.comp_line(json!(false)).await.unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!(false),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "false".to_string()
-                }],
+                text: vec![DocRichText::text("false")],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler.comp_line(json!(0)).await.unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!(0),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "0".to_string()
-                }],
+                text: vec![DocRichText::text("0")],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler.comp_line(json!(-123)).await.unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!(-123),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "-123".to_string()
-                }],
+                text: vec![DocRichText::text("-123")],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler.comp_line(json!(456)).await.unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!(456),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "456".to_string()
-                }],
+                text: vec![DocRichText::text("456")],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler.comp_line(json!("hello world")).await.unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!("hello world"),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "hello world".to_string()
-                }],
+                text: vec![DocRichText::text("hello world")],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler.comp_line(json!(".tag(foo) world")).await.unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!(".tag(foo) world"),
             CompLine {
                 text: vec![
-                    DocRichText {
-                        tag: Some("tag".to_string()),
-                        text: "foo".to_string()
-                    },
-                    DocRichText {
-                        tag: None,
-                        text: " world".to_string()
-                    }
+                    DocRichText::with_tag("tag", "foo"),
+                    DocRichText::text(" world"),
                 ],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
     async fn test_invalid() {
         let mut compiler = Compiler::default();
-        let result = compiler.comp_line(json!([])).await.unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "[object array]".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::ArrayCannotBeLine]
-            )
-        );
 
-        let result = compiler.comp_line(json!({})).await.unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "[object object]".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::EmptyObjectCannotBeLine]
-            )
-        );
+        test_comp_err(
+            &mut compiler,
+            json!([]),
+            CompLine {
+                text: vec![DocRichText::text("[object array]")],
+                ..Default::default()
+            },
+            vec![CompilerError::ArrayCannotBeLine],
+        )
+        .await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({}),
+            CompLine {
+                text: vec![DocRichText::text("[object object]")],
+                ..Default::default()
+            },
+            vec![CompilerError::EmptyObjectCannotBeLine],
+        )
+        .await;
+
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "one": {},
                 "two": {},
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "[object object]".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::TooManyKeysInObjectLine]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("[object object]")],
+                ..Default::default()
+            },
+            vec![CompilerError::TooManyKeysInObjectLine],
+        )
+        .await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "one": "not an object",
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "[object object]".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::LinePropertiesMustBeObject]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("[object object]")],
+                ..Default::default()
+            },
+            vec![CompilerError::LinePropertiesMustBeObject],
+        )
+        .await;
     }
 
     #[tokio::test]
     async fn test_text_overrides() {
         let mut compiler = Compiler::default();
-        let result = compiler
-            .comp_line(json!({
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "foo": {
-                "text": "hello world",
-            }}))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+                    "text": "hello world",
+                }
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "hello world".to_string()
-                }],
+                text: vec![DocRichText::text("hello world")],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "foo": {
-                "text": ["hello world"],
-            }}))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "[object array]".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType("text".to_string())]
-            )
-        );
-
-        let result = compiler
-            .comp_line(json!({
-                "foo": {
-                "comment": "hello world",
-            }}))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+                    "text": ["hello world"],
+                }
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "foo".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "hello world".to_string()
-                }],
+                text: vec![DocRichText::text("[object array]")],
                 ..Default::default()
-            }
-        );
+            },
+            vec![CompilerError::InvalidLinePropertyType("text".to_string())],
+        )
+        .await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "foo": {
-                "comment": ["hello world"],
-            }}))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "foo".to_string()
-                    }],
-                    secondary_text: vec![DocRichText {
-                        tag: None,
-                        text: "[object array]".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType(
-                    "comment".to_string()
-                )]
-            )
-        );
-
-        let result = compiler
-            .comp_line(json!({
-                "foo": {
-                "notes": "hello world",
-            }}))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+                    "comment": "hello world",
+                }
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "foo".to_string()
-                }],
+                text: vec![DocRichText::text("foo")],
+                secondary_text: vec![DocRichText::text("hello world")],
+                ..Default::default()
+            },
+        )
+        .await;
+
+        test_comp_err(
+            &mut compiler,
+            json!({
+                "foo": {
+                    "comment": ["hello world"],
+                }
+            }),
+            CompLine {
+                text: vec![DocRichText::text("foo")],
+                secondary_text: vec![DocRichText::text("[object array]")],
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType(
+                "comment".to_string(),
+            )],
+        )
+        .await;
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "foo": {
+                    "notes": "hello world",
+                }
+            }),
+            CompLine {
+                text: vec![DocRichText::text("foo")],
                 notes: vec![DocNote::Text {
-                    content: vec![DocRichText {
-                        tag: None,
-                        text: "hello world".to_string()
-                    }],
+                    content: vec![DocRichText::text("hello world")],
                 }],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "foo": {
-                "notes": ["hello world", "foo bar"],
-            }}))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+                    "notes": ["hello world", "foo bar"],
+                }
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "foo".to_string()
-                }],
+                text: vec![DocRichText::text("foo")],
                 notes: vec![
                     DocNote::Text {
-                        content: vec![DocRichText {
-                            tag: None,
-                            text: "hello world".to_string()
-                        },],
+                        content: vec![DocRichText::text("hello world")],
                     },
                     DocNote::Text {
-                        content: vec![DocRichText {
-                            tag: None,
-                            text: "foo bar".to_string()
-                        },],
+                        content: vec![DocRichText::text("foo bar")],
                     },
                 ],
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "foo": {
-                "notes": {},
-            }}))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "foo".to_string()
-                    }],
-                    notes: vec![],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType("notes".to_string())]
-            )
-        );
-
-        let result = compiler
-            .comp_line(json!({
-                "foo": {
-                "notes": ["hello", {}],
-                "comment": {},
-            }}))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "foo".to_string()
-                    }],
-                    notes: vec![
-                        DocNote::Text {
-                            content: vec![DocRichText {
-                                tag: None,
-                                text: "hello".to_string()
-                            }],
-                        },
-                        DocNote::Text {
-                            content: vec![DocRichText {
-                                tag: None,
-                                text: "[object object]".to_string()
-                            }],
-                        }
-                    ],
-                    secondary_text: vec![DocRichText {
-                        tag: None,
-                        text: "[object object]".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![
-                    CompilerError::InvalidLinePropertyType("comment".to_string()),
-                    CompilerError::InvalidLinePropertyType("notes[1]".to_string()),
-                ]
-            )
-        );
-
-        let result = compiler
-            .comp_line(json!({
-                "foo": {
-                "split-name": "test .v(boo)",
-            }}))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+                    "notes": {},
+                }
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "foo".to_string()
-                }],
-                split_name: Some(vec![
-                    DocRichText {
-                        tag: None,
-                        text: "test ".to_string()
+                text: vec![DocRichText::text("foo")],
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType("notes".to_string())],
+        )
+        .await;
+
+        test_comp_err(
+            &mut compiler,
+            json!({
+                "foo": {
+                    "notes": ["hello", {}],
+                    "comment": {},
+                }
+            }),
+            CompLine {
+                text: vec![DocRichText::text("foo")],
+                notes: vec![
+                    DocNote::Text {
+                        content: vec![DocRichText::text("hello")],
                     },
-                    DocRichText {
-                        tag: Some("v".to_string()),
-                        text: "boo".to_string()
-                    }
+                    DocNote::Text {
+                        content: vec![DocRichText::text("[object object]")],
+                    },
+                ],
+                secondary_text: vec![DocRichText::text("[object object]")],
+                ..Default::default()
+            },
+            vec![
+                CompilerError::InvalidLinePropertyType("comment".to_string()),
+                CompilerError::InvalidLinePropertyType("notes[1]".to_string()),
+            ],
+        )
+        .await;
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "foo": {
+                    "split-name": "test .v(boo)",
+                }
+            }),
+            CompLine {
+                text: vec![DocRichText::text("foo")],
+                split_name: Some(vec![
+                    DocRichText::text("test "),
+                    DocRichText::with_tag("v", "boo"),
                 ]),
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
 
-        let result = compiler
-            .comp_line(json!({
-                "foo": {
-                "split-name": ["hello world"],
-            }}))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "foo".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType(
-                    "split-name".to_string()
-                )]
-            )
-        );
-
-        let result = compiler
-            .comp_line(json!({
-                "foo": {
-                "split-name": "",
-            }}))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+        test_comp_err(
+            &mut compiler,
+            json!({
+                    "foo": {
+                    "split-name": ["hello world"],
+                }
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "foo".to_string()
-                }],
+                text: vec![DocRichText::text("foo")],
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType(
+                "split-name".to_string(),
+            )],
+        )
+        .await;
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "foo": {
+                    "split-name": "",
+                }
+            }),
+            CompLine {
+                text: vec![DocRichText::text("foo")],
                 split_name: Some(vec![]),
                 ..Default::default()
-            }
-        );
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
     async fn test_preset_one_level() {
-        let test_preset = Preset::compile(json!({
-            "text": "hello world",
-            "comment": "foo bar",
-        }))
-        .await
-        .unwrap();
-        let test_preset_no_text = Preset::compile(json!({
-            "comment": "foo bar",
-        }))
-        .await
-        .unwrap();
         let mut builder = CompilerBuilder::default();
         builder
-            .add_preset("_preset", test_preset)
-            .add_preset("_notext", test_preset_no_text);
+            .add_preset(
+                "_preset",
+                Preset::compile(json!({
+                    "text": "hello world",
+                    "comment": "foo bar",
+                }))
+                .await
+                .unwrap(),
+            )
+            .add_preset(
+                "_notext",
+                Preset::compile(json!({
+                    "comment": "foo bar",
+                }))
+                .await
+                .unwrap(),
+            );
         let mut compiler = builder.build();
-        let result = compiler.comp_line(json!("_preset")).await.unwrap();
-        assert_eq!(
-            result,
+
+        test_comp_ok(
+            &mut compiler,
+            json!("_preset"),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "hello world".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "foo bar".to_string()
-                }],
+                text: vec![DocRichText::text("hello world")],
+                secondary_text: vec![DocRichText::text("foo bar")], 
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "_preset": {
                     "comment": "foo bar 2",
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "hello world".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "foo bar 2".to_string()
-                }],
+                text: vec![DocRichText::text("hello world")],
+                secondary_text: vec![DocRichText::text("foo bar 2")], 
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "_notext": {
                     "comment": "foo bar 2",
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "_notext".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "foo bar 2".to_string()
-                }],
+                text: vec![DocRichText::text("_notext")],
+                secondary_text: vec![DocRichText::text("foo bar 2")], 
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "_notext": {
                     "text": "foo bar 2",
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "foo bar 2".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "foo bar".to_string()
-                }],
+                text: vec![DocRichText::text("foo bar 2")],
+                secondary_text: vec![DocRichText::text("foo bar")], 
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "_invalid": {
                     "comment": "foo bar 2",
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "_invalid".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "foo bar 2".to_string()
-                }],
+                text: vec![DocRichText::text("_invalid")],
+                secondary_text: vec![DocRichText::text("foo bar 2")], 
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "test": {
                     "text": "_preset",
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "_preset".to_string()
-                }],
+                text: vec![DocRichText::text("_preset")],
                 ..Default::default()
             }
-        );
+        ).await;
+
     }
 
     #[tokio::test]
@@ -977,234 +826,158 @@ mod test {
                 .unwrap(),
             );
         let mut compiler = builder.build();
-        let result = compiler
-            .comp_line(json!({
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "_preset::one": {
                     "presets": ["_preset::two"],
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "preset two text".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "preset one".to_string()
-                }],
+                text: vec![DocRichText::text("preset two text")],
+                secondary_text: vec![DocRichText::text("preset one")],
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "test": {
                     "presets": "foo",
                 }
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "test".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType(
-                    "presets".to_string()
-                ),]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("test")],
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType(
+                "presets".to_string()
+            )]
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "test": {
                     "presets": [{}, "foo", "_foo", "_hello::", 123],
                 }
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "test".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![
-                    CompilerError::InvalidLinePropertyType("presets[0]".to_string()),
-                    CompilerError::InvalidPresetString("foo".to_string()),
-                    CompilerError::PresetNotFound("_foo".to_string()),
-                    CompilerError::InvalidPresetString("_hello::".to_string()),
-                    CompilerError::InvalidPresetString("123".to_string()),
-                ]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("test")],
+                ..Default::default()
+            },
+            vec![
+                CompilerError::InvalidLinePropertyType("presets[0]".to_string()),
+                CompilerError::InvalidPresetString("foo".to_string()),
+                CompilerError::PresetNotFound("_foo".to_string()),
+                CompilerError::InvalidPresetString("_hello::".to_string()),
+                CompilerError::InvalidPresetString("123".to_string()),
+            ]
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "_preset::three<1>": {
                     "presets": ["_preset::one"],
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "preset three".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "preset two".to_string()
-                }],
+                text: vec![DocRichText::text("preset three")],
+                secondary_text: vec![DocRichText::text("preset two")],
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!("_preset::four< abcde >"))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!("_preset::four< abcde >"),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "preset four: arg is  abcde ".to_string()
-                }],
-                secondary_text: vec![DocRichText {
-                    tag: None,
-                    text: "preset two".to_string()
-                }],
+                text: vec![DocRichText::text("preset four: arg is  abcde ")],
+                secondary_text: vec![DocRichText::text("preset two")],
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!("_preset::overflow"))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "_preset::overflow".to_string()
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::MaxPresetDepthExceeded(
-                    "_preset::overflow".to_string()
-                )]
-            )
-        );
+        test_comp_err(
+            &mut compiler,
+            json!("_preset::overflow"),
+            CompLine {
+                text: vec![DocRichText::text("_preset::overflow")],
+                ..Default::default()
+            },
+            vec![CompilerError::MaxPresetDepthExceeded(
+                "_preset::overflow".to_string()
+            )]
+        ).await;
+
     }
 
     #[tokio::test]
     async fn test_icon_overrides() {
         let mut compiler = Compiler::default();
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "icon is string": {
                     "icon": "my-icon",
                 },
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "icon is string".to_string(),
-                }],
+                text: vec![DocRichText::text("icon is string")],
                 doc_icon: Some("my-icon".to_string()),
                 map_icon: Some("my-icon".to_string()),
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "icon is string": {
                     "icon": ["my-icon"],
                 },
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "icon is string".to_string(),
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType("icon".to_string()),]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("icon is string")],
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType("icon".to_string()),]
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "icon is array": {
                     "icon": ["my-icon"],
                 },
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "icon is array".to_string(),
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType("icon".to_string()),]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("icon is array")],
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType("icon".to_string()),]
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "icon is empty object": {
                     "icon": {},
                 },
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "icon is empty object".to_string(),
-                }],
+                text: vec![DocRichText::text("icon is empty object")],
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "icon is object": {
                     "icon": {
                         "doc": "my-doc-icon",
@@ -1212,25 +985,19 @@ mod test {
                         "priority": 1,
                     },
                 },
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "icon is object".to_string(),
-                }],
+                text: vec![DocRichText::text("icon is object")],
                 doc_icon: Some("my-doc-icon".to_string()),
                 map_icon: Some("my-map-icon".to_string()),
                 map_icon_priority: 1,
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "icon is object": {
                     "icon": {
                         "doc":{},
@@ -1239,201 +1006,138 @@ mod test {
                         "boo": "foo",
                     },
                 },
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "icon is object".to_string(),
-                    }],
-                    ..Default::default()
-                },
-                vec![
-                    CompilerError::UnusedProperty("icon.boo".to_string()),
-                    CompilerError::InvalidLinePropertyType("icon.doc".to_string()),
-                    CompilerError::InvalidLinePropertyType("icon.map".to_string()),
-                    CompilerError::InvalidLinePropertyType("icon.priority".to_string()),
-                ]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("icon is object")],
+                ..Default::default()
+            },
+            vec![
+                CompilerError::UnusedProperty("icon.boo".to_string()),
+                CompilerError::InvalidLinePropertyType("icon.doc".to_string()),
+                CompilerError::InvalidLinePropertyType("icon.map".to_string()),
+                CompilerError::InvalidLinePropertyType("icon.priority".to_string()),
+            ]
+        ).await;
+
     }
-    
+
     #[tokio::test]
     async fn test_default_icon_priority() {
         let mut builder = CompilerBuilder::default();
         builder.set_default_icon_priority(10);
         let mut compiler = builder.build();
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "icon is partial": {
                     "icon": {
                         "map": "my-map-icon",
                     },
                 },
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "icon is partial".to_string(),
-                }],
+                text: vec![DocRichText::text("icon is partial")],
                 doc_icon: None,
                 map_icon: Some("my-map-icon".to_string()),
                 map_icon_priority: 10,
                 ..Default::default()
             }
-        );
+        ).await;
+
     }
 
     #[tokio::test]
     async fn test_counter_override() {
         let mut compiler = Compiler::default();
-        let result = compiler
-            .comp_line(json!({
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "counter is string": {
                     "counter": "hello",
                 },
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "counter is string".to_string(),
-                }],
-                counter_text: Some(DocRichText {
-                    tag: None,
-                    text: "hello".to_string(),
-                }),
+                text: vec![DocRichText::text("counter is string")],
+                counter_text: Some(DocRichText::text("hello")),
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "counter is tagged string": {
                     "counter": ".test(hello)",
                 },
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "counter is tagged string".to_string(),
-                }],
-                counter_text: Some(DocRichText {
-                    tag: Some("test".to_string()),
-                    text: "hello".to_string(),
-                }),
+                text: vec![DocRichText::text("counter is tagged string")],
+                counter_text: Some(DocRichText::with_tag("test", "hello")),
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "counter is empty tagged string": {
                     "counter": ".test()",
                 },
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "counter is empty tagged string".to_string(),
-                }],
-                counter_text: Some(DocRichText {
-                    tag: Some("test".to_string()),
-                    text: "".to_string(),
-                }),
+                text: vec![DocRichText::text("counter is empty tagged string")],
+                counter_text: Some(DocRichText::with_tag("test", "")),
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "counter is empty string": {
                     "counter": "",
                 },
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "counter is empty string".to_string(),
-                }],
+                text: vec![DocRichText::text("counter is empty string")],
                 counter_text: None,
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "counter is invalid": {
                     "counter": ["hello"],
                 },
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "counter is invalid".to_string(),
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType(
-                    "counter".to_string()
-                ),]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("counter is invalid")],
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType(
+                "counter".to_string()
+            ),]
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "counter is more than one text block": {
                     "counter": ".v(hello) ",
                 },
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "counter is more than one text block".to_string(),
-                    }],
-                    counter_text: Some(DocRichText {
-                        tag: Some("v".to_string()),
-                        text: "hello".to_string(),
-                    }),
-                    ..Default::default()
-                },
-                vec![CompilerError::TooManyTagsInCounter,]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("counter is more than one text block")],
+                counter_text: Some(DocRichText::with_tag("v", "hello")),
+                ..Default::default()
+            },
+            vec![CompilerError::TooManyTagsInCounter,]
+        ).await;
+
     }
 
     #[tokio::test]
@@ -1445,22 +1149,17 @@ mod test {
         );
         let mut compiler = builder.build();
 
-        let result = compiler
-            .comp_line(json!("no color or coord"))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+        test_comp_ok(
+            &mut compiler,
+            json!("no color or coord"),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "no color or coord".to_string(),
-                }],
+                text: vec![DocRichText::text("no color or coord")],
                 line_color: "color".to_string(),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             }
-        );
+        ).await;
+
     }
 
     #[tokio::test]
@@ -1472,50 +1171,37 @@ mod test {
         );
         let mut compiler = builder.build();
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "change color": {
                     "color": "new-color",
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "change color".to_string(),
-                }],
+                text: vec![DocRichText::text("change color")], 
                 line_color: "new-color".to_string(),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "change color 2": {
                     "color": ["newer-color"],
                 }
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "change color 2".to_string(),
-                    }],
-                    line_color: "new-color".to_string(),
-                    map_coord: GameCoord(1.0, 2.0, 3.0),
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType("color".to_string())]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("change color 2")], 
+                line_color: "new-color".to_string(),
+                map_coord: GameCoord(1.0, 2.0, 3.0),
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType("color".to_string())]
+        ).await;
+
     }
 
     #[tokio::test]
@@ -1536,29 +1222,24 @@ mod test {
         );
         let mut compiler = builder.build();
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "change coord": {
                     "coord": [4.0, 5.0, 6.0],
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "change coord".to_string(),
-                }],
+                text: vec![DocRichText::text("change coord")],
                 map_coord: GameCoord(4.0, 5.0, 6.0),
                 movements: vec![CompMovement::to(GameCoord(4.0, 5.0, 6.0))],
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "push pop": {
                     "movements": [
                         "push",
@@ -1566,16 +1247,9 @@ mod test {
                         "pop",
                     ]
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "push pop".to_string(),
-                }],
+                text: vec![DocRichText::text("push pop")],
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 movements: vec![
                     CompMovement::Push,
@@ -1584,32 +1258,25 @@ mod test {
                 ],
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "invalid": {
                     "movements": {}
                 }
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "invalid".to_string(),
-                    }],
-                    map_coord: GameCoord(1.0, 2.0, 3.0),
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType(
-                    "movements".to_string()
-                ),]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("invalid")],
+                map_coord: GameCoord(1.0, 2.0, 3.0),
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType(
+                "movements".to_string()
+            ),]
+        ).await;
+
     }
 
     #[tokio::test]
@@ -1641,24 +1308,18 @@ mod test {
         );
         let mut compiler = builder.build();
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "preset": {
                     "movements": [
                         [3, 4, 5],
                         "_preset::one",
                     ]
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "preset".to_string(),
-                }],
+                text: vec![DocRichText::text("preset")],
                 map_coord: GameCoord(7.0, 8.0, 9.0),
                 movements: vec![
                     CompMovement::to(GameCoord(3.0, 4.0, 5.0)),
@@ -1667,30 +1328,26 @@ mod test {
                 ],
                 ..Default::default()
             }
-        );
+        ).await;
+
     }
 
     #[tokio::test]
     async fn test_markers() {
         let mut compiler = test_utils::create_test_compiler_with_coord_transform();
-        let result = compiler
-            .comp_line(json!({
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "test markers": {
                     "markers": [
                         {"at": [1, 2, 4], "color": "marker 1"},
                         [1, "2", 3]
                     ]
                 }
-            }))
-            .await
-            .unwrap();
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "test markers".to_string(),
-                }],
+                text: vec![DocRichText::text("test markers")],
                 markers: vec![
                     CompMarker {
                         at: GameCoord(1.0, 2.0, 4.0),
@@ -1700,82 +1357,61 @@ mod test {
                 ],
                 ..Default::default()
             }
-        );
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "test markers invalid type": {
                     "markers": {}
                 }
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "test markers invalid type".to_string(),
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidLinePropertyType(
-                    "markers".to_string()
-                )]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("test markers invalid type")],
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidLinePropertyType(
+                "markers".to_string()
+            )]
+        ).await;
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_err(
+            &mut compiler,
+            json!({
                 "test markers invalid marker type": {
                     "markers": [
                         "hello"
                     ]
                 }
-            }))
-            .await
-            .unwrap_err();
-        assert_eq!(
-            result,
-            (
-                CompLine {
-                    text: vec![DocRichText {
-                        tag: None,
-                        text: "test markers invalid marker type".to_string(),
-                    }],
-                    ..Default::default()
-                },
-                vec![CompilerError::InvalidMarkerType]
-            )
-        );
+            }),
+            CompLine {
+                text: vec![DocRichText::text("test markers invalid marker type")], 
+                ..Default::default()
+            },
+            vec![CompilerError::InvalidMarkerType]
+        ).await;
+
     }
 
     #[tokio::test]
     async fn test_unused_properties() {
         let mut compiler = Compiler::default();
 
-        let result = compiler
-            .comp_line(json!({
+        test_comp_ok(
+            &mut compiler,
+            json!({
                 "test": {
                     "unused": "property"
                 }
-            }))
-            .await
-            .unwrap();
-
-        assert_eq!(
-            result,
+            }),
             CompLine {
-                text: vec![DocRichText {
-                    tag: None,
-                    text: "test".to_string(),
-                }],
+                text: vec![DocRichText::text("test")], 
                 properties: [("unused".to_string(), json!("property"))]
                     .into_iter()
                     .collect(),
                 ..Default::default()
             }
-        );
+        ).await;
+
     }
 }

@@ -29,6 +29,7 @@ fn from_pts(pt: &[pt::Block]) -> Vec<DocRichText> {
                 Some(DocRichText {
                     tag: None,
                     ref mut text,
+                    ..
                 }) => {
                     for pt_unit in pt_text.m_t.iter() {
                         append_unit_to_string(pt_unit, text);
@@ -39,31 +40,41 @@ fn from_pts(pt: &[pt::Block]) -> Vec<DocRichText> {
                     for pt_unit in pt_text.m_t.iter() {
                         append_unit_to_string(pt_unit, &mut text);
                     }
-                    out.push(DocRichText { tag: None, text });
+                    out.push(DocRichText {
+                        tag: None,
+                        text,
+                        link: None,
+                    });
                 }
             },
             pt::Block::TagExp(pt_tagexp) => {
                 out.push(parse_tagexp(pt_tagexp));
             }
             pt::Block::Symbol(pt_symbol) => match out.last_mut() {
-                Some(DocRichText { tag: None, text }) => {
+                Some(DocRichText {
+                    tag: None, text, ..
+                }) => {
                     text.push_str(&pt_symbol.m_t);
                 }
                 _ => {
                     out.push(DocRichText {
                         tag: None,
                         text: pt_symbol.m_t.to_string(),
+                        link: None,
                     });
                 }
             },
             pt::Block::Space(pt_space) => match out.last_mut() {
-                Some(DocRichText { tag: None, text }) => {
+                Some(DocRichText {
+                    tag: None, text, ..
+                }) => {
                     text.push_str(&pt_space.m_t);
                 }
                 _ => {
                     out.push(DocRichText {
                         tag: None,
                         text: pt_space.m_t.to_string(),
+                        link: None,
                     });
                 }
             },
@@ -85,6 +96,7 @@ fn parse_tagexp(pt: &pt::TagExp) -> DocRichText {
     DocRichText {
         tag: Some(tag),
         text: arg,
+        link: None,
     }
 }
 
@@ -126,14 +138,16 @@ mod test {
             parse_rich("hello"),
             vec![DocRichText {
                 tag: None,
-                text: "hello".to_string()
+                text: "hello".to_string(),
+                link: None,
             }]
         );
         assert_eq!(
             parse_rich("hello world"),
             vec![DocRichText {
                 tag: None,
-                text: "hello world".to_string()
+                text: "hello world".to_string(),
+                link: None,
             }]
         );
     }
@@ -144,7 +158,8 @@ mod test {
             parse_rich(".tag(hello)"),
             vec![DocRichText {
                 tag: Some("tag".to_string()),
-                text: "hello".to_string()
+                text: "hello".to_string(),
+                link: None,
             },]
         );
         assert_eq!(
@@ -152,11 +167,13 @@ mod test {
             vec![
                 DocRichText {
                     tag: Some("tag".to_string()),
-                    text: "hello".to_string()
+                    text: "hello".to_string(),
+                    link: None,
                 },
                 DocRichText {
                     tag: Some("tag2-zzz".to_string()),
-                    text: "world foo bar".to_string()
+                    text: "world foo bar".to_string(),
+                    link: None,
                 }
             ]
         );
@@ -169,11 +186,13 @@ mod test {
             vec![
                 DocRichText {
                     tag: None,
-                    text: "something".to_string()
+                    text: "something".to_string(),
+                    link: None
                 },
                 DocRichText {
                     tag: Some("tag".to_string()),
-                    text: "".to_string()
+                    text: "".to_string(),
+                    link: None
                 }
             ]
         );
@@ -185,14 +204,16 @@ mod test {
             parse_rich("this is a normal sentence. this is normal"),
             vec![DocRichText {
                 tag: None,
-                text: "this is a normal sentence. this is normal".to_string()
+                text: "this is a normal sentence. this is normal".to_string(),
+                link: None
             }]
         );
         assert_eq!(
             parse_rich("this is a (normal sentence). this (is) normal"),
             vec![DocRichText {
                 tag: None,
-                text: "this is a (normal sentence). this (is) normal".to_string()
+                text: "this is a (normal sentence). this (is) normal".to_string(),
+                link: None
             }]
         );
     }
@@ -203,28 +224,32 @@ mod test {
             parse_rich("\\.tag(hello)"),
             vec![DocRichText {
                 tag: None,
-                text: ".tag(hello)".to_string()
+                text: ".tag(hello)".to_string(),
+                link: None
             }]
         );
         assert_eq!(
             parse_rich(".tag(hello\\) continue)"),
             vec![DocRichText {
                 tag: Some("tag".to_string()),
-                text: "hello) continue".to_string()
+                text: "hello) continue".to_string(),
+                link: None
             }]
         );
         assert_eq!(
             parse_rich(".tag(hello\\continue)"),
             vec![DocRichText {
                 tag: Some("tag".to_string()),
-                text: "hello\\continue".to_string()
+                text: "hello\\continue".to_string(),
+                link: None
             }]
         );
         assert_eq!(
             parse_rich(".\\\\tag(hellocontinue)"),
             vec![DocRichText {
                 tag: None,
-                text: ".\\tag(hellocontinue)".to_string()
+                text: ".\\tag(hellocontinue)".to_string(),
+                link: None
             }]
         );
     }
