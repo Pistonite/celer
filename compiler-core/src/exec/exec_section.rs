@@ -21,7 +21,7 @@ impl CompSection {
         ExecSection {
             name: self.name,
             lines,
-            map: map_builder.build().await,
+            map: map_builder.build(),
         }
     }
 }
@@ -182,7 +182,7 @@ mod test {
         };
 
         let mut builder = MapSectionBuilder::default();
-        builder.add_coord("test", &GameCoord(1.0, 1.0, 3.0)).await;
+        builder.add_coord("test", &GameCoord(1.0, 1.0, 3.0));
 
         let exec_section = test_section.exec(4, &mut builder).await;
 

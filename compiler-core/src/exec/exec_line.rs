@@ -36,7 +36,8 @@ impl CompLine {
         }
 
         let mut map_coords = vec![];
-        for movement in self.movements {
+        let mut movement_iter = tokio_stream::iter(self.movements);
+        while let Some(movement) = movement_iter.next().await {
             match movement {
                 CompMovement::To {
                     to,
@@ -45,21 +46,20 @@ impl CompLine {
                     color,
                 } => {
                     if warp {
-                        map_builder.commit(false).await;
+                        map_builder.commit(false);
                     }
                     map_builder
-                        .add_coord(color.as_ref().unwrap_or(&self.line_color), &to)
-                        .await;
+                        .add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
 
                     if !exclude {
                         map_coords.push(to.clone());
                     }
                 }
                 CompMovement::Push => {
-                    map_builder.push().await;
+                    map_builder.push();
                 }
                 CompMovement::Pop => {
-                    map_builder.commit(false).await;
+                    map_builder.commit(false);
                 }
             }
         }
@@ -289,9 +289,9 @@ mod test {
             ..Default::default()
         };
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("blue", &GameCoord::default()).await;
+        map_builder.add_coord("blue", &GameCoord::default());
         test_line.exec(0, 0, &mut map_builder).await;
-        let map_section = map_builder.build().await;
+        let map_section = map_builder.build();
         assert_eq!(
             map_section.lines,
             vec![
@@ -330,14 +330,13 @@ mod test {
             ..Default::default()
         };
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("blue", &GameCoord::default()).await;
-        map_builder.add_coord("blue", &GameCoord::default()).await;
+        map_builder.add_coord("blue", &GameCoord::default());
+        map_builder.add_coord("blue", &GameCoord::default());
         test_line.exec(0, 0, &mut map_builder).await;
 
         map_builder
-            .add_coord("test color", &GameCoord::default())
-            .await;
-        let map = map_builder.build().await;
+            .add_coord("test color", &GameCoord::default());
+        let map = map_builder.build();
         assert_eq!(
             map.lines,
             vec![
