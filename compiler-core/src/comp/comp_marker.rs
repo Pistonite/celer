@@ -1,3 +1,4 @@
+use tokio_stream::StreamExt;
 use celerctypes::GameCoord;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -28,7 +29,7 @@ impl Compiler {
     /// The following are valid:
     /// - one coords value (array of 2 or 3)
     /// - object with `at` property, an optionally `color`
-    pub fn comp_marker(
+    pub async fn comp_marker(
         &self,
         prop_name: &str,
         prop: Value,
@@ -55,7 +56,8 @@ impl Compiler {
         let mut color = None;
         let mut should_fail = false;
 
-        for (key, value) in mapping.into_iter() {
+        let mut mapping_iter = tokio_stream::iter(mapping);
+        while let Some((key, value)) = mapping_iter.next().await {
             match key.as_ref() {
                 "at" => match self.transform_coord(value) {
                     Ok(coord) => at = Some(coord),
@@ -101,8 +103,8 @@ mod test {
 
     use super::*;
 
-    #[test]
-    fn test_value_invalid() {
+    #[tokio::test]
+    async fn test_value_invalid() {
         let vals = vec![
             json!(1),
             json!(null),
@@ -117,45 +119,45 @@ mod test {
 
         for v in vals.into_iter() {
             let mut errors = vec![];
-            assert_eq!(compiler.comp_marker("", v, &mut errors), None,);
+            assert_eq!(compiler.comp_marker("", v, &mut errors).await, None,);
             assert_eq!(errors, vec![CompilerError::InvalidMarkerType]);
         }
     }
 
-    #[test]
-    fn test_propagate_coord_error() {
+    #[tokio::test]
+    async fn test_propagate_coord_error() {
         let compiler = Compiler::default();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_movement("", json!([1, 2, 3, 4]), &mut errors),
+            compiler.comp_marker("", json!([1, 2, 3, 4]), &mut errors).await,
             None
         );
         assert_eq!(errors, vec![CompilerError::InvalidCoordinateArray]);
     }
 
-    #[test]
-    fn test_valid_coord() {
+    #[tokio::test]
+    async fn test_valid_coord() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_marker("", json!([1, 2, 4]), &mut errors),
+            compiler.comp_marker("", json!([1, 2, 4]), &mut errors).await,
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
     }
 
-    #[test]
-    fn test_object() {
+    #[tokio::test]
+    async fn test_object() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_marker("", json!({"at": [1, 2, 4]}), &mut errors),
+            compiler.comp_marker("", json!({"at": [1, 2, 4]}), &mut errors).await,
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler.comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors),
+            compiler.comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors).await,
             Some(CompMarker {
                 at: GameCoord(1.0, 2.0, 4.0),
                 color: Some("123".to_string())
@@ -164,7 +166,7 @@ mod test {
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler.comp_marker("test", json!({"at": {}, "color": {}}), &mut errors),
+            compiler.comp_marker("test", json!({"at": {}, "color": {}}), &mut errors).await,
             None
         );
         assert_eq!(
@@ -177,8 +179,8 @@ mod test {
         );
     }
 
-    #[test]
-    fn test_unused_property() {
+    #[tokio::test]
+    async fn test_unused_property() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
@@ -189,7 +191,7 @@ mod test {
                     "unused": 1,
                 }),
                 &mut errors
-            ),
+            ).await,
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(

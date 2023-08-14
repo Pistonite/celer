@@ -264,7 +264,7 @@ impl Compiler {
                                 &format!("{p}[{i}]", p = prop::MOVEMENTS),
                                 v,
                                 errors,
-                            ) {
+                            ).await {
                                 match &m {
                                     CompMovement::Push => {
                                         if let Some(i) = ref_stack.last() {
@@ -299,7 +299,7 @@ impl Compiler {
                 Value::Array(array) => {
                     for (i, v) in array.into_iter().enumerate() {
                         if let Some(m) =
-                            self.comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
+                            self.comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors).await
                         {
                             output.markers.push(m);
                         }
