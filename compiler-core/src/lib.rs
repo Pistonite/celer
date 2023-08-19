@@ -8,8 +8,15 @@ mod comp;
 mod exec;
 mod json;
 mod lang;
+mod pack;
+mod plug;
 
+use pack::Resource;
 use lang::Preset;
+
+pub async fn compile(project: &dyn Resource) -> CompDoc {
+    todo!()
+}
 
 #[derive(Default, Debug, Clone)]
 pub struct CompilerContext {
