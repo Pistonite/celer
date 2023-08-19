@@ -2,12 +2,14 @@
 The `icons` property in the configuration defines a mapping between icon id to
 asset location. You can use the `use` property to include an icon, or just specify a URL string.
 
+Icons defined in all configurations are combined.
 If multiple configuration defines the same icon id, later configuration will override previous ones.
+Icons IDs are by convention written in `kebab-case`
 
 ## Examples
 ```yaml
 config:
-  icons:
+- icons:
     shrine: https://icons.pistonite.org/icon/shrine.shrine.none.69a2d5.c1fefe.69a2d5.c1fefe.69a2d5.c1fefe.png
     foo: use: ./icons/foo.png
     bar: use: someone/repo/bar.png

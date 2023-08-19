@@ -852,8 +852,8 @@ mod test {
                 text: vec![DocRichText::text("test")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType(
-                "presets".to_string()
+            vec![CompilerError::InvalidPresetString(
+                "foo".to_string()
             )]
         ).await;
 

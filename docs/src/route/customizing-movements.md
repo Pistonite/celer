@@ -1,5 +1,5 @@
 # Customizing Movements
-This section is an extension of the previous section for customizing a line,
+This section is an extension of [Customizing Lines](./customizing-lines.md),
 focusing on the `coord` and `movements` properties for customizing map movements.
 
 ## Single Coordinate
@@ -26,7 +26,7 @@ The `movements` property can be used to specify more than one point of movement:
 ```
 
 ## Additional Properties
-Each point in the `movements` array can be a mapping with additiona properties.
+Each point in the `movements` array can be a mapping with additional properties.
 If using this form, the coordinate should be specified with the `to` property.
 All properties except for `to` are optional.
 |Property|Type|Description|
@@ -100,4 +100,19 @@ Functionality-wise, the movement stack is the same as the `warp: true`. However,
 it can let you return to a previous state without explicitly warping to the location,
 which may save effort when changing the route.
 
-
+## Presets
+You can embed movements from a preset by using the same syntax as you would
+for the `presets` property (See [Using Presets](./using-presets.md)).
+In this case, the `movements` from the preset will be injected
+into the `movements` of the line.
+```yaml
+- Line:
+    movements:
+    - [50, 50]
+    - _Some::Preset # movements from the preset will be injected here
+    - [60, 60]
+```
+:::tip
+When using presets in movements, properties other than `movements` of the
+preset are ignored.
+:::

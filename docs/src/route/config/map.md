@@ -20,7 +20,7 @@ All properties below are required, unless specified otherwise.
     - Transformed from the `x` and `y` of the game coordinates using the `transform` property of the layer that the game coord is on.
     - Layer dependent
     - For more info, see https://github.com/commenthol/leaflet-rastercoords.
-4. Latitude and Longtitude
+4. Latitude and Longitude
     - Used internally in leaflet map
     - `leaflet-rastercoords` handles the transformation
 :::tip
@@ -29,11 +29,11 @@ Routes will usually only work with route coordinates. Map preset makers need to 
 
 ### Coord Map
 In the example below from Breath of the Wild, when 3 axes are specified, the middle
-is `z` (height). This transform allow users to specify (x, y, z) in the order they
+is `z` (height). This transform allows users to specify (x, y, z) in the order they
 know from the game.
 ```yaml
 config:
-  map:
+- map:
     coord-map:
       2d: ["x", "y"]
       3d: ["x", "z", "y"]
@@ -53,7 +53,7 @@ Use these properties to specify the initial condition of the map.
 Example:
 ```yaml
 config:
-  map:
+- map:
     initial-coord: [50, 60, 70]
     initial-zoom: 3
     initial-color: blue
@@ -79,7 +79,7 @@ Celer does not support hosting tilesets. If your tileset is not hosted publicly,
 :::
 
 ### Layer Transform
-The `transform` property has 2 subproperties: `scale` and `translate`.
+The `transform` property has 2 sub-properties: `scale` and `translate`.
 
 Suppose scale is `[a, b]` and translate is `[c, d]`. The raster coord is transformed from game coord as:
 ```

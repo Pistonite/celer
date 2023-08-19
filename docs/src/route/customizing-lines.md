@@ -15,8 +15,8 @@ The rest of this page lists all available properties.
 The following properties are used for text customization:
 |Property|Type|Description|
 |-|-|-|
-|`comment`|Rich Text|Secondary text. This text will appear below the primary text in a smaller font|
-|`text`|Rich Text|Override the primary text. Presets specified here will NOT be expanded|
+|`comment`|[Rich Text](./customizing-text.md)|Secondary text. This text will appear below the primary text in a smaller font|
+|`text`|[Rich Text](./customizing-text.md)|Override the primary text. Presets specified here will NOT be expanded|
 
 Example:
 ```yaml
@@ -28,7 +28,7 @@ Example:
 The `notes` property can be used for adding notes that appear on the side.
 |Property|Type|Description|
 |-|-|-|
-|`notes`|Rich Text|Set a text note to the appear on the side|
+|`notes`|[Rich Text](./customizing-text.md)|Set a text note to appear on the side|
 
 You can also specify an array instead of a single note.
 
@@ -46,7 +46,7 @@ Example:
 This property can be used to customize the counter block.
 |Property|Type|Description|
 |-|-|-|
-|`counter`|Rich Text|Set the text and style for the counter block on the left of the main column|
+|`counter`|[Rich Text](./customizing-text.md)|Set the text and style for the counter block on the left of the main column|
 :::warning
 The Rich Text style is applied to the whole block. This means you can only have one tag like `.tag(hello)` or `hello` (no tag)
 :::
@@ -55,11 +55,11 @@ This is the replacement for the `split-type` property in the older Celer format
 :::
 
 ## Icon
-You can configure the icon by using the `icon` property, which takes 3 (optional) subproperties:
+You can configure the icon by using the `icon` property, which takes 3 (optional) sub-properties:
 |Property|Type|Description|
 |-|-|-|
-|`doc`|`string`|Icon id of the icon on the document|
-|`map`|`string`|Icon id of the icon on the map|
+|`doc`|`string`|Icon ID of the icon on the document|
+|`map`|`string`|Icon ID of the icon on the map|
 |`priority`|0, 1 or 2|Set the priority/level of the icon.|
 
 When setting priority, `0` is primary, `1` is secondary, and other values are "other".
@@ -95,7 +95,7 @@ There's also a shorthand that will probably be more commonly used:
 
 ## Color
 Use the `color` property to change the line color, both on the map and on the document.
-The current line will have the new color, and lines afterwards will keep this color until
+The current line will have the new color, and lines afterward will keep this color until
 changed again.
 
 The color is interpreted as a [CSS color](https://www.w3schools.com/cssref/css_colors.php).
@@ -142,9 +142,17 @@ See [Customizing Movements](./customizing-movements)
 Use this property to set the split name.
 |Property|Type|Description|
 |-|-|-|
-|`split-name`|Rich Text|Name to be used when exporting to compatible software, such as livesplit|
+|`split-name`|[Rich Text](./customizing-text.md)|Name to be used when exporting to compatible software, such as livesplit|
+:::tip
+You can use Rich Text for the split name so that plugins can alter it if necessary.
+When exporting, the style provided by the Rich Text is usually not kept.
+:::
 
 If not specified, the primary text will be the split name.
+
+## Presets
+The `presets` property allow you to define additional presets for the line.
+See [Using Presets](./using-presets.md) for details.
 
 ## Other Properties
 Built-in and third-party plugins may let you set additional properties. Check the
@@ -153,7 +161,3 @@ you are using.
 
 If you specify a property that is not recognized by Celer or any plugin, you will see a warning message
 saying that property is unused.
-
-
-
-
