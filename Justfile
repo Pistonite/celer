@@ -68,17 +68,13 @@ build:
     cp target/x86_64-unknown-linux-musl/release/start-server dist/start-server
     @echo "Done - Build outputs saved to dist/"
 
-# Start production server, requires build first
-server PORT="8080":
-    cd dist && ./start-server --port {{PORT}}
-
 container: 
     docker build -t pistonite/celer . --no-cache
     @echo "Run with:"
     @echo
     @echo "docker run -p 8000:80 pistonite/celer"
 
-release TAG:
+release TAG="latest":
     docker login
     docker push pistonite/celer:{{TAG}}
     docker logout
