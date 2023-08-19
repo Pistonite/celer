@@ -74,6 +74,28 @@ pub struct DocRichText {
     pub tag: Option<String>,
     /// The text content
     pub text: String,
+    /// The hyperlink of the text.
+    pub link: Option<String>,
+}
+
+impl DocRichText {
+    /// Create a rich text block with no tag
+    pub fn text(text: &str) -> Self {
+        Self {
+            tag: None,
+            text: text.to_string(),
+            link: None,
+        }
+    }
+
+    /// Create a rich text block with a tag
+    pub fn with_tag(tag: &str, text: &str) -> Self {
+        Self {
+            tag: Some(tag.to_string()),
+            text: text.to_string(),
+            link: None,
+        }
+    }
 }
 
 /// Document note block

@@ -14,8 +14,8 @@ pub struct MapSectionBuilder {
 
 impl MapSectionBuilder {
     /// Add a new point in the main movement
-    pub async fn add_coord(&mut self, color: &str, coord: &GameCoord) {
-        self.change_color(color).await;
+    pub fn add_coord(&mut self, color: &str, coord: &GameCoord) {
+        self.change_color(color);
         match self.line_stack.last_mut() {
             None => self.line_stack.push(MapLine {
                 color: color.to_owned(),
@@ -30,10 +30,10 @@ impl MapSectionBuilder {
     /// Change the color of the current line
     ///
     /// No-op if the current color is the same as the new color, or if there's no current line
-    async fn change_color(&mut self, color: &str) {
+    fn change_color(&mut self, color: &str) {
         if let Some(current_line) = self.line_stack.last() {
             if current_line.color.as_str() != color {
-                self.commit(true).await;
+                self.commit(true);
                 if let Some(line) = self.line_stack.last_mut() {
                     line.color = color.to_string();
                 }
@@ -46,7 +46,7 @@ impl MapSectionBuilder {
     /// If `continue_current`, the current line will be reset
     /// with the current color and the last point.
     /// Otherwise, the stack will be popped
-    pub async fn commit(&mut self, continue_current: bool) {
+    pub fn commit(&mut self, continue_current: bool) {
         if let Some(line) = self.line_stack.pop() {
             if continue_current {
                 self.line_stack.push(new_with_last_point(&line));
@@ -61,7 +61,7 @@ impl MapSectionBuilder {
     /// Then start a new line with the current position and color
     ///
     /// Use `commit(false)` to pop the stack top
-    pub async fn push(&mut self) {
+    pub fn push(&mut self) {
         if let Some(line) = self.line_stack.last() {
             self.line_stack.push(new_with_last_point(line));
         } else {
@@ -74,8 +74,8 @@ impl MapSectionBuilder {
 
     /// Create a map section. Remove the current icons, markers and lines.
     /// Keep the current line color and the last point.
-    pub async fn build(&mut self) -> ExecMapSection {
-        self.commit(true).await;
+    pub fn build(&mut self) -> ExecMapSection {
+        self.commit(true);
         ExecMapSection {
             icons: std::mem::take(&mut self.icons),
             markers: std::mem::take(&mut self.markers),
@@ -99,10 +99,10 @@ fn new_with_last_point(line: &MapLine) -> MapLine {
 mod test {
     use super::*;
 
-    #[tokio::test]
-    async fn test_add_coord_when_empty() {
+    #[test]
+    fn test_add_coord_when_empty() {
         let mut builder = MapSectionBuilder::default();
-        builder.add_coord("blue", &GameCoord(1.2, 55.0, 37.8)).await;
+        builder.add_coord("blue", &GameCoord(1.2, 55.0, 37.8));
         assert_eq!(
             builder.line_stack,
             vec![MapLine {
@@ -113,11 +113,11 @@ mod test {
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_add_coord_to_current_line() {
+    #[test]
+    fn test_add_coord_to_current_line() {
         let mut builder = MapSectionBuilder::default();
-        builder.add_coord("red", &GameCoord(1.2, 55.0, 37.8)).await;
-        builder.add_coord("red", &GameCoord(1.2, 65.0, 37.8)).await;
+        builder.add_coord("red", &GameCoord(1.2, 55.0, 37.8));
+        builder.add_coord("red", &GameCoord(1.2, 65.0, 37.8));
         assert_eq!(
             builder.line_stack,
             vec![MapLine {
@@ -128,11 +128,11 @@ mod test {
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_add_coord_different_color_no_add_line() {
+    #[test]
+    fn test_add_coord_different_color_no_add_line() {
         let mut builder = MapSectionBuilder::default();
-        builder.add_coord("blue", &GameCoord(1.2, 55.0, 37.8)).await;
-        builder.add_coord("red", &GameCoord(1.2, 65.0, 37.8)).await;
+        builder.add_coord("blue", &GameCoord(1.2, 55.0, 37.8));
+        builder.add_coord("red", &GameCoord(1.2, 65.0, 37.8));
         assert_eq!(
             builder.line_stack,
             vec![MapLine {
@@ -143,20 +143,20 @@ mod test {
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_change_color_no_current() {
+    #[test]
+    fn test_change_color_no_current() {
         let mut builder = MapSectionBuilder::default();
-        builder.change_color("red").await;
+        builder.change_color("red");
         assert_eq!(builder.line_stack, vec![]);
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_change_color_same() {
+    #[test]
+    fn test_change_color_same() {
         let mut builder = MapSectionBuilder::default();
-        builder.add_coord("red", &GameCoord(1.2, 55.0, 37.8)).await;
-        builder.add_coord("red", &GameCoord(1.2, 56.0, 37.8)).await;
-        builder.change_color("red").await;
+        builder.add_coord("red", &GameCoord(1.2, 55.0, 37.8));
+        builder.add_coord("red", &GameCoord(1.2, 56.0, 37.8));
+        builder.change_color("red");
         assert_eq!(
             builder.line_stack,
             vec![MapLine {
@@ -167,12 +167,12 @@ mod test {
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_change_color_different_should_commit() {
+    #[test]
+    fn test_change_color_different_should_commit() {
         let mut builder = MapSectionBuilder::default();
-        builder.add_coord("red", &GameCoord(1.2, 55.0, 37.8)).await;
-        builder.add_coord("red", &GameCoord(1.2, 56.0, 37.8)).await;
-        builder.change_color("blue").await;
+        builder.add_coord("red", &GameCoord(1.2, 55.0, 37.8));
+        builder.add_coord("red", &GameCoord(1.2, 56.0, 37.8));
+        builder.change_color("blue");
         assert_eq!(
             builder.line_stack,
             vec![MapLine {
@@ -189,15 +189,15 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_commit_none() {
+    #[test]
+    fn test_commit_none() {
         let mut builder = MapSectionBuilder::default();
-        builder.commit(false).await;
+        builder.commit(false);
         assert_eq!(builder.line_stack, vec![]);
         assert_eq!(builder.lines, vec![]);
 
-        builder.push().await;
-        builder.commit(true).await;
+        builder.push();
+        builder.commit(true);
         assert_eq!(
             builder.line_stack,
             vec![MapLine {
@@ -208,8 +208,8 @@ mod test {
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_commit_one_coord_no_add() {
+    #[test]
+    fn test_commit_one_coord_no_add() {
         let test_line = MapLine {
             color: "blue".to_string(),
             points: vec![GameCoord(1.2, 55.0, 37.8)],
@@ -218,13 +218,13 @@ mod test {
             line_stack: vec![test_line.clone()],
             ..Default::default()
         };
-        builder.commit(false).await;
+        builder.commit(false);
         assert_eq!(builder.line_stack, vec![]);
         assert_eq!(builder.lines, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_commit_many_coords_add() {
+    #[test]
+    fn test_commit_many_coords_add() {
         let test_line = MapLine {
             color: "blue".to_string(),
             points: vec![GameCoord(1.2, 55.0, 37.8), GameCoord(1.2, 65.0, 37.8)],
@@ -233,13 +233,13 @@ mod test {
             line_stack: vec![test_line.clone()],
             ..Default::default()
         };
-        builder.commit(false).await;
+        builder.commit(false);
         assert_eq!(builder.line_stack, vec![]);
         assert_eq!(builder.lines, vec![test_line]);
     }
 
-    #[tokio::test]
-    async fn test_commit_many_coords_continue_current() {
+    #[test]
+    fn test_commit_many_coords_continue_current() {
         let test_line = MapLine {
             color: "blue".to_string(),
             points: vec![GameCoord(1.2, 55.0, 37.8), GameCoord(1.2, 65.0, 37.8)],
@@ -248,7 +248,7 @@ mod test {
             line_stack: vec![test_line.clone()],
             ..Default::default()
         };
-        builder.commit(true).await;
+        builder.commit(true);
         assert_eq!(
             builder.line_stack,
             vec![MapLine {
@@ -259,13 +259,13 @@ mod test {
         assert_eq!(builder.lines, vec![test_line]);
     }
 
-    #[tokio::test]
-    async fn test_push_empty() {
+    #[test]
+    fn test_push_empty() {
         let mut builder = MapSectionBuilder {
             line_stack: vec![],
             ..Default::default()
         };
-        builder.push().await;
+        builder.push();
         assert_eq!(
             builder.line_stack,
             vec![MapLine {
@@ -273,7 +273,7 @@ mod test {
                 points: vec![],
             },]
         );
-        builder.push().await;
+        builder.push();
         assert_eq!(
             builder.line_stack,
             vec![
@@ -289,8 +289,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_push_existing_one() {
+    #[test]
+    fn test_push_existing_one() {
         let test_line = MapLine {
             color: "blue".to_string(),
             points: vec![GameCoord(1.2, 55.0, 37.8)],
@@ -299,7 +299,7 @@ mod test {
             line_stack: vec![test_line.clone()],
             ..Default::default()
         };
-        builder.push().await;
+        builder.push();
         assert_eq!(
             builder.line_stack,
             vec![
@@ -315,8 +315,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_push_existing_more_than_one() {
+    #[test]
+    fn test_push_existing_more_than_one() {
         let test_line = MapLine {
             color: "blue".to_string(),
             points: vec![GameCoord(1.2, 55.0, 37.8), GameCoord(1.2, 65.0, 37.8)],
@@ -325,7 +325,7 @@ mod test {
             line_stack: vec![test_line.clone()],
             ..Default::default()
         };
-        builder.push().await;
+        builder.push();
         assert_eq!(
             builder.line_stack,
             vec![
@@ -341,8 +341,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_build_icons_and_markers() {
+    #[test]
+    fn test_build_icons_and_markers() {
         let test_icons = vec![
             MapIcon {
                 id: "test".to_string(),
@@ -368,15 +368,15 @@ mod test {
             markers: test_markers.clone(),
             ..Default::default()
         };
-        let section = builder.build().await;
+        let section = builder.build();
         assert_eq!(section.icons, test_icons);
         assert_eq!(section.markers, test_markers);
         assert_eq!(builder.icons, vec![]);
         assert_eq!(builder.markers, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_build_commit_line() {
+    #[test]
+    fn test_build_commit_line() {
         let test_line = MapLine {
             color: "blue".to_string(),
             points: vec![GameCoord(1.2, 55.0, 37.8), GameCoord(1.2, 65.0, 37.8)],
@@ -390,7 +390,7 @@ mod test {
             line_stack: vec![test_current_line.clone()],
             ..Default::default()
         };
-        let section = builder.build().await;
+        let section = builder.build();
         assert_eq!(section.lines, vec![test_line, test_current_line]);
         assert_eq!(
             builder.line_stack,

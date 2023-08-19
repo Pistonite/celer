@@ -54,7 +54,7 @@ impl Coerce for Value {
     fn try_coerce_to_f64(&self) -> Option<f64> {
         match self {
             Value::Number(n) => n.as_f64(),
-            Value::String(s) => s.parse::<f64>().ok(),
+            Value::String(s) => s.trim().parse::<f64>().ok(),
             _ => None,
         }
     }
@@ -72,7 +72,7 @@ impl Coerce for Value {
                     None
                 }
             }),
-            Value::String(s) => match s.as_ref() {
+            Value::String(s) => match s.trim() {
                 "true" => Some(true),
                 "false" => Some(false),
                 _ => None,
@@ -91,6 +91,7 @@ mod test {
     fn test_to_f64() {
         assert_eq!(Some(1.0), json!("1.0").try_coerce_to_f64());
         assert_eq!(Some(13.0), json!("13").try_coerce_to_f64());
+        assert_eq!(Some(13.0), json!(" 13 ").try_coerce_to_f64());
         assert_eq!(None, json!("").try_coerce_to_f64());
         assert_eq!(None, json!(null).try_coerce_to_f64());
         assert_eq!(None, json!(true).try_coerce_to_f64());
@@ -107,6 +108,7 @@ mod test {
         assert_eq!(None, json!("0").try_coerce_to_bool());
         assert_eq!(None, json!("").try_coerce_to_bool());
         assert_eq!(Some(true), json!("true").try_coerce_to_bool());
+        assert_eq!(Some(true), json!(" true ").try_coerce_to_bool());
         assert_eq!(Some(false), json!("false").try_coerce_to_bool());
         assert_eq!(Some(false), json!(null).try_coerce_to_bool());
         assert_eq!(Some(true), json!(true).try_coerce_to_bool());

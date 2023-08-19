@@ -158,6 +158,13 @@ mod test {
                 args: vec!["f\\o:o,bar".to_string(), " biz>".to_string()],
             }
         );
+        assert_eq!(
+            PresetInst::try_parse("hello::world<f\\o:o\\,bar\\\\, biz\\>>").unwrap(),
+            PresetInst {
+                name: "hello::world".to_string(),
+                args: vec!["f\\o:o,bar\\".to_string(), " biz>".to_string()],
+            }
+        );
     }
 
     #[test]

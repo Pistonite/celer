@@ -67,7 +67,5 @@ pub struct DocTag {
     color: Option<String>,
     /// Background color of the text
     background: Option<String>,
-    /// Link to direct to when clicked
-    link: Option<String>,
 }
 

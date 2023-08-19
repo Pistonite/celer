@@ -2,9 +2,11 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-use crate::{json::Coerce, lang::PresetInst};
+use crate::json::Coerce;
+use crate::lang::PresetInst;
 
-use super::{prop, validate_not_array_or_object, Compiler, CompilerError};
+use super::prop;
+use super::{validate_not_array_or_object, Compiler, CompilerError};
 
 impl Compiler {
     /// Apply the preset to the output.
@@ -57,9 +59,13 @@ impl Compiler {
         output: &mut BTreeMap<String, Value>,
         errors: &mut Vec<CompilerError>,
     ) {
-        match presets {
-            Value::Array(arr) => {
-                for (i, preset_value) in arr.into_iter().enumerate() {
+        let preset_arr = match presets {
+            Value::Array(arr) => arr,
+            _ => vec![presets],
+        };
+        // match presets {
+        //     Value::Array(arr) => {
+                for (i, preset_value) in preset_arr.into_iter().enumerate() {
                     if !validate_not_array_or_object!(
                         &preset_value,
                         errors,
@@ -84,13 +90,13 @@ impl Compiler {
                         }
                     }
                 }
-            }
-            _ => {
-                errors.push(CompilerError::InvalidLinePropertyType(
-                    prop::PRESETS.to_string(),
-                ));
-            }
-        }
+            // }
+            // _ => {
+            //     errors.push(CompilerError::InvalidLinePropertyType(
+            //         prop::PRESETS.to_string(),
+            //     ));
+            // }
+        // }
     }
 
     /// Expand presets in the movements array
@@ -284,7 +290,7 @@ mod test {
                 "_preset::three",
                 Preset::compile(json!({
                     "text": "preset three",
-                    "presets": ["_preset::two"]
+                    "presets": "_preset::two"
                 }))
                 .await
                 .unwrap(),
@@ -420,8 +426,8 @@ mod test {
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
-            vec![CompilerError::InvalidLinePropertyType(
-                "presets".to_string()
+            vec![CompilerError::InvalidPresetString(
+                "preset one".to_string()
             )]
         );
 

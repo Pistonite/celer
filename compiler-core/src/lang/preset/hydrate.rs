@@ -30,7 +30,7 @@ impl PresetBlob {
         match self {
             Self::NonTemplate(value) => value.clone(),
             Self::Template(tempstr) => {
-                let str = tempstr.hydrate(args);
+                let str = tempstr.hydrate(args).await;
                 Value::String(str)
             }
             Self::Array(arr) => {

@@ -36,7 +36,8 @@ impl CompLine {
         }
 
         let mut map_coords = vec![];
-        for movement in self.movements {
+        let mut movement_iter = tokio_stream::iter(self.movements);
+        while let Some(movement) = movement_iter.next().await {
             match movement {
                 CompMovement::To {
                     to,
@@ -45,21 +46,20 @@ impl CompLine {
                     color,
                 } => {
                     if warp {
-                        map_builder.commit(false).await;
+                        map_builder.commit(false);
                     }
                     map_builder
-                        .add_coord(color.as_ref().unwrap_or(&self.line_color), &to)
-                        .await;
+                        .add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
 
                     if !exclude {
                         map_coords.push(to.clone());
                     }
                 }
                 CompMovement::Push => {
-                    map_builder.push().await;
+                    map_builder.push();
                 }
                 CompMovement::Pop => {
-                    map_builder.commit(false).await;
+                    map_builder.commit(false);
                 }
             }
         }
@@ -138,10 +138,12 @@ mod test {
             DocRichText {
                 tag: None,
                 text: "test1".to_string(),
+                link: None,
             },
             DocRichText {
                 tag: Some("test tag".to_string()),
                 text: "test2".to_string(),
+                link: Some("test link".to_string()),
             },
         ];
         let test_color = "test color".to_string();
@@ -155,15 +157,18 @@ mod test {
             DocRichText {
                 tag: None,
                 text: "secondary test1".to_string(),
+                link: None,
             },
             DocRichText {
                 tag: Some("secondary test tag".to_string()),
                 text: "secondary test2".to_string(),
+                link: Some("secondary test link".to_string()),
             },
         ];
         let test_counter_text = Some(DocRichText {
             tag: Some("counter test tag".to_string()),
             text: "counter test".to_string(),
+            link: None,
         });
         let test_notes = vec![
             DocNote::Text {
@@ -171,10 +176,12 @@ mod test {
                     DocRichText {
                         tag: None,
                         text: "note test1".to_string(),
+                        link: None,
                     },
                     DocRichText {
                         tag: Some("note test tag".to_string()),
                         text: "note test2".to_string(),
+                        link: Some("note test link".to_string()),
                     },
                 ],
             },
@@ -282,9 +289,9 @@ mod test {
             ..Default::default()
         };
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("blue", &GameCoord::default()).await;
+        map_builder.add_coord("blue", &GameCoord::default());
         test_line.exec(0, 0, &mut map_builder).await;
-        let map_section = map_builder.build().await;
+        let map_section = map_builder.build();
         assert_eq!(
             map_section.lines,
             vec![
@@ -323,14 +330,13 @@ mod test {
             ..Default::default()
         };
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("blue", &GameCoord::default()).await;
-        map_builder.add_coord("blue", &GameCoord::default()).await;
+        map_builder.add_coord("blue", &GameCoord::default());
+        map_builder.add_coord("blue", &GameCoord::default());
         test_line.exec(0, 0, &mut map_builder).await;
 
         map_builder
-            .add_coord("test color", &GameCoord::default())
-            .await;
-        let map = map_builder.build().await;
+            .add_coord("test color", &GameCoord::default());
+        let map = map_builder.build();
         assert_eq!(
             map.lines,
             vec![
@@ -352,14 +358,17 @@ mod test {
             DocRichText {
                 tag: None,
                 text: "test1".to_string(),
+                link: None,
             },
             DocRichText {
                 tag: Some("something".to_string()),
                 text: " test ".to_string(),
+                link: None,
             },
             DocRichText {
                 tag: None,
                 text: "test3".to_string(),
+                link: None,
             },
         ];
 
