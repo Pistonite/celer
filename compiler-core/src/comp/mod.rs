@@ -18,7 +18,7 @@ pub use comp_movement::*;
 mod comp_preset;
 mod desugar;
 use desugar::*;
-mod prop;
+pub mod prop;
 
 #[derive(Derivative, Debug, Clone)]
 #[derivative(Default)]

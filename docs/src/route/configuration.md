@@ -30,3 +30,26 @@ config:
     colorful:
       color: blue
 ```
+
+## Configuration Files
+The configuration files that are loaded by `use` should
+be a YAML file that defines a mapping on the root level. For example:
+```yaml
+# something.yaml
+icons:
+  foo: use: bar/biz/boo.png
+tags:
+  colorful:
+    color: blue
+```
+
+Be careful that top-level `use` is not permitted. The following config file
+is invalid for others to include with `use`:
+```yaml
+# something.yaml
+use: another/file/something.yaml
+```
+:::tip
+You can still use `use` in the config properties themselves, like
+the example above in the `icons` property
+:::

@@ -3,6 +3,7 @@
 use serde_json::Value;
 
 use crate::json::Coerce;
+use crate::comp::prop;
 
 /// Result of parsing an object which could be loading a resource with
 /// the `use` property
@@ -39,7 +40,7 @@ impl From<Value> for Use {
         if iter.next().is_some() {
             return Self::NotUse(value);
         }
-        if key != "use" {
+        if key != prop::USE {
             return Self::NotUse(value);
         }
         let v = v.coerce_to_string();

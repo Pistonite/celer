@@ -1,5 +1,15 @@
 //! Property constants
 
+pub const USE: &str = "use";
+pub const TITLE: &str = "title";
+pub const VERSION: &str = "version";
+pub const ROUTE: &str = "route";
+pub const CONFIG: &str = "config";
+
+pub const ICONS: &str = "icons";
+pub const TAGS: &str = "tags";
+pub const MAP: &str = "map";
+
 pub const TEXT: &str = "text";
 pub const COMMENT: &str = "comment";
 pub const NOTES: &str = "notes";

@@ -10,6 +10,7 @@ mod json;
 mod lang;
 mod pack;
 mod plug;
+mod util;
 
 use pack::Resource;
 use lang::Preset;
