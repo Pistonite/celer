@@ -31,7 +31,10 @@ pub trait Resource: Sync {
     /// Load resource as json
     async fn load_json(&self, loader: &dyn ResourceLoader) -> PackerResult<Value> {
         let bytes = self.load(loader).await?;
-        Ok(serde_json::from_slice(&bytes)?)
+        match serde_json::from_slice(&bytes) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(PackerError::InvalidJSON),
+        }
     }
 
     /// Load resource as image URL

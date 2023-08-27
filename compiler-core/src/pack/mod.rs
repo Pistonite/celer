@@ -24,13 +24,13 @@ pub use resource::*;
 use serde_json::Value;
 
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, PartialEq, thiserror::Error)]
 pub enum PackerError {
     #[error("Invalid `use` value: {0}")]
     InvalidUse(String),
 
-    #[error("Error when parsing JSON: {0}")]
-    InvalidJSON(#[from] serde_json::Error),
+    #[error("Error when parsing JSON")]
+    InvalidJSON,
 
     #[error("")]
     InvalidIcon,
@@ -52,6 +52,9 @@ pub enum PackerError {
 
     #[error("Project config at index {0}: the `{1}` property is invalid")]
     InvalidConfigProperty(usize, String),
+
+    #[error("Project config at index {0}: the required `{1}` property is missing")]
+    MissingConfigProperty(usize, String),
 
     #[error("Project config at index {0}: the `{1}` property is unused")]
     UnusedConfigProperty(usize, String),

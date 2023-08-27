@@ -38,13 +38,14 @@ pub async fn pack_config(
     // add values to builder
     let mut config_iter = tokio_stream::iter(config_value.into_iter());
     while let Some((key, value)) = config_iter.next().await {
-        match key.as_ref() {
-            prop::MAP => {
-                if builder.map.is_some() {
-                    return Err(PackerError::DuplicateMap(index));
-                }
-            }
-        }
+        // match key.as_ref() {
+        //     prop::MAP => {
+        //         if builder.map.is_some() {
+        //             return Err(PackerError::DuplicateMap(index));
+        //         }
+        //         // builder.map = Some
+        //     }
+        // }
 
     }
 

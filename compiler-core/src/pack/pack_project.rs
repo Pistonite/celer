@@ -38,7 +38,7 @@ pub async fn pack_project(
     let project_json = project.load_json(loader).await?;
     let project_obj = match project_json {
         Value::Object(o) => o,
-        _ => return Err(PackerError::InvalidResourceType(project.name(), "object".to_string())),
+        _ => return Err(PackerError::InvalidResourceType(project.name().to_string(), "object".to_string())),
     };
 
     let mut title = None;
