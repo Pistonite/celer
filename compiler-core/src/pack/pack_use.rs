@@ -2,8 +2,8 @@
 
 use serde_json::Value;
 
-use crate::json::Coerce;
 use crate::comp::prop;
+use crate::json::Coerce;
 
 /// Result of parsing an object which could be loading a resource with
 /// the `use` property
@@ -23,7 +23,7 @@ pub enum Use {
     /// Not loading a resource
     NotUse(Value),
     /// Invalid path specified in the use property
-    Invalid(String)
+    Invalid(String),
 }
 
 impl From<Value> for Use {
@@ -88,7 +88,6 @@ impl From<Value> for Use {
     }
 }
 
-
 #[cfg(test)]
 mod test {
     use serde_json::json;
@@ -104,7 +103,7 @@ mod test {
             json!(true),
             json!(false),
             json!([]),
-            json!([1,2,3]),
+            json!([1, 2, 3]),
         ];
 
         for test in tests {
@@ -132,69 +131,99 @@ mod test {
 
     #[test]
     fn test_use_relative() {
-        assert_eq!(Use::from(json!({
-            "use": "./hello"
-        })), Use::Relative("./hello".to_string()));
-        assert_eq!(Use::from(json!({
-            "use": "../foo/hello"
-        })), Use::Relative("../foo/hello".to_string()));
+        assert_eq!(
+            Use::from(json!({
+                "use": "./hello"
+            })),
+            Use::Relative("./hello".to_string())
+        );
+        assert_eq!(
+            Use::from(json!({
+                "use": "../foo/hello"
+            })),
+            Use::Relative("../foo/hello".to_string())
+        );
     }
 
     #[test]
     fn test_use_absolute() {
-        assert_eq!(Use::from(json!({
-            "use": "/hello"
-        })), Use::Absolute("/hello".to_string()));
-        assert_eq!(Use::from(json!({
-            "use": "/foo/hello"
-        })), Use::Absolute("/foo/hello".to_string()));
-        assert_eq!(Use::from(json!({
-            "use": "//foo/hello"
-        })), Use::Absolute("//foo/hello".to_string()));
+        assert_eq!(
+            Use::from(json!({
+                "use": "/hello"
+            })),
+            Use::Absolute("/hello".to_string())
+        );
+        assert_eq!(
+            Use::from(json!({
+                "use": "/foo/hello"
+            })),
+            Use::Absolute("/foo/hello".to_string())
+        );
+        assert_eq!(
+            Use::from(json!({
+                "use": "//foo/hello"
+            })),
+            Use::Absolute("//foo/hello".to_string())
+        );
     }
 
     #[test]
     fn test_use_remote() {
-        assert_eq!(Use::from(json!({
-            "use": "foo/hello/bar"
-        })), Use::Remote {
-            owner: "foo".to_string(),
-            repo: "hello".to_string(),
-            path: "bar".to_string(),
-            reference: None,
-        });
-        assert_eq!(Use::from(json!({
-            "use": "foo/hello/bar:test"
-        })), Use::Remote {
-            owner: "foo".to_string(),
-            repo: "hello".to_string(),
-            path: "bar".to_string(),
-            reference: Some("test".to_string()),
-        });
-        assert_eq!(Use::from(json!({
-            "use": ".foo/hello/bar/giz"
-        })), Use::Remote {
-            owner: ".foo".to_string(),
-            repo: "hello".to_string(),
-            path: "bar/giz".to_string(),
-            reference: None,
-        });
-        assert_eq!(Use::from(json!({
-            "use": "foo/hello/bar/giz/biz:test"
-        })), Use::Remote {
-            owner: "foo".to_string(),
-            repo: "hello".to_string(),
-            path: "bar/giz/biz".to_string(),
-            reference: Some("test".to_string()),
-        });
-        assert_eq!(Use::from(json!({
-            "use": "foo/hello/bar/giz/biz:"
-        })), Use::Remote {
-            owner: "foo".to_string(),
-            repo: "hello".to_string(),
-            path: "bar/giz/biz".to_string(),
-            reference: None,
-        });
+        assert_eq!(
+            Use::from(json!({
+                "use": "foo/hello/bar"
+            })),
+            Use::Remote {
+                owner: "foo".to_string(),
+                repo: "hello".to_string(),
+                path: "bar".to_string(),
+                reference: None,
+            }
+        );
+        assert_eq!(
+            Use::from(json!({
+                "use": "foo/hello/bar:test"
+            })),
+            Use::Remote {
+                owner: "foo".to_string(),
+                repo: "hello".to_string(),
+                path: "bar".to_string(),
+                reference: Some("test".to_string()),
+            }
+        );
+        assert_eq!(
+            Use::from(json!({
+                "use": ".foo/hello/bar/giz"
+            })),
+            Use::Remote {
+                owner: ".foo".to_string(),
+                repo: "hello".to_string(),
+                path: "bar/giz".to_string(),
+                reference: None,
+            }
+        );
+        assert_eq!(
+            Use::from(json!({
+                "use": "foo/hello/bar/giz/biz:test"
+            })),
+            Use::Remote {
+                owner: "foo".to_string(),
+                repo: "hello".to_string(),
+                path: "bar/giz/biz".to_string(),
+                reference: Some("test".to_string()),
+            }
+        );
+        assert_eq!(
+            Use::from(json!({
+                "use": "foo/hello/bar/giz/biz:"
+            })),
+            Use::Remote {
+                owner: "foo".to_string(),
+                repo: "hello".to_string(),
+                path: "bar/giz/biz".to_string(),
+                reference: None,
+            }
+        );
     }
 
     fn make_use(s: &str) -> Value {

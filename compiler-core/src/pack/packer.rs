@@ -1,4 +1,4 @@
-use super::{ResourceResolver, ResourceLoader};
+use super::{ResourceLoader, ResourceResolver};
 
 /// Packer resolves resources and packs them into a single json blob for compiling
 pub struct Packer {

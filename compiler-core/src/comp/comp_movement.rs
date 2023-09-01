@@ -1,7 +1,7 @@
-use tokio_stream::StreamExt;
 use celerctypes::GameCoord;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use tokio_stream::StreamExt;
 
 use crate::json::Coerce;
 
@@ -187,7 +187,9 @@ mod test {
         let compiler = Compiler::default();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_movement("", json!([1, 2, 3, 4]), &mut errors).await,
+            compiler
+                .comp_movement("", json!([1, 2, 3, 4]), &mut errors)
+                .await,
             None
         );
         assert_eq!(errors, vec![CompilerError::InvalidCoordinateArray]);
@@ -198,7 +200,9 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_movement("", json!([1, 2, 4]), &mut errors).await,
+            compiler
+                .comp_movement("", json!([1, 2, 4]), &mut errors)
+                .await,
             Some(CompMovement::to(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
@@ -209,26 +213,30 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_movement(
-                "",
-                json!({
-                    "to": [1, 2, 4],
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "",
+                    json!({
+                        "to": [1, 2, 4],
+                    }),
+                    &mut errors
+                )
+                .await,
             Some(CompMovement::to(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler.comp_movement(
-                "",
-                json!({
-                    "to": [1, 2, 4],
-                    "warp": true,
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "",
+                    json!({
+                        "to": [1, 2, 4],
+                        "warp": true,
+                    }),
+                    &mut errors
+                )
+                .await,
             Some(CompMovement::To {
                 to: GameCoord(1.0, 2.0, 4.0),
                 warp: true,
@@ -239,16 +247,18 @@ mod test {
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler.comp_movement(
-                "",
-                json!({
-                    "to": [1, 2, 4],
-                    "warp": true,
-                    "exclude": true,
-                    "color": null
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "",
+                    json!({
+                        "to": [1, 2, 4],
+                        "warp": true,
+                        "exclude": true,
+                        "color": null
+                    }),
+                    &mut errors
+                )
+                .await,
             Some(CompMovement::To {
                 to: GameCoord(1.0, 2.0, 4.0),
                 warp: true,
@@ -259,16 +269,18 @@ mod test {
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler.comp_movement(
-                "",
-                json!({
-                    "to": [1, 2, 4],
-                    "warp": "false",
-                    "exclude": true,
-                    "color": "red",
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "",
+                    json!({
+                        "to": [1, 2, 4],
+                        "warp": "false",
+                        "exclude": true,
+                        "color": "red",
+                    }),
+                    &mut errors
+                )
+                .await,
             Some(CompMovement::To {
                 to: GameCoord(1.0, 2.0, 4.0),
                 warp: false,
@@ -280,14 +292,16 @@ mod test {
 
         errors.clear();
         assert_eq!(
-            compiler.comp_movement(
-                "",
-                json!({
-                    "to": [1, 2, 4],
-                    "warp": 0,
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "",
+                    json!({
+                        "to": [1, 2, 4],
+                        "warp": 0,
+                    }),
+                    &mut errors
+                )
+                .await,
             Some(CompMovement::To {
                 to: GameCoord(1.0, 2.0, 4.0),
                 warp: false,
@@ -299,14 +313,16 @@ mod test {
 
         errors.clear();
         assert_eq!(
-            compiler.comp_movement(
-                "te",
-                json!({
-                    "to": [1, 2, 4],
-                    "exclude": "something",
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "te",
+                    json!({
+                        "to": [1, 2, 4],
+                        "exclude": "something",
+                    }),
+                    &mut errors
+                )
+                .await,
             None
         );
         assert_eq!(
@@ -318,14 +334,16 @@ mod test {
 
         errors.clear();
         assert_eq!(
-            compiler.comp_movement(
-                "te",
-                json!({
-                    "to": [1, 2, 4],
-                    "warp": "something",
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "te",
+                    json!({
+                        "to": [1, 2, 4],
+                        "warp": "something",
+                    }),
+                    &mut errors
+                )
+                .await,
             None
         );
         assert_eq!(
@@ -337,14 +355,16 @@ mod test {
 
         errors.clear();
         assert_eq!(
-            compiler.comp_movement(
-                "test",
-                json!({
-                    "to": [1, 2, 4],
-                    "color": [],
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "test",
+                    json!({
+                        "to": [1, 2, 4],
+                        "color": [],
+                    }),
+                    &mut errors
+                )
+                .await,
             None
         );
         assert_eq!(
@@ -376,14 +396,16 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_movement(
-                "test",
-                json!({
-                    "to": [1, 2, 4],
-                    "unused": 1,
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_movement(
+                    "test",
+                    json!({
+                        "to": [1, 2, 4],
+                        "unused": 1,
+                    }),
+                    &mut errors
+                )
+                .await,
             Some(CompMovement::to(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(

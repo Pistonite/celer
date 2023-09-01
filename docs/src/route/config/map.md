@@ -58,6 +58,10 @@ config:
     initial-zoom: 3
     initial-color: blue
 ```
+:::warning
+The `initial-coord` specified here must be a Game Coord, not a Route Coord like
+the ones specified in the route. in other words, it should always be `[x, y, z]` where `z` is height
+:::
 
 
 ## Layers

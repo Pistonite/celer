@@ -121,7 +121,7 @@ Use the `markers` property to add circular markers.
 |-|-|-|
 |`markers`|sequence|A list of markers. Each marker should have the `at` property and optionally a `color` property.|
 
-The `at` property is required, and should be a valid coordinate with 2 or 3 axes specified.
+The `at` property is required, and should be a valid [Route Coord](./config/map#coordinate-concepts) with 2 or 3 axes specified.
 
 The `color` property is optional, and the default is the same color as the line
 

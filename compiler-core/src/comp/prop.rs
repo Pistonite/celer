@@ -37,4 +37,3 @@ pub const TRANSLATE: &str = "translate";
 pub const USE: &str = "use";
 pub const VERSION: &str = "version";
 pub const ZOOM_BOUNDS: &str = "zoom-bounds";
-

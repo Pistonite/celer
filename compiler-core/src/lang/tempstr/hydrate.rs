@@ -1,5 +1,5 @@
-use tokio_stream::StreamExt;
 use super::{TempStr, TempStrBlock};
+use tokio_stream::StreamExt;
 
 impl TempStr {
     /// Replace variable in a template string with arguments
@@ -37,7 +37,10 @@ mod test {
             TempStr::from("abcd").hydrate(&["hello".to_string()]).await,
             "abcd"
         );
-        assert_eq!(TempStr::from("abcd").hydrate(&["hello", "world"]).await, "abcd");
+        assert_eq!(
+            TempStr::from("abcd").hydrate(&["hello", "world"]).await,
+            "abcd"
+        );
     }
 
     #[tokio::test]
@@ -59,7 +62,9 @@ mod test {
             "bartempfooworld"
         );
         assert_eq!(
-            TempStr::from("bar$(3)$(3) $(2)$(1)$(2)").hydrate(args).await,
+            TempStr::from("bar$(3)$(3) $(2)$(1)$(2)")
+                .hydrate(args)
+                .await,
             "bar tempworldtemp"
         );
     }

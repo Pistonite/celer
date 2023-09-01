@@ -12,8 +12,8 @@ mod pack;
 mod plug;
 mod util;
 
-use pack::Resource;
 use lang::Preset;
+use pack::Resource;
 
 pub async fn compile(project: &dyn Resource) -> CompDoc {
     todo!()

@@ -260,11 +260,10 @@ impl Compiler {
                         // need to track the coordinate of the final position with a stack
                         let mut ref_stack = vec![];
                         for (i, v) in array.into_iter().enumerate() {
-                            if let Some(m) = self.comp_movement(
-                                &format!("{p}[{i}]", p = prop::MOVEMENTS),
-                                v,
-                                errors,
-                            ).await {
+                            if let Some(m) = self
+                                .comp_movement(&format!("{p}[{i}]", p = prop::MOVEMENTS), v, errors)
+                                .await
+                            {
                                 match &m {
                                     CompMovement::Push => {
                                         if let Some(i) = ref_stack.last() {
@@ -298,8 +297,9 @@ impl Compiler {
             prop::MARKERS => match value {
                 Value::Array(array) => {
                     for (i, v) in array.into_iter().enumerate() {
-                        if let Some(m) =
-                            self.comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors).await
+                        if let Some(m) = self
+                            .comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
+                            .await
                         {
                             output.markers.push(m);
                         }
@@ -702,10 +702,11 @@ mod test {
             json!("_preset"),
             CompLine {
                 text: vec![DocRichText::text("hello world")],
-                secondary_text: vec![DocRichText::text("foo bar")], 
+                secondary_text: vec![DocRichText::text("foo bar")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -716,10 +717,11 @@ mod test {
             }),
             CompLine {
                 text: vec![DocRichText::text("hello world")],
-                secondary_text: vec![DocRichText::text("foo bar 2")], 
+                secondary_text: vec![DocRichText::text("foo bar 2")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -730,10 +732,11 @@ mod test {
             }),
             CompLine {
                 text: vec![DocRichText::text("_notext")],
-                secondary_text: vec![DocRichText::text("foo bar 2")], 
+                secondary_text: vec![DocRichText::text("foo bar 2")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -744,10 +747,11 @@ mod test {
             }),
             CompLine {
                 text: vec![DocRichText::text("foo bar 2")],
-                secondary_text: vec![DocRichText::text("foo bar")], 
+                secondary_text: vec![DocRichText::text("foo bar")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -758,10 +762,11 @@ mod test {
             }),
             CompLine {
                 text: vec![DocRichText::text("_invalid")],
-                secondary_text: vec![DocRichText::text("foo bar 2")], 
+                secondary_text: vec![DocRichText::text("foo bar 2")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -773,9 +778,9 @@ mod test {
             CompLine {
                 text: vec![DocRichText::text("_preset")],
                 ..Default::default()
-            }
-        ).await;
-
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -838,8 +843,9 @@ mod test {
                 text: vec![DocRichText::text("preset two text")],
                 secondary_text: vec![DocRichText::text("preset one")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -852,10 +858,9 @@ mod test {
                 text: vec![DocRichText::text("test")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidPresetString(
-                "foo".to_string()
-            )]
-        ).await;
+            vec![CompilerError::InvalidPresetString("foo".to_string())],
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -874,8 +879,9 @@ mod test {
                 CompilerError::PresetNotFound("_foo".to_string()),
                 CompilerError::InvalidPresetString("_hello::".to_string()),
                 CompilerError::InvalidPresetString("123".to_string()),
-            ]
-        ).await;
+            ],
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -888,8 +894,9 @@ mod test {
                 text: vec![DocRichText::text("preset three")],
                 secondary_text: vec![DocRichText::text("preset two")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -898,8 +905,9 @@ mod test {
                 text: vec![DocRichText::text("preset four: arg is  abcde ")],
                 secondary_text: vec![DocRichText::text("preset two")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -909,10 +917,10 @@ mod test {
                 ..Default::default()
             },
             vec![CompilerError::MaxPresetDepthExceeded(
-                "_preset::overflow".to_string()
-            )]
-        ).await;
-
+                "_preset::overflow".to_string(),
+            )],
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -931,8 +939,9 @@ mod test {
                 doc_icon: Some("my-icon".to_string()),
                 map_icon: Some("my-icon".to_string()),
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -945,8 +954,9 @@ mod test {
                 text: vec![DocRichText::text("icon is string")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType("icon".to_string()),]
-        ).await;
+            vec![CompilerError::InvalidLinePropertyType("icon".to_string())],
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -959,8 +969,9 @@ mod test {
                 text: vec![DocRichText::text("icon is array")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType("icon".to_string()),]
-        ).await;
+            vec![CompilerError::InvalidLinePropertyType("icon".to_string())],
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -972,8 +983,9 @@ mod test {
             CompLine {
                 text: vec![DocRichText::text("icon is empty object")],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -992,8 +1004,9 @@ mod test {
                 map_icon: Some("my-map-icon".to_string()),
                 map_icon_priority: 1,
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -1016,9 +1029,9 @@ mod test {
                 CompilerError::InvalidLinePropertyType("icon.doc".to_string()),
                 CompilerError::InvalidLinePropertyType("icon.map".to_string()),
                 CompilerError::InvalidLinePropertyType("icon.priority".to_string()),
-            ]
-        ).await;
-
+            ],
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1042,9 +1055,9 @@ mod test {
                 map_icon: Some("my-map-icon".to_string()),
                 map_icon_priority: 10,
                 ..Default::default()
-            }
-        ).await;
-
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1062,8 +1075,9 @@ mod test {
                 text: vec![DocRichText::text("counter is string")],
                 counter_text: Some(DocRichText::text("hello")),
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -1076,8 +1090,9 @@ mod test {
                 text: vec![DocRichText::text("counter is tagged string")],
                 counter_text: Some(DocRichText::with_tag("test", "hello")),
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -1090,8 +1105,9 @@ mod test {
                 text: vec![DocRichText::text("counter is empty tagged string")],
                 counter_text: Some(DocRichText::with_tag("test", "")),
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -1104,8 +1120,9 @@ mod test {
                 text: vec![DocRichText::text("counter is empty string")],
                 counter_text: None,
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -1119,9 +1136,10 @@ mod test {
                 ..Default::default()
             },
             vec![CompilerError::InvalidLinePropertyType(
-                "counter".to_string()
-            ),]
-        ).await;
+                "counter".to_string(),
+            )],
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -1135,9 +1153,9 @@ mod test {
                 counter_text: Some(DocRichText::with_tag("v", "hello")),
                 ..Default::default()
             },
-            vec![CompilerError::TooManyTagsInCounter,]
-        ).await;
-
+            vec![CompilerError::TooManyTagsInCounter],
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1157,9 +1175,9 @@ mod test {
                 line_color: "color".to_string(),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
-            }
-        ).await;
-
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1179,12 +1197,13 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("change color")], 
+                text: vec![DocRichText::text("change color")],
                 line_color: "new-color".to_string(),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -1194,14 +1213,14 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("change color 2")], 
+                text: vec![DocRichText::text("change color 2")],
                 line_color: "new-color".to_string(),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType("color".to_string())]
-        ).await;
-
+            vec![CompilerError::InvalidLinePropertyType("color".to_string())],
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1234,8 +1253,9 @@ mod test {
                 map_coord: GameCoord(4.0, 5.0, 6.0),
                 movements: vec![CompMovement::to(GameCoord(4.0, 5.0, 6.0))],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_ok(
             &mut compiler,
@@ -1257,8 +1277,9 @@ mod test {
                     CompMovement::Pop,
                 ],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -1273,10 +1294,10 @@ mod test {
                 ..Default::default()
             },
             vec![CompilerError::InvalidLinePropertyType(
-                "movements".to_string()
-            ),]
-        ).await;
-
+                "movements".to_string(),
+            )],
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1327,9 +1348,9 @@ mod test {
                     CompMovement::to(GameCoord(7.0, 8.0, 9.0)),
                 ],
                 ..Default::default()
-            }
-        ).await;
-
+            },
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1353,11 +1374,12 @@ mod test {
                         at: GameCoord(1.0, 2.0, 4.0),
                         color: Some("marker 1".to_string()),
                     },
-                    CompMarker::at(GameCoord(1.0, 2.0, 3.0))
+                    CompMarker::at(GameCoord(1.0, 2.0, 3.0)),
                 ],
                 ..Default::default()
-            }
-        ).await;
+            },
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -1371,9 +1393,10 @@ mod test {
                 ..Default::default()
             },
             vec![CompilerError::InvalidLinePropertyType(
-                "markers".to_string()
-            )]
-        ).await;
+                "markers".to_string(),
+            )],
+        )
+        .await;
 
         test_comp_err(
             &mut compiler,
@@ -1385,12 +1408,12 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("test markers invalid marker type")], 
+                text: vec![DocRichText::text("test markers invalid marker type")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidMarkerType]
-        ).await;
-
+            vec![CompilerError::InvalidMarkerType],
+        )
+        .await;
     }
 
     #[tokio::test]
@@ -1405,13 +1428,13 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("test")], 
+                text: vec![DocRichText::text("test")],
                 properties: [("unused".to_string(), json!("property"))]
                     .into_iter()
                     .collect(),
                 ..Default::default()
-            }
-        ).await;
-
+            },
+        )
+        .await;
     }
 }

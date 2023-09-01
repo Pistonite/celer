@@ -3,7 +3,9 @@ This section is an extension of [Customizing Lines](./customizing-lines.md),
 focusing on the `coord` and `movements` properties for customizing map movements.
 
 ## Single Coordinate
-Use the `coord` movement if the line has a single movement segment:
+Use the `coord` property if the line has a single movement segment.
+The coordinate specified should be a [Route Coord](./config/map#coordinate-concepts)
+
 ```yaml
 - Move somewhere:
     coord: [0, 0]
@@ -31,7 +33,7 @@ If using this form, the coordinate should be specified with the `to` property.
 All properties except for `to` are optional.
 |Property|Type|Description|
 |-|-|-|
-|`to`|coordinate|The point to move to|
+|`to`|[Route Coord](./config/map#coordinate-concepts)|The point to move to|
 |`warp`|`boolean`|If `true`, no line is drawn from previous point to this point|
 |`exclude`|`boolean`|If `true`, this point is not considered part of the line when fitting the map to document. (Has no effect on the map line itself)|
 |`color`|`string`|Similar to the `color` property for the line, change the line color from this point on until next line|

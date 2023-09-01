@@ -48,8 +48,7 @@ impl CompLine {
                     if warp {
                         map_builder.commit(false);
                     }
-                    map_builder
-                        .add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
+                    map_builder.add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
 
                     if !exclude {
                         map_coords.push(to.clone());
@@ -334,8 +333,7 @@ mod test {
         map_builder.add_coord("blue", &GameCoord::default());
         test_line.exec(0, 0, &mut map_builder).await;
 
-        map_builder
-            .add_coord("test color", &GameCoord::default());
+        map_builder.add_coord("test color", &GameCoord::default());
         let map = map_builder.build();
         assert_eq!(
             map.lines,

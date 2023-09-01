@@ -2,14 +2,14 @@ use std::collections::HashMap;
 use tokio_stream::StreamExt;
 
 use celerctypes::{DocTag, MapMetadata};
-use serde_json::{Value, Map};
+use serde_json::{Map, Value};
 
 use crate::comp::prop;
 use crate::lang::Preset;
 
-use super::{Use, PackerError};
+use super::{PackerError, Use};
 
-use super::{ResourceResolver, PackerResult, ResourceLoader};
+use super::{PackerResult, ResourceLoader, ResourceResolver};
 
 pub struct RouteMetadataBuilder {
     pub map: Option<MapMetadata>,
@@ -46,7 +46,6 @@ pub async fn pack_config(
         //         // builder.map = Some
         //     }
         // }
-
     }
 
     todo!()
@@ -111,4 +110,3 @@ async fn process_config(
 
     Ok(config_obj)
 }
-

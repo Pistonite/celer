@@ -1,7 +1,6 @@
 use serde_json::Value;
 
-use super::{Use, PackerResult, PackerError};
-
+use super::{PackerError, PackerResult, Use};
 
 pub trait ResourceResolver {
     fn resolve(&self, target: &Use) -> PackerResult<Box<dyn Resource>>;
@@ -10,7 +9,6 @@ pub trait ResourceResolver {
 
 #[async_trait::async_trait]
 pub trait Resource: Sync {
-
     fn path(&self) -> &ResourcePath;
 
     /// Name of the resource for display, typically the file path or URL
@@ -42,12 +40,10 @@ pub trait Resource: Sync {
     /// Return value can be a data URL
     async fn load_image_url(&self, loader: &dyn ResourceLoader) -> PackerResult<String> {
         match self.path() {
-            ResourcePath::Url(url) => {
-                Ok(url.to_string())
-            }
-            ResourcePath::FsPath(path) => {
-                Err(PackerError::NotImpl("Local image is not implemented yet.".to_string()))
-            }
+            ResourcePath::Url(url) => Ok(url.to_string()),
+            ResourcePath::FsPath(path) => Err(PackerError::NotImpl(
+                "Local image is not implemented yet.".to_string(),
+            )),
         }
     }
 }

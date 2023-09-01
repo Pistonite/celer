@@ -1,21 +1,21 @@
 use celerctypes::RouteMetadata;
 use serde_json::Value;
 
-use super::{Resource, PackerError, PackerResult, ResourceResolver, ResourceLoader};
+use super::{PackerError, PackerResult, Resource, ResourceLoader, ResourceResolver};
 
 use crate::comp::prop;
 use crate::json::Coerce;
 
 macro_rules! check_metadata_not_array_or_object {
-    ($property:expr, $value:ident) => {
-        {
-            if $value.is_array() || $value.is_object() {
-                Err(PackerError::InvalidMetadataPropertyType($property.to_string()))
-            } else {
-                Ok($value.coerce_to_string())
-            }
+    ($property:expr, $value:ident) => {{
+        if $value.is_array() || $value.is_object() {
+            Err(PackerError::InvalidMetadataPropertyType(
+                $property.to_string(),
+            ))
+        } else {
+            Ok($value.coerce_to_string())
         }
-    }
+    }};
 }
 
 macro_rules! check_metadata_required_property {
@@ -24,11 +24,11 @@ macro_rules! check_metadata_required_property {
             Some(v) => Ok(v),
             None => Err(PackerError::MissingMetadataProperty($property.to_string())),
         }
-    }
+    };
 }
 
 /// Entry point for parsing project.yaml
-/// 
+///
 /// Returns the metadata and the route blob with all uses resolved
 pub async fn pack_project(
     project: &dyn Resource,
@@ -38,7 +38,12 @@ pub async fn pack_project(
     let project_json = project.load_json(loader).await?;
     let project_obj = match project_json {
         Value::Object(o) => o,
-        _ => return Err(PackerError::InvalidResourceType(project.name().to_string(), "object".to_string())),
+        _ => {
+            return Err(PackerError::InvalidResourceType(
+                project.name().to_string(),
+                "object".to_string(),
+            ))
+        }
     };
 
     let mut title = None;
@@ -57,13 +62,21 @@ pub async fn pack_project(
             prop::ROUTE => {
                 route = match value {
                     Value::Array(a) => Some(a),
-                    _ => return Err(PackerError::InvalidMetadataPropertyType(prop::ROUTE.to_string())),
+                    _ => {
+                        return Err(PackerError::InvalidMetadataPropertyType(
+                            prop::ROUTE.to_string(),
+                        ))
+                    }
                 }
             }
             prop::CONFIG => {
                 config = match value {
                     Value::Array(a) => Some(a),
-                    _ => return Err(PackerError::InvalidMetadataPropertyType(prop::CONFIG.to_string())),
+                    _ => {
+                        return Err(PackerError::InvalidMetadataPropertyType(
+                            prop::CONFIG.to_string(),
+                        ))
+                    }
                 }
             }
             _ => return Err(PackerError::UnusedMetadataProperty(key)),

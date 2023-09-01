@@ -16,7 +16,7 @@ pub struct MapMetadata {
     /// Initial coordinates
     pub initial_coord: GameCoord,
     /// Initial zoom level
-    pub initial_zoom: u32,
+    pub initial_zoom: u64,
     /// Initial map line color
     pub initial_color: String,
 }
