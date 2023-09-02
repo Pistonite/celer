@@ -3,7 +3,7 @@
 use celerctypes::{Axis, MapCoordMap};
 use serde_json::Value;
 
-use crate::comp::prop;
+use crate::{comp::prop, json::Cast};
 
 use super::{PackerError, PackerResult};
 
@@ -44,15 +44,9 @@ macro_rules! try_parse_axis {
 }
 
 pub async fn pack_coord_map(value: Value, index: usize) -> PackerResult<MapCoordMap> {
-    let mut obj = match value {
-        Value::Object(o) => o,
-        _ => {
-            return Err(PackerError::InvalidConfigProperty(
-                index,
-                format!("{}.{}", prop::MAP, prop::COORD_MAP),
-            ))
-        }
-    };
+    let mut obj = value.try_into_object().map_err(|_| {
+        PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::MAP, prop::COORD_MAP))
+    })?;
 
     let mapping_2d =
         check_coord_map_required_property!(prop::MAPPING_2D, index, obj.remove(prop::MAPPING_2D))?;
@@ -66,24 +60,19 @@ pub async fn pack_coord_map(value: Value, index: usize) -> PackerResult<MapCoord
         ));
     }
 
-    let mut mapping_2d = match mapping_2d {
-        Value::Array(o) => o,
-        _ => {
-            return Err(PackerError::InvalidConfigProperty(
-                index,
-                format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_2D),
-            ))
-        }
-    };
-    let mut mapping_3d = match mapping_3d {
-        Value::Array(o) => o,
-        _ => {
-            return Err(PackerError::InvalidConfigProperty(
-                index,
-                format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_3D),
-            ))
-        }
-    };
+    let mut mapping_2d = mapping_2d.try_into_array().map_err(|_| {
+        PackerError::InvalidConfigProperty(
+            index,
+            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_2D),
+        )
+    })?;
+
+    let mut mapping_3d = mapping_3d.try_into_array().map_err(|_| {
+        PackerError::InvalidConfigProperty(
+            index,
+            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_3D),
+        )
+    })?;
 
     let (c1_2d, c2_2d) = {
         let c2 = pop_coord_map_array!(mapping_2d, index, prop::MAPPING_2D)?;

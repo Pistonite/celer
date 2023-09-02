@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio_stream::StreamExt;
 
-use crate::json::Coerce;
+use crate::json::{Coerce, Cast};
 
 use super::{Compiler, CompilerError};
 
@@ -44,13 +44,10 @@ impl Compiler {
                 }
             };
         }
-        let mapping = match prop {
-            Value::Object(o) => o,
-            _ => {
-                errors.push(CompilerError::InvalidMarkerType);
-                return None;
-            }
-        };
+        let mapping = prop.try_into_object().ok().or_else(|| {
+            errors.push(CompilerError::InvalidMarkerType);
+            None
+        })?;
 
         let mut at = None;
         let mut color = None;

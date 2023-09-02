@@ -1,7 +1,7 @@
 use celerctypes::{Axis, GameCoord};
 use serde_json::Value;
 
-use crate::json::Coerce;
+use crate::json::{Coerce, Cast};
 
 use super::{Compiler, CompilerError};
 
@@ -26,17 +26,9 @@ macro_rules! map_coord {
 
 impl Compiler {
     pub fn transform_coord(&self, prop: Value) -> Result<GameCoord, CompilerError> {
-        if prop.is_null() {
-            return Err(CompilerError::InvalidCoordinateType("null".to_string()));
-        }
-        let array = match prop {
-            Value::Array(array) => array,
-            _ => {
-                return Err(CompilerError::InvalidCoordinateType(
-                    prop.coerce_to_string(),
-                ))
-            }
-        };
+        let array = prop.try_into_array().map_err(|prop| {
+            CompilerError::InvalidCoordinateType(prop.coerce_to_repl())
+        })?;
         let mut output = GameCoord::default();
         match array.len() {
             2 => {

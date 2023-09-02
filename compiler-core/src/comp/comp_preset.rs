@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-use crate::json::Coerce;
+use crate::json::{Coerce, Cast};
 use crate::lang::PresetInst;
 
 use super::prop;
@@ -63,8 +63,6 @@ impl Compiler {
             Value::Array(arr) => arr,
             _ => vec![presets],
         };
-        // match presets {
-        //     Value::Array(arr) => {
         for (i, preset_value) in preset_arr.into_iter().enumerate() {
             if !validate_not_array_or_object!(
                 &preset_value,
@@ -90,13 +88,6 @@ impl Compiler {
                 }
             }
         }
-        // }
-        // _ => {
-        //     errors.push(CompilerError::InvalidLinePropertyType(
-        //         prop::PRESETS.to_string(),
-        //     ));
-        // }
-        // }
     }
 
     /// Expand presets in the movements array
@@ -131,17 +122,15 @@ impl Compiler {
             self.apply_preset(depth + 1, &preset_inst, &mut map, errors)
                 .await;
 
-            match map.remove(prop::MOVEMENTS).and_then(|m| match m {
-                Value::Array(x) => Some(x),
-                _ => None,
-            }) {
-                Some(movements) => {
+            match map.remove(prop::MOVEMENTS).and_then(|m| m.try_into_array().ok()) {
+Some(movements) => {
                     new_array.extend(movements);
                 }
-                None => {
+                _ => {
                     errors.push(CompilerError::InvalidMovementPreset(preset_str.to_string()));
                 }
             }
+
         }
         Value::Array(new_array)
     }
