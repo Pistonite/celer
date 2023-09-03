@@ -1,11 +1,11 @@
-use tokio_stream::StreamExt;
 use celerctypes::GameCoord;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::Coerce;
+use crate::json::{Cast, Coerce};
+use crate::util::async_for;
 
-use super::{Compiler, CompilerError};
+use super::{prop, Compiler, CompilerError};
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -44,32 +44,28 @@ impl Compiler {
                 }
             };
         }
-        let mapping = match prop {
-            Value::Object(o) => o,
-            _ => {
-                errors.push(CompilerError::InvalidMarkerType);
-                return None;
-            }
-        };
+        let mapping = prop.try_into_object().ok().or_else(|| {
+            errors.push(CompilerError::InvalidMarkerType);
+            None
+        })?;
 
         let mut at = None;
         let mut color = None;
         let mut should_fail = false;
 
-        let mut mapping_iter = tokio_stream::iter(mapping);
-        while let Some((key, value)) = mapping_iter.next().await {
+        async_for!((key, value) in mapping, {
             match key.as_ref() {
-                "at" => match self.transform_coord(value) {
+                prop::AT => match self.transform_coord(value) {
                     Ok(coord) => at = Some(coord),
                     Err(e) => {
                         errors.push(e);
                         should_fail = true;
                     }
                 },
-                "color" => {
+                prop::COLOR => {
                     if value.is_array() || value.is_object() {
                         errors.push(CompilerError::InvalidLinePropertyType(format!(
-                            "{prop_name}.color"
+                            "{prop_name}.{}", prop::COLOR
                         )))
                     } else {
                         color = Some(value.coerce_to_string())
@@ -77,7 +73,7 @@ impl Compiler {
                 }
                 _ => errors.push(CompilerError::UnusedProperty(format!("{prop_name}.{key}"))),
             }
-        }
+        });
 
         match at {
             None => {
@@ -129,7 +125,9 @@ mod test {
         let compiler = Compiler::default();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_marker("", json!([1, 2, 3, 4]), &mut errors).await,
+            compiler
+                .comp_marker("", json!([1, 2, 3, 4]), &mut errors)
+                .await,
             None
         );
         assert_eq!(errors, vec![CompilerError::InvalidCoordinateArray]);
@@ -140,7 +138,9 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_marker("", json!([1, 2, 4]), &mut errors).await,
+            compiler
+                .comp_marker("", json!([1, 2, 4]), &mut errors)
+                .await,
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
@@ -151,13 +151,17 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_marker("", json!({"at": [1, 2, 4]}), &mut errors).await,
+            compiler
+                .comp_marker("", json!({"at": [1, 2, 4]}), &mut errors)
+                .await,
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler.comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors).await,
+            compiler
+                .comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors)
+                .await,
             Some(CompMarker {
                 at: GameCoord(1.0, 2.0, 4.0),
                 color: Some("123".to_string())
@@ -166,7 +170,9 @@ mod test {
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler.comp_marker("test", json!({"at": {}, "color": {}}), &mut errors).await,
+            compiler
+                .comp_marker("test", json!({"at": {}, "color": {}}), &mut errors)
+                .await,
             None
         );
         assert_eq!(
@@ -184,14 +190,16 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler.comp_marker(
-                "test",
-                json!({
-                    "at": [1, 2, 4],
-                    "unused": 1,
-                }),
-                &mut errors
-            ).await,
+            compiler
+                .comp_marker(
+                    "test",
+                    json!({
+                        "at": [1, 2, 4],
+                        "unused": 1,
+                    }),
+                    &mut errors
+                )
+                .await,
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(

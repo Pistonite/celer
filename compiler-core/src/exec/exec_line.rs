@@ -1,7 +1,7 @@
 use celerctypes::{ExecLine, MapIcon, MapMarker};
-use tokio_stream::StreamExt;
 
-use crate::{comp::CompMovement, CompLine};
+use crate::comp::{CompLine, CompMovement};
+use crate::util::async_for;
 
 use super::MapSectionBuilder;
 
@@ -25,19 +25,17 @@ impl CompLine {
             })
         }
 
-        let mut marker_iter = tokio_stream::iter(self.markers);
-        while let Some(marker) = marker_iter.next().await {
+        async_for!(marker in self.markers, {
             map_builder.markers.push(MapMarker {
                 coord: marker.at,
                 line_index: line_number,
                 section_index: section_number,
                 color: marker.color.unwrap_or_else(|| self.line_color.clone()),
             });
-        }
+        });
 
         let mut map_coords = vec![];
-        let mut movement_iter = tokio_stream::iter(self.movements);
-        while let Some(movement) = movement_iter.next().await {
+        async_for!(movement in self.movements, {
             match movement {
                 CompMovement::To {
                     to,
@@ -48,8 +46,7 @@ impl CompLine {
                     if warp {
                         map_builder.commit(false);
                     }
-                    map_builder
-                        .add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
+                    map_builder.add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
 
                     if !exclude {
                         map_coords.push(to.clone());
@@ -62,7 +59,7 @@ impl CompLine {
                     map_builder.commit(false);
                 }
             }
-        }
+        });
 
         let split_name = self
             .split_name
@@ -334,8 +331,7 @@ mod test {
         map_builder.add_coord("blue", &GameCoord::default());
         test_line.exec(0, 0, &mut map_builder).await;
 
-        map_builder
-            .add_coord("test color", &GameCoord::default());
+        map_builder.add_coord("test color", &GameCoord::default());
         let map = map_builder.build();
         assert_eq!(
             map.lines,

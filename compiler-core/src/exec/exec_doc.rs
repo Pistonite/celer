@@ -8,8 +8,7 @@ impl CompDoc {
     /// Execute the document
     pub async fn exec(self) -> ExecDoc {
         let mut map_builder = MapSectionBuilder::default();
-        map_builder
-            .add_coord("", &self.project.map.initial_coord);
+        map_builder.add_coord("", &self.project.map.initial_coord);
         let mut sections = vec![];
         for (index, section) in self.route.into_iter().enumerate() {
             let exec_section = section.exec(index, &mut map_builder).await;

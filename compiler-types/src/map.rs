@@ -16,7 +16,7 @@ pub struct MapMetadata {
     /// Initial coordinates
     pub initial_coord: GameCoord,
     /// Initial zoom level
-    pub initial_zoom: u32,
+    pub initial_zoom: u64,
     /// Initial map line color
     pub initial_color: String,
 }
@@ -56,11 +56,11 @@ pub struct MapLayerAttr {
     ///
     /// See: https://github.com/commenthol/leaflet-rastercoords.
     /// Form is [width, height]
-    pub size: (u32, u32),
+    pub size: (u64, u64),
     /// Min and max zoom levels
-    pub zoom_bounds: (u32, u32),
+    pub zoom_bounds: (u64, u64),
     /// Max native zoom of the tileset
-    pub max_native_zoom: u32,
+    pub max_native_zoom: u64,
     /// Coordinate transformation
     ///
     /// This should transform (x, y) from the game's coordinate space to (x, y) in the raster image.
@@ -68,7 +68,7 @@ pub struct MapLayerAttr {
     /// The minimum Z value this layer should be used
     ///
     /// This value is ignored for the first (lowest) layer
-    pub start_z: f32,
+    pub start_z: f64,
     /// Attribution 
     pub attribution: MapAttribution,
 }
@@ -84,9 +84,9 @@ pub struct MapLayerAttr {
 #[ts(export)]
 pub struct MapTilesetTransform {
     /// The scale of the transformation
-    pub scale: (f32, f32),
+    pub scale: (f64, f64),
     /// The translation of the transformation
-    pub translate: (f32, f32),
+    pub translate: (f64, f64),
 }
 
 /// Attribution to display on the map

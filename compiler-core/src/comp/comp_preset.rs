@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-use crate::json::Coerce;
+use crate::json::{Cast, Coerce};
 use crate::lang::PresetInst;
 
 use super::prop;
@@ -63,40 +63,31 @@ impl Compiler {
             Value::Array(arr) => arr,
             _ => vec![presets],
         };
-        // match presets {
-        //     Value::Array(arr) => {
-                for (i, preset_value) in preset_arr.into_iter().enumerate() {
-                    if !validate_not_array_or_object!(
-                        &preset_value,
-                        errors,
-                        format!("{p}[{i}]", p = prop::PRESETS)
-                    ) {
-                        continue;
-                    }
+        for (i, preset_value) in preset_arr.into_iter().enumerate() {
+            if !validate_not_array_or_object!(
+                &preset_value,
+                errors,
+                format!("{p}[{i}]", p = prop::PRESETS)
+            ) {
+                continue;
+            }
 
-                    let preset_string = preset_value.coerce_to_string();
-                    if !preset_string.starts_with('_') {
-                        errors.push(CompilerError::InvalidPresetString(preset_string));
-                        continue;
-                    }
+            let preset_string = preset_value.coerce_to_string();
+            if !preset_string.starts_with('_') {
+                errors.push(CompilerError::InvalidPresetString(preset_string));
+                continue;
+            }
 
-                    let preset_inst = PresetInst::try_parse(&preset_string);
-                    match preset_inst {
-                        None => {
-                            errors.push(CompilerError::InvalidPresetString(preset_string));
-                        }
-                        Some(inst) => {
-                            self.apply_preset(depth + 1, &inst, output, errors).await;
-                        }
-                    }
+            let preset_inst = PresetInst::try_parse(&preset_string);
+            match preset_inst {
+                None => {
+                    errors.push(CompilerError::InvalidPresetString(preset_string));
                 }
-            // }
-            // _ => {
-            //     errors.push(CompilerError::InvalidLinePropertyType(
-            //         prop::PRESETS.to_string(),
-            //     ));
-            // }
-        // }
+                Some(inst) => {
+                    self.apply_preset(depth + 1, &inst, output, errors).await;
+                }
+            }
+        }
     }
 
     /// Expand presets in the movements array
@@ -131,14 +122,14 @@ impl Compiler {
             self.apply_preset(depth + 1, &preset_inst, &mut map, errors)
                 .await;
 
-            match map.remove(prop::MOVEMENTS).and_then(|m| match m {
-                Value::Array(x) => Some(x),
-                _ => None,
-            }) {
+            match map
+                .remove(prop::MOVEMENTS)
+                .and_then(|m| m.try_into_array().ok())
+            {
                 Some(movements) => {
                     new_array.extend(movements);
                 }
-                None => {
+                _ => {
                     errors.push(CompilerError::InvalidMovementPreset(preset_str.to_string()));
                 }
             }
@@ -426,9 +417,7 @@ mod test {
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
-            vec![CompilerError::InvalidPresetString(
-                "preset one".to_string()
-            )]
+            vec![CompilerError::InvalidPresetString("preset one".to_string())]
         );
 
         errors.clear();

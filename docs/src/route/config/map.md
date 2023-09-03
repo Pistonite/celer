@@ -58,6 +58,10 @@ config:
     initial-zoom: 3
     initial-color: blue
 ```
+:::warning
+The `initial-coord` specified here must be a Game Coord, not a Route Coord like
+the ones specified in the route. in other words, it should always be `[x, y, z]` where `z` is height
+:::
 
 
 ## Layers
@@ -86,3 +90,22 @@ Suppose scale is `[a, b]` and translate is `[c, d]`. The raster coord is transfo
 (x, y) -> (x * a + c, y * b + d)
 ```
 
+### Layer Example
+Example:
+```yaml
+config:
+- map:
+    layers:
+    - name: Example
+      template-url: https://some.tileset.org/{x}/{y}/{z}
+      size: [500, 500]
+      zoom-bounds: [3, 8]
+      max-native-zoom: 6
+      transform:
+        scale: [2, 2]
+        translate: [100, 100]
+      start-z: 0
+      attribution:
+        link: https://some.tileset.org
+        copyright: true
+```
