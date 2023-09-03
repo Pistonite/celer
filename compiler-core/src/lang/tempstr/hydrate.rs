@@ -1,5 +1,6 @@
+use crate::util::async_for;
+
 use super::{TempStr, TempStrBlock};
-use tokio_stream::StreamExt;
 
 impl TempStr {
     /// Replace variable in a template string with arguments
@@ -10,8 +11,7 @@ impl TempStr {
         S: AsRef<str>,
     {
         let mut s = String::new();
-        let mut block_iter = tokio_stream::iter(&self.0);
-        while let Some(block) = block_iter.next().await {
+        async_for!(block in &self.0, {
             match block {
                 TempStrBlock::Lit(lit) => s.push_str(lit),
                 TempStrBlock::Var(idx) => {
@@ -20,7 +20,7 @@ impl TempStr {
                     }
                 }
             }
-        }
+        });
         s
     }
 }

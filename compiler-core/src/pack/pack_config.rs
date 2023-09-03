@@ -1,15 +1,20 @@
 use std::collections::HashMap;
-use tokio_stream::StreamExt;
 
 use celerctypes::{DocTag, MapMetadata};
 use serde_json::{Map, Value};
 
-use crate::comp::prop;
+use crate::json::Coerce;
 use crate::lang::Preset;
+use crate::util::async_for;
+use crate::Setting;
+use crate::{comp::prop, json::Cast};
 
-use super::{pack_map, PackerError, PackerResult, ResourceLoader, ResourceResolver, Use};
+use super::{
+    pack_map, pack_presets, PackerError, PackerResult, ResourceLoader, ResourceResolver, Use,
+};
 
-pub struct RouteMetadataBuilder {
+#[derive(Default, Debug)]
+pub struct ConfigBuilder {
     pub map: Option<MapMetadata>,
     pub icons: HashMap<String, String>,
     pub tags: HashMap<String, DocTag>,
@@ -18,11 +23,12 @@ pub struct RouteMetadataBuilder {
 
 /// Pack a config json blob and apply the values to the [`RouteMetadataBuilder`]
 pub async fn pack_config(
-    builder: &mut RouteMetadataBuilder,
+    builder: &mut ConfigBuilder,
     resolver: &dyn ResourceResolver,
     loader: &dyn ResourceLoader,
     config: Value,
     index: usize,
+    setting: &Setting,
 ) -> PackerResult<()> {
     // Load and resolve top-level `use` properties
     let config_value = match Use::from(config) {
@@ -35,8 +41,7 @@ pub async fn pack_config(
     let config_value = process_config(resolver, loader, config_value, index).await?;
 
     // add values to builder
-    let mut config_iter = tokio_stream::iter(config_value.into_iter());
-    while let Some((key, value)) = config_iter.next().await {
+    async_for!((key, value) in config_value.into_iter(), {
         match key.as_ref() {
             prop::MAP => {
                 if builder.map.is_some() {
@@ -44,9 +49,31 @@ pub async fn pack_config(
                 }
                 builder.map = Some(pack_map(value, index).await?);
             }
-            _ => todo!(),
+            prop::ICONS => {
+                let icons = value.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::ICONS.to_string()))?;
+                async_for!((key, value) in icons.into_iter(), {
+                    if value.is_array() || value.is_object() {
+                        return Err(PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::ICONS, key)));
+                    }
+                    builder.icons.insert(key, value.coerce_to_string());
+                });
+            }
+            prop::TAGS => {
+                let tags = value.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::TAGS.to_string()))?;
+                async_for!((key, value) in tags.into_iter(), {
+                    let tag = serde_json::from_value::<DocTag>(value).map_err(|_| PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::TAGS, key)))?;
+                    builder.tags.insert(key, tag);
+                });
+            }
+            prop::PRESETS => {
+                let presets = pack_presets(value, index, setting.max_preset_namespace_depth).await?;
+                async_for!((key, value) in presets.into_iter(), {
+                    builder.presets.insert(key, value);
+                });
+            }
+            _ => return Err(PackerError::UnusedConfigProperty(index, key)),
         }
-    }
+    });
 
     Ok(())
 }
@@ -92,8 +119,7 @@ async fn process_config(
         _ => return Ok(config_obj),
     };
 
-    let mut icons_iter = tokio_stream::iter(icons.values_mut());
-    while let Some(value) = icons_iter.next().await {
+    async_for!(value in icons.values_mut(), {
         let v = value.take();
         match Use::from(v) {
             Use::Invalid(path) => return Err(PackerError::InvalidUse(path)),
@@ -106,7 +132,7 @@ async fn process_config(
                 *value = Value::String(image_url);
             }
         }
-    }
+    });
 
     Ok(config_obj)
 }

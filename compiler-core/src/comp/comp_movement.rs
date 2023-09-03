@@ -1,9 +1,8 @@
 use celerctypes::GameCoord;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tokio_stream::StreamExt;
 
-use crate::json::Coerce;
+use crate::{comp::prop, json::Coerce, util::async_for};
 
 use super::{Compiler, CompilerError};
 
@@ -82,41 +81,40 @@ impl Compiler {
 
                 let mut should_fail = false;
 
-                let mut props_iter = tokio_stream::iter(props);
-                while let Some((key, value)) = props_iter.next().await {
+                async_for!((key, value) in props, {
                     match key.as_ref() {
-                        "to" => match self.transform_coord(value) {
+                        prop::TO => match self.transform_coord(value) {
                             Ok(coord) => to = Some(coord),
                             Err(e) => {
                                 should_fail = true;
                                 errors.push(e);
                             }
                         },
-                        "warp" => match value.try_coerce_to_bool() {
+                        prop::WARP => match value.try_coerce_to_bool() {
                             Some(b) => warp = b,
                             None => {
                                 should_fail = true;
                                 errors.push(CompilerError::InvalidLinePropertyType(format!(
-                                    "{prop_name}.warp"
+                                    "{prop_name}.{}", prop::WARP
                                 )));
                             }
                         },
-                        "exclude" => match value.try_coerce_to_bool() {
+                        prop::EXCLUDE => match value.try_coerce_to_bool() {
                             Some(b) => exclude = b,
                             None => {
                                 should_fail = true;
                                 errors.push(CompilerError::InvalidLinePropertyType(format!(
-                                    "{prop_name}.exclude"
+                                    "{prop_name}.{}", prop::EXCLUDE
                                 )));
                             }
                         },
-                        "color" => match value {
+                        prop::COLOR => match value {
                             Value::Null => color = None,
                             Value::String(s) => color = Some(s),
                             _ => {
                                 should_fail = true;
                                 errors.push(CompilerError::InvalidLinePropertyType(format!(
-                                    "{prop_name}.color"
+                                    "{prop_name}.{}", prop::COLOR
                                 )));
                             }
                         },
@@ -125,7 +123,8 @@ impl Compiler {
                                 .push(CompilerError::UnusedProperty(format!("{prop_name}.{key}")));
                         }
                     }
-                }
+                });
+
                 match to {
                     None => {
                         errors.push(CompilerError::InvalidMovementType);

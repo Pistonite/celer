@@ -2,55 +2,73 @@ use serde_json::Value;
 
 use super::{PackerError, PackerResult, Use};
 
-pub trait ResourceResolver {
-    fn resolve(&self, target: &Use) -> PackerResult<Box<dyn Resource>>;
+pub trait ResourceResolver: Send + Sync {
+    fn resolve(&self, target: &Use) -> PackerResult<ResourcePath>;
     fn get_resolver(&self, target: &Use) -> PackerResult<Box<dyn ResourceResolver>>;
 }
 
-#[async_trait::async_trait]
-pub trait Resource: Sync {
-    fn path(&self) -> &ResourcePath;
+pub enum ResourcePath {
+    Url(String),
+    FsPath(String),
+}
 
-    /// Name of the resource for display, typically the file path or URL
-    fn name(&self) -> &str {
-        match self.path() {
+impl ResourcePath {
+    /// File path or URL
+    pub fn name(&self) -> &str {
+        match self {
             ResourcePath::Url(url) => &url,
             ResourcePath::FsPath(path) => &path,
         }
     }
 
-    async fn load(&self, loader: &dyn ResourceLoader) -> PackerResult<Vec<u8>> {
-        match self.path() {
+    pub async fn load(&self, loader: &dyn ResourceLoader) -> PackerResult<Vec<u8>> {
+        match self {
             ResourcePath::Url(url) => loader.load_url(url).await,
             ResourcePath::FsPath(path) => loader.load_fs(path).await,
         }
     }
 
-    /// Load resource as json
-    async fn load_structured(&self, loader: &dyn ResourceLoader) -> PackerResult<Value> {
+    /// Load resource as structured data (json, yaml, etc)
+    ///
+    /// The type depends on the file extension
+    pub async fn load_structured(&self, loader: &dyn ResourceLoader) -> PackerResult<Value> {
+        let n = self.name();
+        if n.ends_with(".yaml") || n.ends_with(".yml") {
+            self.load_yaml(loader).await
+        } else if n.ends_with(".json") {
+            self.load_json(loader).await
+        } else {
+            Err(PackerError::UnknownFormat(n.to_string()))
+        }
+    }
+
+    pub async fn load_yaml(&self, loader: &dyn ResourceLoader) -> PackerResult<Value> {
+        let bytes = self.load(loader).await?;
+        match serde_yaml::from_slice(&bytes) {
+            Ok(v) => Ok(v),
+            Err(_) => Err(PackerError::InvalidFormat),
+        }
+    }
+
+    pub async fn load_json(&self, loader: &dyn ResourceLoader) -> PackerResult<Value> {
         let bytes = self.load(loader).await?;
         match serde_json::from_slice(&bytes) {
             Ok(v) => Ok(v),
-            Err(_) => Err(PackerError::InvalidJSON),
+            Err(_) => Err(PackerError::InvalidFormat),
         }
     }
 
     /// Load resource as image URL
     ///
     /// Return value can be a data URL
-    async fn load_image_url(&self, loader: &dyn ResourceLoader) -> PackerResult<String> {
-        match self.path() {
+    pub async fn load_image_url(&self, loader: &dyn ResourceLoader) -> PackerResult<String> {
+        match self {
             ResourcePath::Url(url) => Ok(url.to_string()),
             ResourcePath::FsPath(path) => Err(PackerError::NotImpl(
                 "Local image is not implemented yet.".to_string(),
             )),
         }
     }
-}
-
-pub enum ResourcePath {
-    Url(String),
-    FsPath(String),
 }
 
 #[async_trait::async_trait]

@@ -1,11 +1,13 @@
 use celerctypes::GameCoord;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tokio_stream::StreamExt;
 
-use crate::json::{Cast, Coerce};
+use crate::{
+    json::{Cast, Coerce},
+    util::async_for,
+};
 
-use super::{Compiler, CompilerError};
+use super::{prop, Compiler, CompilerError};
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -53,20 +55,19 @@ impl Compiler {
         let mut color = None;
         let mut should_fail = false;
 
-        let mut mapping_iter = tokio_stream::iter(mapping);
-        while let Some((key, value)) = mapping_iter.next().await {
+        async_for!((key, value) in mapping, {
             match key.as_ref() {
-                "at" => match self.transform_coord(value) {
+                prop::AT => match self.transform_coord(value) {
                     Ok(coord) => at = Some(coord),
                     Err(e) => {
                         errors.push(e);
                         should_fail = true;
                     }
                 },
-                "color" => {
+                prop::COLOR => {
                     if value.is_array() || value.is_object() {
                         errors.push(CompilerError::InvalidLinePropertyType(format!(
-                            "{prop_name}.color"
+                            "{prop_name}.{}", prop::COLOR
                         )))
                     } else {
                         color = Some(value.coerce_to_string())
@@ -74,7 +75,7 @@ impl Compiler {
                 }
                 _ => errors.push(CompilerError::UnusedProperty(format!("{prop_name}.{key}"))),
             }
-        }
+        });
 
         match at {
             None => {

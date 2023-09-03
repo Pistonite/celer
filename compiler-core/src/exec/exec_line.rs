@@ -1,7 +1,6 @@
 use celerctypes::{ExecLine, MapIcon, MapMarker};
-use tokio_stream::StreamExt;
 
-use crate::{comp::CompMovement, CompLine};
+use crate::{comp::CompMovement, util::async_for, CompLine};
 
 use super::MapSectionBuilder;
 
@@ -25,19 +24,17 @@ impl CompLine {
             })
         }
 
-        let mut marker_iter = tokio_stream::iter(self.markers);
-        while let Some(marker) = marker_iter.next().await {
+        async_for!(marker in self.markers, {
             map_builder.markers.push(MapMarker {
                 coord: marker.at,
                 line_index: line_number,
                 section_index: section_number,
                 color: marker.color.unwrap_or_else(|| self.line_color.clone()),
             });
-        }
+        });
 
         let mut map_coords = vec![];
-        let mut movement_iter = tokio_stream::iter(self.movements);
-        while let Some(movement) = movement_iter.next().await {
+        async_for!(movement in self.movements, {
             match movement {
                 CompMovement::To {
                     to,
@@ -61,7 +58,7 @@ impl CompLine {
                     map_builder.commit(false);
                 }
             }
-        }
+        });
 
         let split_name = self
             .split_name

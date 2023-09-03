@@ -1,13 +1,13 @@
 //! Packs [`MapMetadata`]
 
-use celerctypes::{GameCoord, MapLayerAttr, MapMetadata};
+use celerctypes::{GameCoord, MapMetadata};
 use serde_json::Value;
-use tokio_stream::StreamExt;
 
 use super::{pack_coord_map, pack_map_layer, PackerError, PackerResult};
 
 use crate::comp::prop;
 use crate::json::{Cast, Coerce};
+use crate::util::async_for;
 
 macro_rules! check_map_required_property {
     ($property:expr, $index:ident, $value:expr) => {
@@ -89,10 +89,9 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
 
     let layers = {
         let mut packed_layers = Vec::with_capacity(layers.len());
-        let mut iter = tokio_stream::iter(layers.into_iter().enumerate());
-        while let Some((i, layer)) = iter.next().await {
+        async_for!((i, layer) in layers.into_iter().enumerate(), {
             packed_layers.push(pack_map_layer(layer, index, i)?);
-        }
+        });
         packed_layers
     };
 

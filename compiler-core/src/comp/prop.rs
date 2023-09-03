@@ -1,5 +1,6 @@
 //! Property constants
 
+pub const AT: &str = "at";
 pub const ATTRIBUTION: &str = "attribution";
 pub const COLOR: &str = "color";
 pub const COMMENT: &str = "comment";
@@ -7,6 +8,7 @@ pub const CONFIG: &str = "config";
 pub const COORD_MAP: &str = "coord-map";
 pub const COPYRIGHT: &str = "copyright";
 pub const COUNTER: &str = "counter";
+pub const EXCLUDE: &str = "exclude";
 pub const ICON: &str = "icon";
 pub const ICONS: &str = "icons";
 pub const INITIAL_COLOR: &str = "initial-color";
@@ -32,8 +34,10 @@ pub const TAGS: &str = "tags";
 pub const TEMPLATE_URL: &str = "template-url";
 pub const TEXT: &str = "text";
 pub const TITLE: &str = "title";
+pub const TO: &str = "to";
 pub const TRANSFORM: &str = "transform";
 pub const TRANSLATE: &str = "translate";
 pub const USE: &str = "use";
 pub const VERSION: &str = "version";
+pub const WARP: &str = "warp";
 pub const ZOOM_BOUNDS: &str = "zoom-bounds";

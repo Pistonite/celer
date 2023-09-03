@@ -1,10 +1,15 @@
 use celerctypes::RouteMetadata;
 use serde_json::Value;
 
-use super::{PackerError, PackerResult, Resource, ResourceLoader, ResourceResolver};
-
 use crate::comp::prop;
-use crate::json::Coerce;
+use crate::json::{Cast, Coerce};
+use crate::util::async_for;
+use crate::{CompilerMetadata, Setting};
+
+use super::{
+    pack_config, pack_route, ConfigBuilder, PackerError, PackerResult, PackerValue, ResourceLoader,
+    ResourcePath, ResourceResolver,
+};
 
 macro_rules! check_metadata_not_array_or_object {
     ($property:expr, $value:ident) => {{
@@ -19,24 +24,32 @@ macro_rules! check_metadata_not_array_or_object {
 }
 
 macro_rules! check_metadata_required_property {
-    ($property:expr, $value:ident) => {
-        match $value {
+    ($property:expr, $obj:ident) => {
+        match $obj.remove($property) {
             Some(v) => Ok(v),
             None => Err(PackerError::MissingMetadataProperty($property.to_string())),
         }
     };
 }
 
+/// Result of packing a project
+pub struct PackedProject {
+    pub route_metadata: RouteMetadata,
+    pub compiler_metadata: CompilerMetadata,
+    pub route: PackerValue,
+}
+
 /// Entry point for parsing project.yaml
 ///
 /// Returns the metadata and the route blob with all uses resolved
 pub async fn pack_project(
-    project: &dyn Resource,
+    project: &ResourcePath,
     resolver: &dyn ResourceResolver,
     loader: &dyn ResourceLoader,
-) -> PackerResult<(RouteMetadata, Value)> {
-    let project_json = project.load_json(loader).await?;
-    let project_obj = match project_json {
+    setting: &Setting,
+) -> PackerResult<PackedProject> {
+    let project_json = project.load_structured(loader).await?;
+    let mut project_obj = match project_json {
         Value::Object(o) => o,
         _ => {
             return Err(PackerError::InvalidResourceType(
@@ -46,47 +59,51 @@ pub async fn pack_project(
         }
     };
 
-    let mut title = None;
-    let mut version = None;
-    let mut route = None;
-    let mut config = None;
+    let title = check_metadata_required_property!(prop::TITLE, project_obj)?;
+    let version = check_metadata_required_property!(prop::VERSION, project_obj)?;
+    let route = check_metadata_required_property!(prop::ROUTE, project_obj)?;
+    let config = check_metadata_required_property!(prop::CONFIG, project_obj)?;
 
-    for (key, value) in project_obj.into_iter() {
-        match key.as_str() {
-            prop::TITLE => {
-                title = Some(check_metadata_not_array_or_object!(prop::TITLE, value)?);
-            }
-            prop::VERSION => {
-                version = Some(check_metadata_not_array_or_object!(prop::VERSION, value)?);
-            }
-            prop::ROUTE => {
-                route = match value {
-                    Value::Array(a) => Some(a),
-                    _ => {
-                        return Err(PackerError::InvalidMetadataPropertyType(
-                            prop::ROUTE.to_string(),
-                        ))
-                    }
-                }
-            }
-            prop::CONFIG => {
-                config = match value {
-                    Value::Array(a) => Some(a),
-                    _ => {
-                        return Err(PackerError::InvalidMetadataPropertyType(
-                            prop::CONFIG.to_string(),
-                        ))
-                    }
-                }
-            }
-            _ => return Err(PackerError::UnusedMetadataProperty(key)),
-        }
+    if let Some(k) = project_obj.keys().next() {
+        return Err(PackerError::UnusedMetadataProperty(k.to_string()));
     }
 
-    let title = check_metadata_required_property!(prop::TITLE, title)?;
-    let version = check_metadata_required_property!(prop::VERSION, version)?;
-    let route = check_metadata_required_property!(prop::ROUTE, route)?;
-    let config = check_metadata_required_property!(prop::CONFIG, config)?;
+    let title = check_metadata_not_array_or_object!(prop::TITLE, title)?;
+    let version = check_metadata_not_array_or_object!(prop::VERSION, version)?;
+    let config = config
+        .try_into_array()
+        .map_err(|_| PackerError::InvalidMetadataPropertyType(prop::CONFIG.to_string()))?;
 
-    todo!()
+    let mut builder = ConfigBuilder::default();
+    async_for!((i, config) in config.into_iter().enumerate(), {
+        pack_config(&mut builder, resolver, loader, config, i, setting).await?;
+    });
+
+    let route_metadata = RouteMetadata {
+        name: project.name().to_string(),
+        title,
+        version,
+        map: builder.map.ok_or(PackerError::MissingMap)?,
+        icons: builder.icons,
+        tags: builder.tags,
+    };
+
+    let compiler_metadata = CompilerMetadata {
+        presets: builder.presets,
+    };
+
+    let route = pack_route(
+        route,
+        resolver,
+        loader,
+        setting.max_use_depth,
+        setting.max_ref_depth,
+    )
+    .await;
+
+    Ok(PackedProject {
+        route_metadata,
+        compiler_metadata,
+        route,
+    })
 }
