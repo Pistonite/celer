@@ -1,6 +1,7 @@
 use celerctypes::{ExecLine, MapIcon, MapMarker};
 
-use crate::{comp::CompMovement, util::async_for, CompLine};
+use crate::comp::{CompLine, CompMovement};
+use crate::util::async_for;
 
 use super::MapSectionBuilder;
 

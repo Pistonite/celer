@@ -3,7 +3,8 @@
 use celerctypes::{Axis, MapCoordMap};
 use serde_json::Value;
 
-use crate::{comp::prop, json::Cast};
+use crate::comp::prop;
+use crate::json::Cast;
 
 use super::{PackerError, PackerResult};
 

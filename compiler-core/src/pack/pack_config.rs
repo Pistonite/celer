@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use celerctypes::{DocTag, MapMetadata};
 use serde_json::{Map, Value};
 
-use crate::json::Coerce;
+use crate::comp::prop;
+use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
 use crate::util::async_for;
 use crate::Setting;
-use crate::{comp::prop, json::Cast};
 
 use super::{
     pack_map, pack_presets, PackerError, PackerResult, ResourceLoader, ResourceResolver, Use,
