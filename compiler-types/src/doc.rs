@@ -53,7 +53,7 @@ pub struct ExecLine {
 #[ts(export)]
 pub struct DocDiagnostic {
     /// The diagnostic message
-    pub msg: String,
+    pub msg: Vec<DocPoorText>,
     /// Type of the diagnostic
     #[serde(rename = "type")]
     pub msg_type: String,
@@ -96,6 +96,15 @@ impl DocRichText {
             link: None,
         }
     }
+}
+
+/// Document poor text type. Just text or link
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone, TS)]
+#[serde(tag = "type", rename_all = "camelCase")]
+#[ts(export)]
+pub enum DocPoorText {
+    Text(String),
+    Link(String),
 }
 
 /// Document note block

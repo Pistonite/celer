@@ -23,6 +23,8 @@ pub use doc::*;
 pub struct ExecDoc {
     /// Project metadata
     pub project: RouteMetadata,
+    /// The preface
+    pub preface: Vec<Vec<DocPoorText>>,
     /// The route
     pub route: Vec<ExecSection>,
 }

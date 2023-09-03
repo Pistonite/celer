@@ -1,4 +1,4 @@
-use celerctypes::{ExecDoc, RouteMetadata};
+use celerctypes::{ExecDoc, RouteMetadata, DocPoorText};
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -57,7 +57,9 @@ pub struct CompilerMetadata {
 pub struct CompDoc {
     /// Project metadata
     project: RouteMetadata,
-    // TODO: compiler info
+    /// The preface
+    preface: Vec<Vec<DocPoorText>>,
+    /// The route
     route: Vec<CompSection>,
 }
 
