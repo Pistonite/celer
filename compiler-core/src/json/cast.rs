@@ -1,9 +1,9 @@
-use serde_json::{Value, Map};
+use serde_json::{Map, Value};
 
 /// The Into version of the as_type methods for non-primitive types
 ///
 /// On error, returns the original value with the Err variant
-pub trait Cast: Sized{
+pub trait Cast: Sized {
     type Object;
     fn try_into_object(self) -> Result<Self::Object, Self>;
     fn try_into_array(self) -> Result<Vec<Self>, Self>;

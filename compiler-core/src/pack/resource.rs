@@ -27,7 +27,7 @@ pub trait Resource: Sync {
     }
 
     /// Load resource as json
-    async fn load_json(&self, loader: &dyn ResourceLoader) -> PackerResult<Value> {
+    async fn load_structured(&self, loader: &dyn ResourceLoader) -> PackerResult<Value> {
         let bytes = self.load(loader).await?;
         match serde_json::from_slice(&bytes) {
             Ok(v) => Ok(v),

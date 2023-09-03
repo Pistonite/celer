@@ -1,4 +1,3 @@
-
 use serde_json::Value;
 
 /// Loosely interpret a json value as a type
@@ -19,6 +18,9 @@ pub trait Coerce {
 
     /// Interpret a number or string as f64
     fn try_coerce_to_f64(&self) -> Option<f64>;
+
+    /// Interpret a number or string as u64
+    fn try_coerce_to_u64(&self) -> Option<u64>;
 
     /// Interpret a null, number (0 or 1), boolean, or string ("true" or "false") as bool
     fn try_coerce_to_bool(&self) -> Option<bool>;
@@ -54,6 +56,14 @@ impl Coerce for Value {
         match self {
             Value::Number(n) => n.as_f64(),
             Value::String(s) => s.trim().parse::<f64>().ok(),
+            _ => None,
+        }
+    }
+
+    fn try_coerce_to_u64(&self) -> Option<u64> {
+        match self {
+            Value::Number(n) => n.as_u64(),
+            Value::String(s) => s.trim().parse::<u64>().ok(),
             _ => None,
         }
     }

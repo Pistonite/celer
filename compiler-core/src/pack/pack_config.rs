@@ -7,9 +7,7 @@ use serde_json::{Map, Value};
 use crate::comp::prop;
 use crate::lang::Preset;
 
-use super::{PackerError, Use};
-
-use super::{PackerResult, ResourceLoader, ResourceResolver};
+use super::{pack_map, PackerError, PackerResult, ResourceLoader, ResourceResolver, Use};
 
 pub struct RouteMetadataBuilder {
     pub map: Option<MapMetadata>,
@@ -18,6 +16,7 @@ pub struct RouteMetadataBuilder {
     pub presets: HashMap<String, Preset>,
 }
 
+/// Pack a config json blob and apply the values to the [`RouteMetadataBuilder`]
 pub async fn pack_config(
     builder: &mut RouteMetadataBuilder,
     resolver: &dyn ResourceResolver,
@@ -38,17 +37,18 @@ pub async fn pack_config(
     // add values to builder
     let mut config_iter = tokio_stream::iter(config_value.into_iter());
     while let Some((key, value)) = config_iter.next().await {
-        // match key.as_ref() {
-        //     prop::MAP => {
-        //         if builder.map.is_some() {
-        //             return Err(PackerError::DuplicateMap(index));
-        //         }
-        //         // builder.map = Some
-        //     }
-        // }
+        match key.as_ref() {
+            prop::MAP => {
+                if builder.map.is_some() {
+                    return Err(PackerError::DuplicateMap(index));
+                }
+                builder.map = Some(pack_map(value, index).await?);
+            }
+            _ => todo!(),
+        }
     }
 
-    todo!()
+    Ok(())
 }
 
 /// Load a top-level `use`

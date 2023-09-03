@@ -16,7 +16,6 @@ mod pack_map;
 pub use pack_map::*;
 mod pack_map_layer;
 pub use pack_map_layer::*;
-mod pack_metadata;
 mod pack_project;
 pub use pack_project::*;
 mod pack_use;

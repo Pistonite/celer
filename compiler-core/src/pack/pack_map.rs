@@ -1,11 +1,13 @@
 //! Packs [`MapMetadata`]
 
-use celerctypes::{MapMetadata, GameCoord};
+use celerctypes::{GameCoord, MapLayerAttr, MapMetadata};
 use serde_json::Value;
+use tokio_stream::StreamExt;
 
-use super::{PackerError, PackerResult, pack_coord_map};
+use super::{pack_coord_map, pack_map_layer, PackerError, PackerResult};
 
-use crate::{comp::prop, json::Coerce};
+use crate::comp::prop;
+use crate::json::{Cast, Coerce};
 
 macro_rules! check_map_required_property {
     ($property:expr, $index:ident, $value:expr) => {
@@ -21,15 +23,9 @@ macro_rules! check_map_required_property {
 
 /// Parses the `map` property in a config json blob
 pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
-    let mut map_obj = match value {
-        Value::Object(o) => o,
-        _ => {
-            return Err(PackerError::InvalidConfigProperty(
-                index,
-                prop::MAP.to_string(),
-            ))
-        }
-    };
+    let mut map_obj = value
+        .try_into_object()
+        .map_err(|_| PackerError::InvalidConfigProperty(index, prop::MAP.to_string()))?;
 
     let layers = check_map_required_property!(prop::LAYERS, index, map_obj.remove(prop::LAYERS))?;
     let coord_map =
@@ -57,15 +53,9 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
         ));
     }
 
-    let layers = match layers {
-        Value::Array(o) => o,
-        _ => {
-            return Err(PackerError::InvalidConfigProperty(
-                index,
-                format!("{}.{}", prop::MAP, prop::LAYERS),
-            ))
-        }
-    };
+    let layers = layers.try_into_array().map_err(|_| {
+        PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::MAP, prop::LAYERS))
+    })?;
 
     let coord_map = pack_coord_map(coord_map, index).await?;
     let initial_coord = match serde_json::from_value::<GameCoord>(initial_coord) {
@@ -97,7 +87,22 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
         initial_color.coerce_to_string()
     };
 
-    todo!()
+    let layers = {
+        let mut packed_layers = Vec::with_capacity(layers.len());
+        let mut iter = tokio_stream::iter(layers.into_iter().enumerate());
+        while let Some((i, layer)) = iter.next().await {
+            packed_layers.push(pack_map_layer(layer, index, i)?);
+        }
+        packed_layers
+    };
+
+    Ok(MapMetadata {
+        layers,
+        coord_map,
+        initial_coord,
+        initial_zoom,
+        initial_color,
+    })
 }
 
 #[cfg(test)]
@@ -286,7 +291,7 @@ mod test {
             result,
             Err(PackerError::InvalidConfigProperty(
                 0,
-        "map.initial-coord".to_string()
+                "map.initial-coord".to_string()
             ))
         );
 
@@ -308,7 +313,7 @@ mod test {
             result,
             Err(PackerError::InvalidConfigProperty(
                 0,
-        "map.initial-zoom".to_string()
+                "map.initial-zoom".to_string()
             ))
         );
 
@@ -330,13 +335,8 @@ mod test {
             result,
             Err(PackerError::InvalidConfigProperty(
                 0,
-        "map.initial-color".to_string()
+                "map.initial-color".to_string()
             ))
         );
-    }
-
-    #[tokio::test]
-    async fn test_layers() {
-        todo!()
     }
 }

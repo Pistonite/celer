@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio_stream::StreamExt;
 
-use crate::json::{Coerce, Cast};
+use crate::json::{Cast, Coerce};
 
 use super::{Compiler, CompilerError};
 

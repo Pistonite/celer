@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-use crate::json::{Coerce, Cast};
+use crate::json::{Cast, Coerce};
 use crate::lang::PresetInst;
 
 use super::prop;
@@ -122,15 +122,17 @@ impl Compiler {
             self.apply_preset(depth + 1, &preset_inst, &mut map, errors)
                 .await;
 
-            match map.remove(prop::MOVEMENTS).and_then(|m| m.try_into_array().ok()) {
-Some(movements) => {
+            match map
+                .remove(prop::MOVEMENTS)
+                .and_then(|m| m.try_into_array().ok())
+            {
+                Some(movements) => {
                     new_array.extend(movements);
                 }
                 _ => {
                     errors.push(CompilerError::InvalidMovementPreset(preset_str.to_string()));
                 }
             }
-
         }
         Value::Array(new_array)
     }
