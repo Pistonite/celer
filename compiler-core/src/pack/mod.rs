@@ -32,7 +32,8 @@ mod resource;
 pub use resource::*;
 use serde_json::{Map, Value};
 
-use crate::{json::Cast, lang::parse_poor};
+use crate::json::Cast;
+use crate::lang::parse_poor;
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum PackerError {

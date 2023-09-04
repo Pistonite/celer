@@ -2,10 +2,11 @@ use celerctypes::{DocPoorText, RouteMetadata};
 use serde::{Deserialize, Serialize};
 
 use crate::api::CompilerMetadata;
+use crate::json::Cast;
 use crate::json::Coerce;
+use crate::lang::parse_poor;
 use crate::pack::PackerValue;
 use crate::util::async_for;
-use crate::{json::Cast, lang::parse_poor};
 
 use super::{CompLine, CompSection, Compiler, CompilerError};
 

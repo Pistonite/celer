@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{json::Cast, lang::parse_rich, pack::PackerValue, util::async_for};
+use crate::json::Cast;
+use crate::lang::parse_rich;
+use crate::pack::PackerValue;
+use crate::util::async_for;
 
 use super::{CompLine, Compiler, CompilerError};
 
