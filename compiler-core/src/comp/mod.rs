@@ -1,14 +1,18 @@
 use std::collections::HashMap;
 
-use celerctypes::{GameCoord, RouteMetadata};
+use celerctypes::{DocDiagnostic, GameCoord, RouteMetadata};
 use derivative::Derivative;
-use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
-use crate::lang::Preset;
+use crate::{
+    lang::{parse_poor, Preset},
+    pack::{PackerError, PackerValue},
+};
 
-mod builder;
-pub use builder::*;
 mod comp_coord;
+pub use comp_coord::*;
+mod comp_doc;
+pub use comp_doc::*;
 mod comp_line;
 pub use comp_line::*;
 mod comp_marker;
@@ -16,27 +20,18 @@ pub use comp_marker::*;
 mod comp_movement;
 pub use comp_movement::*;
 mod comp_preset;
+pub use comp_preset::*;
+mod comp_section;
+pub use comp_section::*;
+mod compiler;
+pub use compiler::*;
 mod desugar;
 use desugar::*;
 pub mod prop;
 
-#[derive(Derivative, Debug, Clone)]
-#[derivative(Default)]
-pub struct Compiler {
-    project: RouteMetadata,
-    presets: HashMap<String, Preset>,
-    /// Current color of the map line
-    color: String,
-    /// Current position on the map
-    coord: GameCoord,
-    #[derivative(Default(value = "8"))]
-    max_preset_depth: usize,
-    default_icon_priority: i64,
-}
-
 pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
 
-#[derive(PartialEq, Debug, Clone, thiserror::Error)]
+#[derive(PartialEq, Debug, thiserror::Error)]
 pub enum CompilerError {
     /// When an array is specified as a line
     #[error("A line cannot be an array. Check the formatting of your route.")]
@@ -98,7 +93,7 @@ pub enum CompilerError {
     InvalidCoordinateArray,
 
     /// When the coordinate value inside coordinate array is not valid
-    #[error("{0} is not a valid coordinate value")]
+    #[error("{0} is not a valid coordinate value.")]
     InvalidCoordinateValue(String),
 
     /// When a preset specified as part of a movement does not contain the `movements` property
@@ -108,14 +103,119 @@ pub enum CompilerError {
     /// When the value specified as part of marker is invalid
     #[error("Some of the markers specified cannot be processed.")]
     InvalidMarkerType,
+
+    /// When a section is a preface.
+    ///
+    /// This may not be an actual error depending on if the compiler is expecting a preface
+    #[error("Preface can only be in the beginning of the route.")]
+    IsPreface(Value),
+
+    /// When a section is invalid
+    #[error("Section data is not the correct type.")]
+    InvalidSectionType,
+
+    /// When packer errors need to be propagated
+    #[error("Packer errors")]
+    PackerErrors(Vec<PackerError>),
+
+    /// When the `route` property is invalid
+    #[error("Route data is not the correct type.")]
+    InvalidRouteType,
 }
 
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CompilerDiagnostic {
-    pub file_name: String,
-    pub line: usize,
-    pub message: String,
+impl CompilerError {
+    /// Get the more info url for a compiler error
+    pub fn get_info_url(&self) -> String {
+        match self {
+            CompilerError::ArrayCannotBeLine
+            | CompilerError::EmptyObjectCannotBeLine
+            | CompilerError::TooManyKeysInObjectLine
+            | CompilerError::LinePropertiesMustBeObject
+            | CompilerError::InvalidLinePropertyType(_)
+            | CompilerError::UnusedProperty(_) => {
+                "https://celer.pistonite.org/docs/route/customizing-lines".to_string()
+            }
+            CompilerError::InvalidPresetString(_)
+            | CompilerError::PresetNotFound(_)
+            | CompilerError::MaxPresetDepthExceeded(_) => {
+                "https://celer.pistonite.org/docs/route/using-presets".to_string()
+            }
+            CompilerError::TooManyTagsInCounter => {
+                "https://celer.pistonite.org/docs/route/customizing-lines#counter".to_string()
+            }
+            CompilerError::InvalidCoordinateType(_)
+            | CompilerError::InvalidCoordinateArray
+            | CompilerError::InvalidCoordinateValue(_)
+            | CompilerError::InvalidMovementType => {
+                "https://celer.pistonite.org/docs/route/customizing-movements".to_string()
+            }
+            CompilerError::InvalidMovementPreset(_) => {
+                "https://celer.pistonite.org/docs/route/customizing-movements#presets".to_string()
+            }
+            CompilerError::InvalidMarkerType => {
+                "https://celer.pistonite.org/docs/route/customizing-lines#markers".to_string()
+            }
+            CompilerError::IsPreface(_) => {
+                "https://celer.pistonite.org/docs/route/route-structure#preface".to_string()
+            }
+            CompilerError::PackerErrors(_) | CompilerError::InvalidSectionType => {
+                "https://celer.pistonite.org/docs/route/route-structure".to_string()
+            }
+            CompilerError::InvalidRouteType => {
+                "https://celer.pistonite.org/docs/route/route-structure#entry-point".to_string()
+            }
+        }
+    }
+
+    pub fn get_type(&self) -> String {
+        let s = match self {
+            CompilerError::ArrayCannotBeLine
+            | CompilerError::EmptyObjectCannotBeLine
+            | CompilerError::TooManyKeysInObjectLine
+            | CompilerError::LinePropertiesMustBeObject
+            | CompilerError::InvalidLinePropertyType(_)
+            | CompilerError::InvalidPresetString(_)
+            | CompilerError::PresetNotFound(_)
+            | CompilerError::MaxPresetDepthExceeded(_)
+            | CompilerError::InvalidMovementType
+            | CompilerError::InvalidCoordinateType(_)
+            | CompilerError::InvalidCoordinateArray
+            | CompilerError::InvalidCoordinateValue(_)
+            | CompilerError::InvalidMovementPreset(_)
+            | CompilerError::InvalidMarkerType
+            | CompilerError::IsPreface(_)
+            | CompilerError::InvalidSectionType
+            | CompilerError::PackerErrors(_)
+            | CompilerError::InvalidRouteType => "error",
+
+            CompilerError::UnusedProperty(_) | CompilerError::TooManyTagsInCounter => "warn",
+        };
+
+        s.to_string()
+    }
+
+    pub fn add_to_diagnostics(&self, output: &mut Vec<DocDiagnostic>) {
+        match self {
+            CompilerError::PackerErrors(errors) => {
+                for error in errors {
+                    error.add_to_diagnostics(output);
+                }
+            }
+            other => {
+                let msg = format!(
+                    "{} See {} for more info.",
+                    other.to_string(),
+                    other.get_info_url()
+                );
+
+                output.push(DocDiagnostic {
+                    msg: parse_poor(&msg),
+                    msg_type: other.get_type(),
+                    source: "celerc/compiler".to_string(),
+                });
+            }
+        }
+    }
 }
 
 /// Convenience macro for validating a json value and add error

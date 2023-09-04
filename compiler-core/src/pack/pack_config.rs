@@ -3,11 +3,11 @@ use std::collections::HashMap;
 use celerctypes::{DocTag, MapMetadata};
 use serde_json::{Map, Value};
 
+use crate::api::Setting;
 use crate::comp::prop;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
 use crate::util::async_for;
-use crate::Setting;
 
 use super::{
     pack_map, pack_presets, PackerError, PackerResult, ResourceLoader, ResourceResolver, Use,
@@ -19,6 +19,7 @@ pub struct ConfigBuilder {
     pub icons: HashMap<String, String>,
     pub tags: HashMap<String, DocTag>,
     pub presets: HashMap<String, Preset>,
+    pub default_icon_priority: Option<i64>,
 }
 
 /// Pack a config json blob and apply the values to the [`RouteMetadataBuilder`]
@@ -70,6 +71,10 @@ pub async fn pack_config(
                 async_for!((key, value) in presets.into_iter(), {
                     builder.presets.insert(key, value);
                 });
+            }
+            prop::DEFAULT_ICON_PRIORITY => {
+                let priority = value.try_coerce_to_i64().ok_or_else(|| PackerError::InvalidConfigProperty(index, prop::DEFAULT_ICON_PRIORITY.to_string()))?;
+                builder.default_icon_priority = Some(priority);
             }
             _ => return Err(PackerError::UnusedConfigProperty(index, key)),
         }

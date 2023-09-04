@@ -83,7 +83,7 @@ impl CompLine {
 #[cfg(test)]
 mod test {
     use crate::comp::{CompMarker, CompMovement};
-    use celerctypes::{DocDiagnostic, DocNote, DocRichText, GameCoord, MapLine};
+    use celerctypes::{DocDiagnostic, DocNote, DocPoorText, DocRichText, GameCoord, MapLine};
 
     use super::*;
 
@@ -145,7 +145,10 @@ mod test {
         ];
         let test_color = "test color".to_string();
         let test_diagnostics = vec![DocDiagnostic {
-            msg: "test msg".to_string(),
+            msg: vec![
+                DocPoorText::Text("test msg1".to_string()),
+                DocPoorText::Link("test link".to_string()),
+            ],
             msg_type: "test msg type".to_string(),
             source: "test msg source".to_string(),
         }];

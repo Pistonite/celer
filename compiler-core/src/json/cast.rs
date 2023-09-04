@@ -7,7 +7,6 @@ pub trait Cast: Sized {
     type Object;
     fn try_into_object(self) -> Result<Self::Object, Self>;
     fn try_into_array(self) -> Result<Vec<Self>, Self>;
-    fn try_into_string(self) -> Result<String, Self>;
 }
 
 macro_rules! cast_match {
@@ -27,9 +26,5 @@ impl Cast for Value {
 
     fn try_into_array(self) -> Result<Vec<Self>, Self> {
         cast_match!(self, Array)
-    }
-
-    fn try_into_string(self) -> Result<String, Self> {
-        cast_match!(self, String)
     }
 }

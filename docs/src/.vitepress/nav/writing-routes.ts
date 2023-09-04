@@ -28,6 +28,7 @@ export const writingRoutesSidebar = {
                 { text: "Tags", link: "/route/config/tags" },
                 { text: "Presets", link: "/route/config/presets" },
                 { text: "Map", link: "/route/config/map" },
+                { text: "Other", link: "/route/config/other" },
             ]
         }
     ],

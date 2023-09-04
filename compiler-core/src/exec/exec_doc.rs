@@ -1,6 +1,6 @@
 use celerctypes::ExecDoc;
 
-use crate::CompDoc;
+use crate::comp::CompDoc;
 
 use super::MapSectionBuilder;
 
@@ -16,6 +16,7 @@ impl CompDoc {
         }
         ExecDoc {
             project: self.project,
+            preface: self.preface,
             route: sections,
         }
     }
@@ -24,10 +25,11 @@ impl CompDoc {
 #[cfg(test)]
 mod test {
     use celerctypes::{
-        ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine, MapMetadata, RouteMetadata,
+        DocPoorText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine, MapMetadata,
+        RouteMetadata,
     };
 
-    use crate::{comp::CompMovement, CompLine, CompSection};
+    use crate::comp::{CompLine, CompMovement, CompSection};
 
     use super::*;
 
@@ -39,13 +41,17 @@ mod test {
             ..Default::default()
         };
 
+        let test_preface = vec![vec![DocPoorText::Text("test".to_string())]];
+
         let test_doc = CompDoc {
             project: test_metadata.clone(),
+            preface: test_preface.clone(),
             ..Default::default()
         };
 
         let exec_doc = test_doc.exec().await;
         assert_eq!(exec_doc.project, test_metadata);
+        assert_eq!(exec_doc.preface, test_preface);
     }
 
     #[tokio::test]
@@ -80,6 +86,7 @@ mod test {
                 ..Default::default()
             },
             route: test_sections.clone(),
+            ..Default::default()
         };
 
         let exec_doc = test_doc.exec().await;
