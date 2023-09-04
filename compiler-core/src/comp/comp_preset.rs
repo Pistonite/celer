@@ -24,7 +24,7 @@ impl Compiler {
             errors.push(CompilerError::MaxPresetDepthExceeded(inst.name.to_string()));
             return;
         }
-        let preset = match self.presets.get(&inst.name) {
+        let preset = match self.meta.presets.get(&inst.name) {
             None => {
                 errors.push(CompilerError::PresetNotFound(inst.name.to_string()));
                 return;

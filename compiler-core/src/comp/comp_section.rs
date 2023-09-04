@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{pack::PackerValue, json::Cast, lang::parse_rich, util::async_for};
+use crate::{json::Cast, lang::parse_rich, pack::PackerValue, util::async_for};
 
-use super::{CompilerError, Compiler, CompLine};
+use super::{CompLine, Compiler, CompilerError};
 
 /// Compiled Section
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -36,7 +36,9 @@ impl Compiler {
         };
 
         let mut iter = section_obj.into_iter();
-        let (section_name, section_value) = iter.next().ok_or_else(|| CompilerError::InvalidSectionType)?;
+        let (section_name, section_value) = iter
+            .next()
+            .ok_or_else(|| CompilerError::InvalidSectionType)?;
         if iter.next().is_some() {
             return Err(CompilerError::InvalidSectionType);
         }
@@ -45,14 +47,19 @@ impl Compiler {
             lines: vec![],
         };
         if let PackerValue::Err(e) = section_value {
-            section.lines.push(self.create_empty_line_for_error(&[CompilerError::PackerErrors(vec![e])]).await);
+            section.lines.push(
+                self.create_empty_line_for_error(&[CompilerError::PackerErrors(vec![e])])
+                    .await,
+            );
             return Ok(section);
         }
         let section_lines = match section_value.try_into_array() {
             Ok(v) => v,
             Err(_) => {
                 section.lines.push(
-                    self.create_empty_line_for_error(&[CompilerError::InvalidSectionType]).await);
+                    self.create_empty_line_for_error(&[CompilerError::InvalidSectionType])
+                        .await,
+                );
                 return Ok(section);
             }
         };
@@ -87,10 +94,9 @@ impl Compiler {
         CompLine {
             text: parse_rich("[compile error]"),
             line_color: self.color.clone(),
-            diagnostics, 
+            diagnostics,
             map_coord: self.coord.clone(),
             ..Default::default()
         }
     }
 }
-

@@ -29,7 +29,6 @@ mod desugar;
 use desugar::*;
 pub mod prop;
 
-
 pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
 
 #[derive(PartialEq, Debug, thiserror::Error)]
@@ -121,7 +120,7 @@ pub enum CompilerError {
 
     /// When the `route` property is invalid
     #[error("Route data is not the correct type.")]
-    InvalidRoute,
+    InvalidRouteType,
 }
 
 impl CompilerError {
@@ -162,7 +161,7 @@ impl CompilerError {
             CompilerError::PackerErrors(_) | CompilerError::InvalidSectionType => {
                 "https://celer.pistonite.org/docs/route/route-structure".to_string()
             }
-            CompilerError::InvalidRoute => {
+            CompilerError::InvalidRouteType => {
                 "https://celer.pistonite.org/docs/route/route-structure#entry-point".to_string()
             }
         }
@@ -187,7 +186,7 @@ impl CompilerError {
             | CompilerError::IsPreface(_)
             | CompilerError::InvalidSectionType
             | CompilerError::PackerErrors(_)
-            | CompilerError::InvalidRoute => "error",
+            | CompilerError::InvalidRouteType => "error",
 
             CompilerError::UnusedProperty(_) | CompilerError::TooManyTagsInCounter => "warn",
         };

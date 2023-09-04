@@ -38,7 +38,7 @@ pub fn parse_poor(s: &str) -> Vec<DocPoorText> {
 fn is_part_link(part: &str) -> bool {
     if part.starts_with("http://") {
         return part.len() > 7;
-    } 
+    }
     if part.starts_with("https://") {
         return part.len() > 8;
     }
@@ -126,10 +126,7 @@ mod test {
     fn test_just_http() {
         assert_eq!(
             parse_poor("hello world https://"),
-            vec![
-                DocPoorText::Text("hello world https://".to_string()),
-            ]
+            vec![DocPoorText::Text("hello world https://".to_string()),]
         );
     }
 }
-

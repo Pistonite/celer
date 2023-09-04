@@ -9,6 +9,7 @@ pub const COORD_MAP: &str = "coord-map";
 pub const COPYRIGHT: &str = "copyright";
 pub const COUNTER: &str = "counter";
 pub const DOC: &str = "doc";
+pub const DEFAULT_ICON_PRIORITY: &str = "default-icon-priority";
 pub const EXCLUDE: &str = "exclude";
 pub const ICON: &str = "icon";
 pub const ICONS: &str = "icons";

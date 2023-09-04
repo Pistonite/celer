@@ -95,7 +95,7 @@ impl Compiler {
             if let Some(inst) = preset_inst {
                 // At this level, we will only process the preset if it exists
                 // otherwise treat the string as a regular string
-                if self.presets.contains_key(&inst.name) {
+                if self.meta.presets.contains_key(&inst.name) {
                     self.apply_preset(0, &inst, &mut properties, &mut errors)
                         .await;
                 }
@@ -130,7 +130,7 @@ impl Compiler {
         CompLine {
             line_color: self.color.clone(),
             map_coord: self.coord.clone(),
-            map_icon_priority: self.default_icon_priority,
+            map_icon_priority: self.meta.default_icon_priority,
             ..Default::default()
         }
     }
@@ -210,7 +210,7 @@ impl Compiler {
                                 }
                             }
                             prop::PRIORITY => {
-                                if let Some(i) = value.as_i64() {
+                                if let Some(i) = value.try_coerce_to_i64() {
                                     output.map_icon_priority = i;
                                 } else {
                                     errors.push(CompilerError::InvalidLinePropertyType(format!(
@@ -995,7 +995,7 @@ mod test {
                     "icon": {
                         "doc": "my-doc-icon",
                         "map": "my-map-icon",
-                        "priority": 1,
+                        "priority": "1",
                     },
                 },
             }),

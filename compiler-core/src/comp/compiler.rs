@@ -3,22 +3,21 @@ use std::collections::HashMap;
 use celerctypes::{GameCoord, MapCoordMap, RouteMetadata};
 use derivative::Derivative;
 
+use crate::api::CompilerMetadata;
 use crate::lang::Preset;
 
 #[derive(Derivative, Debug, Clone)]
 #[derivative(Default)]
 pub struct Compiler {
     pub project: RouteMetadata,
-    pub presets: HashMap<String, Preset>,
+    pub meta: CompilerMetadata,
     /// Current color of the map line
     pub color: String,
     /// Current position on the map
     pub coord: GameCoord,
     #[derivative(Default(value = "8"))]
     pub max_preset_depth: usize,
-    pub default_icon_priority: i64,
 }
-
 
 #[cfg(test)]
 #[derive(Default, Debug, Clone)]
@@ -54,10 +53,12 @@ impl CompilerBuilder {
     pub fn build(self) -> Compiler {
         Compiler {
             project: self.project,
-            presets: self.presets,
+            meta: CompilerMetadata {
+                presets: self.presets,
+                default_icon_priority: self.default_icon_priority,
+            },
             color: self.color,
             coord: self.coord,
-            default_icon_priority: self.default_icon_priority,
             ..Default::default()
         }
     }

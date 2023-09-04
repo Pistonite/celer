@@ -83,7 +83,7 @@ impl CompLine {
 #[cfg(test)]
 mod test {
     use crate::comp::{CompMarker, CompMovement};
-    use celerctypes::{DocDiagnostic, DocNote, DocRichText, GameCoord, MapLine, DocPoorText};
+    use celerctypes::{DocDiagnostic, DocNote, DocPoorText, DocRichText, GameCoord, MapLine};
 
     use super::*;
 
@@ -192,7 +192,7 @@ mod test {
                 link: "note test src video".to_string(),
             },
         ];
-        
+
         let line = CompLine {
             text: test_text.clone(),
             line_color: test_color.clone(),

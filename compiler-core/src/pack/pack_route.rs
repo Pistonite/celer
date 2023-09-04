@@ -117,7 +117,7 @@ async fn pack_route_internal(
                     PackerValue::Ok(x)
                 }
             }
-        },
+        }
         other => {
             resolve_use(
                 resolver,

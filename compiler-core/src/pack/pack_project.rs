@@ -1,10 +1,10 @@
 use celerctypes::RouteMetadata;
 use serde_json::Value;
 
+use crate::api::{CompilerMetadata, Setting};
 use crate::comp::prop;
 use crate::json::{Cast, Coerce};
 use crate::util::async_for;
-use crate::{CompilerMetadata, Setting};
 
 use super::{
     pack_config, pack_route, ConfigBuilder, PackerError, PackerResult, PackerValue, ResourceLoader,
@@ -90,6 +90,7 @@ pub async fn pack_project(
 
     let compiler_metadata = CompilerMetadata {
         presets: builder.presets,
+        default_icon_priority: builder.default_icon_priority.unwrap_or(2),
     };
 
     let route = pack_route(

@@ -30,7 +30,7 @@ mod pack_use;
 pub use pack_use::*;
 mod resource;
 pub use resource::*;
-use serde_json::{Value, Map};
+use serde_json::{Map, Value};
 
 use crate::{json::Cast, lang::parse_poor};
 
@@ -137,7 +137,7 @@ impl Cast for PackerValue {
                     Ok(new_obj)
                 }
                 Err(v) => Err(Self::Ok(v)),
-            }
+            },
             Self::Object(v) => Ok(v),
             _ => Err(self),
         }
@@ -154,12 +154,11 @@ impl Cast for PackerValue {
                     Ok(new_arr)
                 }
                 Err(v) => Err(Self::Ok(v)),
-            }
+            },
             Self::Array(v) => Ok(v),
             _ => Err(self),
         }
     }
-
 }
 
 impl PackerValue {
@@ -204,7 +203,7 @@ impl PackerValue {
             Self::Err(x) => {
                 output_errors.push(x);
                 None
-            },
+            }
             Self::Array(v) => {
                 let mut new_arr = vec![];
                 for x in v.into_iter() {
@@ -213,7 +212,7 @@ impl PackerValue {
                     }
                 }
                 Some(Value::Array(new_arr))
-            },
+            }
             Self::Object(o) => {
                 let mut new_obj = Map::new();
                 for (key, value) in o.into_iter() {

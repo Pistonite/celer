@@ -25,10 +25,11 @@ impl CompDoc {
 #[cfg(test)]
 mod test {
     use celerctypes::{
-        ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine, MapMetadata, RouteMetadata, DocPoorText,
+        DocPoorText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine, MapMetadata,
+        RouteMetadata,
     };
 
-    use crate::comp::{CompMovement, CompLine, CompSection};
+    use crate::comp::{CompLine, CompMovement, CompSection};
 
     use super::*;
 
@@ -39,7 +40,7 @@ mod test {
             version: "test version".to_string(),
             ..Default::default()
         };
-        
+
         let test_preface = vec![vec![DocPoorText::Text("test".to_string())]];
 
         let test_doc = CompDoc {
@@ -47,7 +48,6 @@ mod test {
             preface: test_preface.clone(),
             ..Default::default()
         };
-
 
         let exec_doc = test_doc.exec().await;
         assert_eq!(exec_doc.project, test_metadata);

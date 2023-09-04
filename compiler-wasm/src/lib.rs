@@ -1,4 +1,4 @@
-use celerc::CompDoc;
+use celerc::comp::CompDoc;
 use serde::{ser::SerializeStruct, Serialize, Serializer};
 use serde_json::Value;
 use wasm_bindgen::prelude::*;
