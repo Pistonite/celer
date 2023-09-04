@@ -1,6 +1,6 @@
 use celerctypes::ExecDoc;
 
-use crate::CompDoc;
+use crate::comp::CompDoc;
 
 use super::MapSectionBuilder;
 
@@ -28,7 +28,7 @@ mod test {
         ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine, MapMetadata, RouteMetadata, DocPoorText,
     };
 
-    use crate::{comp::CompMovement, CompLine, CompSection};
+    use crate::comp::{CompMovement, CompLine, CompSection};
 
     use super::*;
 

@@ -55,6 +55,9 @@ pub struct DocDiagnostic {
     /// The diagnostic message
     pub msg: Vec<DocPoorText>,
     /// Type of the diagnostic
+    ///
+    /// The builtin ones are "error" and "warn", but this can be any value.
+    /// Custom themes might utilize this for displaying extra messages.
     #[serde(rename = "type")]
     pub msg_type: String,
     /// Source of the diagnostic

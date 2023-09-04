@@ -51,28 +51,6 @@ pub struct CompilerMetadata {
     pub presets: HashMap<String, Preset>,
 }
 
-/// Compiled Document
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CompDoc {
-    /// Project metadata
-    project: RouteMetadata,
-    /// The preface
-    preface: Vec<Vec<DocPoorText>>,
-    /// The route
-    route: Vec<CompSection>,
-}
-
-/// Compiled Section
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CompSection {
-    /// Name of the section
-    name: String,
-    /// The lines in the section
-    lines: Vec<CompLine>,
-}
-
 /// Compiler settings
 #[derive(Debug, Derivative)]
 #[derivative(Default)]

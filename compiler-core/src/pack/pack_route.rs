@@ -2,6 +2,8 @@
 //!
 //! Resolves `use`s in the route json blob, and leaves the rest untouched.
 
+use std::collections::BTreeMap;
+
 use serde_json::Value;
 
 use crate::json::Cast;
@@ -91,7 +93,31 @@ async fn pack_route_internal(
 
     match Use::from(route) {
         Use::Invalid(path) => PackerValue::Err(PackerError::InvalidUse(path)),
-        Use::NotUse(x) => PackerValue::Ok(x),
+        Use::NotUse(x) => {
+            // array case is covered above
+            match x.try_into_object() {
+                Ok(obj) => {
+                    let mut new_obj = BTreeMap::new();
+                    async_for!((key, value) in obj.into_iter(), {
+                        let result = pack_route_internal(
+                            value,
+                            resolver,
+                            loader,
+                            use_depth,
+                            ref_depth+1,
+                            max_use_depth,
+                            max_ref_depth
+                        ).await;
+                        new_obj.insert(key, result);
+                    });
+                    PackerValue::Object(new_obj)
+                }
+                Err(x) => {
+                    // primitive case
+                    PackerValue::Ok(x)
+                }
+            }
+        },
         other => {
             resolve_use(
                 resolver,

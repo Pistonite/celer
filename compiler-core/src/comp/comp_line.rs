@@ -7,6 +7,7 @@ use serde_json::Value;
 use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
+use crate::util::async_for;
 
 use super::prop;
 use super::{
@@ -110,7 +111,7 @@ impl Compiler {
             );
         }
 
-        let mut output = self.create_line().await;
+        let mut output = self.create_line();
 
         // Process each property
         for (key, value) in properties.into_iter() {
@@ -125,7 +126,7 @@ impl Compiler {
         }
     }
 
-    async fn create_line(&self) -> CompLine {
+    pub fn create_line(&self) -> CompLine {
         CompLine {
             line_color: self.color.clone(),
             map_coord: self.coord.clone(),
@@ -164,7 +165,7 @@ impl Compiler {
                 };
 
                 let mut notes = vec![];
-                for (i, note_value) in iter.enumerate() {
+                async_for!((i, note_value) in iter.enumerate(), {
                     validate_not_array_or_object!(
                         &note_value,
                         errors,
@@ -173,7 +174,7 @@ impl Compiler {
                     notes.push(DocNote::Text {
                         content: lang::parse_rich(&note_value.coerce_to_string()),
                     });
-                }
+                });
                 output.notes = notes;
             }
             prop::SPLIT_NAME => {
@@ -188,44 +189,44 @@ impl Compiler {
                     ));
                 }
                 Value::Object(obj) => {
-                    for (key, value) in obj {
+                    async_for!((key, value) in obj, {
                         match key.as_str() {
-                            "doc" => {
+                            prop::DOC => {
                                 if validate_not_array_or_object!(
                                     &value,
                                     errors,
-                                    format!("{p}.doc", p = prop::ICON)
+                                    format!("{}.{}", prop::ICON, prop::DOC)
                                 ) {
                                     output.doc_icon = Some(value.coerce_to_string());
                                 }
                             }
-                            "map" => {
+                            prop::MAP => {
                                 if validate_not_array_or_object!(
                                     &value,
                                     errors,
-                                    format!("{p}.map", p = prop::ICON)
+                                    format!("{}.{}", prop::ICON, prop::MAP)
                                 ) {
                                     output.map_icon = Some(value.coerce_to_string());
                                 }
                             }
-                            "priority" => {
+                            prop::PRIORITY => {
                                 if let Some(i) = value.as_i64() {
                                     output.map_icon_priority = i;
                                 } else {
                                     errors.push(CompilerError::InvalidLinePropertyType(format!(
-                                        "{p}.priority",
-                                        p = prop::ICON
+                                        "{}.{}",
+                                        prop::ICON, prop::PRIORITY
                                     )));
                                 }
                             }
                             key => {
                                 errors.push(CompilerError::UnusedProperty(format!(
-                                    "{p}.{key}",
-                                    p = prop::ICON
+                                    "{}.{key}",
+                                    prop::ICON
                                 )));
                             }
                         }
-                    }
+                    });
                 }
                 _ => {
                     let icon = value.coerce_to_string();
@@ -259,7 +260,7 @@ impl Compiler {
                     Value::Array(array) => {
                         // need to track the coordinate of the final position with a stack
                         let mut ref_stack = vec![];
-                        for (i, v) in array.into_iter().enumerate() {
+                        async_for!((i, v) in array.into_iter().enumerate(), {
                             if let Some(m) = self
                                 .comp_movement(&format!("{p}[{i}]", p = prop::MOVEMENTS), v, errors)
                                 .await
@@ -280,7 +281,7 @@ impl Compiler {
                                 }
                                 output.movements.push(m);
                             }
-                        }
+                        });
                         if let Some(i) = ref_stack.last() {
                             if let CompMovement::To { to, .. } = &output.movements[*i] {
                                 output.map_coord = to.clone();
@@ -296,14 +297,14 @@ impl Compiler {
             }
             prop::MARKERS => match value {
                 Value::Array(array) => {
-                    for (i, v) in array.into_iter().enumerate() {
+                    async_for!((i, v) in array.into_iter().enumerate(), {
                         if let Some(m) = self
                             .comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
                             .await
                         {
                             output.markers.push(m);
                         }
-                    }
+                    });
                 }
                 _ => errors.push(CompilerError::InvalidLinePropertyType(
                     prop::MARKERS.to_string(),

@@ -1,6 +1,6 @@
 use celerctypes::ExecSection;
 
-use crate::CompSection;
+use crate::comp::CompSection;
 
 use super::MapSectionBuilder;
 
