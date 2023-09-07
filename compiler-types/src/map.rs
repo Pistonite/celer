@@ -16,6 +16,7 @@ pub struct MapMetadata {
     /// Initial coordinates
     pub initial_coord: GameCoord,
     /// Initial zoom level
+    #[ts(type = "number")]
     pub initial_zoom: u64,
     /// Initial map line color
     pub initial_color: String,
@@ -56,10 +57,13 @@ pub struct MapLayerAttr {
     ///
     /// See: https://github.com/commenthol/leaflet-rastercoords.
     /// Form is [width, height]
+    #[ts(type = "[number, number]")]
     pub size: (u64, u64),
     /// Min and max zoom levels
+    #[ts(type = "[number, number]")]
     pub zoom_bounds: (u64, u64),
     /// Max native zoom of the tileset
+    #[ts(type = "number")]
     pub max_native_zoom: u64,
     /// Coordinate transformation
     ///
@@ -68,6 +72,7 @@ pub struct MapLayerAttr {
     /// The minimum Z value this layer should be used
     ///
     /// This value is ignored for the first (lowest) layer
+    #[ts(type = "number")]
     pub start_z: f64,
     /// Attribution 
     pub attribution: MapAttribution,
@@ -84,8 +89,10 @@ pub struct MapLayerAttr {
 #[ts(export)]
 pub struct MapTilesetTransform {
     /// The scale of the transformation
+    #[ts(type = "[number, number]")]
     pub scale: (f64, f64),
     /// The translation of the transformation
+    #[ts(type = "[number, number]")]
     pub translate: (f64, f64),
 }
 
@@ -143,6 +150,7 @@ pub struct MapIcon {
     /// The corresponding section number in the document
     pub section_index: usize,
     /// The priority of the icon (0 = primary, 1 = secondary)
+    #[ts(type = "number")]
     pub priority: i64,
 }
 

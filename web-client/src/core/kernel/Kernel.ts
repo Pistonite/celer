@@ -6,6 +6,7 @@ import {
     documentActions,
     initStore,
     settingsSelector,
+    viewActions,
 } from "core/store";
 import { Logger } from "low/utils";
 
@@ -29,7 +30,7 @@ export class Kernel {
     ///
     /// The kernel owns the store. The store is shared
     /// between app boots (i.e. when switching routes)
-    // private store: AppStore | null = null;
+    private store: AppStore | null = null;
     /// The store cleanup function
     private cleanupStore: (() => void) | null = null;
     /// The link tag that loads the theme css
@@ -38,6 +39,9 @@ export class Kernel {
     private initReact: InitUiFunction;
     /// The function to unmount react
     private cleanupUi: (() => void) | null = null;
+
+    // Alert API
+    private alertCallback: ((ok: boolean) => void) | undefined = undefined;
 
     constructor(initReact: InitUiFunction) {
         this.log = new Logger("ker");
@@ -48,9 +52,12 @@ export class Kernel {
     public init() {
         this.log.info("starting application");
         const store = this.initStore();
+        this.store = store;
         this.initUi(store);
 
         this.test(store);
+
+        // this.showAlert("Alert", "This is a test alert", "Ok", "Cancel");
     }
 
     private async test(store: AppStore) {
@@ -63,6 +70,8 @@ export class Kernel {
         }
         (window as any).testFn = testFn;
         console.log("window api ready");
+        await this.showAlert("Alert", "This is a test alert", "Ok", "Cancel");
+        await this.openFileSys();
     }
 
     /// Initialize the store
@@ -141,5 +150,46 @@ export class Kernel {
             head.appendChild(e);
         }
         this.themeLinkTag.href = `/themes/${theme}.min.css`;
+    }
+
+    /// Show an alert dialog
+    ///
+    /// Returns a promise that resolves to true if the user
+    /// clicked ok and false if the user clicked cancel.
+    public showAlert(title: string, message: string, okButton: string, cancelButton: string): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.alertCallback = (ok) => {
+                const store = this.store;
+                if (!store) {
+                    reject(new Error("store not initialized"));
+                    return;
+                }
+                store.dispatch(viewActions.clearAlert());
+                resolve(ok);
+            }
+            const store = this.store;
+            if (!store) {
+                reject(new Error("store not initialized"));
+                return;
+            }
+            store.dispatch(viewActions.setAlert({
+                title,
+                text: message,
+                okButton,
+                cancelButton,
+            }));
+        });
+    }
+
+    public onAlertAction(ok: boolean) {
+        if (this.alertCallback) {
+            this.alertCallback(ok);
+        }
+    }
+
+    public async openFileSys() {
+        const { openLegacyUserFileSys } = await import("low/fs");
+
+        const fs = await openLegacyUserFileSys();
     }
 }

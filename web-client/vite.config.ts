@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
+import basicSSl from "@vitejs/plugin-basic-ssl";
 
 const kebabCase = (x: string) => x.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 
@@ -22,6 +23,7 @@ export default defineConfig({
         removeRustStyleDocComments(),
         wasm(),
         topLevelAwait(),
+        // basicSSl(),
     ],
     build: {
         rollupOptions: {

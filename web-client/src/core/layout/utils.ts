@@ -193,14 +193,21 @@ export const getDefaultLayout = (
     windowWidth: number,
     windowHeight: number,
 ): Layout => {
-    // TODO: check editor mode StageStore
-    if (windowWidth <= MobileWidthThreshold) {
-        return getDefaultMobileLayout();
+    const isEditor = true;
+    if (isEditor) {
+        if (windowWidth > windowHeight) {
+            return getDefaultLandscapeEditorLayout();
+        }
+        return getDefaultPortraitEditorLayout();
+    } else {
+        if (windowWidth <= MobileWidthThreshold) {
+            return getDefaultMobileLayout();
+        }
+        if (windowWidth > windowHeight) {
+            return getDefaultLandscapeViewerLayout();
+        }
+        return getDefaultPortraitViewerLayout();
     }
-    if (windowWidth > windowHeight) {
-        return getDefaultLandscapeViewerLayout();
-    }
-    return getDefaultPortraitViewerLayout();
 };
 
 /// If the current layout is the default layout

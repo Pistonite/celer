@@ -4,6 +4,7 @@
 //! Such as toolbar, map view, and other UI states.
 
 import { DocViewState, docViewReducers, initialDocViewState } from "core/doc";
+import { StageViewState, stageViewReducers, initialStageViewState } from "core/stage";
 import {
     LayoutViewState,
     initialLayoutViewState,
@@ -12,7 +13,7 @@ import {
 import { MapViewState, initialMapViewState, mapViewReducers } from "core/map";
 import { configureSlice } from "low/store";
 
-export type ViewState = LayoutViewState & MapViewState & DocViewState;
+export type ViewState = LayoutViewState & MapViewState & DocViewState & StageViewState;
 
 /// The toolbar store slice
 export const { viewReducer, viewActions, viewSelector } = configureSlice({
@@ -21,10 +22,12 @@ export const { viewReducer, viewActions, viewSelector } = configureSlice({
         ...initialLayoutViewState,
         ...initialMapViewState,
         ...initialDocViewState,
+        ...initialStageViewState,
     },
     reducers: {
         ...layoutViewReducers,
         ...mapViewReducers,
         ...docViewReducers,
+        ...stageViewReducers,
     },
 });

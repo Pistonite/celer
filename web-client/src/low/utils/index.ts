@@ -4,6 +4,7 @@
 
 export * from "./Logger";
 export * from "./Debouncer";
+export * from "./Pool";
 
 /// Switch theme by switching the css file in link tag
 export function switchTheme(theme: string) {

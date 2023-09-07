@@ -42,6 +42,7 @@ export const initMap = (store: AppStore): MapState => {
     return map;
 };
 
+/// Map options for flying to a point
 const FlyOptions = {
     duration: 0.2, // seconds
     easeLinearity: 0.8,
