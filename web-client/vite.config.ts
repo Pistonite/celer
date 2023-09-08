@@ -23,7 +23,7 @@ export default defineConfig({
         removeRustStyleDocComments(),
         wasm(),
         topLevelAwait(),
-        // basicSSl(),
+        basicSSl(),
     ],
     build: {
         rollupOptions: {

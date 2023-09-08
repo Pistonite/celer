@@ -11,6 +11,12 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
         try {
             // @ts-expect-error getAsFileSystemHandle is not in the TS lib
             const handle = await item.getAsFileSystemHandle();
+            if (!handle) {
+                console.error("Failed to get handle from DataTransferItem");
+                return {
+                    code: FsResultCode.Fail,
+                };
+            }
             const result = await createFsFromFileSystemHandle(handle);
             if (result.code !== FsResultCode.NotSupported) {
                 return result;
@@ -24,6 +30,7 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
         try {
             const entry = item.webkitGetAsEntry();
             if (!entry) {
+                console.error("Failed to get entry from DataTransferItem");
                 return {
                     code: FsResultCode.Fail,
                 };

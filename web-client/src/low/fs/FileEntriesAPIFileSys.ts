@@ -8,7 +8,10 @@ export const isFileEntriesAPISupported = (): boolean => {
         return false;
     }
     // Chrome/Edge has this but it's named DirectoryEntry
-    // However, it doesn't work properly, so we don't need to test for it
+    // However, it doesn't work properly.
+    if (navigator && navigator.userAgent && navigator.userAgent.includes("Chrome")) {
+        return false;
+    }
     if (!window.FileSystemDirectoryEntry) {
         return false;
     }
@@ -17,18 +20,15 @@ export const isFileEntriesAPISupported = (): boolean => {
         return false;
     }
 
-    // @ts-expect-error FileSystemDirectoryEntry should have a createReader() method
-    if (!window.FileSystemDirectoryEntry.createReader) {
+    if (!window.FileSystemDirectoryEntry.prototype.createReader) {
         return false;
     }
 
-    // @ts-expect-error FileSystemDirectoryEntry should have a getFile() method
-    if (!window.FileSystemDirectoryEntry.getFile) {
+    if (!window.FileSystemDirectoryEntry.prototype.getFile) {
         return false;
     }
 
-    // @ts-expect-error FileSystemFileEntry should have a file() method
-    if (!window.FileSystemFileEntry.file) {
+    if (!window.FileSystemFileEntry.prototype.file) {
         return false;
     }
 

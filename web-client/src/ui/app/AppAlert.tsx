@@ -32,9 +32,12 @@ export const AppAlert: React.FC = () => {
                         {alertText}
                     </DialogContent>
                     <DialogActions>
-                        <DialogTrigger disableButtonEnhancement>
-                            <Button appearance="secondary">{alertCancelButton}</Button>
-                        </DialogTrigger>
+                        {
+                            alertCancelButton &&
+                                <DialogTrigger disableButtonEnhancement>
+                                    <Button appearance="secondary">{alertCancelButton}</Button>
+                                </DialogTrigger>
+                        }
                         <DialogTrigger disableButtonEnhancement>
                             <Button ref={okRef} appearance="primary">{alertOkButton}</Button>
                         </DialogTrigger>

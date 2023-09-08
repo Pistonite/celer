@@ -20,7 +20,7 @@ import { useActions } from "low/store";
 import { AppAlert } from "./AppAlert";
 const Map: React.FC = React.lazy(() => import("ui/map"));
 const Doc: React.FC = React.lazy(() => import("ui/doc"));
-const Editor: React.FC = React.lazy(() => import("ui/edit"));
+const Editor: React.FC = React.lazy(() => import("ui/editor"));
 
 /// Margin to show when editing the layout
 const LayoutEditingMargin = 5;

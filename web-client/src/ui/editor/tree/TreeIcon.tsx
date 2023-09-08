@@ -41,8 +41,8 @@ const getFileTypeAndIcon = ({isDirectory, file}: TreeIconProps): [string, JSX.El
     return ["unknown", <Document16Filled />];
 }
 
-export const TreeIcon: React.FC<TreeIconProps> = ({isDirectory, file}) => {
-    const [fileType, icon] = getFileTypeAndIcon({isDirectory, file});
+export const TreeIcon: React.FC<TreeIconProps> = (props) => {
+    const [fileType, icon] = getFileTypeAndIcon(props);
     return (
         <span className={clsx("editor-tree-item-icon", `file-type-${fileType}`)}>
             {icon}

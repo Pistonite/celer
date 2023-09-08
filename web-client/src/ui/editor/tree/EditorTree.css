@@ -1,16 +1,3 @@
-#editor-root {
-    display: flex;
-    flex-direction: row;
-}
-
-#editor-tree-root {
-    min-width: 200px;
-}
-
-.editor-tree-list {
-    padding-left: 8px;
-}
-
 .editor-tree-item-icon {
     display: inline-block;
     width: 16px;

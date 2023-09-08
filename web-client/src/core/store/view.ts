@@ -11,9 +11,10 @@ import {
     layoutViewReducers,
 } from "core/layout";
 import { MapViewState, initialMapViewState, mapViewReducers } from "core/map";
+import { EditorViewState, initialEditorViewState, editorViewReducers } from "core/editor";
 import { configureSlice } from "low/store";
 
-export type ViewState = LayoutViewState & MapViewState & DocViewState & StageViewState;
+export type ViewState = LayoutViewState & MapViewState & DocViewState & StageViewState & EditorViewState;
 
 /// The toolbar store slice
 export const { viewReducer, viewActions, viewSelector } = configureSlice({
@@ -23,11 +24,13 @@ export const { viewReducer, viewActions, viewSelector } = configureSlice({
         ...initialMapViewState,
         ...initialDocViewState,
         ...initialStageViewState,
+        ...initialEditorViewState,
     },
     reducers: {
         ...layoutViewReducers,
         ...mapViewReducers,
         ...docViewReducers,
         ...stageViewReducers,
+        ...editorViewReducers,
     },
 });

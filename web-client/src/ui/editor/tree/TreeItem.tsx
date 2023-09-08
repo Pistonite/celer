@@ -7,8 +7,6 @@ import { TreeIcon } from './TreeIcon';
 export type TreeItemProps = {
     // Displayed file name
     file: string;
-    // Path of the file
-    path: string;
     // Whether the file is a directory
     isDirectory: boolean;
     // Whether the file is selected
@@ -19,10 +17,12 @@ export type TreeItemProps = {
     level: number;
     // For directory, if it is expanded
     isExpanded?: boolean;
+    // If the entry is loading
+    isLoading: boolean;
 }
 
 export const TreeItem: React.FC<TreeItemProps> = ({
-    file, path, isDirectory, isSelected, onClickFile, level, isExpanded
+    file, isDirectory, isSelected, onClickFile, level, isExpanded, isLoading,
 }) => {
     const LEVEL_INDENT = 8 /* px */;
 
@@ -37,12 +37,14 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             <span className={clsx("editor-tree-item-icon", isExpanded && "editor-tree-item-expanded")}>
                 {isDirectory ? <ChevronRight16Regular /> : null}
             </span>
-            <TreeIcon isDirectory={isDirectory} file={file} />
+            <TreeIcon 
+                file={file}
+                isDirectory={isDirectory}
+            />
             <span className="editor-tree-item-name">
-                {file}
+                {file}{isLoading ? " (loading...)" : ""}
             </span>
         </div>
     );
 }
-
 
