@@ -56,16 +56,24 @@ export class FileEntiresAPIFileSys implements FileSys {
     }
 
     public async listDir(path: FsPath): Promise<FsResult<string[]>> {
-        const dirEntry = await this.resolveDir(path);
+        const dirEntryResult = await this.resolveDir(path);
+        if (dirEntryResult.code !== FsResultCode.Ok) {
+            return dirEntryResult;
+        }
+        const dirEntry = dirEntryResult.value;
 
         try {
             const entries: FileSystemEntry[] = await new Promise((resolve, reject) => {
-                // @ts-expect-error FileSystemDirectoryEntry should have a createReader() method
                 dirEntry.createReader().readEntries(resolve, reject);
             });
             return {
                 code: FsResultCode.Ok,
-                value: entries.map(e => e.name),
+                value: entries.map(e => {
+                    if (e.isDirectory) {
+                        return e.name + "/";
+                    }
+                    return e.name;
+                }),
             }
         } catch (e) {
             return {
@@ -79,12 +87,19 @@ export class FileEntiresAPIFileSys implements FileSys {
         if (parentResult.code !== FsResultCode.Ok) {
             return parentResult;
         }
-        const dirEntry = await this.resolveDir(parentResult.value);
+        const nameResult = path.name;
+        if (nameResult.code !== FsResultCode.Ok) {
+            return nameResult;
+        }
+        const dirEntryResult = await this.resolveDir(parentResult.value);
+        if (dirEntryResult.code !== FsResultCode.Ok) {
+            return dirEntryResult;
+        }
+        const dirEntry = dirEntryResult.value;
 
         try {
             const fileEntry = await new Promise<FileSystemEntry>((resolve, reject) => {
-                // @ts-expect-error FileSystemDirectoryEntry should have a getFile() method
-                dirEntry.getFile(path.name, {}, resolve, reject);
+                dirEntry.getFile(nameResult.value, {}, resolve, reject);
             });
             const file = await new Promise<File>((resolve, reject) => {
                 // @ts-expect-error FileSystemFileEntry should have a file() method

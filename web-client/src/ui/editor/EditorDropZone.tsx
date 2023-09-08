@@ -3,8 +3,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import { Body2 } from "@fluentui/react-components";
 
-import { FileSys, createFsFromDataTransferItem } from "low/fs";
-import { FsResultCode } from "low/fs";
+import { FsResultCode, FileSys, createFsFromDataTransferItem } from "low/fs";
 import { useKernel } from "core/kernel";
 
 type EditorDropZoneProps = {
@@ -34,6 +33,7 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({onFileSysCreate})
             }}
 
             onDragOver={(e) => {
+                setIsDragging(true);
                 e.preventDefault();
                 if (e.dataTransfer) {
                     // setting this will allow dropping
@@ -43,20 +43,21 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({onFileSysCreate})
 
             onDrop={(e) => {
                 e.preventDefault();
-                const item = e.dataTransfer?.items[0];
                 setIsDragging(false);
                 setIsOpening(true);
-                const doCreateFileSys = async () => {
-                    if (!item) {
-                        await kernel.showAlert(
-                            "Error",
-                            "Cannot open the project. Make sure you are dropping the correct folder and try again.",
-                            "Close",
-                            "",
-                        );
-                        return;
-                    }
-                    const fileSysResult = await createFsFromDataTransferItem(item);
+                const item = e.dataTransfer?.items[0];
+                
+                if (!item) {
+                    kernel.showAlert(
+                        "Error",
+                        "Cannot open the project. Make sure you are dropping the correct folder and try again.",
+                        "Close",
+                        "",
+                    );
+                    return;
+                }
+                createFsFromDataTransferItem(item).then(async (fileSysResult) => {
+                    setIsOpening(false);
                     if (fileSysResult.code === FsResultCode.NotSupported) {
                         await kernel.showAlert(
                             "Not Supported",
@@ -65,22 +66,37 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({onFileSysCreate})
                             "",
                         );
                         return;
+                    } else if (fileSysResult.code === FsResultCode.IsFile) {
+                        await kernel.showAlert(
+                            "Error",
+                            "You dropped a file. Make sure you are dropping the project folder and not individual files.",
+                            "Close",
+                            "",
+                        );
+                        return;
                     } else if (fileSysResult.code !== FsResultCode.Ok) {
                         await kernel.showAlert(
                             "Error",
-                            "Cannot open the project. Make sure you are dropping the correct folder (not individual files).",
+                            "Cannot open the project. Make sure you have access to the folder or contact support.",
                             "Close",
                             "",
                         );
                         return;
                     }
                     const fileSys = fileSysResult.value;
+                    if (!fileSys.isWritable()) {
+                        const yes = await kernel.showAlert(
+                            "Some feature not supported",
+                            "Your browser does not support writing to file system. You will not be able to save changes made in the web editor! Do you want to open the project anyway?",
+                            "Yes",
+                            "No",
+                        );
+                        if (!yes) {
+                            return;
+                        }
+                    }
                     onFileSysCreate(fileSys);
-                };
-                setTimeout(() => {
-                    doCreateFileSys();
-                    setIsOpening(false);
-                }, 0);
+                });
             }}
         >
             <Body2 align="center">

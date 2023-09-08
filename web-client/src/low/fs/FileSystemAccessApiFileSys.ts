@@ -8,6 +8,11 @@ export const isFileSystemAccessAPISupported = (): boolean => {
     if (!window) {
         return false;
     }
+    if (!window.isSecureContext) {
+        // In Chrome, you can still access the APIs but they just crash the page entirely
+        console.warn("FileSystemAccessAPI is only available in secure context");
+        return false;
+    }
     if (!window.FileSystemDirectoryHandle) {
         return false;
     }
@@ -73,7 +78,11 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         try {
             // @ts-expect-error FileSystemDirectoryHandle should have a values() method
             for await (const entry of dir.values()) {
-                result.push(entry.name);
+                if (entry.kind === "directory") {
+                    result.push(entry.name + "/");
+                } else {
+                    result.push(entry.name);
+                }
             }
         } catch (e) {
             console.error(e);

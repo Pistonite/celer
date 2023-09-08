@@ -110,6 +110,12 @@ class FsPathImpl implements FsPath {
     }
 
     public resolve(path: string): FsPath {
+        if (path === "") {
+            return this;
+        }
+        if (this.underlying === "") {
+            return new FsPathImpl(cleanPath(path));
+        }
         return new FsPathImpl(this.underlying + "/" + cleanPath(path));
     }
 

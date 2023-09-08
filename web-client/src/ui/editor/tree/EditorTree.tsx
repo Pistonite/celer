@@ -21,7 +21,7 @@ export type EditorTreeProps = {
 }
 
 export const EditorTree: React.FC<EditorTreeProps> = ({ rootName, listDir, onClickFile }) => {
-    const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
+    const [expandedPaths, setExpandedPaths] = useState<string[]>([""]);
     return (
         <div id="editor-tree-root">
             <TreeDirNode 

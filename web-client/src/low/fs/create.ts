@@ -8,11 +8,11 @@ import { FsResult, FsResultCode } from "./FsResult";
 export const createFsFromDataTransferItem = async (item: DataTransferItem): Promise<FsResult<FileSys>> => {
     // Prefer File System Access API since it supports writing
     if ("getAsFileSystemHandle" in item) {
+    if (isFileSystemAccessAPISupported()) {
         try {
             // @ts-expect-error getAsFileSystemHandle is not in the TS lib
             const handle = await item.getAsFileSystemHandle();
             if (!handle) {
-                console.error("Failed to get handle from DataTransferItem");
                 return {
                     code: FsResultCode.Fail,
                 };
@@ -25,7 +25,13 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
             console.error(e);
         }
     }
+    }
     console.warn("Failed to create FileSys with FileSystemAccessAPI. Trying FileEntriesAPI");
+    if (!isFileEntriesAPISupported()) {
+        return {
+            code: FsResultCode.NotSupported,
+        };
+    }
     if ("webkitGetAsEntry" in item) {
         try {
             const entry = item.webkitGetAsEntry();
@@ -50,11 +56,6 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
 }
 
 const createFsFromFileSystemHandle = async (handle: FileSystemHandle): Promise<FsResult<FileSys>> => {
-    if (!isFileSystemAccessAPISupported()) {
-        return {
-            code: FsResultCode.NotSupported,
-        };
-    }
     if (handle.kind !== "directory") {
         return {
             code: FsResultCode.IsFile,
@@ -70,11 +71,6 @@ const createFsFromFileSystemHandle = async (handle: FileSystemHandle): Promise<F
 }
 
 const createFsFromFileSystemEntry = async (entry: FileSystemEntry): Promise<FsResult<FileSys>> => {
-    if (!isFileEntriesAPISupported()) {
-        return {
-            code: FsResultCode.NotSupported,
-        };
-    }
     if (entry.isFile || !entry.isDirectory) {
         return {
             code: FsResultCode.IsFile,

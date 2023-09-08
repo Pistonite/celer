@@ -10,7 +10,8 @@ export interface FileSys {
 
     /// List files in a directory
     ///
-    /// Returns a list of file names in the directory (not full paths)
+    /// Returns a list of file names in the directory (not full paths).
+    /// Directory names end with a slash.
     ///
     /// Returns Fail if the underlying file system operation fails.
     /// 
