@@ -1,6 +1,6 @@
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
-import { FsResult, FsResultCode } from "./FsResult";
+import { FsResult, FsResultCode, FsResultCodes, setErrValue, setOkValue } from "./FsResult";
 import { decodeFile } from "./decode";
 
 export const isFileEntriesAPISupported = (): boolean => {
@@ -56,46 +56,92 @@ export class FileEntiresAPIFileSys implements FileSys {
     }
 
     public async listDir(path: FsPath): Promise<FsResult<string[]>> {
-        const dirEntryResult = await this.resolveDir(path);
-        if (dirEntryResult.code !== FsResultCode.Ok) {
-            return dirEntryResult;
+        const result = await this.resolveDir(path);
+        if (result.code !== FsResultCodes.Ok) {
+            return result;
         }
-        const dirEntry = dirEntryResult.value;
+        const dirEntry = result.value;
 
         try {
             const entries: FileSystemEntry[] = await new Promise((resolve, reject) => {
                 dirEntry.createReader().readEntries(resolve, reject);
             });
-            return {
-                code: FsResultCode.Ok,
-                value: entries.map(e => {
+            const names = 
+                entries.map(e => {
                     if (e.isDirectory) {
                         return e.name + "/";
                     }
                     return e.name;
-                }),
-            }
+                });
+            return setOkValue(result, names);
         } catch (e) {
-            return {
-                code: FsResultCode.Fail,
-            };
+            console.error(e);
+            return setErrValue(result, FsResultCodes.Fail);
         }
     }
 
     public async readFile(path: FsPath): Promise<FsResult<string>> {
+        const result = await this.readFileAndModifiedTime(path);
+        if (result.code !== FsResultCodes.Ok) {
+            return result;
+        }
+        return setOkValue(result, result.value[0]); 
+    }
+
+    public async readFileAndModifiedTime(path: FsPath): Promise<FsResult<[string, number]>> {
+        const fileResult = await this.readFileInternal(path);
+        if (fileResult.code !== FsResultCodes.Ok) {
+            return fileResult;
+        }
+        const file = fileResult.value;
+        const result = await decodeFile(file);
+        if (result.code !== FsResultCodes.Ok) {
+            return result;
+        }
+        return setOkValue(result, [result.value, file.lastModified]);
+    }
+
+    public async readIfModified(path: FsPath, lastModified?: number): Promise<FsResult<[string, number]>> {
+        const fileResult = await this.readFileInternal(path);
+        if (fileResult.code !== FsResultCodes.Ok) {
+            return fileResult;
+        }
+        const file = fileResult.value;
+        if (lastModified && file.lastModified <= lastModified) {
+            return setErrValue(fileResult, FsResultCodes.NotModified);
+        }
+        const result = await decodeFile(file);
+        if (result.code !== FsResultCodes.Ok) {
+            return result;
+        }
+        return setOkValue(result, [result.value, file.lastModified]);
+    }
+
+    public async readModifiedTime(path: FsPath): Promise<FsResult<number>> {
+        const fileResult = await this.readFileInternal(path);
+        if (fileResult.code !== FsResultCodes.Ok) {
+            return fileResult;
+        }
+        return {
+            code: FsResultCodes.Ok,
+            value: fileResult.value.lastModified,
+        };
+    }
+
+    async readFileInternal(path: FsPath): Promise<FsResult<File>> {
         const parentResult = path.parent;
-        if (parentResult.code !== FsResultCode.Ok) {
+        if (parentResult.code !== FsResultCodes.Ok) {
             return parentResult;
         }
         const nameResult = path.name;
-        if (nameResult.code !== FsResultCode.Ok) {
+        if (nameResult.code !== FsResultCodes.Ok) {
             return nameResult;
         }
-        const dirEntryResult = await this.resolveDir(parentResult.value);
-        if (dirEntryResult.code !== FsResultCode.Ok) {
-            return dirEntryResult;
+        const result = await this.resolveDir(parentResult.value);
+        if (result.code !== FsResultCodes.Ok) {
+            return result;
         }
-        const dirEntry = dirEntryResult.value;
+        const dirEntry = result.value;
 
         try {
             const fileEntry = await new Promise<FileSystemEntry>((resolve, reject) => {
@@ -105,19 +151,16 @@ export class FileEntiresAPIFileSys implements FileSys {
                 // @ts-expect-error FileSystemFileEntry should have a file() method
                 fileEntry.file(resolve, reject);
             });
-            return await decodeFile(file);
+            return setOkValue(result, file);
         } catch (e) {
-            return {
-                code: FsResultCode.Fail,
-            };
+            console.error(e);
+            return setErrValue(result, FsResultCodes.Fail);
         }
     }
 
-    public async writeFile(_path: FsPath, _content: string): Promise<FsResult<never>> {
+    public async writeFile(_path: FsPath, _content: string): Promise<FsResultCode> {
         // Entries API does not support writing
-        return {
-            code: FsResultCode.NotSupported,
-        };
+        return FsResultCodes.NotSupported;
     }
 
     async resolveDir(path: FsPath): Promise<FsResult<FileSystemDirectoryEntry>> {
@@ -132,19 +175,19 @@ export class FileEntiresAPIFileSys implements FileSys {
                 });
             } catch (e) {
                 return {
-                    code: FsResultCode.Fail,
+                    code: FsResultCodes.Fail,
                 };
             }
         }
 
         if (!entry.isDirectory || !("createReader" in entry)) {
             return {
-                code: FsResultCode.Fail,
+                code: FsResultCodes.Fail,
             };
         }
 
         return {
-            code: FsResultCode.Ok,
+            code: FsResultCodes.Ok,
             value: entry as FileSystemDirectoryEntry,
         };
     }

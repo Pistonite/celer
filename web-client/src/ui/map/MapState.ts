@@ -22,6 +22,8 @@ import { MapContainerMgr } from "./MapContainerMgr";
 import { MapLayerMgr } from "./MapLayerMgr";
 import { MapVisualMgr } from "./MapVisualMgr";
 
+MapLog.info("loading map module");
+
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
     interface Window {

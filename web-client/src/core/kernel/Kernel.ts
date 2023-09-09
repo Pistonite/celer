@@ -8,7 +8,8 @@ import {
     settingsSelector,
     viewActions,
 } from "core/store";
-import { Logger } from "low/utils";
+import type { EditorState } from "./EditorState";
+import { Logger, isInDarkMode } from "low/utils";
 
 import { KeyMgr } from "./KeyMgr";
 
@@ -43,6 +44,10 @@ export class Kernel {
     // Alert API
     private alertCallback: ((ok: boolean) => void) | undefined = undefined;
 
+    // Editor API
+    // The editor is owned by the kernel because the toobar needs access
+    private editor: EditorState | null = null;
+
     constructor(initReact: InitUiFunction) {
         this.log = new Logger("ker");
         this.initReact = initReact;
@@ -51,13 +56,28 @@ export class Kernel {
     /// Start the application. Cleans up previous application if needed
     public init() {
         this.log.info("starting application");
-        const store = this.initStore();
-        this.store = store;
+        let store = this.store;
+        if (!store) {
+            store = this.initStore();
+            this.store = store;
+        }
+
+        this.initStage();
         this.initUi(store);
 
         this.test(store);
 
         // this.showAlert("Alert", "This is a test alert", "Ok", "Cancel");
+    }
+
+    /// Initialize stage info based on window.location
+    private initStage() {
+        const path = window.location.pathname;
+        if (path === "/edit") {
+            this.store?.dispatch(viewActions.setStageMode("edit"));
+        } else {
+            this.store?.dispatch(viewActions.setStageMode("view"));
+        }
     }
 
     private async test(store: AppStore) {
@@ -70,8 +90,6 @@ export class Kernel {
         }
         (window as any).testFn = testFn;
         console.log("window api ready");
-        await this.showAlert("Alert", "This is a test alert", "Ok", "Cancel");
-        await this.openFileSys();
     }
 
     /// Initialize the store
@@ -103,7 +121,6 @@ export class Kernel {
             }),
         );
 
-        // this.store = store;
         this.cleanupStore = () => {
             unwatchSettings();
         };
@@ -116,10 +133,7 @@ export class Kernel {
             this.log.info("unmounting previous ui");
             this.cleanupUi();
         }
-        const isDarkMode = !!(
-            window.matchMedia &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-        );
+        const isDarkMode = isInDarkMode();
         const unmountReact = this.initReact(this, store, isDarkMode);
 
         // key binding handler
@@ -157,19 +171,20 @@ export class Kernel {
     /// Returns a promise that resolves to true if the user
     /// clicked ok and false if the user clicked cancel.
     public showAlert(title: string, message: string, okButton: string, cancelButton: string): Promise<boolean> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             this.alertCallback = (ok) => {
                 const store = this.store;
-                if (!store) {
-                    reject(new Error("store not initialized"));
-                    return;
+                // if there's no store then we don't care
+                if (store) {
+                    store.dispatch(viewActions.clearAlert());
                 }
-                store.dispatch(viewActions.clearAlert());
                 resolve(ok);
+                this.alertCallback = undefined;
             }
             const store = this.store;
             if (!store) {
-                reject(new Error("store not initialized"));
+                console.error("store not initialized");
+                resolve(false);
                 return;
             }
             store.dispatch(viewActions.setAlert({
@@ -187,9 +202,17 @@ export class Kernel {
         }
     }
 
-    public async openFileSys() {
-        const { openLegacyUserFileSys } = await import("low/fs");
-
-        const fs = await openLegacyUserFileSys();
+    public async initEditor() {
+        const { initEditor } = await import("./EditorState");
+        const store = this.store;
+        if (!store) {
+            throw new Error("store not initialized");
+        }
+        this.editor = initEditor(store);
     }
+
+    public getEditor(): EditorState | null {
+        return this.editor;
+    }
+
 }

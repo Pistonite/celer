@@ -3,7 +3,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import { Body2 } from "@fluentui/react-components";
 
-import { FsResultCode, FileSys, createFsFromDataTransferItem } from "low/fs";
+import { FsResultCodes, FileSys, createFsFromDataTransferItem } from "low/fs";
 import { useKernel } from "core/kernel";
 
 type EditorDropZoneProps = {
@@ -58,7 +58,7 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({onFileSysCreate})
                 }
                 createFsFromDataTransferItem(item).then(async (fileSysResult) => {
                     setIsOpening(false);
-                    if (fileSysResult.code === FsResultCode.NotSupported) {
+                    if (fileSysResult.code === FsResultCodes.NotSupported) {
                         await kernel.showAlert(
                             "Not Supported",
                             "Your browser does not support this feature.",
@@ -66,7 +66,7 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({onFileSysCreate})
                             "",
                         );
                         return;
-                    } else if (fileSysResult.code === FsResultCode.IsFile) {
+                    } else if (fileSysResult.code === FsResultCodes.IsFile) {
                         await kernel.showAlert(
                             "Error",
                             "You dropped a file. Make sure you are dropping the project folder and not individual files.",
@@ -74,7 +74,7 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({onFileSysCreate})
                             "",
                         );
                         return;
-                    } else if (fileSysResult.code !== FsResultCode.Ok) {
+                    } else if (fileSysResult.code !== FsResultCodes.Ok) {
                         await kernel.showAlert(
                             "Error",
                             "Cannot open the project. Make sure you have access to the folder or contact support.",

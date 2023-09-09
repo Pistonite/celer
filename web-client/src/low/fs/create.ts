@@ -3,7 +3,7 @@
 import { FileEntiresAPIFileSys, isFileEntriesAPISupported } from "./FileEntriesAPIFileSys";
 import { FileSys } from "./FileSys";
 import { FileSystemAccessAPIFileSys, isFileSystemAccessAPISupported } from "./FileSystemAccessApiFileSys";
-import { FsResult, FsResultCode } from "./FsResult";
+import { FsResult, FsResultCodes } from "./FsResult";
 
 export const createFsFromDataTransferItem = async (item: DataTransferItem): Promise<FsResult<FileSys>> => {
     // Prefer File System Access API since it supports writing
@@ -14,11 +14,11 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
             const handle = await item.getAsFileSystemHandle();
             if (!handle) {
                 return {
-                    code: FsResultCode.Fail,
+                    code: FsResultCodes.Fail,
                 };
             }
             const result = await createFsFromFileSystemHandle(handle);
-            if (result.code !== FsResultCode.NotSupported) {
+            if (result.code !== FsResultCodes.NotSupported) {
                 return result;
             }
         } catch (e) {
@@ -29,7 +29,7 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
     console.warn("Failed to create FileSys with FileSystemAccessAPI. Trying FileEntriesAPI");
     if (!isFileEntriesAPISupported()) {
         return {
-            code: FsResultCode.NotSupported,
+            code: FsResultCodes.NotSupported,
         };
     }
     if ("webkitGetAsEntry" in item) {
@@ -38,11 +38,11 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
             if (!entry) {
                 console.error("Failed to get entry from DataTransferItem");
                 return {
-                    code: FsResultCode.Fail,
+                    code: FsResultCodes.Fail,
                 };
             }
             const result = await createFsFromFileSystemEntry(entry);
-            if (result.code !== FsResultCode.NotSupported) {
+            if (result.code !== FsResultCodes.NotSupported) {
                 return result;
             }
         } catch (e) {
@@ -51,21 +51,21 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
     }
     console.warn("Failed to create FileSys with FileEntriesAPI. Editor is not supported");
     return {
-        code: FsResultCode.NotSupported,
+        code: FsResultCodes.NotSupported,
     };
 }
 
 const createFsFromFileSystemHandle = async (handle: FileSystemHandle): Promise<FsResult<FileSys>> => {
     if (handle.kind !== "directory") {
         return {
-            code: FsResultCode.IsFile,
+            code: FsResultCodes.IsFile,
         };
     }
 
     const rootName = handle.name;
     const fs = new FileSystemAccessAPIFileSys(rootName, handle as FileSystemDirectoryHandle);
     return {
-        code: FsResultCode.Ok,
+        code: FsResultCodes.Ok,
         value: fs,
     };
 }
@@ -73,13 +73,13 @@ const createFsFromFileSystemHandle = async (handle: FileSystemHandle): Promise<F
 const createFsFromFileSystemEntry = async (entry: FileSystemEntry): Promise<FsResult<FileSys>> => {
     if (entry.isFile || !entry.isDirectory) {
         return {
-            code: FsResultCode.IsFile,
+            code: FsResultCodes.IsFile,
         };
     }
     const rootName = entry.name;
     const fs = new FileEntiresAPIFileSys(rootName, entry as FileSystemDirectoryEntry);
     return {
-        code: FsResultCode.Ok,
+        code: FsResultCodes.Ok,
         value: fs,
     };
 }

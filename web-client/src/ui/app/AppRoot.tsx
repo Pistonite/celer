@@ -92,16 +92,17 @@ export const AppRoot: React.FC = () => {
 const useReactGridLayout = (windowWidth: number, windowHeight: number) => {
     const userLayout = useCurrentUserLayout();
     const { setCurrentLayout } = useActions(settingsActions);
+    const { stageMode } = useSelector(viewSelector);
 
     // convert layout to ReactGridLayout
     const [layout, widgets] = useMemo(() => {
         const layout =
-            userLayout || getDefaultLayout(windowWidth, windowHeight);
+            userLayout || getDefaultLayout(windowWidth, windowHeight, stageMode);
         const widgets = WidgetTypes.map((type) => {
             return layout[type] && { i: type, ...layout[type] };
         }).filter(Boolean) as ReactGridLayout.Layout[];
         return [layout, widgets];
-    }, [userLayout, windowWidth, windowHeight]);
+    }, [userLayout, windowWidth, windowHeight, stageMode]);
 
     const { toolbar, toolbarAnchor } = layout;
 

@@ -30,6 +30,17 @@ export const fitLayoutToGrid = (layout: Layout): Layout => {
         layout.viewer && fitLayoutDimToGrid(layout.viewer);
         layout.map && fitLayoutDimToGrid(layout.map);
         layout.editor && fitLayoutDimToGrid(layout.editor);
+
+        if (layout.viewer?.w === 0 || layout.viewer?.h === 0) {
+            delete layout.viewer;
+        }
+        if (layout.editor?.w === 0 || layout.editor?.h === 0) {
+            delete layout.editor;
+        }
+        if (layout.map?.w === 0 || layout.map?.h === 0) {
+            delete layout.map;
+        }
+
     });
 };
 
@@ -123,20 +134,20 @@ export const getDefaultLandscapeEditorLayout = (): Layout => {
         editor: {
             x: 0,
             y: 0,
-            w: GridThird,
+            w: GridHalf,
             h: GridFull,
         },
         viewer: {
-            x: GridThird,
+            x: GridHalf,
             y: 0,
-            w: GridThird,
-            h: GridFull,
+            w: GridHalf,
+            h: GridHalf,
         },
         map: {
-            x: GridThird * 2,
-            y: 0,
-            w: GridThird,
-            h: GridFull,
+            x: GridHalf,
+            y: GridHalf,
+            w: GridHalf,
+            h: GridHalf,
         },
     };
 };
@@ -192,8 +203,9 @@ const MobileWidthThreshold = 400;
 export const getDefaultLayout = (
     windowWidth: number,
     windowHeight: number,
+    stage: "view" | "edit",
 ): Layout => {
-    const isEditor = true;
+    const isEditor = stage === "edit";
     if (isEditor) {
         if (windowWidth > windowHeight) {
             return getDefaultLandscapeEditorLayout();

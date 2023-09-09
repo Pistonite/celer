@@ -13,10 +13,11 @@
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache",
         "fmt": "prettier \"./**/*.{ts,tsx,json,cjs,css,html}\"",
         "fmt:compiler": "prettier --write ./src/low/compiler.g.ts",
-        "test": "jest --config test/jest.config.cjs"
+        "test": "jest --config tools/test/jest.config.cjs"
     },
     "dependencies": {
         "@fluentui/react-components": "^9.21.0",
+        "@fluentui/react-icons": "^2.0.214",
         "@reduxjs/toolkit": "^1.9.5",
         "clsx": "^1.2.1",
         "denque": "^2.1.0",

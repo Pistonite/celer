@@ -39,6 +39,8 @@ declare global {
 /// Class for the current line indicator
 export const DocCurrentLineClass = "doc-current-line";
 
+DocLog.info("loading doc module");
+
 /// Create the doc controller singleton
 export const initDocController = (store: AppStore): DocController => {
     if (window.__theDocController) {

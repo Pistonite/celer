@@ -1,5 +1,5 @@
 
-import { FsResult, FsResultCode } from "./FsResult";
+import { FsResult, FsResultCodes, setOkValue } from "./FsResult";
 
 /// File system path
 ///
@@ -67,19 +67,19 @@ class FsPathImpl implements FsPath {
     get parent(): FsResult<FsPath> {
         if (this.underlying === "") {
             return {
-            code:  FsResultCode.IsRoot,
+            code:  FsResultCodes.IsRoot,
             };
         }
 
         const i = this.underlying.lastIndexOf("/");
         if (i < 0) {
             return {
-                code: FsResultCode.Ok,
+                code: FsResultCodes.Ok,
                 value: fsRootPath,
             };
         }
             return {
-                code: FsResultCode.Ok,
+                code: FsResultCodes.Ok,
                 value: new FsPathImpl(this.underlying.substring(0, i)),
             };
     }
@@ -87,20 +87,20 @@ class FsPathImpl implements FsPath {
     get name(): FsResult<string> {
         if (this.underlying === "") {
             return {
-            code:  FsResultCode.IsRoot,
+            code:  FsResultCodes.IsRoot,
             };
         }
 
         const i = this.underlying.lastIndexOf("/");
         if (i < 0) {
             return {
-                code: FsResultCode.Ok,
+                code: FsResultCodes.Ok,
                 value: this.underlying,
             };
         }
 
         return {
-            code: FsResultCode.Ok,
+            code: FsResultCodes.Ok,
             value: this.underlying.substring(i + 1),
         };
     }
@@ -121,14 +121,12 @@ class FsPathImpl implements FsPath {
 
     public resolveSibling(path: string): FsResult<FsPath> {
         const result = this.parent;
-        if (result.code !== FsResultCode.Ok) {
+        if (result.code !== FsResultCodes.Ok) {
             return result;
         }
 
-        const parentPath = result.value;
-        const newPath = parentPath.resolve(path);
-        result.value = newPath;
-        return result;
+        const newPath = result.value.resolve(path);
+        return setOkValue(result, newPath);
     }
 
 }

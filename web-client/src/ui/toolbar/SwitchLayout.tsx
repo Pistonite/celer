@@ -76,7 +76,7 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
     const { duplicateLayout, deleteCurrentLayout, switchLayout } =
         useActions(settingsActions);
     // view store
-    const { isEditingLayout } = useSelector(viewSelector);
+    const { isEditingLayout, stageMode } = useSelector(viewSelector);
     const { setIsEditingLayout } = useActions(viewActions);
 
     // compute which menu items should show as checked
@@ -108,7 +108,9 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
                             value={`${i}`}
                             key={i}
                         >
-                            Custom {i + 1}
+                            Custom {i + 1} {
+                                savedLayouts[i].editor ? " (Editor)" : ""
+                            }
                         </MenuItemRadio>
                     ))}
 
@@ -146,12 +148,13 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
 
                     <MenuItem
                         icon={<Copy20Regular />}
-                        onClick={() => duplicateLayout()}
+                        onClick={() => duplicateLayout(stageMode)}
                     >
                         Duplicate
                     </MenuItem>
 
                     <MenuItem
+                        disabled={isDefaultLayout}
                         icon={<Delete20Regular />}
                         onClick={() => deleteCurrentLayout()}
                     >

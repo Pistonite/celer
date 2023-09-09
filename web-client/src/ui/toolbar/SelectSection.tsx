@@ -15,7 +15,7 @@ import {
 } from "@fluentui/react-components";
 import { ListBarTree20Regular } from "@fluentui/react-icons";
 import isEqual from "is-equal";
-import React from "react";
+import React, { forwardRef } from "react";
 import { useSelector } from "react-redux";
 import { useDocSections } from "core/doc";
 import { viewActions, viewSelector } from "core/store";
@@ -28,7 +28,7 @@ import {
 } from "./util";
 
 export const SelectSection: ToolbarControl = {
-    ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
+    ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
         const sections = useDocSections();
         const { currentSection } = useSelector(viewSelector);
         const { setDocLocation } = useActions(viewActions);

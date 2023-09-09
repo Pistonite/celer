@@ -1,5 +1,5 @@
 import { FsPath } from "./FsPath";
-import { FsResult } from "./FsResult";
+import { FsResult, FsResultCode } from "./FsResult";
 
 export interface FileSys {
     /// Get the root path of the file system for display
@@ -18,7 +18,7 @@ export interface FileSys {
     /// This function cannot throw.
     listDir: (path: FsPath) => Promise<FsResult<string[]>>;
 
-    /// Read the content of a file
+    /// Read the content of a file and last modified time
     ///
     /// Returns the content of the file as a string.
     ///
@@ -27,6 +27,14 @@ export interface FileSys {
     /// 
     /// This function cannot throw.
     readFile: (path: FsPath) => Promise<FsResult<string>>;
+    readFileAndModifiedTime: (path: FsPath) => Promise<FsResult<[string, number]>>;
+
+    /// Read if the file has been modified since
+    /// 
+    /// Returns NotModified if not modified
+    ///
+    /// This function cannot throw.
+    readIfModified: (path: FsPath, lastModified?: number) => Promise<FsResult<[string, number]>>;
 
     /// Returns if this implementation supports writing to a file
     isWritable: () => boolean;
@@ -38,6 +46,6 @@ export interface FileSys {
     /// 
     /// Returns Fail if the underlying file system operation fails.
     /// Returns NotSupported if the browser does not support this
-    writeFile: (path: FsPath, content: string) => Promise<FsResult<never>>;
+    writeFile: (path: FsPath, content: string) => Promise<FsResultCode>;
 
 }

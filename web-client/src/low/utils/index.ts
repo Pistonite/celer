@@ -15,3 +15,7 @@ export function switchTheme(theme: string) {
     }
     linkTag.href = `/themes/${theme}.min.css`;
 }
+export const isInDarkMode = () => !!(
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+        );
