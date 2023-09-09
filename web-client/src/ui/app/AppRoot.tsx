@@ -17,8 +17,10 @@ import {
     useCurrentUserLayout,
 } from "core/layout";
 import { useActions } from "low/store";
+import { AppAlert } from "./AppAlert";
 const Map: React.FC = React.lazy(() => import("ui/map"));
 const Doc: React.FC = React.lazy(() => import("ui/doc"));
+const Editor: React.FC = React.lazy(() => import("ui/editor"));
 
 /// Margin to show when editing the layout
 const LayoutEditingMargin = 5;
@@ -37,6 +39,7 @@ export const AppRoot: React.FC = () => {
     const rowHeight = (windowHeight - (GridFull + 1) * margin) / GridFull;
 
     return (
+        <>
         <ReactGridLayout
             className="layout-root"
             layout={widgets}
@@ -71,11 +74,17 @@ export const AppRoot: React.FC = () => {
                                 <Doc />
                             </Suspense>
                         )}
-                        {widget.i === "editor" && <div>I am a editor</div>}
+                        {widget.i === "editor" && (
+                            <Suspense fallback={<LoadScreen color="blue" />}>
+                                <Editor />
+                            </Suspense>
+                        )}
                     </div>
                 </div>
             ))}
         </ReactGridLayout>
+            <AppAlert />
+        </>
     );
 };
 
@@ -83,16 +92,17 @@ export const AppRoot: React.FC = () => {
 const useReactGridLayout = (windowWidth: number, windowHeight: number) => {
     const userLayout = useCurrentUserLayout();
     const { setCurrentLayout } = useActions(settingsActions);
+    const { stageMode } = useSelector(viewSelector);
 
     // convert layout to ReactGridLayout
     const [layout, widgets] = useMemo(() => {
         const layout =
-            userLayout || getDefaultLayout(windowWidth, windowHeight);
+            userLayout || getDefaultLayout(windowWidth, windowHeight, stageMode);
         const widgets = WidgetTypes.map((type) => {
             return layout[type] && { i: type, ...layout[type] };
         }).filter(Boolean) as ReactGridLayout.Layout[];
         return [layout, widgets];
-    }, [userLayout, windowWidth, windowHeight]);
+    }, [userLayout, windowWidth, windowHeight, stageMode]);
 
     const { toolbar, toolbarAnchor } = layout;
 

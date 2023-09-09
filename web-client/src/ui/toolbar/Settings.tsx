@@ -1,6 +1,6 @@
 //! Setting control to launch the settings dialog
 
-import React from "react";
+import React, { forwardRef } from "react";
 import {
     Button,
     Dialog,
@@ -20,11 +20,11 @@ import { viewActions } from "core/store";
 import { useActions } from "low/store";
 
 import { ControlComponentProps, ToolbarControl } from "./util";
-import { SettingsDialog } from "./SettingsDialog";
+import { SettingsDialog } from "./settings";
 
 /// The settings control
 export const Settings: ToolbarControl = {
-    ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
+    ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
         return (
             <SettingsInternal>
                 <Tooltip content="Settings" relationship="label">

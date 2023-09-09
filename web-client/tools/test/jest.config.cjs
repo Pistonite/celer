@@ -1,16 +1,15 @@
 const path = require("path");
 
-/** @type {import('jest').Config} */
 module.exports = {
-    rootDir: path.resolve(__dirname, "../"),
+    rootDir: path.resolve(__dirname, "../../"),
     testEnvironment: "jsdom",
-    setupFilesAfterEnv: ["<rootDir>/test/jest.setup.ts"],
+    setupFilesAfterEnv: ["<rootDir>/tools/test/jest.setup.ts"],
     moduleNameMapper: {
         "\\.(css|less|scss|sass)$": "identity-obj-proxy",
         "^ui/(.*)": "<rootDir>/src/ui/$1",
         "^core/(.*)": "<rootDir>/src/core/$1",
         "^low/(.*)": "<rootDir>/src/low/$1",
-        "^@test$": "<rootDir>/test",
+        "^@test$": "<rootDir>/tools/test",
     },
     transform: {
         "\\.[jt]sx?$": [

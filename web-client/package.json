@@ -13,10 +13,11 @@
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache",
         "fmt": "prettier \"./**/*.{ts,tsx,json,cjs,css,html}\"",
         "fmt:compiler": "prettier --write ./src/low/compiler.g.ts",
-        "test": "jest --config test/jest.config.cjs"
+        "test": "jest --config tools/test/jest.config.cjs"
     },
     "dependencies": {
         "@fluentui/react-components": "^9.21.0",
+        "@fluentui/react-icons": "^2.0.214",
         "@reduxjs/toolkit": "^1.9.5",
         "clsx": "^1.2.1",
         "denque": "^2.1.0",
@@ -26,6 +27,7 @@
         "leaflet-arrowheads": "^1.4.0",
         "leaflet-rastercoords": "^1.0.5",
         "lru-cache": "^10.0.0",
+        "monaco-editor": "^0.41.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-grid-layout": "^1.3.4",

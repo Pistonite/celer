@@ -6,8 +6,10 @@ import {
     documentActions,
     initStore,
     settingsSelector,
+    viewActions,
 } from "core/store";
-import { Logger } from "low/utils";
+import type { EditorState } from "./EditorState";
+import { Logger, isInDarkMode } from "low/utils";
 
 import { KeyMgr } from "./KeyMgr";
 
@@ -29,7 +31,7 @@ export class Kernel {
     ///
     /// The kernel owns the store. The store is shared
     /// between app boots (i.e. when switching routes)
-    // private store: AppStore | null = null;
+    private store: AppStore | null = null;
     /// The store cleanup function
     private cleanupStore: (() => void) | null = null;
     /// The link tag that loads the theme css
@@ -39,6 +41,13 @@ export class Kernel {
     /// The function to unmount react
     private cleanupUi: (() => void) | null = null;
 
+    // Alert API
+    private alertCallback: ((ok: boolean) => void) | undefined = undefined;
+
+    // Editor API
+    // The editor is owned by the kernel because the toobar needs access
+    private editor: EditorState | null = null;
+
     constructor(initReact: InitUiFunction) {
         this.log = new Logger("ker");
         this.initReact = initReact;
@@ -47,10 +56,28 @@ export class Kernel {
     /// Start the application. Cleans up previous application if needed
     public init() {
         this.log.info("starting application");
-        const store = this.initStore();
+        let store = this.store;
+        if (!store) {
+            store = this.initStore();
+            this.store = store;
+        }
+
+        this.initStage();
         this.initUi(store);
 
         this.test(store);
+
+        // this.showAlert("Alert", "This is a test alert", "Ok", "Cancel");
+    }
+
+    /// Initialize stage info based on window.location
+    private initStage() {
+        const path = window.location.pathname;
+        if (path === "/edit") {
+            this.store?.dispatch(viewActions.setStageMode("edit"));
+        } else {
+            this.store?.dispatch(viewActions.setStageMode("view"));
+        }
     }
 
     private async test(store: AppStore) {
@@ -94,7 +121,6 @@ export class Kernel {
             }),
         );
 
-        // this.store = store;
         this.cleanupStore = () => {
             unwatchSettings();
         };
@@ -107,10 +133,7 @@ export class Kernel {
             this.log.info("unmounting previous ui");
             this.cleanupUi();
         }
-        const isDarkMode = !!(
-            window.matchMedia &&
-            window.matchMedia("(prefers-color-scheme: dark)").matches
-        );
+        const isDarkMode = isInDarkMode();
         const unmountReact = this.initReact(this, store, isDarkMode);
 
         // key binding handler
@@ -142,4 +165,54 @@ export class Kernel {
         }
         this.themeLinkTag.href = `/themes/${theme}.min.css`;
     }
+
+    /// Show an alert dialog
+    ///
+    /// Returns a promise that resolves to true if the user
+    /// clicked ok and false if the user clicked cancel.
+    public showAlert(title: string, message: string, okButton: string, cancelButton: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            this.alertCallback = (ok) => {
+                const store = this.store;
+                // if there's no store then we don't care
+                if (store) {
+                    store.dispatch(viewActions.clearAlert());
+                }
+                resolve(ok);
+                this.alertCallback = undefined;
+            }
+            const store = this.store;
+            if (!store) {
+                console.error("store not initialized");
+                resolve(false);
+                return;
+            }
+            store.dispatch(viewActions.setAlert({
+                title,
+                text: message,
+                okButton,
+                cancelButton,
+            }));
+        });
+    }
+
+    public onAlertAction(ok: boolean) {
+        if (this.alertCallback) {
+            this.alertCallback(ok);
+        }
+    }
+
+    public async initEditor() {
+        const { initEditor } = await import("./EditorState");
+        const store = this.store;
+        if (!store) {
+            throw new Error("store not initialized");
+        }
+        this.editor = initEditor(store);
+    }
+
+    public getEditor(): EditorState | null {
+        return this.editor;
+    }
+
 }

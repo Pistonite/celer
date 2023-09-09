@@ -20,5 +20,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# cert
+*.pem
+*.key
+*.crt
+*.pfx
 
-/core-graphics

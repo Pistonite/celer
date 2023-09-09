@@ -27,49 +27,12 @@ import {
 } from "@fluentui/react-components";
 import { MoreHorizontal20Filled } from "@fluentui/react-icons";
 import clsx from "clsx";
-import React, { PropsWithChildren } from "react";
-
-import { HeaderControlList } from "./util";
-import { SwitchToolbarLocation } from "./SwitchToolbarLocation";
-import { SwitchLayout } from "./SwitchLayout";
-import { SwitchMapLayer } from "./SwitchMapLayer";
-import { Settings } from "./Settings";
-import { ZoomIn, ZoomOut } from "./Zoom";
-import { ViewDiagnostics } from "./ViewDiagnostics";
-import { SelectSection } from "./SelectSection";
-import { documentSelector } from "core/store";
+import React, { PropsWithChildren, useMemo } from "react";
 import { useSelector } from "react-redux";
 
-/// Header controls.
-///
-/// The controls are defined in groups. Each control is a ToolbarControl that defines its apperances in the toolbar and in the overflow menu
-const HeaderControls: HeaderControlList = [
-    // UI Controls
-    {
-        priority: 30,
-        controls: [SwitchLayout, SwitchToolbarLocation],
-    },
-    // Doc Controls
-    {
-        priority: 40,
-        controls: [SelectSection],
-    },
-    // Map Controls
-    {
-        priority: 20,
-        controls: [SwitchMapLayer, ZoomIn, ZoomOut],
-    },
-    // Diagnostic/editor
-    {
-        priority: 39,
-        controls: [ViewDiagnostics],
-    },
-    // Setting
-    {
-        priority: 99,
-        controls: [Settings],
-    },
-];
+import { documentSelector, viewSelector } from "core/store";
+import { getHeaderControls } from "./getHeaderControls";
+import { HeaderControlList } from "./util";
 
 /// The header props
 type HeaderProps = {
@@ -80,7 +43,12 @@ type HeaderProps = {
 /// The header component
 export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
     const { document } = useSelector(documentSelector);
+    const { stageMode } = useSelector(viewSelector);
     const title = document?.project.title ?? "Loading...";
+
+    const headerControls = useMemo(() => {
+        return getHeaderControls(stageMode);
+    }, [stageMode]);
 
     return (
         <header className={clsx("celer-header", toolbarAnchor)}>
@@ -99,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
 
             <Overflow padding={90} minimumVisible={1}>
                 <Toolbar className="celer-toolbar">
-                    {HeaderControls.map((group, i) => (
+                    {headerControls.map((group, i) => (
                         <React.Fragment key={i}>
                             {group.controls.map((Control, j) => (
                                 <OverflowItem
@@ -111,14 +79,14 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
                                     <Control.ToolbarButton />
                                 </OverflowItem>
                             ))}
-                            {i < HeaderControls.length - 1 && (
+                            {i < headerControls.length - 1 && (
                                 <ToolbarOverflowDivider
                                     groupId={i.toString()}
                                 />
                             )}
                         </React.Fragment>
                     ))}
-                    <OverflowMenu />
+                    <OverflowMenu controls={headerControls}/>
                 </Toolbar>
             </Overflow>
         </header>
@@ -141,7 +109,7 @@ const ToolbarOverflowDivider: React.FC<{ groupId: string }> = ({ groupId }) => {
 /// The overflow menu
 ///
 /// Controls that cannot fit in the toolbar will be moved to here
-const OverflowMenu: React.FC = () => {
+const OverflowMenu: React.FC<{controls: HeaderControlList}> = ({controls}) => {
     const { ref, isOverflowing } = useOverflowMenu<HTMLButtonElement>();
 
     if (!isOverflowing) {
@@ -158,7 +126,7 @@ const OverflowMenu: React.FC = () => {
             </MenuTrigger>
             <MenuPopover>
                 <MenuList>
-                    {HeaderControls.map((group, i) => (
+                    {controls.map((group, i) => (
                         <React.Fragment key={i}>
                             {group.controls.map((Control, j) => (
                                 <ShowIfOverflown
@@ -168,7 +136,7 @@ const OverflowMenu: React.FC = () => {
                                     <Control.MenuItem />
                                 </ShowIfOverflown>
                             ))}
-                            {i < HeaderControls.length - 1 && (
+                            {i < controls.length - 1 && (
                                 <ShowIfGroupOverflown groupId={`${i}`}>
                                     <MenuDivider />
                                 </ShowIfGroupOverflown>
