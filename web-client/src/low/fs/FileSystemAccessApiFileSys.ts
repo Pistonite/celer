@@ -38,12 +38,14 @@ export const isFileSystemAccessAPISupported = (): boolean => {
 /// This is only supported in Chrome/Edge
 export class FileSystemAccessAPIFileSys implements FileSys {
     private rootPath: string;
+    private rootHandle: FileSystemDirectoryHandle;
 
     private dirHandles: Record<string, FileSystemDirectoryHandle> = {};
     private fileHandles: Record<string, FileSystemFileHandle> = {};
 
     constructor(rootPath: string, rootHandle: FileSystemDirectoryHandle) {
         this.rootPath = rootPath;
+        this.rootHandle = rootHandle;
         this.dirHandles = {
             "": rootHandle,
         };
@@ -96,6 +98,14 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             }
         } else {
             delete this.dirHandles[dirPath];
+        }
+
+        if (path.isRoot) {
+            this.dirHandles[dirPath] = this.rootHandle;
+            return {
+                code: FsResultCodes.Ok,
+                value: this.dirHandles[dirPath],
+            };
         }
 
         const parentPathResult = path.parent;

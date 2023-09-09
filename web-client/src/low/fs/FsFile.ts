@@ -66,15 +66,23 @@ export class FsFile {
         return await this.load();
     }
 
-    /// Load the file's content from FS. Overwrites any unsaved changes
+    /// Load the file's content from FS. 
+    /// 
+    /// Overwrites any unsaved changes only if the file has been
+    /// modified since it was last loaded.
     ///
     /// If it fails, the file's content will not be changed
     public async load(): Promise<FsResultCode> {
-        const result = await this.fs.readFile(this.path);
+        const result = await this.fs.readIfModified(this.path, this.lastModified);
+        if (result.code === FsResultCodes.NotModified) {
+            return FsResultCodes.Ok;
+        }
         if (result.code !== FsResultCodes.Ok) {
             return result.code;
         }
-        this.content = result.value;
+        const [content, lastModified] = result.value;
+        this.content = content;
+        this.lastModified = lastModified;
         this.dirty = false;
         return FsResultCodes.Ok;
     }

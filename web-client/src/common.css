@@ -10,3 +10,13 @@
 .spinning-infinite {
   animation: spinning 1s linear infinite;
 }
+
+.color-error {
+    color: #ff8888;
+    fill: #ff8888;
+}
+
+.color-success {
+    color: #88ff88;
+    fill: #88ff88;
+}

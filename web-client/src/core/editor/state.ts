@@ -41,7 +41,7 @@ export type EditorSettingsState = {
 
 export const initialEditorSettingsState: EditorSettingsState = {
     autoSaveEnabled: true,
-    autoLoadEnabled: false,
+    autoLoadEnabled: true,
     deactivateLoadAfterMinutes: 30,
 }
 

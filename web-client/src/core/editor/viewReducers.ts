@@ -30,3 +30,15 @@ withPayload((state: EditorViewState, {openedFile, currentFileSupported}) => {
     state.openedFile = openedFile;
     state.currentFileSupported = currentFileSupported;
 });
+
+export const startFileSysLoad: ReducerDecl<EditorViewState> =
+(state) => {
+    state.loadInProgress = true;
+    state.lastLoadError = false;
+};
+
+export const endFileSysLoad: ReducerDeclWithPayload<
+EditorViewState,boolean> = withPayload((state: EditorViewState, success: boolean) => {
+    state.loadInProgress = false;
+    state.lastLoadError = !success;
+});

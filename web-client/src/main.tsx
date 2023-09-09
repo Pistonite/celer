@@ -1,3 +1,4 @@
+import "./common.css";
 import { Kernel } from "core/kernel";
 import { initAppRoot } from "ui/app";
 
