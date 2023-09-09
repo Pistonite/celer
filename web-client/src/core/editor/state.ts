@@ -17,8 +17,7 @@ export type EditorViewState = {
     loadInProgress: boolean;
     lastLoadError: boolean;
     saveInProgress: boolean;
-
-}
+};
 
 export const initialEditorViewState: EditorViewState = {
     serial: 0,
@@ -37,11 +36,10 @@ export type EditorSettingsState = {
     autoSaveEnabled: boolean;
     autoLoadEnabled: boolean;
     deactivateLoadAfterMinutes: number;
-}
+};
 
 export const initialEditorSettingsState: EditorSettingsState = {
     autoSaveEnabled: true,
     autoLoadEnabled: true,
     deactivateLoadAfterMinutes: 30,
-}
-
+};

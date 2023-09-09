@@ -1,73 +1,19 @@
-//! Editor logic that wraps monaco editor
-import * as monaco from 'monaco-editor'
-// eslint-disable-next-line import/no-internal-modules
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
-// eslint-disable-next-line import/no-internal-modules
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
-// eslint-disable-next-line import/no-internal-modules
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
+import * as monaco from "monaco-editor";
+import reduxWatch from "redux-watch";
 
-import { AppStore, viewActions, viewSelector, settingsSelector } from 'core/store';
-import { FileSys, FsFile, FsResultCode, FsResultCodes } from 'low/fs';
+import {
+    AppStore,
+    viewActions,
+    viewSelector,
+    settingsSelector,
+} from "core/store";
+import { FileSys, FsFile, FsResultCode, FsResultCodes } from "low/fs";
+import { isInDarkMode, sleep } from "low/utils";
 
-import { EditorContainerId, EditorLog, toFsPath } from 'core/editor';
-import { isInDarkMode, sleep } from 'low/utils';
-import reduxWatch from 'redux-watch';
+import { EditorKernel } from "./EditorKernel";
+import { EditorContainerId, EditorLog, toFsPath } from "./utils";
 
-EditorLog.info("loading editor module");
-
-declare global {
-    interface Window {
-        __theEditorState: EditorState;
-    }
-}
-
-export const initEditor = (store: AppStore): EditorState => {
-    if (window.__theEditorState) {
-        window.__theEditorState.delete();
-    }
-    EditorLog.info("creating editor");
-    window.MonacoEnvironment = {
-        getWorker(_, label) {
-            if (label === 'json') {
-                return new jsonWorker()
-            }
-            if (label === 'typescript' || label === 'javascript') {
-                return new tsWorker()
-            }
-            return new editorWorker()
-        }
-    };
-
-    const editor = new EditorStateImpl(store);
-    window.__theEditorState = editor;
-    return editor;
-}
-
-export interface EditorState {
-    /// Reset the editor with a new file system. Unsaved changes will be lost
-    reset(fs?: FileSys): void;
-
-    /// Delete the editor state and free resources
-    delete(): void;
-
-    /// Request directory listing
-    ///
-    /// See EditorTree for input/output format
-    /// On failure this returns empty array. This function will not throw
-    listDir(path: string[]): Promise<string[]>;
-
-    /// Open a file in the editor
-    openFile(path: string[]): Promise<void>;
-
-    /// Check if there are unsaved changes
-    hasUnsavedChanges(): boolean;
-
-    /// Load changes from the file system for the opened files
-    loadChangesFromFs(): Promise<void>;
-}
-
-class EditorStateImpl implements EditorState {
+export class EditorKernelImpl implements EditorKernel {
     private store: AppStore;
     private fs: FileSys | undefined;
 
@@ -76,14 +22,14 @@ class EditorStateImpl implements EditorState {
     ///
     /// Anything that changes files or currentFile or the monaco editor
     /// should lock the fs
-    private fsLock: boolean = false;
+    private fsLock = false;
     /// Opened files
     private files: Record<string, FsFile> = {};
     private currentFile: FsFile | undefined;
 
     private monacoDom: HTMLDivElement;
     private monacoEditor: monaco.editor.IStandaloneCodeEditor;
-    private cleanup: (() => void);
+    private cleanup: () => void;
 
     constructor(store: AppStore) {
         this.store = store;
@@ -91,7 +37,7 @@ class EditorStateImpl implements EditorState {
         this.monacoDom.id = "monaco-editor";
         this.monacoEditor = monaco.editor.create(this.monacoDom, {
             theme: isInDarkMode() ? "vs-dark" : "vs",
-            });
+        });
 
         const resizeHandler = () => {
             this.resizeEditor();
@@ -107,9 +53,7 @@ class EditorStateImpl implements EditorState {
                 this.onSettingsUpdate();
             }),
         );
-        const watchView = reduxWatch(() =>
-            viewSelector(store.getState()),
-        );
+        const watchView = reduxWatch(() => viewSelector(store.getState()));
         const unwatchView = store.subscribe(
             watchView((_newVal, _oldVal) => {
                 this.onViewUpdate();
@@ -126,20 +70,26 @@ class EditorStateImpl implements EditorState {
     public reset(fs?: FileSys) {
         EditorLog.info("resetting editor");
         this.fs = fs;
-        this.store.dispatch(viewActions.updateOpenedFile({
-            openedFile: undefined,
-            currentFileSupported: true,
-        }));
+        this.store.dispatch(
+            viewActions.updateOpenedFile({
+                openedFile: undefined,
+                currentFileSupported: true,
+            }),
+        );
         if (fs) {
-            this.store.dispatch(viewActions.updateFileSys({
-                rootPath: fs.getRootName(),
-                supportsSave: fs.isWritable(),
-            }));
+            this.store.dispatch(
+                viewActions.updateFileSys({
+                    rootPath: fs.getRootName(),
+                    supportsSave: fs.isWritable(),
+                }),
+            );
         } else {
-            this.store.dispatch(viewActions.updateFileSys({
-                rootPath: undefined,
-                supportsSave: true,
-            }));
+            this.store.dispatch(
+                viewActions.updateFileSys({
+                    rootPath: undefined,
+                    supportsSave: true,
+                }),
+            );
         }
         this.monacoDom.remove();
     }
@@ -147,16 +97,16 @@ class EditorStateImpl implements EditorState {
     public delete() {
         EditorLog.info("deleting editor");
         this.reset();
-            this.monacoEditor.dispose();
+        this.monacoEditor.dispose();
         this.cleanup();
     }
 
     private onSettingsUpdate() {
-            this.resizeEditor();
+        this.resizeEditor();
     }
 
     private onViewUpdate() {
-            this.resizeEditor();
+        this.resizeEditor();
     }
 
     /// Request directory listing
@@ -180,7 +130,7 @@ class EditorStateImpl implements EditorState {
     public async openFile(path: string[]) {
         const fsPath = toFsPath(path);
         const idPath = fsPath.path;
-      EditorLog.info(`opening ${idPath}`);
+        EditorLog.info(`opening ${idPath}`);
         await this.withLockedFs("openFile", async () => {
             if (!this.fs) {
                 return;
@@ -212,10 +162,12 @@ class EditorStateImpl implements EditorState {
             }
             this.currentFile = undefined;
             this.monacoDom.remove();
-            this.store.dispatch(viewActions.updateOpenedFile({
-                openedFile: undefined,
-                currentFileSupported: true,
-            }));
+            this.store.dispatch(
+                viewActions.updateOpenedFile({
+                    openedFile: undefined,
+                    currentFileSupported: true,
+                }),
+            );
         });
     }
 
@@ -225,17 +177,21 @@ class EditorStateImpl implements EditorState {
         const content = await fsFile.getContent();
         if (content.code !== FsResultCodes.Ok) {
             EditorLog.error(`openFsFile failed with code ${content.code}`);
-            this.store.dispatch(viewActions.updateOpenedFile({
-                openedFile: path,
-                currentFileSupported: false,
-            }));
+            this.store.dispatch(
+                viewActions.updateOpenedFile({
+                    openedFile: path,
+                    currentFileSupported: false,
+                }),
+            );
             return;
         }
         this.updateEditorValue(path, content.value);
-        this.store.dispatch(viewActions.updateOpenedFile({
-            openedFile: path,
-            currentFileSupported: true,
-        }));
+        this.store.dispatch(
+            viewActions.updateOpenedFile({
+                openedFile: path,
+                currentFileSupported: true,
+            }),
+        );
         this.currentFile = fsFile;
     }
 
@@ -272,7 +228,7 @@ class EditorStateImpl implements EditorState {
         // do this async for any UI size changes to finish
         setTimeout(() => {
             // Resize to 0,0 to force monaco to shrink if needed
-            this.monacoEditor.layout({width: 0, height: 0});
+            this.monacoEditor.layout({ width: 0, height: 0 });
             this.monacoEditor.layout();
         }, 0);
     }
@@ -286,25 +242,34 @@ class EditorStateImpl implements EditorState {
         EditorLog.info("loading changes from filesystem");
         this.store.dispatch(viewActions.startFileSysLoad());
         await sleep(5999);
-        const success = await this.withLockedFs("loadChangesFromFs", async () => {
-            let success = true;
-            for (const id in this.files) {
-                const fsFile = this.files[id];
-                const result = await this.loadChangesFromFsForFsFile(id, fsFile);
-                if (result !== FsResultCodes.Ok) {
-                    success = false;
+        const success = await this.withLockedFs(
+            "loadChangesFromFs",
+            async () => {
+                let success = true;
+                for (const id in this.files) {
+                    const fsFile = this.files[id];
+                    const result = await this.loadChangesFromFsForFsFile(
+                        id,
+                        fsFile,
+                    );
+                    if (result !== FsResultCodes.Ok) {
+                        success = false;
+                    }
+                    // sleep some time so the UI doesn't freeze
+                    await sleep(50);
                 }
-                // sleep some time so the UI doesn't freeze
-                await sleep(50);
-            }
-            return success;
-        });
+                return success;
+            },
+        );
         this.store.dispatch(viewActions.endFileSysLoad(success));
         EditorLog.info("changes loaded from filesystem");
     }
 
     // WARNING: must only call in locked fs
-    async loadChangesFromFsForFsFile(id: string, fsFile: FsFile): Promise<FsResultCode> {
+    async loadChangesFromFsForFsFile(
+        id: string,
+        fsFile: FsFile,
+    ): Promise<FsResultCode> {
         EditorLog.info(`syncing ${id}`);
         const result = await fsFile.load();
         if (result !== FsResultCodes.Ok) {
@@ -341,8 +306,6 @@ class EditorStateImpl implements EditorState {
         try {
             this.fsLock = true;
             return await f();
-        } catch (e) {
-            throw e;
         } finally {
             this.fsLock = false;
         }
@@ -355,6 +318,4 @@ class EditorStateImpl implements EditorState {
         }
         return await this.withLockedFs(reason, f);
     }
-
 }
-

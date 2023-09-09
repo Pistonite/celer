@@ -40,7 +40,6 @@ export const fitLayoutToGrid = (layout: Layout): Layout => {
         if (layout.map?.w === 0 || layout.map?.h === 0) {
             delete layout.map;
         }
-
     });
 };
 

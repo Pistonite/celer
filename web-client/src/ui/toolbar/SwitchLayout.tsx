@@ -108,9 +108,8 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
                             value={`${i}`}
                             key={i}
                         >
-                            Custom {i + 1} {
-                                savedLayouts[i].editor ? " (Editor)" : ""
-                            }
+                            Custom {i + 1}{" "}
+                            {savedLayouts[i].editor ? " (Editor)" : ""}
                         </MenuItemRadio>
                     ))}
 

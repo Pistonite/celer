@@ -1,13 +1,12 @@
+import { saveLog } from "low/utils";
 import React, { PropsWithChildren } from "react";
-
-import { ErrorScreen } from "./ErrorScreen";
 
 type ErrorState = {
     hasError: boolean;
 };
 
 /// Error boundary component
-export class ErrorBoundary extends React.Component<
+export class AppErrorBoundary extends React.Component<
     PropsWithChildren,
     ErrorState
 > {
@@ -24,7 +23,16 @@ export class ErrorBoundary extends React.Component<
 
     render() {
         if (this.state.hasError) {
-            return <ErrorScreen message={this.error} />;
+            return (
+                <>
+                    <h1>Oh snap :(</h1>
+                    <hr />
+                    <p>Celer has encountered an error and stopped working. Refresh the page to reload it.</p>
+                    <p>Sorry for the inconvenience</p>
+                    <p>{this.error}</p>
+                    <button onClick={saveLog}>Download logs</button>
+                </>
+            );
         }
         return this.props.children;
     }

@@ -37,7 +37,7 @@ export class FsFile {
     public async getContent(): Promise<FsResult<string>> {
         if (this.content === undefined) {
             const result = await this.load();
-            if (result!== FsResultCodes.Ok) {
+            if (result !== FsResultCodes.Ok) {
                 return { code: result };
             }
         }
@@ -66,14 +66,17 @@ export class FsFile {
         return await this.load();
     }
 
-    /// Load the file's content from FS. 
-    /// 
+    /// Load the file's content from FS.
+    ///
     /// Overwrites any unsaved changes only if the file has been
     /// modified since it was last loaded.
     ///
     /// If it fails, the file's content will not be changed
     public async load(): Promise<FsResultCode> {
-        const result = await this.fs.readIfModified(this.path, this.lastModified);
+        const result = await this.fs.readIfModified(
+            this.path,
+            this.lastModified,
+        );
         if (result.code === FsResultCodes.NotModified) {
             return FsResultCodes.Ok;
         }
@@ -112,5 +115,4 @@ export class FsFile {
         this.dirty = false;
         return FsResultCodes.Ok;
     }
-
 }

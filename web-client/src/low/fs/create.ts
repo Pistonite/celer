@@ -1,32 +1,42 @@
 //! Utils for creating FileSys
 
-import { FileEntiresAPIFileSys, isFileEntriesAPISupported } from "./FileEntriesAPIFileSys";
+import {
+    FileEntiresAPIFileSys,
+    isFileEntriesAPISupported,
+} from "./FileEntriesAPIFileSys";
 import { FileSys } from "./FileSys";
-import { FileSystemAccessAPIFileSys, isFileSystemAccessAPISupported } from "./FileSystemAccessApiFileSys";
+import {
+    FileSystemAccessAPIFileSys,
+    isFileSystemAccessAPISupported,
+} from "./FileSystemAccessApiFileSys";
 import { FsResult, FsResultCodes } from "./FsResult";
 
-export const createFsFromDataTransferItem = async (item: DataTransferItem): Promise<FsResult<FileSys>> => {
+export const createFsFromDataTransferItem = async (
+    item: DataTransferItem,
+): Promise<FsResult<FileSys>> => {
     // Prefer File System Access API since it supports writing
     if ("getAsFileSystemHandle" in item) {
-    if (isFileSystemAccessAPISupported()) {
-        try {
-            // @ts-expect-error getAsFileSystemHandle is not in the TS lib
-            const handle = await item.getAsFileSystemHandle();
-            if (!handle) {
-                return {
-                    code: FsResultCodes.Fail,
-                };
+        if (isFileSystemAccessAPISupported()) {
+            try {
+                // @ts-expect-error getAsFileSystemHandle is not in the TS lib
+                const handle = await item.getAsFileSystemHandle();
+                if (!handle) {
+                    return {
+                        code: FsResultCodes.Fail,
+                    };
+                }
+                const result = await createFsFromFileSystemHandle(handle);
+                if (result.code !== FsResultCodes.NotSupported) {
+                    return result;
+                }
+            } catch (e) {
+                console.error(e);
             }
-            const result = await createFsFromFileSystemHandle(handle);
-            if (result.code !== FsResultCodes.NotSupported) {
-                return result;
-            }
-        } catch (e) {
-            console.error(e);
         }
     }
-    }
-    console.warn("Failed to create FileSys with FileSystemAccessAPI. Trying FileEntriesAPI");
+    console.warn(
+        "Failed to create FileSys with FileSystemAccessAPI. Trying FileEntriesAPI",
+    );
     if (!isFileEntriesAPISupported()) {
         return {
             code: FsResultCodes.NotSupported,
@@ -49,13 +59,17 @@ export const createFsFromDataTransferItem = async (item: DataTransferItem): Prom
             console.error(e);
         }
     }
-    console.warn("Failed to create FileSys with FileEntriesAPI. Editor is not supported");
+    console.warn(
+        "Failed to create FileSys with FileEntriesAPI. Editor is not supported",
+    );
     return {
         code: FsResultCodes.NotSupported,
     };
-}
+};
 
-const createFsFromFileSystemHandle = async (handle: FileSystemHandle): Promise<FsResult<FileSys>> => {
+const createFsFromFileSystemHandle = async (
+    handle: FileSystemHandle,
+): Promise<FsResult<FileSys>> => {
     if (handle.kind !== "directory") {
         return {
             code: FsResultCodes.IsFile,
@@ -63,23 +77,31 @@ const createFsFromFileSystemHandle = async (handle: FileSystemHandle): Promise<F
     }
 
     const rootName = handle.name;
-    const fs = new FileSystemAccessAPIFileSys(rootName, handle as FileSystemDirectoryHandle);
+    const fs = new FileSystemAccessAPIFileSys(
+        rootName,
+        handle as FileSystemDirectoryHandle,
+    );
     return {
         code: FsResultCodes.Ok,
         value: fs,
     };
-}
+};
 
-const createFsFromFileSystemEntry = async (entry: FileSystemEntry): Promise<FsResult<FileSys>> => {
+const createFsFromFileSystemEntry = async (
+    entry: FileSystemEntry,
+): Promise<FsResult<FileSys>> => {
     if (entry.isFile || !entry.isDirectory) {
         return {
             code: FsResultCodes.IsFile,
         };
     }
     const rootName = entry.name;
-    const fs = new FileEntiresAPIFileSys(rootName, entry as FileSystemDirectoryEntry);
+    const fs = new FileEntiresAPIFileSys(
+        rootName,
+        entry as FileSystemDirectoryEntry,
+    );
     return {
         code: FsResultCodes.Ok,
         value: fs,
     };
-}
+};

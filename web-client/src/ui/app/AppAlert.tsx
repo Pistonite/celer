@@ -1,13 +1,23 @@
 //! Global alert component
 import { useRef } from "react";
-import { useSelector } from "react-redux"
-import { Button, Dialog, DialogActions, DialogBody, DialogContent, DialogSurface, DialogTitle, DialogTrigger } from "@fluentui/react-components";
+import { useSelector } from "react-redux";
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogBody,
+    DialogContent,
+    DialogSurface,
+    DialogTitle,
+    DialogTrigger,
+} from "@fluentui/react-components";
 
 import { useKernel } from "core/kernel";
-import { viewSelector } from "core/store"
+import { viewSelector } from "core/store";
 
 export const AppAlert: React.FC = () => {
-    const { alertTitle, alertText, alertOkButton, alertCancelButton } = useSelector(viewSelector);
+    const { alertTitle, alertText, alertOkButton, alertCancelButton } =
+        useSelector(viewSelector);
     const kernel = useKernel();
     const okRef = useRef<HTMLButtonElement>(null);
     if (!alertText) {
@@ -16,7 +26,7 @@ export const AppAlert: React.FC = () => {
 
     return (
         <Dialog
-            open 
+            open
             modalType="alert"
             onOpenChange={(ev, data) => {
                 if (!data.open) {
@@ -28,23 +38,23 @@ export const AppAlert: React.FC = () => {
             <DialogSurface>
                 <DialogBody>
                     <DialogTitle>{alertTitle}</DialogTitle>
-                    <DialogContent>
-                        {alertText}
-                    </DialogContent>
+                    <DialogContent>{alertText}</DialogContent>
                     <DialogActions>
-                        {
-                            alertCancelButton &&
-                                <DialogTrigger disableButtonEnhancement>
-                                    <Button appearance="secondary">{alertCancelButton}</Button>
-                                </DialogTrigger>
-                        }
+                        {alertCancelButton && (
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button appearance="secondary">
+                                    {alertCancelButton}
+                                </Button>
+                            </DialogTrigger>
+                        )}
                         <DialogTrigger disableButtonEnhancement>
-                            <Button ref={okRef} appearance="primary">{alertOkButton}</Button>
+                            <Button ref={okRef} appearance="primary">
+                                {alertOkButton}
+                            </Button>
                         </DialogTrigger>
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>
         </Dialog>
-
     );
-}
+};

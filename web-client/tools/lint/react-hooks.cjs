@@ -16,15 +16,22 @@ const rootDir = path.resolve(__dirname, "../../src");
 const ok = checkPath(rootDir, "src");
 if (!ok) {
     console.log();
-    console.log("Removed the `React.` prefix from the function usage in lines above.");
+    console.log(
+        "Removed the `React.` prefix from the function usage in lines above.",
+    );
     process.exit(1);
 }
 
 function checkPath(filePath, displayPath) {
     let ok = true;
-    if(fs.statSync(filePath).isDirectory()) {
+    if (fs.statSync(filePath).isDirectory()) {
         fs.readdirSync(filePath).forEach((file) => {
-            if (!checkPath(path.join(filePath, file), path.join(displayPath, file))) {
+            if (
+                !checkPath(
+                    path.join(filePath, file),
+                    path.join(displayPath, file),
+                )
+            ) {
                 ok = false;
             }
         });
@@ -55,4 +62,3 @@ function checkLine(line) {
     }
     return true;
 }
-

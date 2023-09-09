@@ -1,6 +1,6 @@
 import "./EditorTree.css";
-import { useEffect, useState } from 'react';
-import { TreeItem } from './TreeItem';
+import { useEffect, useState } from "react";
+import { TreeItem } from "./TreeItem";
 
 export type EditorTreeProps = {
     /// Name of the root directory
@@ -18,13 +18,17 @@ export type EditorTreeProps = {
 
     /// Callback when a file is clicked.
     onClickFile: (path: string[]) => void;
-}
+};
 
-export const EditorTree: React.FC<EditorTreeProps> = ({ rootName, listDir, onClickFile }) => {
+export const EditorTree: React.FC<EditorTreeProps> = ({
+    rootName,
+    listDir,
+    onClickFile,
+}) => {
     const [expandedPaths, setExpandedPaths] = useState<string[]>([""]);
     return (
         <div id="editor-tree-root">
-            <TreeDirNode 
+            <TreeDirNode
                 name={rootName}
                 path={[]}
                 listDir={listDir}
@@ -34,16 +38,16 @@ export const EditorTree: React.FC<EditorTreeProps> = ({ rootName, listDir, onCli
                     const pathStr = path.join("/");
 
                     if (isExpanded) {
-                        setExpandedPaths(x => [...x, pathStr]);
+                        setExpandedPaths((x) => [...x, pathStr]);
                     } else {
-                        setExpandedPaths(x => x.filter(p => pathStr !== p));
+                        setExpandedPaths((x) => x.filter((p) => pathStr !== p));
                     }
                 }}
                 level={0}
             />
         </div>
     );
-}
+};
 
 type TreeDirNodeProps = {
     name: string;
@@ -53,14 +57,14 @@ type TreeDirNodeProps = {
     level: number;
     getIsExpanded: (path: string[]) => boolean;
     setIsExpanded: (path: string[], isExpanded: boolean) => void;
-}
+};
 
 const TreeDirNode: React.FC<TreeDirNodeProps> = ({
-    name, 
+    name,
     path,
     listDir,
     onClickFile,
-    level,  
+    level,
     getIsExpanded,
     setIsExpanded,
 }) => {
@@ -84,19 +88,20 @@ const TreeDirNode: React.FC<TreeDirNodeProps> = ({
 
     return (
         <>
-            <TreeItem 
+            <TreeItem
                 file={name}
                 isDirectory={true}
-                isSelected={false} 
+                isSelected={false}
                 isExpanded={isExpanded}
                 onClickFile={() => {
                     setIsExpanded(path, !isExpanded);
-                } } 
-                level={level} 
+                }}
+                level={level}
                 isLoading={isLoading}
             />
-            {
-                isExpanded && entries !== undefined && entries.map((entry, i) => {
+            {isExpanded &&
+                entries !== undefined &&
+                entries.map((entry, i) => {
                     if (entry.endsWith("/")) {
                         const name = entry.slice(0, -1);
                         return (
@@ -108,29 +113,28 @@ const TreeDirNode: React.FC<TreeDirNodeProps> = ({
                                 onClickFile={onClickFile}
                                 getIsExpanded={getIsExpanded}
                                 setIsExpanded={setIsExpanded}
-                                level={level+1}
+                                level={level + 1}
                             />
                         );
                     } else {
                         return (
-                            <TreeItem 
+                            <TreeItem
                                 key={i}
-                                file={entry} 
-                                isDirectory={false} 
-                                isSelected={false} 
+                                file={entry}
+                                isDirectory={false}
+                                isSelected={false}
                                 onClickFile={() => {
                                     onClickFile([...path, entry]);
                                 }}
-                                level={level+1}
+                                level={level + 1}
                                 isLoading={false}
                             />
                         );
                     }
-                })
-            }
+                })}
         </>
     );
-}
+};
 
 const compareEntry = (a: string, b: string): number => {
     const isADir = a.endsWith("/");
@@ -142,5 +146,4 @@ const compareEntry = (a: string, b: string): number => {
         return 1;
     }
     return a.localeCompare(b);
-
-}
+};

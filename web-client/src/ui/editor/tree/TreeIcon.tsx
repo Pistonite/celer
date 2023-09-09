@@ -1,26 +1,34 @@
 import {
-    Folder16Filled, 
+    Folder16Filled,
     Document16Filled,
     Info16Filled,
     CodeJs16Filled,
     CodeTs16Filled,
     CodePy16Filled,
     CodeBlock16Filled,
-} from '@fluentui/react-icons';
-import clsx from 'clsx';
+} from "@fluentui/react-icons";
+import clsx from "clsx";
 
 export type TreeIconProps = {
     // If this is true, then the icon will be a folder icon.
     isDirectory: boolean;
     // File name used to determine the icon.
     file: string;
-}
+};
 
-const getFileTypeAndIcon = ({isDirectory, file}: TreeIconProps): [string, JSX.Element] => {
+const getFileTypeAndIcon = ({
+    isDirectory,
+    file,
+}: TreeIconProps): [string, JSX.Element] => {
     if (isDirectory) {
         return ["folder", <Folder16Filled />];
     }
-    if (file.endsWith(".js") || file.endsWith(".jsx") || file.endsWith(".mjs") || file.endsWith(".cjs")) {
+    if (
+        file.endsWith(".js") ||
+        file.endsWith(".jsx") ||
+        file.endsWith(".mjs") ||
+        file.endsWith(".cjs")
+    ) {
         return ["js", <CodeJs16Filled />];
     }
     if (file.endsWith(".ts") || file.endsWith(".tsx")) {
@@ -39,13 +47,15 @@ const getFileTypeAndIcon = ({isDirectory, file}: TreeIconProps): [string, JSX.El
         return ["md", <Info16Filled />];
     }
     return ["unknown", <Document16Filled />];
-}
+};
 
 export const TreeIcon: React.FC<TreeIconProps> = (props) => {
     const [fileType, icon] = getFileTypeAndIcon(props);
     return (
-        <span className={clsx("editor-tree-item-icon", `file-type-${fileType}`)}>
+        <span
+            className={clsx("editor-tree-item-icon", `file-type-${fileType}`)}
+        >
             {icon}
         </span>
     );
-}
+};

@@ -18,11 +18,7 @@ import {
     initialMapSettingsState,
     mapSettingsReducers,
 } from "core/map";
-import {
-    EditorSettingsState,
-    initialEditorSettingsState,
-
-} from "core/editor";
+import { EditorSettingsState, initialEditorSettingsState } from "core/editor";
 import { configureSlice } from "low/store";
 
 /// Local storage key
@@ -31,7 +27,8 @@ const LOCAL_STORAGE_KEY = "Celer.Settings";
 /// The settings slice state
 export type SettingsState = LayoutSettingsState &
     MapSettingsState &
-    DocSettingsState & EditorSettingsState;
+    DocSettingsState &
+    EditorSettingsState;
 
 /// Try loading initial state from local storage on store init
 const loadState = (): SettingsState => {

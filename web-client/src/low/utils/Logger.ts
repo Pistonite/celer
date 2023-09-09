@@ -1,6 +1,7 @@
 //! Client side log util
 
 import Denque from "denque";
+import { saveAs } from "./FileSaver";
 /// Global log queue
 const LogQueue = new Denque<string>();
 const pushLog = (msg: string) => {
@@ -14,6 +15,25 @@ const pushLog = (msg: string) => {
 export const getLog = () => {
     return LogQueue.toArray();
 };
+
+/// Save the current log to a file
+export const saveLog = () => {
+    const result = confirm(`You are about to download the client-side application log to a file.
+
+Celer does not automatically collect any user data. However, the client-side log may contain sensitive information such as the name of the files loaded in the application.
+
+Please make sure sensitive information are removed before sharing it with developers or others for diagonistics.
+
+Do you want to continue?
+
+`);
+    if (!result) {
+        return;
+    }
+    const log = getLog().join("\n");
+    const filename = `celer_web-client_${new Date().toISOString()}.log`;
+    saveAs(log, filename);
+}
 
 /// A general-purpose client side logger
 ///

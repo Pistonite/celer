@@ -18,13 +18,13 @@
 
 @media (prefers-color-scheme: dark) {
     #editor-panel {
-        background-color: #1E1E1E;
+        background-color: #1e1e1e;
     }
 }
 
 #editor-file-name {
     padding: 4px;
-    border-bottom: 1px solid #CCC;
+    border-bottom: 1px solid #ccc;
 }
 
 #editor-outer-container {
@@ -53,7 +53,6 @@
 }
 
 .editor-drop-zone-dragging {
-    color: #479EF5;
-    border-color: #479EF5 !important;
+    color: #479ef5;
+    border-color: #479ef5 !important;
 }
-

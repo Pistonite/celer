@@ -18,5 +18,4 @@ export class Pool<T> {
     public free(obj: T) {
         this.availables.push(obj);
     }
-
 }

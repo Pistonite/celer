@@ -11,4 +11,4 @@ export const toFsPath = (path: string[]): FsPath => {
         fsPath = fsPath.resolve(path[i]);
     }
     return fsPath;
-}
+};

@@ -68,7 +68,8 @@ export const DocLine: React.FC<DocLineProps> = ({
                         <div
                             className="docline-counter"
                             style={{
-                                backgroundColor: counterText.tag?.background || undefined,
+                                backgroundColor:
+                                    counterText.tag?.background || undefined,
                                 color: counterText.tag?.color || undefined,
                             }}
                         >

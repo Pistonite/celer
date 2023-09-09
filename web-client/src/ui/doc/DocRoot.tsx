@@ -115,7 +115,9 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                               )
                                             : undefined
                                     }
-                                    counterType={line.counterText?.tag || undefined}
+                                    counterType={
+                                        line.counterText?.tag || undefined
+                                    }
                                 />
                             ))}
                         </DocSection>

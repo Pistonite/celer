@@ -133,7 +133,7 @@ export class MapState {
         // setup update debouncers
         this.recreateVisualsDebouncer = new Debouncer(200, () => {
             const state = store.getState();
-            const {document} = documentSelector(state);
+            const { document } = documentSelector(state);
             if (!document) {
                 return;
             }
@@ -154,7 +154,7 @@ export class MapState {
         };
 
         // update document initially
-        const {document} = documentSelector(store.getState());
+        const { document } = documentSelector(store.getState());
         if (document) {
             this.onDocumentUpdate(document);
         }
