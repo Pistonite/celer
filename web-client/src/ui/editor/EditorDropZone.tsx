@@ -84,12 +84,36 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({
                             return;
                         }
                         const fileSys = fileSysResult.value;
+                        let result = await fileSys.init();
+                        while (result !== FsResultCodes.Ok) {
+                            let retry = false;
+                            if (result === FsResultCodes.PermissionDenied) {
+                                retry = await kernel.showAlert(
+                                    "Permission Denied",
+                                    "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
+                                    "Grant Permission",
+                                    "Cancel",
+                                );
+                            } else {
+                                retry = await kernel.showAlert(
+                                    "Error",
+                                    "Failed to initialize the project. Please try again.",
+                                    "Retry",
+                                    "Cancel",
+                                );
+                            }
+                            if (!retry) {
+                                return;
+                            }
+                            result = await fileSys.init();
+                        }
+
                         if (!fileSys.isWritable()) {
                             const yes = await kernel.showAlert(
-                                "Some feature not supported",
-                                "Your browser does not support writing to file system. You will not be able to save changes made in the web editor! Do you want to open the project anyway?",
-                                "Yes",
-                                "No",
+                                "Save not supported",
+                                "Your browser does not support saving changes to the file system. You will not be able to save changes made using the web editor. You can still open the project and use the auto-load feature.",
+                                "Continue",
+                                "Cancel",
                             );
                             if (!yes) {
                                 return;

@@ -14,6 +14,8 @@ export const FsResultCodes = {
     IsFile: 5,
     /// The file was not modified since the last check
     NotModified: 6,
+    /// Permission error
+    PermissionDenied: 7,
 } as const;
 
 export type FsResultCode = (typeof FsResultCodes)[keyof typeof FsResultCodes];

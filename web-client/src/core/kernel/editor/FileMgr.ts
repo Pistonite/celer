@@ -2,9 +2,12 @@ import * as monaco from "monaco-editor";
 
 import { AppDispatcher, viewActions } from "core/store";
 import { FileSys, FsFile, FsPath, FsResultCode, FsResultCodes } from "low/fs";
-import { isInDarkMode, sleep } from "low/utils";
+import { sleep } from "low/utils";
 
 import { EditorContainerId, EditorLog, toFsPath } from "./utils";
+
+type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
+
 /// File manager
 ///
 /// This manages the opened files in the editor
@@ -23,17 +26,19 @@ export class FileMgr {
     /// Opened editor
     private currentFile: FsFile | undefined;
     private monacoDom: HTMLDivElement;
-    private monacoEditor: monaco.editor.IStandaloneCodeEditor;
+    private monacoEditor: IStandaloneCodeEditor;
+    private isEditorOpen = false;
 
     private dispatcher: AppDispatcher;
 
-    constructor(dispatcher: AppDispatcher) {
+    constructor(
+        monacoDom: HTMLDivElement,
+        monacoEditor: IStandaloneCodeEditor,
+        dispatcher: AppDispatcher,
+    ) {
         this.dispatcher = dispatcher;
-        this.monacoDom = document.createElement("div");
-        this.monacoDom.id = "monaco-editor";
-        this.monacoEditor = monaco.editor.create(this.monacoDom, {
-            theme: isInDarkMode() ? "vs-dark" : "vs",
-        });
+        this.monacoDom = monacoDom;
+        this.monacoEditor = monacoEditor;
     }
 
     public isFsLoaded(): boolean {
@@ -42,10 +47,15 @@ export class FileMgr {
 
     public async reset(fs?: FileSys) {
         await this.lockedFsScope("reset", async () => {
+            if (this.fs === fs) {
+                return;
+            }
             this.fs = fs;
             this.files = {};
             await this.updateEditor(undefined, undefined, undefined);
+            this.dispatcher.dispatch(viewActions.setUnsavedFiles([]));
             if (fs) {
+                EditorLog.info("resetting file system...");
                 this.dispatcher.dispatch(
                     viewActions.updateFileSys({
                         rootPath: fs.getRootName(),
@@ -53,6 +63,7 @@ export class FileMgr {
                     }),
                 );
             } else {
+                EditorLog.info("closing file system...");
                 this.dispatcher.dispatch(
                     viewActions.updateFileSys({
                         rootPath: undefined,
@@ -118,7 +129,7 @@ export class FileMgr {
     }
 
     public async loadChangesFromFs(): Promise<FsResultCode> {
-        EditorLog.info("loading changes from filesystem");
+        EditorLog.info("loading changes from file system...");
         this.dispatcher.dispatch(viewActions.setAutoLoadActive(true));
         const handle = window.setTimeout(() => {
             this.dispatcher.dispatch(viewActions.startFileSysLoad());
@@ -126,6 +137,9 @@ export class FileMgr {
         const success = await this.lockedFsScope(
             "loadChangesFromFs",
             async () => {
+                // ensure editor changes is synced first,
+                // so the current file is marked dirty
+                await this.syncEditorToCurrentFile();
                 let success = true;
                 for (const id in this.files) {
                     const fsFile = this.files[id];
@@ -144,22 +158,22 @@ export class FileMgr {
         );
         window.clearTimeout(handle);
         this.dispatcher.dispatch(viewActions.endFileSysLoad(success));
-        EditorLog.info("changes loaded from filesystem");
+        EditorLog.info("changes loaded from file system");
         return success ? FsResultCodes.Ok : FsResultCodes.Fail;
     }
 
-    async loadChangesFromFsForFsFile(
+    private async loadChangesFromFsForFsFile(
         idPath: string,
         fsFile: FsFile,
     ): Promise<FsResultCode> {
-        EditorLog.info(`syncing ${idPath}`);
+        EditorLog.info(`syncing ${idPath}...`);
         return await this.ensureLockedFs(
             "loadChangesFromFsForFsFile",
             async () => {
                 const isCurrentFile = this.currentFile === fsFile;
                 let content: string | undefined = undefined;
 
-                let result = await fsFile.load();
+                let result = await fsFile.loadIfNotDirty();
 
                 if (result === FsResultCodes.Ok) {
                     if (isCurrentFile) {
@@ -193,13 +207,102 @@ export class FileMgr {
         );
     }
 
+    public async hasUnsavedChanges(): Promise<boolean> {
+        return await this.ensureLockedFs("hasUnsavedChanges", async () => {
+            if (!this.isFsLoaded()) {
+                return false;
+            }
+            await this.syncEditorToCurrentFile();
+            for (const id in this.files) {
+                const fsFile = this.files[id];
+                if (fsFile.isDirty()) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
+    public hasUnsavedChangesSync(): boolean {
+        if (!this.isFsLoaded()) {
+            return false;
+        }
+        if (this.currentFile) {
+            this.currentFile.setContent(this.monacoEditor.getValue());
+        }
+        for (const id in this.files) {
+            const fsFile = this.files[id];
+            if (fsFile.isDirty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public async saveChangesToFs(): Promise<FsResultCode> {
+        if (!this.fs?.isWritable()) {
+            return FsResultCodes.NotSupported;
+        }
+        EditorLog.info("saving changes to file system...");
+        const handle = window.setTimeout(() => {
+            this.dispatcher.dispatch(viewActions.startFileSysSave());
+        }, 200);
+        const success = await this.lockedFsScope(
+            "saveChangesToFs",
+            async () => {
+                // ensure editor changes is synced first,
+                // so the current file is marked dirty
+                await this.syncEditorToCurrentFile();
+                let success = true;
+                for (const id in this.files) {
+                    const fsFile = this.files[id];
+                    const result = await this.saveChangesToFsForFsFile(
+                        id,
+                        fsFile,
+                    );
+                    if (result !== FsResultCodes.Ok) {
+                        success = false;
+                    }
+                    // sleep some time so the UI doesn't freeze
+                    await sleep(50);
+                }
+                return success;
+            },
+        );
+        window.clearTimeout(handle);
+        this.dispatcher.dispatch(viewActions.endFileSysSave(success));
+        EditorLog.info("changes saved to file system");
+        return success ? FsResultCodes.Ok : FsResultCodes.Fail;
+    }
+
+    private async saveChangesToFsForFsFile(
+        idPath: string,
+        fsFile: FsFile,
+    ): Promise<FsResultCode> {
+        EditorLog.info(`saving ${idPath}...`);
+        return await this.ensureLockedFs(
+            "saveChangesToFsForFsFile",
+            async () => {
+                const result = await fsFile.writeIfDirty();
+                if (result !== FsResultCodes.Ok) {
+                    EditorLog.error(`save failed with code ${result}`);
+                }
+                return result;
+            },
+        );
+    }
+
     private async updateEditor(
         file: FsFile | undefined,
         path: string | undefined,
         content: string | undefined,
     ) {
-        this.ensureLockedFs("updateEditor", async () => {
-            this.currentFile = file;
+        await this.ensureLockedFs("updateEditor", async () => {
+            // in case we are switching files, sync the current file first
+            if (this.currentFile !== file) {
+                await this.syncEditorToCurrentFile();
+                this.currentFile = file;
+            }
             const success = content !== undefined;
             this.dispatcher.dispatch(
                 viewActions.updateOpenedFile({
@@ -215,20 +318,62 @@ export class FileMgr {
                 if (this.monacoEditor.getValue() !== content) {
                     this.monacoEditor.setValue(content);
                 }
-                // TODO: actually have good language detection
-                if (path.endsWith(".js")) {
-                    const model = this.monacoEditor.getModel();
-                    if (model) {
+
+                // TODO: actually have language detection
+                const model = this.monacoEditor.getModel();
+                if (model) {
+                    if (path.endsWith(".js")) {
                         if (model.getLanguageId() !== "javascript") {
                             monaco.editor.setModelLanguage(model, "javascript");
                         }
+                    } else {
+                        if (model.getLanguageId() !== "text") {
+                            monaco.editor.setModelLanguage(model, "text");
+                        }
                     }
                 }
+
                 await this.attachEditor();
+                this.isEditorOpen = true;
             } else {
                 this.monacoDom.remove();
+                this.isEditorOpen = false;
             }
         });
+    }
+
+    public async syncEditorToCurrentFile() {
+        await this.ensureLockedFs("syncEditorToCurrentFile", async () => {
+            if (this.currentFile && this.isEditorOpen) {
+                this.currentFile.setContent(this.monacoEditor.getValue());
+            }
+        });
+    }
+
+    public updateDirtyFileList(currentList: string[]) {
+        const unsavedFiles: string[] = [];
+        const ids = Object.keys(this.files);
+        ids.sort();
+        ids.forEach((id) => {
+            if (this.files[id].isDirty()) {
+                unsavedFiles.push(id);
+            }
+        });
+        // don't update if the list is the same
+        // to prevent unnecessary rerenders
+        if (unsavedFiles.length === currentList.length) {
+            let needsUpdate = false;
+            for (let i = 0; i < unsavedFiles.length; i++) {
+                if (unsavedFiles[i] !== currentList[i]) {
+                    needsUpdate = true;
+                    break;
+                }
+            }
+            if (!needsUpdate) {
+                return;
+            }
+        }
+        this.dispatcher.dispatch(viewActions.setUnsavedFiles(unsavedFiles));
     }
 
     private async attachEditor() {
@@ -258,8 +403,17 @@ export class FileMgr {
         reason: string,
         f: () => Promise<T>,
     ): Promise<T> {
+        let cycles = 0;
         while (this.fsLock) {
-            EditorLog.info(`${reason} waiting for fs to become available...`);
+            cycles++;
+            if (cycles % 100 === 0) {
+                EditorLog.warn(
+                    `${reason} has been waiting for fs lock for ${
+                        cycles / 10
+                    } seconds!`,
+                );
+                cycles = 0;
+            }
             await sleep(100);
         }
         try {

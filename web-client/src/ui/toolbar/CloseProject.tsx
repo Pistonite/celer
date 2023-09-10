@@ -47,7 +47,7 @@ const useCloseProjectControl = () => {
             return;
         }
 
-        if (editor.hasUnsavedChanges()) {
+        if (await editor.hasUnsavedChanges()) {
             const yes = await kernel.showAlert(
                 "Unsaved changes",
                 "There are unsaved changes in the editor. Continue closing will discard all changes. Are you sure you want to continue?",

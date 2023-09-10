@@ -6,7 +6,7 @@
 //! | No                                  | No         | Disabled | ArrowSync |
 //! | Yes            | Disabled | No      | No         | Enabled  | ArrowSync |
 //! | Yes            | Disabled | Yes     |            | Disabled | ArrowSync | Rotating
-//! | Yes            | Enabled  | No      | No         | Disabled | ArrowSyncCheckmark |
+//! | Yes            | Enabled  | No      | No         | Enabled  | ArrowSyncCheckmark |
 //! | Yes            | Enabled  | Yes     |            | Disabled | ArrowSync | Rotating
 //! | Yes            | Inactive | No      | No         | Enabled  | ArrowSync |
 //! | Yes            | Inactive | Yes     |            | Disabled | ArrowSync | Rotating
@@ -20,12 +20,12 @@ import {
     ArrowSyncCheckmark20Regular,
     ArrowSyncDismiss20Filled,
 } from "@fluentui/react-icons";
+import clsx from "clsx";
 
 import { useKernel } from "core/kernel";
 import { settingsSelector, viewSelector } from "core/store";
 
 import { ToolbarControl } from "./util";
-import clsx from "clsx";
 
 export const SyncProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
@@ -46,7 +46,7 @@ export const SyncProject: ToolbarControl = {
         return (
             <Tooltip content={tooltip} relationship="label">
                 <MenuItem icon={icon} disabled={!enabled} onClick={handler}>
-                    Reload filesystem
+                    Reload file system
                 </MenuItem>
             </Tooltip>
         );
@@ -60,8 +60,7 @@ const useSyncProjectControl = () => {
     const { autoLoadEnabled } = useSelector(settingsSelector);
 
     const isOpened = rootPath !== undefined;
-    const enabled =
-        isOpened && !loadInProgress && (!autoLoadEnabled || !autoLoadActive);
+    const enabled = isOpened && !loadInProgress;
     const icon = getIcon(
         isOpened,
         loadInProgress,
@@ -91,7 +90,7 @@ const useSyncProjectControl = () => {
             if (result2 !== FsResultCodes.Ok) {
                 await kernel.showAlert(
                     "Error",
-                    "Fail to load changes from filesystem. Please try again.",
+                    "Fail to load changes from file system. Please try again.",
                     "Close",
                     "",
                 );
@@ -140,17 +139,17 @@ const getTooltip = (
 ) => {
     if (isOpened) {
         if (loadInProgress) {
-            return "Loading from filesystem in progress...";
+            return "Loading from file system in progress...";
         }
         if (lastLoadError) {
-            return "There was an error loading from filesystem. Click to retry.";
+            return "There was an error loading from file system. Click to retry.";
         }
         if (autoLoadEnabled) {
             if (autoLoadActive) {
-                return "Auto-load is enabled and active. Any change you made in the filesystem will be loaded automatically after a while.";
+                return "Auto-load is enabled and active. Any change you made in the file system will be loaded automatically after a while. (Click to manually reload)";
             }
             return "Auto-load has been deactivated due to inactivity. Click to activate.";
         }
     }
-    return "Reload files from filesystem";
+    return "Reload files from file system";
 };

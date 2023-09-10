@@ -43,9 +43,32 @@ export const endFileSysLoad: ReducerDeclWithPayload<EditorViewState, boolean> =
         state.lastLoadError = !success;
     });
 
+export const startFileSysSave: ReducerDecl<EditorViewState> = (state) => {
+    state.saveInProgress = true;
+    state.lastSaveError = false;
+};
+
+export const endFileSysSave: ReducerDeclWithPayload<EditorViewState, boolean> =
+    withPayload((state: EditorViewState, success: boolean) => {
+        state.saveInProgress = false;
+        state.lastSaveError = !success;
+    });
+
 export const setAutoLoadActive: ReducerDeclWithPayload<
     EditorViewState,
     boolean
 > = withPayload((state: EditorViewState, active: boolean) => {
     state.autoLoadActive = active;
 });
+
+export const setUnsavedFiles: ReducerDeclWithPayload<
+    EditorViewState,
+    string[]
+> = withPayload((state: EditorViewState, unsavedFiles: string[]) => {
+    state.unsavedFiles = unsavedFiles;
+});
+
+export const setShowFileTree: ReducerDeclWithPayload<EditorViewState, boolean> =
+    withPayload((state: EditorViewState, showFileTree: boolean) => {
+        state.showFileTree = showFileTree;
+    });

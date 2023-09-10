@@ -39,11 +39,14 @@ export const isFileSystemAccessAPISupported = (): boolean => {
     return true;
 };
 
+type PermissionStatus = "granted" | "denied" | "prompt";
+
 /// FileSys implementation that uses FileSystem Access API
 /// This is only supported in Chrome/Edge
 export class FileSystemAccessAPIFileSys implements FileSys {
     private rootPath: string;
     private rootHandle: FileSystemDirectoryHandle;
+    private permissionStatus: PermissionStatus;
 
     private dirHandles: Record<string, FileSystemDirectoryHandle> = {};
     private fileHandles: Record<string, FileSystemFileHandle> = {};
@@ -55,10 +58,25 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             "": rootHandle,
         };
         this.fileHandles = {};
+        this.permissionStatus = "prompt";
+    }
+
+    public async init(): Promise<FsResultCode> {
+        // @ts-expect-error ts lib does not have requestPermission
+        this.permissionStatus = await this.rootHandle.requestPermission({
+            mode: "readwrite",
+        });
+        if (this.permissionStatus !== "granted") {
+            return FsResultCodes.PermissionDenied;
+        }
+        return FsResultCodes.Ok;
     }
 
     public isWritable(): boolean {
-        return isFileSystemAccessAPISupported();
+        return (
+            isFileSystemAccessAPISupported() &&
+            this.permissionStatus === "granted"
+        );
     }
 
     public getRootName() {
@@ -213,8 +231,9 @@ export class FileSystemAccessAPIFileSys implements FileSys {
                 return fileHandleResult.code;
             }
             try {
-                // @ts-expect-error FileSystemFileHandle should have a createWritable() method
+                // @ts-expect-error FileSystemWritableFileStream is not in tslib
                 const file: FileSystemWritableFileStream =
+                    // @ts-expect-error FileSystemFileHandle should have a createWritable() method
                     await fileHandleResult.value.createWritable();
                 await file.write(content);
                 await file.close();
