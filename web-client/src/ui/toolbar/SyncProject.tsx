@@ -25,6 +25,7 @@ import { useKernel } from "core/kernel";
 import { settingsSelector, viewSelector } from "core/store";
 
 import { ToolbarControl } from "./util";
+import clsx from "clsx";
 
 export const SyncProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
@@ -82,7 +83,20 @@ const useSyncProjectControl = () => {
             return;
         }
 
-        await editor.loadChangesFromFs();
+        const result = await editor.loadChangesFromFs(true /* isUserAction */);
+        const { FsResultCodes } = await import("low/fs");
+        if (result !== FsResultCodes.Ok) {
+            // failure could be due to project structure change. try again
+            const result2 = await editor.loadChangesFromFs(false);
+            if (result2 !== FsResultCodes.Ok) {
+                await kernel.showAlert(
+                    "Error",
+                    "Fail to load changes from filesystem. Please try again.",
+                    "Close",
+                    "",
+                );
+            }
+        }
     }, [kernel]);
 
     return { tooltip, enabled, icon, handler };
@@ -99,7 +113,14 @@ const getIcon = (
         return <ArrowSync20Regular />;
     }
     if (loadInProgress) {
-        return <ArrowSync20Regular className="spinning-infinite" />;
+        return (
+            <ArrowSync20Regular
+                className={clsx(
+                    "spinning-infinite",
+                    autoLoadEnabled && autoLoadActive && "color-success",
+                )}
+            />
+        );
     }
     if (lastLoadError) {
         return <ArrowSyncDismiss20Filled className="color-error" />;

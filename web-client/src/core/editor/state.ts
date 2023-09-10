@@ -35,11 +35,11 @@ export const initialEditorViewState: EditorViewState = {
 export type EditorSettingsState = {
     autoSaveEnabled: boolean;
     autoLoadEnabled: boolean;
-    deactivateLoadAfterMinutes: number;
+    deactivateAutoLoadAfterMinutes: number;
 };
 
 export const initialEditorSettingsState: EditorSettingsState = {
     autoSaveEnabled: true,
     autoLoadEnabled: true,
-    deactivateLoadAfterMinutes: 30,
+    deactivateAutoLoadAfterMinutes: 1,
 };

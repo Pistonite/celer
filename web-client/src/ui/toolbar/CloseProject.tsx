@@ -59,7 +59,7 @@ const useCloseProjectControl = () => {
             }
         }
 
-        editor.reset();
+        await editor.reset();
     }, [kernel]);
 
     return rootPath ? handler : undefined;

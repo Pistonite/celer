@@ -18,7 +18,8 @@ export const getLog = () => {
 
 /// Save the current log to a file
 export const saveLog = () => {
-    const result = confirm(`You are about to download the client-side application log to a file.
+    const result =
+        confirm(`You are about to download the client-side application log to a file.
 
 Celer does not automatically collect any user data. However, the client-side log may contain sensitive information such as the name of the files loaded in the application.
 
@@ -33,7 +34,7 @@ Do you want to continue?
     const log = getLog().join("\n");
     const filename = `celer_web-client_${new Date().toISOString()}.log`;
     saveAs(log, filename);
-}
+};
 
 /// A general-purpose client side logger
 ///

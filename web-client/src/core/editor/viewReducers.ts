@@ -42,3 +42,10 @@ export const endFileSysLoad: ReducerDeclWithPayload<EditorViewState, boolean> =
         state.loadInProgress = false;
         state.lastLoadError = !success;
     });
+
+export const setAutoLoadActive: ReducerDeclWithPayload<
+    EditorViewState,
+    boolean
+> = withPayload((state: EditorViewState, active: boolean) => {
+    state.autoLoadActive = active;
+});

@@ -1,6 +1,6 @@
 //! Editor logic that wraps monaco editor
 
-import { FileSys } from "low/fs";
+import { FileSys, FsResultCode } from "low/fs";
 
 /// Interface used to access editor API
 ///
@@ -9,23 +9,20 @@ import { FileSys } from "low/fs";
 /// without importing the editor module.
 export interface EditorKernel {
     /// Reset the editor with a new file system. Unsaved changes will be lost
-    reset(fs?: FileSys): void;
-
-    /// Delete the editor state and free resources
-    delete(): void;
+    reset(fs?: FileSys): Promise<void>;
 
     /// Request directory listing
     ///
     /// See EditorTree for input/output format
     /// On failure this returns empty array. This function will not throw
-    listDir(path: string[]): Promise<string[]>;
+    listDir(path: string[], isUserAction: boolean): Promise<string[]>;
 
     /// Open a file in the editor
-    openFile(path: string[]): Promise<void>;
+    openFile(path: string[], isUserAction: boolean): Promise<FsResultCode>;
 
     /// Check if there are unsaved changes
     hasUnsavedChanges(): boolean;
 
     /// Load changes from the file system for the opened files
-    loadChangesFromFs(): Promise<void>;
+    loadChangesFromFs(isUserAction: boolean): Promise<FsResultCode>;
 }

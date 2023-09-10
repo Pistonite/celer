@@ -72,6 +72,8 @@ const TreeDirNode: React.FC<TreeDirNodeProps> = ({
 
     const isExpanded = getIsExpanded(path);
 
+    // using path.join since path is an array
+    /* eslint-disable react-hooks/exhaustive-deps*/
     useEffect(() => {
         if (!isExpanded) {
             return;
@@ -82,7 +84,7 @@ const TreeDirNode: React.FC<TreeDirNodeProps> = ({
             setEntries(entries);
         };
         loadEntries();
-    }, [path, isExpanded, listDir]);
+    }, [path.join("/"), isExpanded, listDir]);
 
     const isLoading = isExpanded && entries === undefined;
 

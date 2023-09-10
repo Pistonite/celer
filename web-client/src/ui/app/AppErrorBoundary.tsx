@@ -27,7 +27,10 @@ export class AppErrorBoundary extends React.Component<
                 <>
                     <h1>Oh snap :(</h1>
                     <hr />
-                    <p>Celer has encountered an error and stopped working. Refresh the page to reload it.</p>
+                    <p>
+                        Celer has encountered an error and stopped working.
+                        Refresh the page to reload it.
+                    </p>
                     <p>Sorry for the inconvenience</p>
                     <p>{this.error}</p>
                     <button onClick={saveLog}>Download logs</button>

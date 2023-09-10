@@ -28,7 +28,7 @@ export const EditorRoot: React.FC = () => {
             if (!editor) {
                 return [];
             }
-            return editor.listDir(paths);
+            return editor.listDir(paths, true /* isUserAction */);
         },
         [serial],
     );
@@ -43,7 +43,10 @@ export const EditorRoot: React.FC = () => {
                                 listDir={listDir}
                                 onClickFile={(path) => {
                                     tryWithEditorRef(kernel, 10, (editor) => {
-                                        editor.openFile(path);
+                                        editor.openFile(
+                                            path,
+                                            true /* isUserAction */,
+                                        );
                                     });
                                 }}
                             />
@@ -59,9 +62,9 @@ export const EditorRoot: React.FC = () => {
                                             <div id="editor-container"></div>
                                         ) : (
                                             <Body1>
-                                                The web editor cannot open the
-                                                file because it is not a text
-                                                file.
+                                                Cannot open this file. Either
+                                                this is not a text file or there
+                                                was a problem opening it.
                                             </Body1>
                                         )}
                                     </div>
