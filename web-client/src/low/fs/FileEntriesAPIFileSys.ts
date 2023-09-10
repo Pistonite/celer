@@ -56,6 +56,10 @@ export class FileEntiresAPIFileSys implements FileSys {
         this.rootEntry = rootEntry;
     }
 
+    public async init(): Promise<FsResultCode> {
+        return FsResultCodes.Ok;
+    }
+
     public isWritable(): boolean {
         // Entries API does not support writing
         return false;

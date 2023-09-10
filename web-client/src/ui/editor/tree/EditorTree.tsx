@@ -6,6 +6,12 @@ export type EditorTreeProps = {
     /// Name of the root directory
     rootName: string;
 
+    /// Currently opened file
+    openedFile: string | undefined;
+
+    /// List of unsaved files
+    unsavedFiles: string[];
+
     /// Callback for listing a directory.
     ///
     /// The path is path segments from the root directory.
@@ -24,6 +30,8 @@ export const EditorTree: React.FC<EditorTreeProps> = ({
     rootName,
     listDir,
     onClickFile,
+    openedFile,
+    unsavedFiles,
 }) => {
     const [expandedPaths, setExpandedPaths] = useState<string[]>([""]);
     return (
@@ -31,6 +39,8 @@ export const EditorTree: React.FC<EditorTreeProps> = ({
             <TreeDirNode
                 name={rootName}
                 path={[]}
+                openedFile={openedFile}
+                unsavedFiles={unsavedFiles}
                 listDir={listDir}
                 onClickFile={onClickFile}
                 getIsExpanded={(path) => expandedPaths.includes(path.join("/"))}
@@ -57,6 +67,8 @@ type TreeDirNodeProps = {
     level: number;
     getIsExpanded: (path: string[]) => boolean;
     setIsExpanded: (path: string[], isExpanded: boolean) => void;
+    openedFile: string | undefined;
+    unsavedFiles: string[];
 };
 
 const TreeDirNode: React.FC<TreeDirNodeProps> = ({
@@ -67,6 +79,8 @@ const TreeDirNode: React.FC<TreeDirNodeProps> = ({
     level,
     getIsExpanded,
     setIsExpanded,
+    openedFile,
+    unsavedFiles,
 }) => {
     const [entries, setEntries] = useState<string[] | undefined>(undefined);
 
@@ -116,20 +130,27 @@ const TreeDirNode: React.FC<TreeDirNodeProps> = ({
                                 getIsExpanded={getIsExpanded}
                                 setIsExpanded={setIsExpanded}
                                 level={level + 1}
+                                openedFile={openedFile}
+                                unsavedFiles={unsavedFiles}
                             />
                         );
                     } else {
+                        const pathStr =
+                            path.length === 0
+                                ? entry
+                                : `${path.join("/")}/${entry}`;
                         return (
                             <TreeItem
                                 key={i}
                                 file={entry}
                                 isDirectory={false}
-                                isSelected={false}
+                                isSelected={pathStr === openedFile}
                                 onClickFile={() => {
                                     onClickFile([...path, entry]);
                                 }}
                                 level={level + 1}
                                 isLoading={false}
+                                isDirty={unsavedFiles.includes(pathStr)}
                             />
                         );
                     }

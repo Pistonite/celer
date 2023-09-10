@@ -1,3 +1,4 @@
+import * as monaco from "monaco-editor";
 import reduxWatch from "redux-watch";
 
 import {
@@ -8,6 +9,7 @@ import {
     ViewState,
 } from "core/store";
 import { FileSys, FsResultCode } from "low/fs";
+import { isInDarkMode } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
 import { EditorLog, toFsPath } from "./utils";
@@ -24,7 +26,21 @@ export class EditorKernelImpl implements EditorKernel {
 
     constructor(store: AppStore) {
         this.store = store;
-        this.fileMgr = new FileMgr(store);
+
+        this.idleMgr = new IdleMgr(this.onIdle.bind(this));
+
+        const monacoDom = document.createElement("div");
+        monacoDom.id = "monaco-editor";
+        const monacoEditor = monaco.editor.create(monacoDom, {
+            theme: isInDarkMode() ? "vs-dark" : "vs",
+        });
+        monacoEditor.onKeyDown(() => {
+            this.idleMgr.notifyActivity();
+        });
+        monacoEditor.onMouseDown(() => {
+            this.idleMgr.notifyActivity();
+        });
+        this.fileMgr = new FileMgr(monacoDom, monacoEditor, store);
 
         const resizeHandler = this.onResize.bind(this);
         window.addEventListener("resize", resizeHandler);
@@ -45,8 +61,6 @@ export class EditorKernelImpl implements EditorKernel {
             }),
         );
 
-        this.idleMgr = new IdleMgr(this.onIdle.bind(this));
-
         this.cleanup = () => {
             window.removeEventListener("resize", resizeHandler);
             unwatchSettings();
@@ -60,7 +74,6 @@ export class EditorKernelImpl implements EditorKernel {
 
     /// Reset the editor with a new file system. Unsaved changes will be lost
     public async reset(fs?: FileSys): Promise<void> {
-        EditorLog.info("resetting editor");
         await this.idleMgr.pauseIdleScope(async () => {
             await this.fileMgr.reset(fs);
         });
@@ -98,9 +111,14 @@ export class EditorKernelImpl implements EditorKernel {
         return result;
     }
 
-    public hasUnsavedChanges(): boolean {
-        // TODO: edit not implemented yet so
-        return false;
+    public async hasUnsavedChanges(): Promise<boolean> {
+        return await this.idleMgr.pauseIdleScope(async () => {
+            return await this.fileMgr.hasUnsavedChanges();
+        });
+    }
+
+    public hasUnsavedChangesSync(): boolean {
+        return this.fileMgr.hasUnsavedChangesSync();
     }
 
     public async loadChangesFromFs(
@@ -111,6 +129,15 @@ export class EditorKernelImpl implements EditorKernel {
         }
         return await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.loadChangesFromFs();
+        });
+    }
+
+    public async saveChangesToFs(isUserAction: boolean): Promise<FsResultCode> {
+        if (isUserAction) {
+            this.idleMgr.notifyActivity();
+        }
+        return await this.idleMgr.pauseIdleScope(async () => {
+            return await this.fileMgr.saveChangesToFs();
         });
     }
 
@@ -130,6 +157,14 @@ export class EditorKernelImpl implements EditorKernel {
         this.fileMgr.resizeEditor();
     }
 
+    /// The editor does the following things on idle:
+    /// 1. If there's an opened file, pull changes from monaco editor
+    /// 2. If any file has been touched, run compiler
+    /// 3. Update unsaved file list in view store
+    ///
+    /// Long idle only:
+    /// - If auto save is enabled, save changes to fs
+    /// - If auto load is enabled, load changes from fs
     private async onIdle(isLong: boolean, duration: number) {
         if (!this.fileMgr.isFsLoaded()) {
             return;
@@ -137,24 +172,53 @@ export class EditorKernelImpl implements EditorKernel {
         EditorLog.info(
             "idle" + (isLong ? " (long)" : "") + ` duration= ${duration}ms`,
         );
+        const { autoLoadActive, unsavedFiles } = viewSelector(
+            this.store.getState(),
+        );
+
+        // pull changes from monaco editor first to make sure current file is marked dirty if needed
+        await this.fileMgr.syncEditorToCurrentFile();
+
         if (isLong) {
-            const { autoLoadActive } = viewSelector(this.store.getState());
+            const {
+                autoSaveEnabled,
+                autoLoadEnabled,
+                deactivateAutoLoadAfterMinutes,
+            } = settingsSelector(this.store.getState());
+
+            let shouldRerenderFs = false;
+
             if (autoLoadActive) {
-                const { autoLoadEnabled, deactivateAutoLoadAfterMinutes } =
-                    settingsSelector(this.store.getState());
                 if (autoLoadEnabled) {
                     EditorLog.info("auto loading changes...");
                     await this.loadChangesFromFs(false /* isUserAction */);
+                    // make sure file system view is rerendered in case there are directory updates
+                    shouldRerenderFs = true;
                 }
                 if (deactivateAutoLoadAfterMinutes > 0) {
                     if (duration > deactivateAutoLoadAfterMinutes * 60 * 1000) {
-                        EditorLog.info("deactivating auto load...");
+                        EditorLog.info(
+                            "auto load deactivated due to inactivity",
+                        );
                         this.store.dispatch(
                             viewActions.setAutoLoadActive(false),
                         );
                     }
                 }
             }
+
+            if (autoSaveEnabled) {
+                EditorLog.info("auto saving changes...");
+                await this.saveChangesToFs(false /* isUserAction */);
+                // make sure file system view is rerendered in case there are directory updates
+                shouldRerenderFs = true;
+            }
+            if (shouldRerenderFs) {
+                this.store.dispatch(viewActions.incFileSysSerial());
+            }
         }
+
+        // do this last so we can get the latest save status after auto-save
+        this.fileMgr.updateDirtyFileList(unsavedFiles);
     }
 }

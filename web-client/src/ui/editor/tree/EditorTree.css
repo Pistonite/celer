@@ -23,6 +23,10 @@
     rotate: 90deg;
 }
 
+.editor-tree-item-selected {
+    background-color: #88888844;
+}
+
 .editor-tree-item:hover {
     background-color: #88888888;
 }

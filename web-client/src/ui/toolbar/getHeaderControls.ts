@@ -10,6 +10,7 @@ import { ViewDiagnostics } from "./ViewDiagnostics";
 import { SelectSection } from "./SelectSection";
 import { CloseProject } from "./CloseProject";
 import { SyncProject } from "./SyncProject";
+import { SaveProject } from "./SaveProject";
 
 /// Header controls.
 ///
@@ -38,7 +39,9 @@ export const getHeaderControls = (mode: StageMode): HeaderControlList => {
             priority: mode === "edit" ? 89 : 39,
             controls: [
                 ViewDiagnostics,
-                ...(mode === "edit" ? [CloseProject, SyncProject] : []),
+                ...(mode === "edit"
+                    ? [SaveProject, SyncProject, CloseProject]
+                    : []),
             ],
         },
         // Setting

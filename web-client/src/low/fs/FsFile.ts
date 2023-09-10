@@ -103,7 +103,7 @@ export class FsFile {
     /// Write the content without checking if it's dirty. Overwrites the file currently on FS
     ///
     /// This is private - outside code should only use writeIfDirty
-    async write(): Promise<FsResultCode> {
+    private async write(): Promise<FsResultCode> {
         if (this.content === undefined) {
             // file was never read, so no need to save
             return FsResultCodes.Ok;

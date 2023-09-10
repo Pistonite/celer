@@ -66,12 +66,21 @@ export class Kernel {
         this.initUi(store);
 
         this.test(store);
+        // window.onbeforeunload = () => "key";
+        window.addEventListener("beforeunload", (e) => {
+            if (this.editor && this.editor.hasUnsavedChangesSync()) {
+                e.preventDefault();
+                return (e.returnValue =
+                    "There are unsaved changes in the editor which will be lost. Are you sure you want to leave?");
+            }
+        });
 
         // this.showAlert("Alert", "This is a test alert", "Ok", "Cancel");
     }
 
     /// Initialize stage info based on window.location
     private initStage() {
+        this.log.info("initializing stage...");
         const path = window.location.pathname;
         if (path === "/edit") {
             this.store?.dispatch(viewActions.setStageMode("edit"));
@@ -92,6 +101,7 @@ export class Kernel {
 
     /// Initialize the store
     private initStore(): AppStore {
+        this.log.info("initializing store...");
         if (this.cleanupStore) {
             this.log.info("cleaning up previous store");
             this.cleanupStore();
@@ -127,6 +137,7 @@ export class Kernel {
 
     /// Initialize UI related stuff
     private initUi(store: AppStore) {
+        this.log.info("initializing ui...");
         if (this.cleanupUi) {
             this.log.info("unmounting previous ui");
             this.cleanupUi();

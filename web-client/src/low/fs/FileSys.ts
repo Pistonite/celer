@@ -2,6 +2,12 @@ import { FsPath } from "./FsPath";
 import { FsResult, FsResultCode } from "./FsResult";
 
 export interface FileSys {
+    /// Async init function
+    ///
+    /// The FileSys implementation may need to do some async initialization.
+    /// For example, request permission from the user.
+    init: () => Promise<FsResultCode>;
+
     /// Get the root path of the file system for display
     ///
     /// The returned string has no significance in the file system itself.

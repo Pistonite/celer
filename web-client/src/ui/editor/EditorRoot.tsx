@@ -12,7 +12,7 @@ import { EditorDropZone } from "./EditorDropZone";
 
 export const EditorRoot: React.FC = () => {
     const kernel = useKernel();
-    const { serial, rootPath, openedFile, currentFileSupported } =
+    const { serial, rootPath, openedFile, unsavedFiles, currentFileSupported } =
         useSelector(viewSelector);
 
     useEffect(() => {
@@ -28,7 +28,7 @@ export const EditorRoot: React.FC = () => {
             if (!editor) {
                 return [];
             }
-            return editor.listDir(paths, true /* isUserAction */);
+            return editor.listDir(paths, false /* isUserAction */);
         },
         [serial],
     );
@@ -41,6 +41,8 @@ export const EditorRoot: React.FC = () => {
                             <EditorTree
                                 rootName={rootPath}
                                 listDir={listDir}
+                                openedFile={openedFile}
+                                unsavedFiles={unsavedFiles}
                                 onClickFile={(path) => {
                                     tryWithEditorRef(kernel, 10, (editor) => {
                                         editor.openFile(
@@ -55,7 +57,12 @@ export const EditorRoot: React.FC = () => {
                             {openedFile !== undefined ? (
                                 <>
                                     <div id="editor-file-name">
-                                        <Body1>{openedFile}</Body1>
+                                        <Body1>
+                                            {openedFile}
+                                            {unsavedFiles.includes(
+                                                openedFile,
+                                            ) && "*"}
+                                        </Body1>
                                     </div>
                                     <div id="editor-outer-container">
                                         {currentFileSupported ? (

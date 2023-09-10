@@ -21,8 +21,17 @@ export interface EditorKernel {
     openFile(path: string[], isUserAction: boolean): Promise<FsResultCode>;
 
     /// Check if there are unsaved changes
-    hasUnsavedChanges(): boolean;
+    hasUnsavedChanges(): Promise<boolean>;
+
+    /// Check if there are unsaved changes synchronously
+    ///
+    /// This could block UI. Use only when absolutely need to check this in
+    /// a synchronous context, like window.onbeforeunload
+    hasUnsavedChangesSync(): boolean;
 
     /// Load changes from the file system for the opened files
     loadChangesFromFs(isUserAction: boolean): Promise<FsResultCode>;
+
+    /// Save changes to the file system for the opened files
+    saveChangesToFs(isUserAction: boolean): Promise<FsResultCode>;
 }
