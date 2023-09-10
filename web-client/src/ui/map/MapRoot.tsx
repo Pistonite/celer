@@ -4,7 +4,7 @@ import "./Map.css";
 
 import { useEffect, useRef } from "react";
 import { useSelector, useStore } from "react-redux";
-import { LoadScreen, ErrorScreen } from "ui/shared";
+import { LoadScreen, ErrorScreen, ErrorBoundary } from "ui/shared";
 import { AppStore, documentSelector } from "core/store";
 
 import { MapState, initMap } from "./MapState";
@@ -35,5 +35,9 @@ export const MapRoot: React.FC = () => {
         return <ErrorScreen message="This map has no layers" />;
     }
 
-    return <div id={RootContainerId}></div>;
+    return (
+        <ErrorBoundary>
+            <div id={RootContainerId}></div>
+        </ErrorBoundary>
+    );
 };

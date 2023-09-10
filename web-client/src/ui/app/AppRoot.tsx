@@ -40,49 +40,55 @@ export const AppRoot: React.FC = () => {
 
     return (
         <>
-        <ReactGridLayout
-            className="layout-root"
-            layout={widgets}
-            cols={GridFull}
-            width={windowWidth}
-            rowHeight={rowHeight}
-            isResizable={isEditingLayout}
-            isDraggable={isEditingLayout}
-            margin={[margin, margin]}
-            onLayoutChange={setLayout}
-        >
-            {widgets.map((widget) => (
-                <div
-                    className={clsx(
-                        "widget-container",
-                        isEditingLayout && "editing",
-                        `widget-toolbar-${layout.toolbarAnchor}`,
-                    )}
-                    key={widget.i}
-                >
-                    {layout.toolbar === widget.i && (
-                        <Header toolbarAnchor={layout.toolbarAnchor} />
-                    )}
-                    <div className="widget">
-                        {widget.i === "map" && (
-                            <Suspense fallback={<LoadScreen color="green" />}>
-                                <Map />
-                            </Suspense>
+            <ReactGridLayout
+                className="layout-root"
+                layout={widgets}
+                cols={GridFull}
+                width={windowWidth}
+                rowHeight={rowHeight}
+                isResizable={isEditingLayout}
+                isDraggable={isEditingLayout}
+                margin={[margin, margin]}
+                onLayoutChange={setLayout}
+            >
+                {widgets.map((widget) => (
+                    <div
+                        className={clsx(
+                            "widget-container",
+                            isEditingLayout && "editing",
+                            `widget-toolbar-${layout.toolbarAnchor}`,
                         )}
-                        {widget.i === "viewer" && (
-                            <Suspense fallback={<LoadScreen color="yellow" />}>
-                                <Doc />
-                            </Suspense>
+                        key={widget.i}
+                    >
+                        {layout.toolbar === widget.i && (
+                            <Header toolbarAnchor={layout.toolbarAnchor} />
                         )}
-                        {widget.i === "editor" && (
-                            <Suspense fallback={<LoadScreen color="blue" />}>
-                                <Editor />
-                            </Suspense>
-                        )}
+                        <div className="widget">
+                            {widget.i === "map" && (
+                                <Suspense
+                                    fallback={<LoadScreen color="green" />}
+                                >
+                                    <Map />
+                                </Suspense>
+                            )}
+                            {widget.i === "viewer" && (
+                                <Suspense
+                                    fallback={<LoadScreen color="yellow" />}
+                                >
+                                    <Doc />
+                                </Suspense>
+                            )}
+                            {widget.i === "editor" && (
+                                <Suspense
+                                    fallback={<LoadScreen color="blue" />}
+                                >
+                                    <Editor />
+                                </Suspense>
+                            )}
+                        </div>
                     </div>
-                </div>
-            ))}
-        </ReactGridLayout>
+                ))}
+            </ReactGridLayout>
             <AppAlert />
         </>
     );
@@ -97,7 +103,8 @@ const useReactGridLayout = (windowWidth: number, windowHeight: number) => {
     // convert layout to ReactGridLayout
     const [layout, widgets] = useMemo(() => {
         const layout =
-            userLayout || getDefaultLayout(windowWidth, windowHeight, stageMode);
+            userLayout ||
+            getDefaultLayout(windowWidth, windowHeight, stageMode);
         const widgets = WidgetTypes.map((type) => {
             return layout[type] && { i: type, ...layout[type] };
         }).filter(Boolean) as ReactGridLayout.Layout[];

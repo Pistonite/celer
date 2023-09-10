@@ -1,6 +1,6 @@
 import React, { PropsWithChildren } from "react";
 
-import { ErrorScreen } from ".";
+import { ErrorScreen } from "./ErrorScreen";
 
 type ErrorState = {
     hasError: boolean;

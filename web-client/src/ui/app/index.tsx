@@ -11,10 +11,12 @@ import {
 } from "@fluentui/react-components";
 import { Provider as ReduxProvider } from "react-redux";
 
+import { ErrorBoundary } from "ui/shared";
 import type { AppStore } from "core/store";
 import { Kernel, KernelContext } from "core/kernel";
 
 import { AppRoot } from "./AppRoot";
+import { AppErrorBoundary } from "./AppErrorBoundary";
 
 /// Mount the react app root
 ///
@@ -32,16 +34,20 @@ export const initAppRoot = (
     );
     root.render(
         <React.StrictMode>
-            <KernelContext.Provider value={kernel}>
-                <ReduxProvider store={store}>
-                    <FluentProvider
-                        id="style-root"
-                        theme={isDarkMode ? webDarkTheme : webLightTheme}
-                    >
-                        <AppRoot />
-                    </FluentProvider>
-                </ReduxProvider>
-            </KernelContext.Provider>
+            <AppErrorBoundary>
+                <KernelContext.Provider value={kernel}>
+                    <ReduxProvider store={store}>
+                        <FluentProvider
+                            id="style-root"
+                            theme={isDarkMode ? webDarkTheme : webLightTheme}
+                        >
+                            <ErrorBoundary>
+                                <AppRoot />
+                            </ErrorBoundary>
+                        </FluentProvider>
+                    </ReduxProvider>
+                </KernelContext.Provider>
+            </AppErrorBoundary>
         </React.StrictMode>,
     );
 

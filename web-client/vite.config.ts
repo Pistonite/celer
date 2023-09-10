@@ -5,16 +5,20 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
 
-const kebabCase = (x: string) => x.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+const kebabCase = (x: string) =>
+    x.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
 
 const removeRustStyleDocComments = () => {
     return {
         name: "remove-rust-style-doc-comments",
         transform(code: string, _id: string) {
-            return code.split("\n").filter(x => !x.startsWith("//!")).join("\n");
-        }
+            return code
+                .split("\n")
+                .filter((x) => !x.startsWith("//!"))
+                .join("\n");
+        },
     };
-}
+};
 
 const createHttpsConfig = () => {
     try {
@@ -25,12 +29,12 @@ const createHttpsConfig = () => {
     } catch (e) {
         return undefined;
     }
-}
+};
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
-        react(), 
+        react(),
         tsconfigPaths(),
         removeRustStyleDocComments(),
         wasm(),
@@ -52,13 +56,15 @@ export default defineConfig({
                         }
                     }
                     const name = kebabCase(info.name);
-                    return name.startsWith("assets/") ? `${name}-[hash].js` : `assets/${name}-[hash].js`;
+                    return name.startsWith("assets/")
+                        ? `${name}-[hash].js`
+                        : `assets/${name}-[hash].js`;
                 },
                 manualChunks: {
                     "assets/react": ["react", "react-dom"],
                     "assets/fluentui": ["@fluentui/react-components"],
-                }
-            }
-        }
+                },
+            },
+        },
     },
 });

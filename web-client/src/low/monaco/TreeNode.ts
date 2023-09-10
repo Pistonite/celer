@@ -12,7 +12,11 @@ export class TreeNode {
     // Children nodes
     public children: TreeNode[];
 
-    constructor(name: string, isDirectory: boolean, parent: TreeNode | undefined) {
+    constructor(
+        name: string,
+        isDirectory: boolean,
+        parent: TreeNode | undefined,
+    ) {
         this.name = name;
         this.isDirectory = isDirectory;
         this.children = [];
@@ -21,11 +25,13 @@ export class TreeNode {
 
     /// Get full path of this node
     public getPath(): string {
-        if(!this.parent) {
+        if (!this.parent) {
             return "/";
         }
 
-        return `${this.parent.getPath()}${this.name}${this.isDirectory ? "/" : ""}`;
+        return `${this.parent.getPath()}${this.name}${
+            this.isDirectory ? "/" : ""
+        }`;
     }
 
     public isDescendantOf(treeNode: TreeNode): boolean {

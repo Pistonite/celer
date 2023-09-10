@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
                             )}
                         </React.Fragment>
                     ))}
-                    <OverflowMenu controls={headerControls}/>
+                    <OverflowMenu controls={headerControls} />
                 </Toolbar>
             </Overflow>
         </header>
@@ -109,7 +109,9 @@ const ToolbarOverflowDivider: React.FC<{ groupId: string }> = ({ groupId }) => {
 /// The overflow menu
 ///
 /// Controls that cannot fit in the toolbar will be moved to here
-const OverflowMenu: React.FC<{controls: HeaderControlList}> = ({controls}) => {
+const OverflowMenu: React.FC<{ controls: HeaderControlList }> = ({
+    controls,
+}) => {
     const { ref, isOverflowing } = useOverflowMenu<HTMLButtonElement>();
 
     if (!isOverflowing) {

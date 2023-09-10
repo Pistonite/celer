@@ -8,9 +8,9 @@ import {
     settingsSelector,
     viewActions,
 } from "core/store";
-import type { EditorState } from "./EditorState";
 import { Logger, isInDarkMode } from "low/utils";
 
+import type { EditorKernel } from "./editor";
 import { KeyMgr } from "./KeyMgr";
 
 type InitUiFunction = (
@@ -46,7 +46,7 @@ export class Kernel {
 
     // Editor API
     // The editor is owned by the kernel because the toobar needs access
-    private editor: EditorState | null = null;
+    private editor: EditorKernel | null = null;
 
     constructor(initReact: InitUiFunction) {
         this.log = new Logger("ker");
@@ -84,10 +84,8 @@ export class Kernel {
         const wasm = await import("low/celerc");
         const testFn = async (test: any) => {
             const result = await wasm.tryCompileFromCompDoc(test);
-            store.dispatch(
-                documentActions.setDocument(result)
-            );
-        }
+            store.dispatch(documentActions.setDocument(result));
+        };
         (window as any).testFn = testFn;
         console.log("window api ready");
     }
@@ -170,7 +168,12 @@ export class Kernel {
     ///
     /// Returns a promise that resolves to true if the user
     /// clicked ok and false if the user clicked cancel.
-    public showAlert(title: string, message: string, okButton: string, cancelButton: string): Promise<boolean> {
+    public showAlert(
+        title: string,
+        message: string,
+        okButton: string,
+        cancelButton: string,
+    ): Promise<boolean> {
         return new Promise((resolve) => {
             this.alertCallback = (ok) => {
                 const store = this.store;
@@ -180,19 +183,21 @@ export class Kernel {
                 }
                 resolve(ok);
                 this.alertCallback = undefined;
-            }
+            };
             const store = this.store;
             if (!store) {
                 console.error("store not initialized");
                 resolve(false);
                 return;
             }
-            store.dispatch(viewActions.setAlert({
-                title,
-                text: message,
-                okButton,
-                cancelButton,
-            }));
+            store.dispatch(
+                viewActions.setAlert({
+                    title,
+                    text: message,
+                    okButton,
+                    cancelButton,
+                }),
+            );
         });
     }
 
@@ -203,7 +208,7 @@ export class Kernel {
     }
 
     public async initEditor() {
-        const { initEditor } = await import("./EditorState");
+        const { initEditor } = await import("./editor");
         const store = this.store;
         if (!store) {
             throw new Error("store not initialized");
@@ -211,8 +216,7 @@ export class Kernel {
         this.editor = initEditor(store);
     }
 
-    public getEditor(): EditorState | null {
+    public getEditor(): EditorKernel | null {
         return this.editor;
     }
-
 }

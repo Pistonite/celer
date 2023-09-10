@@ -7,7 +7,7 @@ export type StageViewState = {
     alertText: string;
     alertOkButton: string;
     alertCancelButton: string;
-}
+};
 
 export type StageMode = "view" | "edit";
 
@@ -18,4 +18,3 @@ export const initialStageViewState: StageViewState = {
     alertOkButton: "",
     alertCancelButton: "",
 };
-

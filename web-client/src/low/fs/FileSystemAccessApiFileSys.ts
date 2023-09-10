@@ -1,7 +1,12 @@
-
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
-import { FsResult, FsResultCode, FsResultCodes, setErrValue, setOkValue } from "./FsResult";
+import {
+    FsResult,
+    FsResultCode,
+    FsResultCodes,
+    setErrValue,
+    setOkValue,
+} from "./FsResult";
 import { decodeFile } from "./decode";
 
 export const isFileSystemAccessAPISupported = (): boolean => {
@@ -32,7 +37,7 @@ export const isFileSystemAccessAPISupported = (): boolean => {
     }
 
     return true;
-}
+};
 
 /// FileSys implementation that uses FileSystem Access API
 /// This is only supported in Chrome/Edge
@@ -87,7 +92,10 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         });
     }
 
-    async resolveDir(path: FsPath, useCache: boolean): Promise<FsResult<FileSystemDirectoryHandle>> {
+    async resolveDir(
+        path: FsPath,
+        useCache: boolean,
+    ): Promise<FsResult<FileSystemDirectoryHandle>> {
         const dirPath = path.path;
         if (useCache) {
             if (dirPath in this.dirHandles) {
@@ -112,7 +120,10 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         if (parentPathResult.code !== FsResultCodes.Ok) {
             return parentPathResult;
         }
-        const parentDirResult = await this.resolveDir(parentPathResult.value, useCache);
+        const parentDirResult = await this.resolveDir(
+            parentPathResult.value,
+            useCache,
+        );
         if (parentDirResult.code !== FsResultCodes.Ok) {
             return parentDirResult;
         }
@@ -123,7 +134,9 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         }
 
         try {
-            const dirHandle = await parentDirHandle.getDirectoryHandle(result.value);
+            const dirHandle = await parentDirHandle.getDirectoryHandle(
+                result.value,
+            );
             this.dirHandles[dirPath] = dirHandle;
             return setOkValue(result, dirHandle);
         } catch (e) {
@@ -140,7 +153,9 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         return setOkValue(result, result.value[0]);
     }
 
-    public async readFileAndModifiedTime(path: FsPath): Promise<FsResult<[string, number]>> {
+    public async readFileAndModifiedTime(
+        path: FsPath,
+    ): Promise<FsResult<[string, number]>> {
         const fileResult = await this.readFileInternal(path);
         if (fileResult.code !== FsResultCodes.Ok) {
             return fileResult;
@@ -153,7 +168,10 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         return setOkValue(result, [result.value, file.lastModified]);
     }
 
-    public async readIfModified(path: FsPath, lastModified?: number): Promise<FsResult<[string, number]>> {
+    public async readIfModified(
+        path: FsPath,
+        lastModified?: number,
+    ): Promise<FsResult<[string, number]>> {
         const fileResult = await this.readFileInternal(path);
         if (fileResult.code !== FsResultCodes.Ok) {
             return fileResult;
@@ -185,7 +203,10 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         });
     }
 
-    public async writeFile(path: FsPath, content: string): Promise<FsResultCode> {
+    public async writeFile(
+        path: FsPath,
+        content: string,
+    ): Promise<FsResultCode> {
         return await retryIfCacheFailed2(async (useCache: boolean) => {
             const fileHandleResult = await this.resolveFile(path, useCache);
             if (fileHandleResult.code !== FsResultCodes.Ok) {
@@ -193,7 +214,8 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             }
             try {
                 // @ts-expect-error FileSystemFileHandle should have a createWritable() method
-                const file: FileSystemWritableFileStream = await fileHandleResult.value.createWritable();
+                const file: FileSystemWritableFileStream =
+                    await fileHandleResult.value.createWritable();
                 await file.write(content);
                 await file.close();
                 return FsResultCodes.Ok;
@@ -204,7 +226,10 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         });
     }
 
-    async resolveFile(path: FsPath, useCache: boolean): Promise<FsResult<FileSystemFileHandle>> {
+    async resolveFile(
+        path: FsPath,
+        useCache: boolean,
+    ): Promise<FsResult<FileSystemFileHandle>> {
         const filePath = path.path;
         if (useCache) {
             if (filePath in this.fileHandles) {
@@ -222,7 +247,10 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             return parentDirResult;
         }
 
-        const parentDirHandleResult = await this.resolveDir(parentDirResult.value, useCache);
+        const parentDirHandleResult = await this.resolveDir(
+            parentDirResult.value,
+            useCache,
+        );
         if (parentDirHandleResult.code !== FsResultCodes.Ok) {
             return parentDirHandleResult;
         }
@@ -233,7 +261,9 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         }
 
         try {
-            const fileHandle = await parentDirHandleResult.value.getFileHandle(result.value);
+            const fileHandle = await parentDirHandleResult.value.getFileHandle(
+                result.value,
+            );
             this.fileHandles[filePath] = fileHandle;
             return setOkValue(result, fileHandle);
         } catch (e) {
@@ -241,10 +271,11 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             return setErrValue(result, FsResultCodes.Fail);
         }
     }
-
 }
 
-const retryIfCacheFailed = async <T>(func: (useCache: boolean) => Promise<FsResult<T>>): Promise<FsResult<T>> => {
+const retryIfCacheFailed = async <T>(
+    func: (useCache: boolean) => Promise<FsResult<T>>,
+): Promise<FsResult<T>> => {
     const result = await func(true);
     if (result.code !== FsResultCodes.Fail) {
         return result;
@@ -252,11 +283,12 @@ const retryIfCacheFailed = async <T>(func: (useCache: boolean) => Promise<FsResu
     return await func(false);
 };
 
-const retryIfCacheFailed2 = async (func: (useCache: boolean) => Promise<FsResultCode>): Promise<FsResultCode> => {
+const retryIfCacheFailed2 = async (
+    func: (useCache: boolean) => Promise<FsResultCode>,
+): Promise<FsResultCode> => {
     const result = await func(true);
     if (result !== FsResultCodes.Fail) {
         return result;
     }
     return await func(false);
 };
-

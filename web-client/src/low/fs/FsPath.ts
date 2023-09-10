@@ -1,4 +1,3 @@
-
 import { FsResult, FsResultCodes, setOkValue } from "./FsResult";
 
 /// File system path
@@ -13,7 +12,7 @@ export interface FsPath {
     readonly isRoot: boolean;
 
     /// Get the parent directory of this path.
-    /// 
+    ///
     /// For files, return the directory it is in.
     /// For directories, return the parent directory.
     ///
@@ -51,7 +50,7 @@ export interface FsPath {
 
 class FsPathImpl implements FsPath {
     /// Underlying path
-    /// 
+    ///
     /// This is the full path, with no the leading or trailing slash.
     /// For root, this is an empty string.
     private underlying: string;
@@ -67,7 +66,7 @@ class FsPathImpl implements FsPath {
     get parent(): FsResult<FsPath> {
         if (this.underlying === "") {
             return {
-            code:  FsResultCodes.IsRoot,
+                code: FsResultCodes.IsRoot,
             };
         }
 
@@ -78,16 +77,16 @@ class FsPathImpl implements FsPath {
                 value: fsRootPath,
             };
         }
-            return {
-                code: FsResultCodes.Ok,
-                value: new FsPathImpl(this.underlying.substring(0, i)),
-            };
+        return {
+            code: FsResultCodes.Ok,
+            value: new FsPathImpl(this.underlying.substring(0, i)),
+        };
     }
 
     get name(): FsResult<string> {
         if (this.underlying === "") {
             return {
-            code:  FsResultCodes.IsRoot,
+                code: FsResultCodes.IsRoot,
             };
         }
 
@@ -128,12 +127,10 @@ class FsPathImpl implements FsPath {
         const newPath = result.value.resolve(path);
         return setOkValue(result, newPath);
     }
-
 }
 
 const cleanPath = (path: string) => {
     return path.replace(/^\/+|\/+$/g, "");
-}
+};
 
 export const fsRootPath: FsPath = new FsPathImpl("");
-

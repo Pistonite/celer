@@ -50,10 +50,15 @@ export const switchLayout: ReducerDeclWithPayload<LayoutSettingsState, number> =
 /// If the current layout is the default layout, the actual
 /// current layout will be duplicated and switched to.
 export const duplicateLayout: ReducerDeclWithPayload<
-LayoutSettingsState, "view" | "edit"
+    LayoutSettingsState,
+    "view" | "edit"
 > = withPayload((state: LayoutSettingsState, mode: "view" | "edit") => {
     if (isCurrentLayoutDefault(state)) {
-        const layout = getDefaultLayout(window.innerWidth, window.innerHeight, mode);
+        const layout = getDefaultLayout(
+            window.innerWidth,
+            window.innerHeight,
+            mode,
+        );
         state.savedLayouts.push(layout);
     } else {
         state.savedLayouts.push(state.savedLayouts[state.currentLayout]);

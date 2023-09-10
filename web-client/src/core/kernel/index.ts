@@ -5,3 +5,4 @@
 
 export * from "./Kernel";
 export * from "./context";
+export type { EditorKernel } from "./editor";

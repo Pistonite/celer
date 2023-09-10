@@ -1,6 +1,12 @@
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
-import { FsResult, FsResultCode, FsResultCodes, setErrValue, setOkValue } from "./FsResult";
+import {
+    FsResult,
+    FsResultCode,
+    FsResultCodes,
+    setErrValue,
+    setOkValue,
+} from "./FsResult";
 import { decodeFile } from "./decode";
 
 export const isFileEntriesAPISupported = (): boolean => {
@@ -9,7 +15,11 @@ export const isFileEntriesAPISupported = (): boolean => {
     }
     // Chrome/Edge has this but it's named DirectoryEntry
     // However, it doesn't work properly.
-    if (navigator && navigator.userAgent && navigator.userAgent.includes("Chrome")) {
+    if (
+        navigator &&
+        navigator.userAgent &&
+        navigator.userAgent.includes("Chrome")
+    ) {
         return false;
     }
     if (!window.FileSystemDirectoryEntry) {
@@ -33,7 +43,7 @@ export const isFileEntriesAPISupported = (): boolean => {
     }
 
     return true;
-}
+};
 
 /// FileSys implementation that uses File Entries API
 /// This is not supported in Chrome/Edge, but in Firefox
@@ -63,16 +73,17 @@ export class FileEntiresAPIFileSys implements FileSys {
         const dirEntry = result.value;
 
         try {
-            const entries: FileSystemEntry[] = await new Promise((resolve, reject) => {
-                dirEntry.createReader().readEntries(resolve, reject);
+            const entries: FileSystemEntry[] = await new Promise(
+                (resolve, reject) => {
+                    dirEntry.createReader().readEntries(resolve, reject);
+                },
+            );
+            const names = entries.map((e) => {
+                if (e.isDirectory) {
+                    return e.name + "/";
+                }
+                return e.name;
             });
-            const names = 
-                entries.map(e => {
-                    if (e.isDirectory) {
-                        return e.name + "/";
-                    }
-                    return e.name;
-                });
             return setOkValue(result, names);
         } catch (e) {
             console.error(e);
@@ -85,10 +96,12 @@ export class FileEntiresAPIFileSys implements FileSys {
         if (result.code !== FsResultCodes.Ok) {
             return result;
         }
-        return setOkValue(result, result.value[0]); 
+        return setOkValue(result, result.value[0]);
     }
 
-    public async readFileAndModifiedTime(path: FsPath): Promise<FsResult<[string, number]>> {
+    public async readFileAndModifiedTime(
+        path: FsPath,
+    ): Promise<FsResult<[string, number]>> {
         const fileResult = await this.readFileInternal(path);
         if (fileResult.code !== FsResultCodes.Ok) {
             return fileResult;
@@ -101,7 +114,10 @@ export class FileEntiresAPIFileSys implements FileSys {
         return setOkValue(result, [result.value, file.lastModified]);
     }
 
-    public async readIfModified(path: FsPath, lastModified?: number): Promise<FsResult<[string, number]>> {
+    public async readIfModified(
+        path: FsPath,
+        lastModified?: number,
+    ): Promise<FsResult<[string, number]>> {
         const fileResult = await this.readFileInternal(path);
         if (fileResult.code !== FsResultCodes.Ok) {
             return fileResult;
@@ -144,9 +160,11 @@ export class FileEntiresAPIFileSys implements FileSys {
         const dirEntry = result.value;
 
         try {
-            const fileEntry = await new Promise<FileSystemEntry>((resolve, reject) => {
-                dirEntry.getFile(nameResult.value, {}, resolve, reject);
-            });
+            const fileEntry = await new Promise<FileSystemEntry>(
+                (resolve, reject) => {
+                    dirEntry.getFile(nameResult.value, {}, resolve, reject);
+                },
+            );
             const file = await new Promise<File>((resolve, reject) => {
                 // @ts-expect-error FileSystemFileEntry should have a file() method
                 fileEntry.file(resolve, reject);
@@ -158,12 +176,17 @@ export class FileEntiresAPIFileSys implements FileSys {
         }
     }
 
-    public async writeFile(_path: FsPath, _content: string): Promise<FsResultCode> {
+    public async writeFile(
+        _path: FsPath,
+        _content: string,
+    ): Promise<FsResultCode> {
         // Entries API does not support writing
         return FsResultCodes.NotSupported;
     }
 
-    async resolveDir(path: FsPath): Promise<FsResult<FileSystemDirectoryEntry>> {
+    async resolveDir(
+        path: FsPath,
+    ): Promise<FsResult<FileSystemDirectoryEntry>> {
         let entry: FileSystemEntry;
         if (path.isRoot) {
             entry = this.rootEntry;

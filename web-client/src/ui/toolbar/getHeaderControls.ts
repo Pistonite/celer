@@ -13,11 +13,9 @@ import { SyncProject } from "./SyncProject";
 
 /// Header controls.
 ///
-/// The controls are defined in groups. 
+/// The controls are defined in groups.
 /// Each control is a ToolbarControl that defines its apperances in the toolbar and in the overflow menu
-export const getHeaderControls = (
-    mode: StageMode
-): HeaderControlList => {
+export const getHeaderControls = (mode: StageMode): HeaderControlList => {
     return [
         // UI Controls
         {
@@ -37,13 +35,10 @@ export const getHeaderControls = (
         // Diagnostic/editor
         {
             // make this section hide last in edit mode
-            priority: mode === "edit" ? 89: 39,
+            priority: mode === "edit" ? 89 : 39,
             controls: [
                 ViewDiagnostics,
-                ...(mode === "edit" ? [
-                    CloseProject,
-                    SyncProject,
-                ] : []),
+                ...(mode === "edit" ? [CloseProject, SyncProject] : []),
             ],
         },
         // Setting
@@ -53,4 +48,3 @@ export const getHeaderControls = (
         },
     ];
 };
-
