@@ -7,6 +7,7 @@ edition = "2021"
 [dependencies]
 async-recursion = "1.0.4"
 async-trait = "0.1.73"
+cached = { version = "0.45.1", features = ["async"]}
 compiler-types = { path = "../compiler-types" }
 derivative = "2.2.0"
 futures = "0.3.28"
@@ -17,12 +18,25 @@ serde_yaml = "0.9.25"
 thiserror = "1.0.47"
 tokio = { version = "1.29.1", features = [
     "macros",
-] }
-tokio-stream = "0.1.14"
+    "rt-multi-thread",
+], optional = true}
+tokio-stream = { version = "0.1.14", optional = true }
+wasm-bindgen = { version = "0.2.87", optional = true }
+wasm-bindgen-futures = { version = "0.4.37", optional = true }
+js-sys = { version = "0.3.64", optional = true }
 
 [features]
-default = ["tokio/rt-multi-thread"]
-wasm = ["tokio/rt"]
+default = [
+    "tokio", 
+    "tokio-stream", 
+    "cached/async_tokio_rt_multi_thread"
+]
+wasm = [
+    "cached/wasm", 
+    "wasm-bindgen", 
+    "wasm-bindgen-futures",
+    "js-sys"
+]
 
 [lib]
 name = "celerc"

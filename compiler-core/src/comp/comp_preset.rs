@@ -12,7 +12,8 @@ impl Compiler {
     /// Apply the preset to the output.
     ///
     /// Presets are applied recursively, including presets in the movements
-    #[async_recursion::async_recursion]
+    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
+    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
     pub async fn apply_preset(
         &self,
         depth: usize,

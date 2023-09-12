@@ -7,12 +7,11 @@
 //! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
 //! and a json blob of the route.
 
-mod image;
-mod pack_config;
 use std::collections::BTreeMap;
+use serde_json::{Map, Value};
 
 use celerctypes::DocDiagnostic;
-use derivative::Derivative;
+mod pack_config;
 pub use pack_config::*;
 mod pack_coord_map;
 pub use pack_coord_map::*;
@@ -30,15 +29,17 @@ mod pack_use;
 pub use pack_use::*;
 mod resource;
 pub use resource::*;
-use serde_json::{Map, Value};
 
 use crate::json::Cast;
 use crate::lang::parse_poor;
 
-#[derive(Debug, PartialEq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum PackerError {
     #[error("Invalid `use` value: {0}")]
     InvalidUse(String),
+
+    #[error("Invalid path: {0}")]
+    InvalidPath(String),
 
     #[error("Max depth of {0} levels of `use` is reached. Please make sure there are no circular dependencies.")]
     MaxUseDepthExceeded(usize),
@@ -197,7 +198,8 @@ impl PackerValue {
         }
     }
 
-    #[async_recursion::async_recursion]
+    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
+    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
     async fn flatten_internal(self, output_errors: &mut Vec<PackerError>) -> Option<Value> {
         match self {
             Self::Ok(x) => Some(x),

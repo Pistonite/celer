@@ -1,4 +1,4 @@
-/// Async iterator macro
+/// Async iterator wrapper using tokio_stream::StreamExt
 macro_rules! async_for {
     ($v:pat in $iter:expr, $body:stmt) => {{
         let mut iter = tokio_stream::iter($iter);
@@ -7,5 +7,4 @@ macro_rules! async_for {
         }
     }};
 }
-
 pub(crate) use async_for;

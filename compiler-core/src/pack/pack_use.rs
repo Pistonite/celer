@@ -7,8 +7,19 @@ use crate::json::Coerce;
 
 /// Result of parsing an object which could be loading a resource with
 /// the `use` property
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Use {
+    /// Correctly formed `use` property
+    Valid(ValidUse),
+    /// Not loading a resource
+    NotUse(Value),
+    /// Invalid path specified in the use property
+    Invalid(String),
+}
+
+/// Correctly formed `use` property
+#[derive(Debug, PartialEq, Clone)]
+pub enum ValidUse {
     /// Loading a resource using relative path
     Relative(String),
     /// Loading a resource using absolute path
@@ -20,10 +31,6 @@ pub enum Use {
         path: String,
         reference: Option<String>,
     },
-    /// Not loading a resource
-    NotUse(Value),
-    /// Invalid path specified in the use property
-    Invalid(String),
 }
 
 impl From<Value> for Use {
@@ -48,13 +55,13 @@ impl From<Value> for Use {
             if v.ends_with("/") {
                 Self::Invalid(v)
             } else {
-                Self::Absolute(v)
+                Self::Valid(ValidUse::Absolute(v))
             }
         } else if v.starts_with("./") || v.starts_with("../") {
             if v.ends_with("/") {
                 Self::Invalid(v)
             } else {
-                Self::Relative(v)
+                Self::Valid(ValidUse::Relative(v))
             }
         } else {
             let mut reference_split = v.splitn(2, ':');
@@ -78,12 +85,12 @@ impl From<Value> for Use {
                 Some(path) => path,
                 None => return Self::Invalid(v),
             };
-            Self::Remote {
+            Self::Valid(ValidUse::Remote {
                 owner: owner.to_string(),
                 repo: repo.to_string(),
                 path: path.to_string(),
                 reference: reference.map(|s| s.to_string()),
-            }
+            })
         }
     }
 }
@@ -135,13 +142,13 @@ mod test {
             Use::from(json!({
                 "use": "./hello"
             })),
-            Use::Relative("./hello".to_string())
+            Use::Valid(ValidUse::Relative("./hello".to_string()))
         );
         assert_eq!(
             Use::from(json!({
                 "use": "../foo/hello"
             })),
-            Use::Relative("../foo/hello".to_string())
+            Use::Valid(ValidUse::Relative("../foo/hello".to_string()))
         );
     }
 
@@ -151,19 +158,19 @@ mod test {
             Use::from(json!({
                 "use": "/hello"
             })),
-            Use::Absolute("/hello".to_string())
+            Use::Valid(ValidUse::Absolute("/hello".to_string()))
         );
         assert_eq!(
             Use::from(json!({
                 "use": "/foo/hello"
             })),
-            Use::Absolute("/foo/hello".to_string())
+            Use::Valid(ValidUse::Absolute("/foo/hello".to_string()))
         );
         assert_eq!(
             Use::from(json!({
                 "use": "//foo/hello"
             })),
-            Use::Absolute("//foo/hello".to_string())
+            Use::Valid(ValidUse::Absolute("//foo/hello".to_string()))
         );
     }
 
@@ -173,56 +180,56 @@ mod test {
             Use::from(json!({
                 "use": "foo/hello/bar"
             })),
-            Use::Remote {
+            Use::Valid(ValidUse::Remote {
                 owner: "foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar".to_string(),
                 reference: None,
-            }
+            })
         );
         assert_eq!(
             Use::from(json!({
                 "use": "foo/hello/bar:test"
             })),
-            Use::Remote {
+            Use::Valid(ValidUse::Remote {
                 owner: "foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar".to_string(),
                 reference: Some("test".to_string()),
-            }
+            })
         );
         assert_eq!(
             Use::from(json!({
                 "use": ".foo/hello/bar/giz"
             })),
-            Use::Remote {
+            Use::Valid(ValidUse::Remote {
                 owner: ".foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar/giz".to_string(),
                 reference: None,
-            }
+            })
         );
         assert_eq!(
             Use::from(json!({
                 "use": "foo/hello/bar/giz/biz:test"
             })),
-            Use::Remote {
+            Use::Valid(ValidUse::Remote {
                 owner: "foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar/giz/biz".to_string(),
                 reference: Some("test".to_string()),
-            }
+            })
         );
         assert_eq!(
             Use::from(json!({
                 "use": "foo/hello/bar/giz/biz:"
             })),
-            Use::Remote {
+            Use::Valid(ValidUse::Remote {
                 owner: "foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar/giz/biz".to_string(),
                 reference: None,
-            }
+            })
         );
     }
 

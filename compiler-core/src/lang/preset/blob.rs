@@ -37,7 +37,8 @@ impl PresetBlob {
     /// If the blob has any template strings in it, returns a Some variant with
     /// the template strings compiled and the input value taken out.
     /// Otherwise returns a None variant.
-    #[async_recursion::async_recursion]
+    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
+    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
     async fn compile_internal(value: &mut Value) -> Option<Self> {
         match value {
             Value::String(s) => {

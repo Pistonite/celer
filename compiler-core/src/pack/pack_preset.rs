@@ -20,7 +20,8 @@ pub async fn pack_presets(
     Ok(output)
 }
 
-#[async_recursion::async_recursion]
+#[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
+#[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
 async fn pack_presets_internal(
     preset_name: &str,
     value: Value,

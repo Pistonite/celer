@@ -8,6 +8,10 @@ default-run = "generate"
 [dependencies]
 serde = { version = "1.0.174", features = ["derive"] }
 ts-rs = "6.2.1"
+# wasm-bindgen = { version = "0.2.87", optional = false }
+
+[features]
+# wasm = ["wasm-bindgen"]
 
 [[bin]]
 name = "generate"

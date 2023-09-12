@@ -22,7 +22,8 @@ impl Preset {
 
 impl PresetBlob {
     /// Hydrate a preset blob with the given arguments
-    #[async_recursion::async_recursion]
+    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
+    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
     pub async fn hydrate<S>(&self, args: &[S]) -> Value
     where
         S: AsRef<str> + Sync,

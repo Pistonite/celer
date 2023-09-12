@@ -7,7 +7,7 @@ use crate::comp::{Compiler, CompilerError};
 use crate::lang::Preset;
 use crate::metrics::CompilerMetrics;
 use crate::pack::{
-    self, PackedProject, PackerError, ResourceLoader, ResourcePath, ResourceResolver,
+    self, PackedProject,     Resource,
 };
 use crate::plug::run_plugins;
 
@@ -54,13 +54,11 @@ pub struct Setting {
 }
 
 pub async fn compile_project(
-    project: &ResourcePath,
-    resolver: &dyn ResourceResolver,
-    loader: &dyn ResourceLoader,
+    project_resource: &Resource,
     setting: &Setting,
 ) -> CompilerOutput {
     let mut metrics = CompilerMetrics::new();
-    let pack_result = pack::pack_project(project, resolver, loader, setting).await;
+    let pack_result = pack::pack_project(project_resource, setting).await;
     metrics.pack_done();
 
     let (comp_doc, comp_meta) = match pack_result {

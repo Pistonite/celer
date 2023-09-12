@@ -9,6 +9,7 @@ import {
     viewActions,
 } from "core/store";
 import { Logger, isInDarkMode } from "low/utils";
+import { wasmCall } from "low/wasm";
 
 import type { EditorKernel } from "./editor";
 import { KeyMgr } from "./KeyMgr";
@@ -97,6 +98,9 @@ export class Kernel {
         };
         (window as any).testFn = testFn;
         console.log("window api ready");
+
+        const testr = await wasmCall(() => wasm.testSomething("hello world"));
+        console.log(testr);
     }
 
     /// Initialize the store

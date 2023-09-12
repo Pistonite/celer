@@ -45,7 +45,8 @@ fn wasm_pack_build() -> io::Result<()> {
 
 fn override_typescript_definitions() -> io::Result<()>{
     println!("generating typescript definitions");
-    let d_ts = celercwasm::generate_d_ts();
+    let mut d_ts = celercwasm::generate_d_ts_imports();
+    d_ts.push_str(&celercwasm::generate_d_ts());
     fs::write(Path::new(OUTPUT_DIR).join("celercwasm.d.ts"), d_ts)?;
     Ok(())
 }
