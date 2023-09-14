@@ -8,16 +8,6 @@ use utils::*;
 
 mod resource;
 
-macro_rules! js_await {
-    ($($call:tt)*) => {
-        {
-            let promise_result = $($call)*;
-            let promise = promise_result?;
-            let promise = js_sys::Promise::resolve(&promise);
-            wasm_bindgen_futures::JsFuture::from(promise).await?
-        }
-    };
-}
 
 wasm_import!{
     import { ExecDoc } from "low/compiler.g";

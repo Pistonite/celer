@@ -11,6 +11,8 @@ use crate::pack::{
 };
 use crate::plug::run_plugins;
 
+use crate::util::cancel;
+
 /// Output of the compiler API
 pub struct CompilerOutput {
     /// The final document to be rendered
@@ -98,4 +100,10 @@ pub async fn compile_project(
         metadata: comp_meta,
         metrics,
     }
+}
+
+#[cfg(feature = "wasm")]
+#[inline]
+pub fn cancel_current_compilation() {
+    cancel();
 }

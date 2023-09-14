@@ -3,11 +3,11 @@ mod path;
 pub use path::*;
 
 #[cfg(not(feature = "wasm"))]
-mod async_for;
+mod async_macro;
 #[cfg(not(feature = "wasm"))]
-pub(crate) use async_for::async_for;
+pub(crate) use async_macro::*;
 #[cfg(feature = "wasm")]
-pub mod async_for_wasm;
+pub mod async_macro_wasm;
 #[cfg(feature = "wasm")]
-pub(crate) use async_for_wasm::async_for;
+pub(crate) use async_macro_wasm::*;
 

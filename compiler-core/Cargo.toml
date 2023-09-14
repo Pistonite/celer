@@ -24,6 +24,8 @@ tokio-stream = { version = "0.1.14", optional = true }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }
 js-sys = { version = "0.3.64", optional = true }
+web-sys = { version = "0.3.64", optional = true }
+instant = "0.1.12"
 
 [features]
 default = [
@@ -35,7 +37,9 @@ wasm = [
     "cached/wasm", 
     "wasm-bindgen", 
     "wasm-bindgen-futures",
-    "js-sys"
+    "js-sys",
+    "web-sys/Window",
+    "instant/wasm-bindgen",
 ]
 
 [lib]

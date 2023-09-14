@@ -17,12 +17,19 @@ export class FsFile {
     /// The last modified time of the file on fs when last checked
     private lastModified: number | undefined;
 
+    /// A flag for the compiler to mark if the file is changed
+    /// since the last compile
+    ///
+    /// If the flag is unchanged, the compiler can use the cached result to skip parsing
+    private changedSinceLastCompile: boolean;
+
     constructor(fs: FileSys, path: FsPath) {
         this.fs = fs;
         this.path = path;
         this.dirty = false;
         this.content = undefined;
         this.lastModified = undefined;
+        this.changedSinceLastCompile = false;
     }
 
     public getDisplayPath(): string {
@@ -34,7 +41,12 @@ export class FsFile {
     }
 
     /// Get or load the content of the file
-    public async getContent(): Promise<FsResult<string>> {
+    ///
+    /// If clearChangedSinceLastCompile is true, it will clear the flag.
+    public async getContent(clearChangedSinceLastCompile?: boolean): Promise<FsResult<string>> {
+        if (clearChangedSinceLastCompile) {
+            this.changedSinceLastCompile = false;
+        }
         if (this.content === undefined) {
             const result = await this.load();
             if (result !== FsResultCodes.Ok) {
@@ -49,11 +61,9 @@ export class FsFile {
 
     /// Set the content in memory. Does not save to FS.
     public setContent(content: string): void {
-        if (content === this.content) {
-            return;
-        }
         this.content = content;
         this.dirty = true;
+        this.changedSinceLastCompile = true;
     }
 
     /// Load the file's content if it's not dirty
@@ -114,5 +124,9 @@ export class FsFile {
         }
         this.dirty = false;
         return FsResultCodes.Ok;
+    }
+
+    public wasChangedSinceLastCompile(): boolean {
+        return this.changedSinceLastCompile;
     }
 }

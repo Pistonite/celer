@@ -1,5 +1,7 @@
 //! Utils for gluing WASM and JS
 
+use std::future::Future;
+
 use serde::de::DeserializeOwned;
 use wasm_bindgen::prelude::*;
 
@@ -114,15 +116,21 @@ macro_rules! wasm_from {
 }
 pub(crate) use wasm_from;
 
-/// Wrapper for JS function so we can implement [`Send`] and [`Sync`]
-///
-/// We need this because the compiler core expects certain types to be Send and Sync
-/// However, anything from JS is not Send nor Sync. Therefore we need to mark it
-/// as Send and Sync manually to make sure it compiles.
-///
-/// This is safe because tokio/rt is used in WASM and everything should be single-threaded
-/// 
-/// Read more: https://github.com/rustwasm/wasm-bindgen/pull/955
-pub struct WasmFunction(pub js_sys::Function);
-unsafe impl Send for WasmFunction {}
-unsafe impl Sync for WasmFunction {}
+/// Execute in JS context, everything is JsValue
+#[inline]
+pub async fn js_async<F>(f: F) -> Result<JsValue, JsValue> where F: Future<Output = Result<JsValue, JsValue>> {
+    f.await
+}
+
+// macro_rules! js_call {}
+
+macro_rules! js_await {
+    ($($call:tt)*) => {
+        {
+            let promise = $($call)*;
+            let promise: js_sys::Promise = wasm_bindgen::JsCast::dyn_into(promise)?;
+            wasm_bindgen_futures::JsFuture::from(promise).await?
+        }
+    };
+}
+pub(crate) use js_await;

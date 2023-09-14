@@ -5,34 +5,61 @@ use serde_json::Value;
 use crate::pack::{PackerResult, PackerError, ValidUse};
 use crate::util::Path;
 
+use super::ResourceLoader;
+
+#[cfg(not(feature = "wasm"))]
+pub type ArcLoader<R> = Arc<dyn ResourceLoader<Ref=R> + Send + Sync>;
+#[cfg(not(feature = "wasm"))]
+pub type ArcResolver = Arc<dyn ResourceResolver + Send + Sync>;
+#[cfg(feature = "wasm")]
+pub type ArcLoader = Arc<dyn ResourceLoader>;
+#[cfg(feature = "wasm")]
+pub type ArcResolver = Arc<dyn ResourceResolver>;
+
+macro_rules! loader_delegate {
+    ($func:ident, $type:ty) => {
+        #[doc = "Macro-generated loader delegate. See [`ResourceLoader`]"]
+        pub async fn $func(&self) -> PackerResult<$type> {
+            match &self.path {
+                ResourcePath::Url(url) => self.url_loader.$func(url).await,
+                ResourcePath::FsPath(path) => self.fs_loader.$func(path.as_ref()).await,
+            }
+        }
+    }
+}
+
 /// A resource contains:
 /// - an API to load the resource
 /// - an API to resolve another resource from its location
 #[derive(Clone)]
 pub struct Resource {
     path: ResourcePath,
-    loader: Arc<dyn ResourceLoader>,
-    resolver: Arc<dyn ResourceResolver>,
+    fs_loader: ArcLoader,
+    url_loader: ArcLoader,
+    resolver: ArcResolver,
 }
 
 impl Resource {
     pub fn new(
         path: ResourcePath,
-        loader: Arc<dyn ResourceLoader>,
-        resolver: Arc<dyn ResourceResolver>,
+        fs_loader: ArcLoader,
+        url_loader: ArcLoader,
+        resolver: ArcResolver,
     ) -> Self {
         Self {
             path,
-            loader,
+            fs_loader,
+            url_loader,
             resolver,
         }
     }
 
     /// Create a new resource with the same loader
-    pub fn create(&self, path: ResourcePath, resolver: Arc<dyn ResourceResolver>) -> Self {
+    pub fn create(&self, path: ResourcePath, resolver: ArcResolver) -> Self {
         Self {
             path,
-            loader: self.loader.clone(),
+            fs_loader: self.fs_loader.clone(),
+            url_loader: self.url_loader.clone(),
             resolver,
         }
     }
@@ -45,62 +72,29 @@ impl Resource {
         }
     }
 
-    pub async fn load(&self) -> PackerResult<Vec<u8>> {
-        match &self.path {
-            ResourcePath::Url(url) => self.loader.load_url(url).await,
-            ResourcePath::FsPath(path) => self.loader.load_fs(path).await,
-        }
-    }
+    loader_delegate!(load_structured, Value);
+    loader_delegate!(load_image_url, String);
 
-    /// Load resource as structured data (json, yaml, etc)
-    ///
-    /// The type depends on the file extension
-    pub async fn load_structured(&self) -> PackerResult<Value> {
-        let n = self.name();
-        if n.ends_with(".yaml") || n.ends_with(".yml") {
-            self.load_yaml().await
-        } else if n.ends_with(".json") {
-            self.load_json().await
-        } else {
-            Err(PackerError::UnknownFormat(n.to_string()))
-        }
-    }
-
-    pub async fn load_yaml(&self) -> PackerResult<Value> {
-        let bytes = self.load().await?;
-        match serde_yaml::from_slice(&bytes) {
-            Ok(v) => Ok(v),
-            Err(_) => Err(PackerError::InvalidFormat),
-        }
-    }
-
-    pub async fn load_json(&self) -> PackerResult<Value> {
-        let bytes = self.load().await?;
-        match serde_json::from_slice(&bytes) {
-            Ok(v) => Ok(v),
-            Err(_) => Err(PackerError::InvalidFormat),
-        }
-    }
-
-    /// Load resource as image URL
-    ///
-    /// Return value can be a data URL
-    pub async fn load_image_url(&self) -> PackerResult<String> {
-        match &self.path {
-            ResourcePath::Url(url) => Ok(url.to_string()),
-            ResourcePath::FsPath(path) => Err(PackerError::NotImpl(
-                "Local image is not implemented yet.".to_string(),
-            )),
-        }
-    }
+    // /// Load resource as image URL
+    // ///
+    // /// Return value can be a data URL
+    // pub async fn load_image_url(&self) -> PackerResult<String> {
+    //     match &self.path {
+    //         ResourcePath::Url(url) => Ok(url.to_string()),
+    //         ResourcePath::FsPath(path) => Err(PackerError::NotImpl(
+    //             "Local image is not implemented yet.".to_string(),
+    //         )),
+    //     }
+    // }
 
     pub async fn resolve(&self, target: &ValidUse) -> PackerResult<Resource> {
         self.resolver.resolve(&self, target).await
     }
 }
 
-#[async_trait::async_trait]
-pub trait ResourceResolver: Send + Sync {
+#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
+#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
+pub trait ResourceResolver {
     /// Resolve a resource from the given `Use` and loader
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource>;
 }
@@ -110,14 +104,4 @@ pub enum ResourcePath {
     Url(String),
     FsPath(Path),
 }
-
-#[async_trait::async_trait]
-pub trait ResourceLoader: Send + Sync {
-    /// Read a resource from the given file path
-    async fn load_fs(&self, path: &Path) -> PackerResult<Vec<u8>>;
-
-    /// Load a resource from the given URL
-    async fn load_url(&self, url: &str) -> PackerResult<Vec<u8>>;
-}
-
 

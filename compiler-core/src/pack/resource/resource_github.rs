@@ -4,7 +4,7 @@ use std::sync::Arc;
 use cached::proc_macro::cached;
 use crate::util::Path;
 
-use super::{ResourceResolver,  ResourcePath,   ResourceLoader, Resource};
+use super::{ResourceResolver,  ResourcePath,   ResourceLoader, Resource, ArcLoader, EmptyLoader};
 use crate::pack::{PackerResult, PackerError, ValidUse};
 
 pub struct GitHubResourceResolver {
@@ -26,7 +26,8 @@ impl GitHubResourceResolver {
 
 }
 
-#[async_trait::async_trait]
+#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
+#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
 impl ResourceResolver for GitHubResourceResolver {
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
         match target {
@@ -68,16 +69,20 @@ pub async fn create_github_resource(
     repo: &str,
     path: &str,
     reference: Option<&str>,
-    loader: Arc<dyn ResourceLoader>,
+    url_loader: ArcLoader,
 ) -> PackerResult<Resource> {
     let path = Path::try_from(&path).ok_or_else(||PackerError::InvalidPath(path.to_string()))?;
     let url = get_github_url(&owner, &repo, &path, reference.as_deref()).await?;
-    Ok(Resource::new(ResourcePath::Url(url), loader, Arc::new(GitHubResourceResolver::new(
-        owner, 
-        repo, 
-        path,
-        reference
-    ))))
+    Ok(Resource::new(
+        ResourcePath::Url(url), 
+        Arc::new(EmptyLoader),
+        url_loader, 
+        Arc::new(GitHubResourceResolver::new(
+            owner, 
+            repo, 
+            path,
+            reference
+        ))))
 }
 
 pub async fn create_github_resource_from(

@@ -32,6 +32,7 @@ pub use resource::*;
 
 use crate::json::Cast;
 use crate::lang::parse_poor;
+use crate::util::{WasmError, Path};
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum PackerError {
@@ -52,6 +53,12 @@ pub enum PackerError {
 
     #[error("The format of resource {0} cannot be determined")]
     UnknownFormat(String),
+
+    #[error("Cannot load file: {0}")]
+    LoadFile(String),
+
+    #[error("Cannot load url: {0}")]
+    LoadUrl(String),
 
     #[error("Error when parsing structured data")]
     InvalidFormat,
@@ -99,6 +106,10 @@ pub enum PackerError {
 
     #[error("{0}")]
     NotImpl(String),
+
+    #[cfg(feature = "wasm")]
+    #[error("Wasm execution error: {0}")]
+    Wasm(#[from] WasmError),
 }
 
 impl PackerError {

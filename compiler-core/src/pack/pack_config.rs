@@ -10,7 +10,7 @@ use crate::lang::Preset;
 use crate::util::async_for;
 
 use super::{
-    pack_map, pack_presets, PackerError, PackerResult, ResourceLoader, ResourceResolver, Use, Resource, ValidUse,
+    pack_map, pack_presets, PackerError, PackerResult, Use, Resource, ValidUse,
 };
 
 #[derive(Default, Debug)]
@@ -57,20 +57,20 @@ pub async fn pack_config(
                         return Err(PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::ICONS, key)));
                     }
                     builder.icons.insert(key, value.coerce_to_string());
-                });
+                })?;
             }
             prop::TAGS => {
                 let tags = value.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::TAGS.to_string()))?;
                 async_for!((key, value) in tags.into_iter(), {
                     let tag = serde_json::from_value::<DocTag>(value).map_err(|_| PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::TAGS, key)))?;
                     builder.tags.insert(key, tag);
-                });
+                })?;
             }
             prop::PRESETS => {
                 let presets = pack_presets(value, index, setting.max_preset_namespace_depth).await?;
                 async_for!((key, value) in presets.into_iter(), {
                     builder.presets.insert(key, value);
-                });
+                })?;
             }
             prop::DEFAULT_ICON_PRIORITY => {
                 let priority = value.try_coerce_to_i64().ok_or_else(|| PackerError::InvalidConfigProperty(index, prop::DEFAULT_ICON_PRIORITY.to_string()))?;
@@ -78,7 +78,7 @@ pub async fn pack_config(
             }
             _ => return Err(PackerError::UnusedConfigProperty(index, key)),
         }
-    });
+    })?;
 
     Ok(())
 }
@@ -90,7 +90,7 @@ async fn load_config_from_use(
     index: usize,
 ) -> PackerResult<Value> {
     let config_resource = project_resource.resolve(&use_prop).await?;
-    let config = config_resource.load_json().await?;
+    let config = config_resource.load_structured().await?;
     // Calling process_config here
     // because any `use` inside the config needs to be resolved by the config resource
     // not the project resource
@@ -134,7 +134,7 @@ async fn process_config(
                 *value = Value::String(image_url);
             }
         }
-    });
+    })?;
 
     Ok(config_obj)
 }

@@ -7,7 +7,8 @@ use super::{ResourceResolver, Resource, ResourcePath, create_github_resource_fro
 
 pub struct LocalResourceResolver(Path);
 
-#[async_trait::async_trait]
+#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
+#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
 impl ResourceResolver for LocalResourceResolver {
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
         match target {

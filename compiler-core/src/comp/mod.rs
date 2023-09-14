@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use crate::{
     lang::{parse_poor, Preset},
-    pack::{PackerError, PackerValue},
+    pack::{PackerError, PackerValue}, util::WasmError,
 };
 
 mod comp_coord;
@@ -121,6 +121,10 @@ pub enum CompilerError {
     /// When the `route` property is invalid
     #[error("Route data is not the correct type.")]
     InvalidRouteType,
+
+    #[cfg(feature = "wasm")]
+    #[error("Wasm execution error: {0}")]
+    Wasm(#[from] WasmError),
 }
 
 impl CompilerError {
@@ -164,6 +168,7 @@ impl CompilerError {
             CompilerError::InvalidRouteType => {
                 "https://celer.pistonite.org/docs/route/route-structure#entry-point".to_string()
             }
+            CompilerError::Wasm(_) => "".to_string(),
         }
     }
 
@@ -186,6 +191,7 @@ impl CompilerError {
             | CompilerError::IsPreface(_)
             | CompilerError::InvalidSectionType
             | CompilerError::PackerErrors(_)
+            | CompilerError::Wasm(_)
             | CompilerError::InvalidRouteType => "error",
 
             CompilerError::UnusedProperty(_) | CompilerError::TooManyTagsInCounter => "warn",

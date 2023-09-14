@@ -665,6 +665,7 @@ dependencies = [
  "compiler-types",
  "derivative",
  "futures",
+ "instant",
  "js-sys",
  "regen-lang",
  "serde",
@@ -675,6 +676,7 @@ dependencies = [
  "tokio-stream",
  "wasm-bindgen",
  "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
