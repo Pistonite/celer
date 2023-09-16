@@ -8,6 +8,9 @@ import { FileSys, FsResultCode } from "low/fs";
 /// The interface provides a way for TypeScript to know about the editor
 /// without importing the editor module.
 export interface EditorKernel {
+    /// Initialize
+    init(): Promise<void>;
+
     /// Reset the editor with a new file system. Unsaved changes will be lost
     reset(fs?: FileSys): Promise<void>;
 
@@ -34,4 +37,10 @@ export interface EditorKernel {
 
     /// Save changes to the file system for the opened files
     saveChangesToFs(isUserAction: boolean): Promise<FsResultCode>;
+
+    /// Trigger a compiler run. If one is running, there will be another run after it
+    compile(): void;
+
+    /// Cancel the current compiler run
+    cancelCompile(): void;
 }

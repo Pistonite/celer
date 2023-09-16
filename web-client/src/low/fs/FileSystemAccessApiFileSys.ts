@@ -205,6 +205,22 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         return setOkValue(result, [result.value, file.lastModified]);
     }
 
+    public async readFileAsBytes(path: FsPath): Promise<FsResult<Uint8Array>> {
+        const fileResult = await this.readFileInternal(path);
+        if (fileResult.code !== FsResultCodes.Ok) {
+            return fileResult;
+        }
+        const file = fileResult.value;
+        try {
+            const buffer = await file.arrayBuffer();
+            const array = new Uint8Array(buffer);
+            return setOkValue(fileResult, array);
+        } catch (e) {
+            console.error(e);
+            return setErrValue(fileResult, FsResultCodes.Fail);
+        }
+    }
+
     async readFileInternal(path: FsPath): Promise<FsResult<File>> {
         return await retryIfCacheFailed(async (useCache: boolean) => {
             const result = await this.resolveFile(path, useCache);

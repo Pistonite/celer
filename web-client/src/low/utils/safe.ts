@@ -1,13 +1,4 @@
-//! low/wasm
-//!
-//! WebAssembly utilities
-
-/// WebAssembly result type
-/// 
-/// The result type has a flag indicating success or failure, and a value.
 export type Result<T, E> = [true, T] | [false, E]; 
-
-/// Optional type for interfacing with Rust
 export type Option<T> = T | undefined;
 
 /// no-throw Wrapper function for calling WebAssembly functions

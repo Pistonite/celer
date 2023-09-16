@@ -66,6 +66,21 @@ export class FsFile {
         this.changedSinceLastCompile = true;
     }
 
+    public async getContentAsBytes(clearChangedSinceLastCompile?: boolean): Promise<FsResult<Uint8Array>> {
+        if (clearChangedSinceLastCompile) {
+            this.changedSinceLastCompile = false;
+        }
+        if (this.content !== undefined) {
+            const encoder = new TextEncoder();
+            return {
+                code: FsResultCodes.Ok,
+                value: encoder.encode(this.content)
+            };
+        }
+        // if content is not loaded, try loading it as string
+
+    }
+
     /// Load the file's content if it's not dirty
     ///
     /// Returns Ok if the file is dirty

@@ -7,10 +7,12 @@ use celerc::pack::{ArcLoader, GlobalCacheLoader, UrlLoader, LocalResourceResolve
 use celerc::util::Path;
 use celerctypes::ExecDoc;
 use js_sys::Function;
-use log::info;
+use log::{info, LevelFilter};
 
 use crate::resource::FileCache;
 use crate::logger::Logger;
+
+const LOGGER: Logger = Logger;
 
 thread_local! {
     static FILE_CACHE: Arc<FileCache> = Arc::new(FileCache::new());
@@ -26,8 +28,15 @@ thread_local! {
 
 /// Initialize
 pub fn init(load_file: Function, check_changed: Function) {
+    match log::set_logger(&LOGGER) {
+        Ok(_) => {
+            log::set_max_level(LevelFilter::Info);
+        }
+        Err(_) => {
+            web_sys::console::warn_1(&"failed to initialize compiler logger. It might have already been initialized".into());
+        }
+    }
     info!("initializing compiler...");
-    let _ = log::set_boxed_logger(Box::new(Logger));
     FILE_CACHE.with(|cache| {
         cache.init(load_file, check_changed);
     });

@@ -153,7 +153,7 @@ pub async fn into_future(promise: JsValue) -> Result<JsValue, JsValue> {
 
 /// Create a stub JS function to fill in for a function slot that is not yet initialized
 pub fn stub_function() -> Function {
-    Function::new_no_args("throw new Error(\"not initialized\"")
+    Function::new_no_args("throw new Error(\"not initialized\")")
 }
 
 /// Log an error to the console

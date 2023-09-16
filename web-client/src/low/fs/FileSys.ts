@@ -47,6 +47,9 @@ export interface FileSys {
         lastModified?: number,
     ) => Promise<FsResult<[string, number]>>;
 
+    /// Read file as raw bytes
+    readFileAsBytes: (path: FsPath) => Promise<FsResult<Uint8Array>>;
+
     /// Returns if this implementation supports writing to a file
     isWritable: () => boolean;
 

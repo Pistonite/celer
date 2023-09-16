@@ -11,6 +11,7 @@ import { SelectSection } from "./SelectSection";
 import { CloseProject } from "./CloseProject";
 import { SyncProject } from "./SyncProject";
 import { SaveProject } from "./SaveProject";
+import { CompileProject } from "./CompileProject";
 
 /// Header controls.
 ///
@@ -40,7 +41,7 @@ export const getHeaderControls = (mode: StageMode): HeaderControlList => {
             controls: [
                 ViewDiagnostics,
                 ...(mode === "edit"
-                    ? [SaveProject, SyncProject, CloseProject]
+                    ? [CompileProject, SaveProject, SyncProject, CloseProject]
                     : []),
             ],
         },

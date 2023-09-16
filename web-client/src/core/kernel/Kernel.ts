@@ -3,13 +3,11 @@ import reduxWatch from "redux-watch";
 import {
     AppStore,
     SettingsState,
-    documentActions,
     initStore,
     settingsSelector,
     viewActions,
 } from "core/store";
 import { Logger, isInDarkMode } from "low/utils";
-import { wasmCall } from "low/wasm";
 
 import type { EditorKernel } from "./editor";
 import { KeyMgr } from "./KeyMgr";
@@ -66,7 +64,7 @@ export class Kernel {
         this.initStage();
         this.initUi(store);
 
-        this.test(store);
+        // this.test(store);
         // window.onbeforeunload = () => "key";
         window.addEventListener("beforeunload", (e) => {
             if (this.editor && this.editor.hasUnsavedChangesSync()) {
@@ -90,18 +88,18 @@ export class Kernel {
         }
     }
 
-    private async test(store: AppStore) {
-        const wasm = await import("low/celerc");
-        const testFn = async (test: any) => {
-            const result = await wasm.tryCompileFromCompDoc(test);
-            store.dispatch(documentActions.setDocument(result));
-        };
-        (window as any).testFn = testFn;
-        console.log("window api ready");
-
-        const testr = await wasmCall(() => wasm.testSomething("hello world"));
-        console.log(testr);
-    }
+    // private async test(store: AppStore) {
+    //     const wasm = await import("low/celerc");
+    //     const testFn = async (test: any) => {
+    //         const result = await wasm.tryCompileFromCompDoc(test);
+    //         store.dispatch(documentActions.setDocument(result));
+    //     };
+    //     (window as any).testFn = testFn;
+    //     console.log("window api ready");
+    //
+    //     const testr = await wasmCall(() => wasm.testSomething("hello world"));
+    //     console.log(testr);
+    // }
 
     /// Initialize the store
     private initStore(): AppStore {
@@ -228,7 +226,9 @@ export class Kernel {
         if (!store) {
             throw new Error("store not initialized");
         }
-        this.editor = initEditor(store);
+        const editor = initEditor(store);
+        await editor.init();
+        this.editor = editor;
     }
 
     public getEditor(): EditorKernel | null {

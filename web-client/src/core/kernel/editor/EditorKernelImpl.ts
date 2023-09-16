@@ -15,12 +15,14 @@ import { EditorKernel } from "./EditorKernel";
 import { EditorLog, toFsPath } from "./utils";
 import { IdleMgr } from "./IdleMgr";
 import { FileMgr } from "./FileMgr";
+import { CompMgr } from "./CompMgr";
 
 export class EditorKernelImpl implements EditorKernel {
     private store: AppStore;
 
     private idleMgr: IdleMgr;
     private fileMgr: FileMgr;
+    private compMgr: CompMgr;
 
     private cleanup: () => void;
 
@@ -41,6 +43,8 @@ export class EditorKernelImpl implements EditorKernel {
             this.idleMgr.notifyActivity();
         });
         this.fileMgr = new FileMgr(monacoDom, monacoEditor, store);
+
+        this.compMgr = new CompMgr(store);
 
         const resizeHandler = this.onResize.bind(this);
         window.addEventListener("resize", resizeHandler);
@@ -70,6 +74,10 @@ export class EditorKernelImpl implements EditorKernel {
         };
 
         this.idleMgr.start();
+    }
+
+    public async init(): Promise<void> {
+        await this.compMgr.init(async () => {throw new Error("todo")}, () => false);
     }
 
     /// Reset the editor with a new file system. Unsaved changes will be lost
@@ -139,6 +147,14 @@ export class EditorKernelImpl implements EditorKernel {
         return await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.saveChangesToFs();
         });
+    }
+
+    public compile(): void {
+        this.compMgr.triggerCompile();
+    }
+
+    public cancelCompile(): void {
+        this.compMgr.cancel();
     }
 
     private onSettingsUpdate() {

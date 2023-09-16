@@ -376,6 +376,16 @@ export class FileMgr {
         this.dispatcher.dispatch(viewActions.setUnsavedFiles(unsavedFiles));
     }
 
+    public checkIfFileChangedSinceLastCompiled(path: string): boolean {
+        const fsFile = this.files[path];
+        if (!fsFile) {
+            // if file is not loaded in the editor then
+            // return true so it can be loaded
+            return true;
+        }
+        return fsFile.wasChangedSinceLastCompile();
+    }
+
     private async attachEditor() {
         let div = document.getElementById(EditorContainerId);
         while (!div) {

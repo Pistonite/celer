@@ -1,8 +1,10 @@
 
-import { AppDispatcher } from "core/store";
-import { Debouncer } from "low/utils";
+import { AppDispatcher, viewActions } from "core/store";
+import { sleep } from "low/utils";
+import { initCompiler } from "low/celerc";
 
 export type RequestFileFunction = (path: string) => Promise<Uint8Array>;
+export type CheckChangedFunction = (path: string) => boolean;
 
 /// The compilation manager
 ///
@@ -19,6 +21,11 @@ export class CompMgr {
         this.dispatcher = dispatcher;
         this.needCompile = false;
         this.compiling = false;
+
+    }
+
+    public async init(loadFile: RequestFileFunction, checkChanged: CheckChangedFunction) {
+        initCompiler(loadFile, checkChanged);
     }
 
     /// Trigger compilation of the document
@@ -35,14 +42,11 @@ export class CompMgr {
         this.compile();
     }
 
-    /// Similar to triggerCompile, but will cancel any pending compilation and start a new one
-    ///
-    /// Use this when it's sure that the document has changed and the old compilation result is no longer valid
-    public triggerCompileNow() {
-        this.needCompile = true;
+    /// Cancel the current compilation if it is running (do nothing if not)
+    public cancel() {
         // wasm api cancel
         // wasm.wasmCall(cancelCompile)
-        this.compile();
+        console.log("test compile cancel");
     }
 
     private async compile() {
@@ -51,12 +55,25 @@ export class CompMgr {
         if (this.compiling) {
             return;
         }
+        console.log("test compile function start");
+        const handle = window.setTimeout(() => {
+            this.dispatcher.dispatch(viewActions.setCompileInProgress(true));
+        }, 200);
         this.compiling = true;
-        // turn off the flag before compiling.
-        // if anyone calls triggerCompile during compilation, it will be turned on again
-        // to trigger another compile
-        this.needCompile = false;
+        while (this.needCompile) {
+            console.log("test compile start");
+            // turn off the flag before compiling.
+            // if anyone calls triggerCompile during compilation, it will be turned on again
+            // to trigger another compile
+            this.needCompile = false;
+            await sleep(5000);
+            console.log("test compile end");
+        }
 
+        window.clearTimeout(handle);
+        this.dispatcher.dispatch(viewActions.setCompileInProgress(false));
+        this.compiling = false;
+        console.log("function end");
         //wasm api should be something like:
         //compile(requestfunction) -> Promise<result>
     }
