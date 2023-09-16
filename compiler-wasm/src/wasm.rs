@@ -1,20 +1,14 @@
 //! Utils for gluing WASM and JS
 
-use std::future::Future;
-
-use serde::de::DeserializeOwned;
+use js_sys::{Promise, Function};
+use web_sys::console;
 use wasm_bindgen::prelude::*;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    pub fn log(s: &str);
-}
+use wasm_bindgen_futures::JsFuture;
 
 /// Import types from compiler-types in the generated TS code
 ///
 /// This defines a function that the build script uses to generate the import block
-macro_rules! wasm_import {
+macro_rules! import {
 ( $(import { $($import:ty),* } from $module:literal; )*) => {
     pub fn generate_d_ts_imports() -> String {
         let mut d_ts = String::new();
@@ -33,7 +27,7 @@ macro_rules! wasm_import {
     }
 }
 }
-pub(crate) use wasm_import;
+pub(crate) use import;
 
 /// Define the API functions of the wasm module
 ///
@@ -56,7 +50,7 @@ pub(crate) use wasm_import;
 ///     ...
 /// }
 /// ```
-macro_rules! wasm_api {
+macro_rules! ffi {
 (
     $(
         $(#[doc = $doc:literal])*
@@ -70,7 +64,7 @@ macro_rules! wasm_api {
                 $(
                     "///", $doc, "\n",
                 )*
-                "export function ", stringify!($name), "(", $(stringify!($arg), ": ", stringify!($arg_ty), ",")* ,
+                "export function ", stringify!($name), "(", $(stringify!($arg), ": ", stringify!($arg_ty), ",", )* 
                 "): Promise<", stringify!($ret_ty), ">;\n\n"
             ));
         )*
@@ -85,26 +79,46 @@ macro_rules! wasm_api {
                 let $arg = <$arg_ty>::from_wasm($arg)?;
             )*
             let result = $body;
-            let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-            let result = result.serialize(&serializer)?;
-            Ok(result)
+            result.into_wasm()
         }
     )*
 }
 }
 
-pub(crate) use wasm_api;
+pub(crate) use ffi;
 
 pub trait WasmFrom : Sized {
-    fn from_wasm(value: wasm_bindgen::JsValue) -> Result<Self, wasm_bindgen::JsValue>;
+    fn from_wasm(value: JsValue) -> Result<Self, JsValue>;
 }
-impl WasmFrom for wasm_bindgen::JsValue {
-    fn from_wasm(value: wasm_bindgen::JsValue) -> Result<Self, wasm_bindgen::JsValue> {
+impl WasmFrom for JsValue {
+    fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
         Ok(value)
     }
 }
+impl WasmFrom for Function {
+    fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
+        value.dyn_into()
+    }
+}
 
-macro_rules! wasm_from {
+pub trait WasmInto {
+    fn into_wasm(self) -> Result<JsValue, JsValue>;
+}
+impl WasmInto for JsValue {
+    fn into_wasm(self) -> Result<JsValue, JsValue> {
+        Ok(self)
+    }
+}
+impl<T> WasmInto for Option<T> where T: WasmInto {
+    fn into_wasm(self) -> Result<JsValue, JsValue> {
+        match self {
+            Some(v) => v.into_wasm(),
+            None => Ok(JsValue::UNDEFINED),
+        }
+    }
+}
+
+macro_rules! from {
 ($ty:ty) => {
     impl WasmFrom for $ty {
         fn from_wasm(value: wasm_bindgen::JsValue) -> Result<Self, wasm_bindgen::JsValue> {
@@ -114,23 +128,36 @@ macro_rules! wasm_from {
     }
 };
 }
-pub(crate) use wasm_from;
+pub(crate) use from;
 
-/// Execute in JS context, everything is JsValue
-#[inline]
-pub async fn js_async<F>(f: F) -> Result<JsValue, JsValue> where F: Future<Output = Result<JsValue, JsValue>> {
-    f.await
-}
+from!{String}
 
-// macro_rules! js_call {}
-
-macro_rules! js_await {
-    ($($call:tt)*) => {
-        {
-            let promise = $($call)*;
-            let promise: js_sys::Promise = wasm_bindgen::JsCast::dyn_into(promise)?;
-            wasm_bindgen_futures::JsFuture::from(promise).await?
+macro_rules! into {
+($ty:ty) => {
+    impl WasmInto for $ty {
+        fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
+            let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+            let result = <Self as serde::Serialize>::serialize(&self, &serializer)?;
+            Ok(result)
         }
-    };
+    }
+};
 }
-pub(crate) use js_await;
+pub(crate) use into;
+
+/// Take a promise and return a future
+pub async fn into_future(promise: JsValue) -> Result<JsValue, JsValue> {
+    let promise: Promise = promise.dyn_into()?;
+    JsFuture::from(promise).await
+}
+
+/// Create a stub JS function to fill in for a function slot that is not yet initialized
+pub fn stub_function() -> Function {
+    Function::new_no_args("throw new Error(\"not initialized\"")
+}
+
+/// Log an error to the console
+pub fn console_error(s: &JsValue) {
+    console::error_1(&s);
+}
+

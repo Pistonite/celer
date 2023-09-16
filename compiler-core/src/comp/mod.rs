@@ -31,7 +31,7 @@ pub mod prop;
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
 
-#[derive(PartialEq, Debug, thiserror::Error)]
+#[derive(PartialEq, Debug, Clone, thiserror::Error)]
 pub enum CompilerError {
     /// When an array is specified as a line
     #[error("A line cannot be an array. Check the formatting of your route.")]
@@ -222,7 +222,12 @@ impl CompilerError {
             }
         }
     }
+
+    pub fn is_cancel(&self) -> bool {
+        matches!(self, Self::Wasm(WasmError::Cancel))
+    }
 }
+
 
 /// Convenience macro for validating a json value and add error
 macro_rules! validate_not_array_or_object {

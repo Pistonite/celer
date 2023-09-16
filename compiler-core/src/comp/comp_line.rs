@@ -165,7 +165,8 @@ impl Compiler {
                 };
 
                 let mut notes = vec![];
-                async_for!((i, note_value) in iter.enumerate(), {
+                // ignore error from async loop
+                let _ = async_for!((i, note_value) in iter.enumerate(), {
                     validate_not_array_or_object!(
                         &note_value,
                         errors,
@@ -189,7 +190,8 @@ impl Compiler {
                     ));
                 }
                 Value::Object(obj) => {
-                    async_for!((key, value) in obj, {
+                    // ignore error from async loop
+                    let _ = async_for!((key, value) in obj, {
                         match key.as_str() {
                             prop::DOC => {
                                 if validate_not_array_or_object!(

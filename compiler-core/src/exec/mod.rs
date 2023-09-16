@@ -12,3 +12,18 @@ mod exec_section;
 pub use exec_section::*;
 mod exec_doc;
 pub use exec_doc::*;
+
+use crate::util::WasmError;
+
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum ExecError {
+    #[error("wasm error: {0}")]
+    Wasm(#[from] WasmError),
+}
+
+pub type ExecResult<T> = Result<T, ExecError>;
+impl ExecError {
+    pub fn is_cancel(&self) -> bool {
+        matches!(self, Self::Wasm(WasmError::Cancel))
+    }
+}

@@ -3,7 +3,7 @@ use celerctypes::{ExecLine, MapIcon, MapMarker};
 use crate::comp::{CompLine, CompMovement};
 use crate::util::async_for;
 
-use super::MapSectionBuilder;
+use super::{MapSectionBuilder, ExecResult};
 
 impl CompLine {
     /// Execute the line.
@@ -14,7 +14,7 @@ impl CompLine {
         section_number: usize,
         line_number: usize,
         map_builder: &mut MapSectionBuilder,
-    ) -> ExecLine {
+    ) -> ExecResult<ExecLine> {
         if let Some(icon) = self.map_icon {
             map_builder.icons.push(MapIcon {
                 id: icon,
@@ -32,7 +32,7 @@ impl CompLine {
                 section_index: section_number,
                 color: marker.color.unwrap_or_else(|| self.line_color.clone()),
             });
-        });
+        })?;
 
         let mut map_coords = vec![];
         async_for!(movement in self.movements, {
@@ -59,12 +59,12 @@ impl CompLine {
                     map_builder.commit(false);
                 }
             }
-        });
+        })?;
 
         let split_name = self
             .split_name
             .map(|v| v.into_iter().map(|v| v.text).collect::<Vec<_>>().join(""));
-        ExecLine {
+        Ok(ExecLine {
             section: section_number,
             index: line_number,
             text: self.text,
@@ -76,7 +76,7 @@ impl CompLine {
             notes: self.notes,
             map_coords,
             split_name,
-        }
+        })
     }
 }
 
@@ -203,7 +203,7 @@ mod test {
             notes: test_notes.clone(),
             ..Default::default()
         };
-        let exec_line = line.exec(3, 4, &mut map_section).await;
+        let exec_line = line.exec(3, 4, &mut map_section).await.unwrap();
         assert_eq!(exec_line.section, 3);
         assert_eq!(exec_line.index, 4);
         assert_eq!(exec_line.text, test_text);
@@ -222,7 +222,7 @@ mod test {
             ..Default::default()
         };
         let mut map_section = Default::default();
-        let exec_line = test_line.exec(0, 0, &mut map_section).await;
+        let exec_line = test_line.exec(0, 0, &mut map_section).await.unwrap();
         let expected = vec![
             GameCoord(3.4, 5.0, 6.0),
             GameCoord(3.4, 7.0, 6.0),
@@ -378,7 +378,7 @@ mod test {
 
         let exec_line = test_line
             .exec(0, 0, &mut MapSectionBuilder::default())
-            .await;
+            .await.unwrap();
         assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
     }
 }

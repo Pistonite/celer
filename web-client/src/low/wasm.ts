@@ -5,10 +5,13 @@
 /// WebAssembly result type
 /// 
 /// The result type has a flag indicating success or failure, and a value.
-export type WasmResult<T> = [true, T] | [false, any]; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type Result<T, E> = [true, T] | [false, E]; 
+
+/// Optional type for interfacing with Rust
+export type Option<T> = T | undefined;
 
 /// no-throw Wrapper function for calling WebAssembly functions
-export const wasmCall = async <T>(fn: () => Promise<T>): Promise<WasmResult<T>> => {
+export const safeCall = async <T>(fn: () => Promise<T>): Promise<Result<T, any /* eslint-disable-line @typescript-eslint/no-explicit-any*/>> => {
     try {
         return [true, await fn()];
     } catch (e) {
@@ -16,14 +19,12 @@ export const wasmCall = async <T>(fn: () => Promise<T>): Promise<WasmResult<T>> 
     }
 };
 
-declare global {
-    interface Window {
-        __yield: () => Promise<void>;
+/// no-throw Wrapper function for calling WebAssembly functions that already return results
+export const flatSafeCall = async <T, E>(fn: () => Promise<Result<T, E>>): Promise<Result<T, any /* eslint-disable-line @typescript-eslint/no-explicit-any */>> => {
+    try {
+        return await fn();
+    } catch (e) {
+        return [false, e];
     }
 }
 
-window.__yield = () => {
-    return new Promise((resolve) => {
-        setTimeout(resolve, 0);
-    });
-}

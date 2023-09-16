@@ -5,7 +5,7 @@ use crate::util::Path;
 
 use super::{ResourceResolver, Resource, ResourcePath, create_github_resource_from};
 
-pub struct LocalResourceResolver(Path);
+pub struct LocalResourceResolver(pub Path);
 
 #[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
 #[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]

@@ -15,6 +15,8 @@ wasm-bindgen = "0.2.87"
 wasm-bindgen-futures = "0.4.37"
 js-sys = "0.3.64"
 async-trait = "0.1.73"
+log = { version = "0.4.20", features = ["std"] } 
+web-sys = { version = "0.3.64", features = ["console"] }
 
 [lib]
 name = "celercwasm"

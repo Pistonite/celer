@@ -35,6 +35,16 @@ export class CompMgr {
         this.compile();
     }
 
+    /// Similar to triggerCompile, but will cancel any pending compilation and start a new one
+    ///
+    /// Use this when it's sure that the document has changed and the old compilation result is no longer valid
+    public triggerCompileNow() {
+        this.needCompile = true;
+        // wasm api cancel
+        // wasm.wasmCall(cancelCompile)
+        this.compile();
+    }
+
     private async compile() {
         // check if another compilation is running
         // this is safe because there's no await between checking and setting (no other code can run)

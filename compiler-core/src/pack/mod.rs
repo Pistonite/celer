@@ -36,6 +36,9 @@ use crate::util::{WasmError, Path};
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum PackerError {
+    #[error("The project file (project.yaml) is missing or invalid.")]
+    InvalidProject,
+
     #[error("Invalid `use` value: {0}")]
     InvalidUse(String),
 
@@ -119,6 +122,10 @@ impl PackerError {
             msg_type: "error".to_string(),
             source: "celerc/packer".to_string(),
         });
+    }
+
+    pub fn is_cancel(&self) -> bool {
+        matches!(self, Self::Wasm(WasmError::Cancel))
     }
 }
 
