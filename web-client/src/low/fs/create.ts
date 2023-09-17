@@ -1,7 +1,8 @@
 //! Utils for creating FileSys
 
+import { allocErr, allocOk } from "low/utils";
 import {
-    FileEntiresAPIFileSys,
+    FileEntriesAPIFileSys,
     isFileEntriesAPISupported,
 } from "./FileEntriesAPIFileSys";
 import { FileSys } from "./FileSys";
@@ -21,12 +22,11 @@ export const createFsFromDataTransferItem = async (
                 // @ts-expect-error getAsFileSystemHandle is not in the TS lib
                 const handle = await item.getAsFileSystemHandle();
                 if (!handle) {
-                    return {
-                        code: FsResultCodes.Fail,
-                    };
+                    console.error("Failed to get handle from DataTransferItem");
+                    return allocErr(FsResultCodes.Fail);
                 }
                 const result = await createFsFromFileSystemHandle(handle);
-                if (result.code !== FsResultCodes.NotSupported) {
+                if (result.isErr()) {
                     return result;
                 }
             } catch (e) {
@@ -37,71 +37,53 @@ export const createFsFromDataTransferItem = async (
     console.warn(
         "Failed to create FileSys with FileSystemAccessAPI. Trying FileEntriesAPI",
     );
-    if (!isFileEntriesAPISupported()) {
-        return {
-            code: FsResultCodes.NotSupported,
-        };
-    }
     if ("webkitGetAsEntry" in item) {
-        try {
-            const entry = item.webkitGetAsEntry();
-            if (!entry) {
-                console.error("Failed to get entry from DataTransferItem");
-                return {
-                    code: FsResultCodes.Fail,
-                };
+        if (isFileEntriesAPISupported()) {
+            try {
+                const entry = item.webkitGetAsEntry();
+                if (!entry) {
+                    console.error("Failed to get entry from DataTransferItem");
+                    return allocErr(FsResultCodes.Fail);
+                }
+                const result = await createFsFromFileSystemEntry(entry);
+                if (result.isErr()) {
+                    return result;
+                }
+            } catch (e) {
+                console.error(e);
             }
-            const result = await createFsFromFileSystemEntry(entry);
-            if (result.code !== FsResultCodes.NotSupported) {
-                return result;
-            }
-        } catch (e) {
-            console.error(e);
         }
     }
     console.warn(
         "Failed to create FileSys with FileEntriesAPI. Editor is not supported",
     );
-    return {
-        code: FsResultCodes.NotSupported,
-    };
+    return allocErr(FsResultCodes.NotSupported);
 };
 
 const createFsFromFileSystemHandle = async (
     handle: FileSystemHandle,
 ): Promise<FsResult<FileSys>> => {
     if (handle.kind !== "directory") {
-        return {
-            code: FsResultCodes.IsFile,
-        };
+        return allocErr(FsResultCodes.IsFile);
     }
 
-    const rootName = handle.name;
     const fs = new FileSystemAccessAPIFileSys(
-        rootName,
+        handle.name,
         handle as FileSystemDirectoryHandle,
     );
-    return {
-        code: FsResultCodes.Ok,
-        value: fs,
-    };
+
+    return allocOk(fs);
 };
 
 const createFsFromFileSystemEntry = async (
     entry: FileSystemEntry,
 ): Promise<FsResult<FileSys>> => {
     if (entry.isFile || !entry.isDirectory) {
-        return {
-            code: FsResultCodes.IsFile,
-        };
+        return allocErr(FsResultCodes.IsFile);
     }
-    const rootName = entry.name;
-    const fs = new FileEntiresAPIFileSys(
-        rootName,
+    const fs = new FileEntriesAPIFileSys(
+        entry.name,
         entry as FileSystemDirectoryEntry,
     );
-    return {
-        code: FsResultCodes.Ok,
-        value: fs,
-    };
+    return allocOk(fs);
 };

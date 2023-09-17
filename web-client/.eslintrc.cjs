@@ -52,12 +52,7 @@ module.exports = {
         "import/no-useless-path-segments": "warn",
         "import/no-relative-parent-imports": "warn",
         "import/first": "warn",
-        "import/no-unresolved": [
-            "error",
-            {
-                ignore: ["^@test$"],
-            },
-        ],
+        "import/no-unresolved": "off", // we don't need eslint to tell us what is resolved or not
         "import/no-restricted-paths": [
             "error",
             {

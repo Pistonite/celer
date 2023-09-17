@@ -386,6 +386,16 @@ export class FileMgr {
         return fsFile.wasChangedSinceLastCompile();
     }
 
+    public async getFileContent(path: string): Promise<Uint8Array> {
+        this.ensureLockedFs("getFileContent", async () => {
+            const fsFile = this.files[path];
+            if (fsFile) {
+                fsFile.getContent
+
+            }
+        });
+    }
+
     private async attachEditor() {
         let div = document.getElementById(EditorContainerId);
         while (!div) {

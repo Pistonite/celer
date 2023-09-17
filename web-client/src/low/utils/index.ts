@@ -6,7 +6,7 @@ export * from "./Logger";
 export * from "./Debouncer";
 export * from "./Pool";
 export * from "./FileSaver";
-export * from "./safe";
+export * from "./Result";
 
 export const isInDarkMode = () =>
     !!(
