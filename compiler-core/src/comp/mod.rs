@@ -224,7 +224,11 @@ impl CompilerError {
     }
 
     pub fn is_cancel(&self) -> bool {
-        matches!(self, Self::Wasm(WasmError::Cancel))
+        #[cfg(feature = "wasm")]
+        let x = matches!(self, Self::Wasm(WasmError::Cancel));
+        #[cfg(not(feature = "wasm"))]
+        let x = false;
+        x
     }
 }
 

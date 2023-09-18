@@ -3,8 +3,9 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-use celerc::pack::{PackerResult, ResourceLoader, ValidUse, PackerError};
-use js_sys::{Function, Promise, Uint8Array};
+use celerc::{pack::{PackerResult, ResourceLoader, PackerError}, yield_now};
+use js_sys::{Function, Uint8Array};
+use log::info;
 use serde_json::Value;
 use wasm_bindgen::{JsValue, JsCast};
 
@@ -47,13 +48,15 @@ impl ResourceLoader for FileCache {
         self.loader.borrow().load_image_url(path).await
     }
     async fn load_structured(&self, path: &str) -> PackerResult<Value> {
+        yield_now!()?;  
         let mut cache = self.json_cache.borrow_mut();
         let cached_result = cache.get(path);
         if let Some(v) = cached_result {
             let is_cache_valid: Result<bool, JsValue> = async {
                 let changed = self.check_changed.borrow().call1(&JsValue::UNDEFINED, &JsValue::from(path))?;
-                let changed = changed.as_bool().unwrap_or(false);
-                Ok(changed)
+                let changed = changed.as_bool().unwrap_or(true);
+                info!("check_changed: {} => {}", path, changed);
+                Ok(!changed)
             }.await;
 
             let is_cache_valid = match is_cache_valid {
@@ -91,6 +94,7 @@ pub struct FileLoader {
 impl ResourceLoader for FileLoader {
     
     async fn load_raw(&self, path: &str) -> PackerResult<Vec<u8>> {
+        yield_now!()?;  
         let result: Result<Uint8Array, JsValue> = async {
             let promise = self.load_file.call1(&JsValue::UNDEFINED, &JsValue::from(path))?;
             let vec: Uint8Array = into_future(promise).await?.dyn_into()?;

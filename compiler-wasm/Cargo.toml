@@ -19,15 +19,12 @@ log = { version = "0.4.20", features = ["std"] }
 web-sys = { version = "0.3.64", features = ["console"] }
 
 [lib]
-name = "celercwasm"
+name = "celercwasm"
 path = "src/lib.rs"
 crate-type = ["cdylib", "lib"]
 
 [[bin]]
 name = "generate"
 path = "src/build.rs"
-
-[profile.debug]
-# turn off wasm-bindgen optimization
 
 

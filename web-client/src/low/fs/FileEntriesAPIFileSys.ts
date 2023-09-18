@@ -176,7 +176,7 @@ export class FileEntriesAPIFileSys implements FileSys {
         }
     }
 
-    public async writeFile( _path: FsPath, _content: string,): Promise<FsResult<void>> {
+    public async writeFile( _path: FsPath, _content: string | Uint8Array): Promise<FsResult<void>> {
         // Entries API does not support writing
         return allocErr(FsResultCodes.NotSupported);
     }

@@ -1,8 +1,8 @@
 import * as monaco from "monaco-editor";
 
 import { AppDispatcher, viewActions } from "core/store";
-import { FileSys, FsFile, FsPath, FsResultCode, FsResultCodes } from "low/fs";
-import { sleep } from "low/utils";
+import { FileSys, FsFile, FsPath, FsResult, FsResultCodes } from "low/fs";
+import { allocErr, allocOk, sleep } from "low/utils";
 
 import { EditorContainerId, EditorLog, toFsPath } from "./utils";
 
@@ -23,10 +23,10 @@ export class FileMgr {
     /// Opened files
     private files: Record<string, FsFile> = {};
 
-    /// Opened editor
     private currentFile: FsFile | undefined;
     private monacoDom: HTMLDivElement;
     private monacoEditor: IStandaloneCodeEditor;
+    /// If the editor is open. Can be false even if currentFile is not undefined, if it's not a text file
     private isEditorOpen = false;
 
     private dispatcher: AppDispatcher;
@@ -96,39 +96,39 @@ export class FileMgr {
             }
             const fsPath = toFsPath(path);
             const result = await this.fs.listDir(fsPath);
-            if (result.code !== FsResultCodes.Ok) {
-                EditorLog.error(`listDir failed with code ${result.code}`);
+            if (result.isErr()) {
+                EditorLog.error(`listDir failed with code ${result.inner()}`);
                 return [];
             }
-            return result.value;
+            return result.inner();
         });
     }
 
-    public async openFile(path: FsPath): Promise<FsResultCode> {
+    public async openFile(path: FsPath): Promise<FsResult<void>> {
         const idPath = path.path;
         EditorLog.info(`opening ${idPath}`);
         return await this.lockedFsScope("openFile", async () => {
             if (!this.fs) {
                 EditorLog.error("openFile failed: fs is not initialized");
-                return FsResultCodes.Fail;
+                return allocErr(FsResultCodes.Fail);
             }
             let fsFile = this.files[idPath];
             if (!fsFile) {
                 fsFile = new FsFile(this.fs, path);
                 this.files[idPath] = fsFile;
             }
-            const content = await fsFile.getContent();
-            if (content.code !== FsResultCodes.Ok) {
-                EditorLog.error(`openFile failed with code ${content.code}`);
+            const result = await fsFile.getText();
+            if (result.isErr()) {
+                EditorLog.error(`openFile failed with code ${result.inner()}`);
                 await this.updateEditor(fsFile, idPath, undefined);
             } else {
-                await this.updateEditor(fsFile, idPath, content.value);
+                await this.updateEditor(fsFile, idPath, result.inner());
             }
-            return content.code;
+            return result.makeOk(undefined);
         });
     }
 
-    public async loadChangesFromFs(): Promise<FsResultCode> {
+    public async loadChangesFromFs(): Promise<FsResult<void>> {
         EditorLog.info("loading changes from file system...");
         this.dispatcher.dispatch(viewActions.setAutoLoadActive(true));
         const handle = window.setTimeout(() => {
@@ -147,11 +147,11 @@ export class FileMgr {
                         id,
                         fsFile,
                     );
-                    if (result !== FsResultCodes.Ok) {
+                    if (result.isErr()) {
                         success = false;
                     }
-                    // sleep some time so the UI doesn't freeze
-                    await sleep(50);
+                    // yield to UI thread
+                    await sleep(0);
                 }
                 return success;
             },
@@ -159,14 +159,13 @@ export class FileMgr {
         window.clearTimeout(handle);
         this.dispatcher.dispatch(viewActions.endFileSysLoad(success));
         EditorLog.info("changes loaded from file system");
-        return success ? FsResultCodes.Ok : FsResultCodes.Fail;
+        return success ? allocOk() : allocErr(FsResultCodes.Fail);
     }
 
     private async loadChangesFromFsForFsFile(
         idPath: string,
         fsFile: FsFile,
-    ): Promise<FsResultCode> {
-        EditorLog.info(`syncing ${idPath}...`);
+    ): Promise<FsResult<void>> {
         return await this.ensureLockedFs(
             "loadChangesFromFsForFsFile",
             async () => {
@@ -175,18 +174,19 @@ export class FileMgr {
 
                 let result = await fsFile.loadIfNotDirty();
 
-                if (result === FsResultCodes.Ok) {
+                if (result.isOk()) {
                     if (isCurrentFile) {
-                        const contentResult = await fsFile.getContent();
-                        result = contentResult.code;
-                        if (contentResult.code === FsResultCodes.Ok) {
-                            content = contentResult.value;
+                        const contentResult = await fsFile.getText();
+                        if (contentResult.isOk()) {
+                            content = contentResult.inner();
+                        } else {
+                            result = contentResult;
                         }
                     }
                 }
-                if (result !== FsResultCodes.Ok) {
+                if (result.isErr()) {
                     EditorLog.error(`sync failed with code ${result}`);
-                    if (!fsFile.isDirty()) {
+                    if (!fsFile.isNewerThanFs()) {
                         EditorLog.info(`closing ${idPath}`);
                         if (isCurrentFile) {
                             await this.updateEditor(
@@ -215,7 +215,7 @@ export class FileMgr {
             await this.syncEditorToCurrentFile();
             for (const id in this.files) {
                 const fsFile = this.files[id];
-                if (fsFile.isDirty()) {
+                if (fsFile.isNewerThanFs()) {
                     return true;
                 }
             }
@@ -232,16 +232,16 @@ export class FileMgr {
         }
         for (const id in this.files) {
             const fsFile = this.files[id];
-            if (fsFile.isDirty()) {
+            if (fsFile.isNewerThanFs()) {
                 return true;
             }
         }
         return false;
     }
 
-    public async saveChangesToFs(): Promise<FsResultCode> {
+    public async saveChangesToFs(): Promise<FsResult<void>> {
         if (!this.fs?.isWritable()) {
-            return FsResultCodes.NotSupported;
+            return allocErr(FsResultCodes.NotSupported);
         }
         EditorLog.info("saving changes to file system...");
         const handle = window.setTimeout(() => {
@@ -260,11 +260,11 @@ export class FileMgr {
                         id,
                         fsFile,
                     );
-                    if (result !== FsResultCodes.Ok) {
+                    if (result.isErr()) {
                         success = false;
                     }
-                    // sleep some time so the UI doesn't freeze
-                    await sleep(50);
+                    // yield to UI thread
+                    await sleep(0);
                 }
                 return success;
             },
@@ -272,20 +272,19 @@ export class FileMgr {
         window.clearTimeout(handle);
         this.dispatcher.dispatch(viewActions.endFileSysSave(success));
         EditorLog.info("changes saved to file system");
-        return success ? FsResultCodes.Ok : FsResultCodes.Fail;
+        return success ? allocOk() : allocErr(FsResultCodes.Fail);
     }
 
     private async saveChangesToFsForFsFile(
         idPath: string,
         fsFile: FsFile,
-    ): Promise<FsResultCode> {
-        EditorLog.info(`saving ${idPath}...`);
+    ): Promise<FsResult<void>> {
         return await this.ensureLockedFs(
             "saveChangesToFsForFsFile",
             async () => {
-                const result = await fsFile.writeIfDirty();
-                if (result !== FsResultCodes.Ok) {
-                    EditorLog.error(`save failed with code ${result}`);
+                const result = await fsFile.writeIfNewer();
+                if (result.isErr()) {
+                    EditorLog.error(`save ${idPath} failed with code ${result.inner()}`);
                 }
                 return result;
             },
@@ -355,7 +354,7 @@ export class FileMgr {
         const ids = Object.keys(this.files);
         ids.sort();
         ids.forEach((id) => {
-            if (this.files[id].isDirty()) {
+            if (this.files[id].isNewerThanFs()) {
                 unsavedFiles.push(id);
             }
         });
@@ -386,14 +385,52 @@ export class FileMgr {
         return fsFile.wasChangedSinceLastCompile();
     }
 
-    public async getFileContent(path: string): Promise<Uint8Array> {
-        this.ensureLockedFs("getFileContent", async () => {
-            const fsFile = this.files[path];
-            if (fsFile) {
-                fsFile.getContent
-
+    public async getFileAsBytes(path: string): Promise<Uint8Array> {
+        return await this.ensureLockedFs("getFileAsBytes", async () => {
+            if (!this.fs) {
+                throw new Error("fs is not initialized");
             }
+            let fsFile = this.files[path];
+            if (!fsFile) {
+                const fsPath = toFsPath(path.split("/"));
+                fsFile = new FsFile(this.fs, fsPath);
+                this.files[fsPath.path] = fsFile;
+            }
+            const result = await fsFile.getBytes(true /* clearChangedSinceLastCompile */);
+            if (result.isErr()) {
+                throw new Error(`getFileAsBytes failed with code ${result.inner()}`);
+            }
+            return result.inner();
         });
+    }
+
+    public async needsRecompile(): Promise<boolean> {
+        return await this.ensureLockedFs("needsRecompile", async () => {
+            if (!this.fs) {
+                return false;
+            }
+            for (const id in this.files) {
+                const fsFile = this.files[id];
+                if (fsFile.wasChangedSinceLastCompile()) {
+                    return true;
+                }
+                await sleep(0);
+            }
+            return false;
+        });
+    }
+
+    public wasFileChangedSinceLastCompile(path: string): boolean {
+        if (!this.fs) {
+            return false;
+        }
+        let fsFile = this.files[path];
+        if (!fsFile) {
+            const fsPath = toFsPath(path.split("/"));
+            fsFile = new FsFile(this.fs, fsPath);
+            this.files[fsPath.path] = fsFile;
+        }
+        return fsFile.wasChangedSinceLastCompile();
     }
 
     private async attachEditor() {

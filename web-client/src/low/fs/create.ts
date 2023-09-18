@@ -25,10 +25,7 @@ export const createFsFromDataTransferItem = async (
                     console.error("Failed to get handle from DataTransferItem");
                     return allocErr(FsResultCodes.Fail);
                 }
-                const result = await createFsFromFileSystemHandle(handle);
-                if (result.isErr()) {
-                    return result;
-                }
+                return await createFsFromFileSystemHandle(handle);
             } catch (e) {
                 console.error(e);
             }
@@ -45,10 +42,7 @@ export const createFsFromDataTransferItem = async (
                     console.error("Failed to get entry from DataTransferItem");
                     return allocErr(FsResultCodes.Fail);
                 }
-                const result = await createFsFromFileSystemEntry(entry);
-                if (result.isErr()) {
-                    return result;
-                }
+                return await createFsFromFileSystemEntry(entry);
             } catch (e) {
                 console.error(e);
             }

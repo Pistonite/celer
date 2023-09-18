@@ -12,8 +12,6 @@ use crate::pack::{
 };
 use crate::plug::run_plugins;
 
-use crate::util::cancel;
-
 /// Output of the compiler API
 #[derive(Debug, Clone)]
 pub enum CompilerOutput {
@@ -64,6 +62,9 @@ pub struct Setting {
 ///
 /// The root resource should contain the project.yaml file when resolving "./project.yaml"
 pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOutput {
+    #[cfg(feature = "wasm")]
+    crate::util::set_cancelled(false);
+
     info!("compiling document...");
     let mut metrics = CompilerMetrics::new();
     let (comp_doc, comp_meta) = match pack_phase(root_resource, setting).await {
@@ -149,6 +150,6 @@ async fn comp_phase(packed_project: PackedProject, setting: &Setting) -> Result<
 #[cfg(feature = "wasm")]
 #[inline]
 pub fn cancel_current_compilation() {
-    cancel();
+    crate::util::set_cancelled(true);
     info!("cancel requested");
 }

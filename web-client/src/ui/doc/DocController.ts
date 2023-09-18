@@ -85,9 +85,9 @@ export class DocController {
                 if (newDocSerial !== oldDocSerial) {
                     // If document changed, reset the view
                     // TODO: can load from local storage to pick up from where you left
-                    store.dispatch(
-                        viewActions.setDocLocation({ section: 0, line: 0 }),
-                    );
+                    // store.dispatch(
+                    //     viewActions.setDocLocation({ section: 0, line: 0 }),
+                    // );
                     // also update the current line and note positions, and trigger a scroll update
                     // to layout the initial view
                     setTimeout(() => {

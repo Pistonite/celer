@@ -8,9 +8,10 @@ use celerc::util::Path;
 use celerctypes::ExecDoc;
 use js_sys::Function;
 use log::{info, LevelFilter};
+use wasm_bindgen::JsValue;
 
 use crate::resource::FileCache;
-use crate::logger::Logger;
+use crate::logger::{Logger, self};
 
 const LOGGER: Logger = Logger;
 
@@ -27,7 +28,10 @@ thread_local! {
 }
 
 /// Initialize
-pub fn init(load_file: Function, check_changed: Function) {
+pub fn init(logger: JsValue, load_file: Function, check_changed: Function) {
+    if let Err(e) = logger::bind_logger(logger) {
+        web_sys::console::error_1(&e);
+    }
     match log::set_logger(&LOGGER) {
         Ok(_) => {
             log::set_max_level(LevelFilter::Info);
@@ -76,3 +80,4 @@ pub async fn compile_document() -> Option<ExecDoc> {
         }
     }
 }
+

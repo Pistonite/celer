@@ -27,19 +27,20 @@ export const resolveTag = (
     tagMap: Record<string, DocTag>,
     docRichText: DocRichText,
 ): RichText => {
-    const { tag, text } = docRichText;
+    const { tag, text, link } = docRichText;
     if (!tag) {
-        return { text };
+        return { text, link };
     }
 
     const tagDef = tagMap[tag];
     if (!tagDef) {
         // Silently ignore unknown tag because compiler will add a warning (TODO: make sure you actually you taht)
-        return { text };
+        return { text, link };
     }
     return {
         text,
         tag: tagDef,
+        link,
     };
 };
 

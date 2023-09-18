@@ -25,7 +25,7 @@ pub trait ResourceLoader {
         let bytes = self.load_raw(path).await?;
         match serde_yaml::from_slice(&bytes) {
             Ok(v) => Ok(v),
-            Err(_) => Err(PackerError::InvalidFormat),
+            Err(e) => Err(PackerError::InvalidFormat(path.to_string(), e.to_string())),
         }
     }
 
@@ -33,7 +33,7 @@ pub trait ResourceLoader {
         let bytes = self.load_raw(path).await?;
         match serde_json::from_slice(&bytes) {
             Ok(v) => Ok(v),
-            Err(_) => Err(PackerError::InvalidFormat),
+            Err(e) => Err(PackerError::InvalidFormat(path.to_string(), e.to_string())),
         }
     }
 

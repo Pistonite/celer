@@ -20,10 +20,10 @@ pub enum WasmError {
     Cancel,
 }
 
-pub fn cancel() {
+pub fn set_cancelled(value: bool) {
     CANCELLED.with(|cancelled| {
         unsafe {
-            *cancelled.get() = true;
+            *cancelled.get() = value;
         }
     });
 }
@@ -73,6 +73,7 @@ macro_rules! async_for {
 }
 pub(crate) use async_for;
 
+#[macro_export]
 macro_rules! yield_now {
     () => {
         $crate::util::async_macro_wasm::set_timeout_yield().await

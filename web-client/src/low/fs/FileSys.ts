@@ -51,5 +51,5 @@ export interface FileSys {
     ///
     /// Returns Fail if the underlying file system operation fails.
     /// Returns NotSupported if the browser does not support this
-    writeFile: (path: FsPath, content: string) => Promise<FsResult<void>>;
+    writeFile: (path: FsPath, content: string | Uint8Array) => Promise<FsResult<void>>;
 }

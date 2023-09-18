@@ -10,6 +10,7 @@ import { useActions } from "low/store";
 
 import { Rich } from "./Rich";
 import { DocLineContainerClass } from "./utils";
+import { Poor } from "./Poor";
 
 /// One line in the document
 type DocLineProps = {
@@ -124,9 +125,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                             `docline-diagnostic-${type}`,
                         )}
                     >
-                        <Text size={300} font="monospace">
-                            {msg}
-                        </Text>
+                        <Poor content={msg} textProps={{ size: 300, font: "monospace" }} />
                     </div>
                 </div>
             ))}

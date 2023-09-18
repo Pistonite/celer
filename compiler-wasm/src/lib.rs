@@ -13,7 +13,7 @@ mod logger;
 // WASM output types
 import!{
     import { ExecDoc } from "low/compiler.g";
-    import { Option } from "low/wasm";
+    import { Option } from "low/utils";
 }
 
 // WASM output type implementation
@@ -21,14 +21,20 @@ into!{ExecDoc}
 
 ffi!(
     /// Initialize
-    pub async fn initCompiler(load_file: Function, check_changed: Function) -> void {
-        api::init(load_file, check_changed);
+    pub async fn initCompiler(logger: JsValue, load_file: Function, check_changed: Function) -> void {
+        api::init(logger, load_file, check_changed);
         JsValue::UNDEFINED
     }
 
     /// Compile a document from web editor
     pub async fn compileDocument() -> Option<ExecDoc> {
         api::compile_document().await
+    }
+
+    /// Request current compilation be cancelled
+    pub async fn requestCancel() -> void {
+        celerc::api::cancel_current_compilation();
+        JsValue::UNDEFINED
     }
 );
 

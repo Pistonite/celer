@@ -32,7 +32,7 @@ impl ResourceResolver for GitHubResourceResolver {
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
         match target {
             ValidUse::Relative(path) => {
-                let new_path = self.path.join(&path).ok_or_else(||PackerError::InvalidPath(path.clone()))?;
+                let new_path = self.path.join(&format!("../{path}")).ok_or_else(||PackerError::InvalidPath(path.clone()))?;
                 if self.path == new_path {
                     return Ok(source.clone());
                 }

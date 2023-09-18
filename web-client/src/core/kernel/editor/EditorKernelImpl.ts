@@ -8,7 +8,7 @@ import {
     viewActions,
     ViewState,
 } from "core/store";
-import { FileSys, FsResultCode } from "low/fs";
+import { FileSys, FsResult } from "low/fs";
 import { isInDarkMode } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
@@ -35,6 +35,7 @@ export class EditorKernelImpl implements EditorKernel {
         monacoDom.id = "monaco-editor";
         const monacoEditor = monaco.editor.create(monacoDom, {
             theme: isInDarkMode() ? "vs-dark" : "vs",
+            tabSize: 2,
         });
         monacoEditor.onKeyDown(() => {
             this.idleMgr.notifyActivity();
@@ -77,13 +78,17 @@ export class EditorKernelImpl implements EditorKernel {
     }
 
     public async init(): Promise<void> {
-        await this.compMgr.init(async () => {throw new Error("todo")}, () => false);
+        await this.compMgr.init(
+            this.fileMgr.getFileAsBytes.bind(this.fileMgr),
+            this.fileMgr.wasFileChangedSinceLastCompile.bind(this.fileMgr),
+        );
     }
 
     /// Reset the editor with a new file system. Unsaved changes will be lost
     public async reset(fs?: FileSys): Promise<void> {
         await this.idleMgr.pauseIdleScope(async () => {
             await this.fileMgr.reset(fs);
+            this.compile();
         });
     }
 
@@ -108,7 +113,7 @@ export class EditorKernelImpl implements EditorKernel {
     public async openFile(
         path: string[],
         isUserAction: boolean,
-    ): Promise<FsResultCode> {
+    ): Promise<FsResult<void>> {
         const fsPath = toFsPath(path);
         const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.openFile(fsPath);
@@ -131,7 +136,7 @@ export class EditorKernelImpl implements EditorKernel {
 
     public async loadChangesFromFs(
         isUserAction: boolean,
-    ): Promise<FsResultCode> {
+    ): Promise<FsResult<void>> {
         if (isUserAction) {
             this.idleMgr.notifyActivity();
         }
@@ -140,7 +145,7 @@ export class EditorKernelImpl implements EditorKernel {
         });
     }
 
-    public async saveChangesToFs(isUserAction: boolean): Promise<FsResultCode> {
+    public async saveChangesToFs(isUserAction: boolean): Promise<FsResult<void>> {
         if (isUserAction) {
             this.idleMgr.notifyActivity();
         }
@@ -150,6 +155,9 @@ export class EditorKernelImpl implements EditorKernel {
     }
 
     public compile(): void {
+        if (!this.fileMgr.isFsLoaded()) {
+            return;
+        }
         this.compMgr.triggerCompile();
     }
 
@@ -210,6 +218,8 @@ export class EditorKernelImpl implements EditorKernel {
                     await this.loadChangesFromFs(false /* isUserAction */);
                     // make sure file system view is rerendered in case there are directory updates
                     shouldRerenderFs = true;
+                    // trigger a compile after reloading fs
+                    this.compile();
                 }
                 if (deactivateAutoLoadAfterMinutes > 0) {
                     if (duration > deactivateAutoLoadAfterMinutes * 60 * 1000) {
@@ -236,5 +246,9 @@ export class EditorKernelImpl implements EditorKernel {
 
         // do this last so we can get the latest save status after auto-save
         this.fileMgr.updateDirtyFileList(unsavedFiles);
+
+        if (await this.fileMgr.needsRecompile()) {
+            this.compile();
+        }
     }
 }

@@ -39,7 +39,7 @@ pub enum PackerError {
     #[error("The project file (project.yaml) is missing or invalid.")]
     InvalidProject,
 
-    #[error("Invalid `use` value: {0}")]
+    #[error("Invalid `use` value: {0}. If you are specifying a relative path, make sure to start with ./ or ../")]
     InvalidUse(String),
 
     #[error("Invalid path: {0}")]
@@ -63,8 +63,8 @@ pub enum PackerError {
     #[error("Cannot load url: {0}")]
     LoadUrl(String),
 
-    #[error("Error when parsing structured data")]
-    InvalidFormat,
+    #[error("Error when parsing structured data in file {0}: {1}")]
+    InvalidFormat(String, String),
 
     #[error("")]
     InvalidIcon,
@@ -125,7 +125,11 @@ impl PackerError {
     }
 
     pub fn is_cancel(&self) -> bool {
-        matches!(self, Self::Wasm(WasmError::Cancel))
+        #[cfg(feature = "wasm")]
+        let x = matches!(self, Self::Wasm(WasmError::Cancel));
+        #[cfg(not(feature = "wasm"))]
+        let x = false;
+        x
     }
 }
 

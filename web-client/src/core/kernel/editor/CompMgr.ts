@@ -1,7 +1,9 @@
 
-import { AppDispatcher, viewActions } from "core/store";
-import { sleep } from "low/utils";
-import { initCompiler } from "low/celerc";
+import { AppDispatcher, documentActions, viewActions } from "core/store";
+import { Debouncer, Logger, sleep, wrapAsync } from "low/utils";
+import { compileDocument, initCompiler, requestCancel } from "low/celerc";
+
+const CompilerLog = new Logger("com");
 
 export type RequestFileFunction = (path: string) => Promise<Uint8Array>;
 export type CheckChangedFunction = (path: string) => boolean;
@@ -12,6 +14,7 @@ export type CheckChangedFunction = (path: string) => boolean;
 /// This ensures compilation is done for the latest version of the document.
 /// and no 2 compilations are running at the same time.
 export class CompMgr {
+    private compilerDebouncer: Debouncer;
     private dispatcher: AppDispatcher;
 
     private needCompile: boolean;
@@ -19,13 +22,14 @@ export class CompMgr {
 
     constructor(dispatcher: AppDispatcher) {
         this.dispatcher = dispatcher;
+        this.compilerDebouncer = new Debouncer(100, this.compile.bind(this));
         this.needCompile = false;
         this.compiling = false;
 
     }
 
     public async init(loadFile: RequestFileFunction, checkChanged: CheckChangedFunction) {
-        initCompiler(loadFile, checkChanged);
+        initCompiler(CompilerLog, loadFile, checkChanged);
     }
 
     /// Trigger compilation of the document
@@ -35,45 +39,50 @@ export class CompMgr {
     ///
     /// After compilation is done, the document will automatically be updated
     public triggerCompile() {
-        if (this.needCompile) {
-            return;
-        }
         this.needCompile = true;
-        this.compile();
+        this.compilerDebouncer.dispatch();
     }
 
     /// Cancel the current compilation if it is running (do nothing if not)
-    public cancel() {
-        // wasm api cancel
-        // wasm.wasmCall(cancelCompile)
-        console.log("test compile cancel");
+    public async cancel() {
+        const result = await wrapAsync(requestCancel);
+        if (result.isErr()) {
+            CompilerLog.error("failed to cancel compilation");
+        }
     }
 
     private async compile() {
         // check if another compilation is running
         // this is safe because there's no await between checking and setting (no other code can run)
         if (this.compiling) {
+            CompilerLog.warn("compilation already in progress, skipping");
             return;
         }
-        console.log("test compile function start");
         const handle = window.setTimeout(() => {
             this.dispatcher.dispatch(viewActions.setCompileInProgress(true));
         }, 200);
         this.compiling = true;
         while (this.needCompile) {
-            console.log("test compile start");
             // turn off the flag before compiling.
             // if anyone calls triggerCompile during compilation, it will be turned on again
             // to trigger another compile
             this.needCompile = false;
-            await sleep(5000);
-            console.log("test compile end");
+            CompilerLog.info("invoking compiler...");
+            const result = await wrapAsync(compileDocument);
+            if (result.isErr()) {
+                console.error(result.inner());
+            } else {
+                const doc = result.inner();
+                if (doc !== undefined) {
+                    this.dispatcher.dispatch(documentActions.setDocument(doc));
+                }
+            }
         }
+        CompilerLog.info("finished compiling");
 
         window.clearTimeout(handle);
         this.dispatcher.dispatch(viewActions.setCompileInProgress(false));
         this.compiling = false;
-        console.log("function end");
         //wasm api should be something like:
         //compile(requestfunction) -> Promise<result>
     }

@@ -17,6 +17,10 @@
     max-width: 380px;
 }
 
+#doc-end {
+    height: 200px;
+}
+
 #doc-side {
     /* need this because note blocks have position: absolute */
     position: relative;

@@ -17,14 +17,18 @@ impl ResourceResolver for LocalResourceResolver {
                 if self.0 == new_path {
                     return Ok(source.clone());
                 }
-                Ok(source.create(ResourcePath::FsPath(new_path.clone()), Arc::new(Self(new_path))))
+                let new_parent = new_path.parent().ok_or_else(||PackerError::InvalidPath(path.clone()))?;
+                Ok(source.create(
+                    ResourcePath::FsPath(new_path), 
+                    Arc::new(Self(new_parent))))
             }
             ValidUse::Absolute(path) => {
                 let new_path = Path::try_from(&path).ok_or_else(||PackerError::InvalidPath(path.clone()))?;
                 if self.0 == new_path {
                     return Ok(source.clone());
                 }
-                Ok(source.create(ResourcePath::FsPath(new_path.clone()), Arc::new(Self(new_path))))
+                let new_parent = new_path.parent().ok_or_else(||PackerError::InvalidPath(path.clone()))?;
+                Ok(source.create(ResourcePath::FsPath(new_path), Arc::new(Self(new_parent))))
             }
             ValidUse::Remote { owner, repo, path, reference } => {
                 create_github_resource_from(source, owner, repo, path, reference.as_deref()).await
