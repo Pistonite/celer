@@ -375,15 +375,15 @@ export class FileMgr {
         this.dispatcher.dispatch(viewActions.setUnsavedFiles(unsavedFiles));
     }
 
-    public checkIfFileChangedSinceLastCompiled(path: string): boolean {
-        const fsFile = this.files[path];
-        if (!fsFile) {
-            // if file is not loaded in the editor then
-            // return true so it can be loaded
-            return true;
-        }
-        return fsFile.wasChangedSinceLastCompile();
-    }
+    // public checkIfFileChangedSinceLastCompiled(path: string): boolean {
+    //     const fsFile = this.files[path];
+    //     if (!fsFile) {
+    //         // if file is not loaded in the editor then
+    //         // return true so it can be loaded
+    //         return true;
+    //     }
+    //     return fsFile.wasChangedSinceLastCompile();
+    // }
 
     public async getFileAsBytes(path: string): Promise<Uint8Array> {
         return await this.ensureLockedFs("getFileAsBytes", async () => {
@@ -396,7 +396,7 @@ export class FileMgr {
                 fsFile = new FsFile(this.fs, fsPath);
                 this.files[fsPath.path] = fsFile;
             }
-            const result = await fsFile.getBytes(true /* clearChangedSinceLastCompile */);
+            const result = await fsFile.getBytes();
             if (result.isErr()) {
                 throw new Error(`getFileAsBytes failed with code ${result.inner()}`);
             }
@@ -404,34 +404,34 @@ export class FileMgr {
         });
     }
 
-    public async needsRecompile(): Promise<boolean> {
-        return await this.ensureLockedFs("needsRecompile", async () => {
-            if (!this.fs) {
-                return false;
-            }
-            for (const id in this.files) {
-                const fsFile = this.files[id];
-                if (fsFile.wasChangedSinceLastCompile()) {
-                    return true;
-                }
-                await sleep(0);
-            }
-            return false;
-        });
-    }
-
-    public wasFileChangedSinceLastCompile(path: string): boolean {
-        if (!this.fs) {
-            return false;
-        }
-        let fsFile = this.files[path];
-        if (!fsFile) {
-            const fsPath = toFsPath(path.split("/"));
-            fsFile = new FsFile(this.fs, fsPath);
-            this.files[fsPath.path] = fsFile;
-        }
-        return fsFile.wasChangedSinceLastCompile();
-    }
+    // public async needsRecompile(): Promise<boolean> {
+    //     return await this.ensureLockedFs("needsRecompile", async () => {
+    //         if (!this.fs) {
+    //             return false;
+    //         }
+    //         for (const id in this.files) {
+    //             const fsFile = this.files[id];
+    //             if (fsFile.wasChangedSinceLastCompile()) {
+    //                 return true;
+    //             }
+    //             await sleep(0);
+    //         }
+    //         return false;
+    //     });
+    // }
+    //
+    // public wasFileChangedSinceLastCompile(path: string): boolean {
+    //     if (!this.fs) {
+    //         return false;
+    //     }
+    //     let fsFile = this.files[path];
+    //     if (!fsFile) {
+    //         const fsPath = toFsPath(path.split("/"));
+    //         fsFile = new FsFile(this.fs, fsPath);
+    //         this.files[fsPath.path] = fsFile;
+    //     }
+    //     return fsFile.wasChangedSinceLastCompile();
+    // }
 
     private async attachEditor() {
         let div = document.getElementById(EditorContainerId);

@@ -1,12 +1,11 @@
 
 import { AppDispatcher, documentActions, viewActions } from "core/store";
-import { Debouncer, Logger, sleep, wrapAsync } from "low/utils";
+import { Debouncer, Logger, wrapAsync } from "low/utils";
 import { compileDocument, initCompiler, requestCancel } from "low/celerc";
 
 const CompilerLog = new Logger("com");
 
 export type RequestFileFunction = (path: string) => Promise<Uint8Array>;
-export type CheckChangedFunction = (path: string) => boolean;
 
 /// The compilation manager
 ///
@@ -28,8 +27,8 @@ export class CompMgr {
 
     }
 
-    public async init(loadFile: RequestFileFunction, checkChanged: CheckChangedFunction) {
-        initCompiler(CompilerLog, loadFile, checkChanged);
+    public async init(loadFile: RequestFileFunction) {
+        initCompiler(CompilerLog, loadFile);
     }
 
     /// Trigger compilation of the document

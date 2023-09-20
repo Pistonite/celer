@@ -68,6 +68,13 @@ export const setUnsavedFiles: ReducerDeclWithPayload<
     state.unsavedFiles = unsavedFiles;
 });
 
+export const addUnsavedFile: ReducerDeclWithPayload<
+    EditorViewState,
+    string
+> = withPayload((state: EditorViewState, unsavedFile: string) => {
+    state.unsavedFiles.push(unsavedFile);
+});
+
 export const setShowFileTree: ReducerDeclWithPayload<EditorViewState, boolean> =
     withPayload((state: EditorViewState, showFileTree: boolean) => {
         state.showFileTree = showFileTree;

@@ -10,13 +10,13 @@ use js_sys::Function;
 use log::{info, LevelFilter};
 use wasm_bindgen::JsValue;
 
-use crate::resource::FileCache;
+use crate::resource::FileLoader;
 use crate::logger::{Logger, self};
 
 const LOGGER: Logger = Logger;
 
 thread_local! {
-    static FILE_CACHE: Arc<FileCache> = Arc::new(FileCache::new());
+    static FILE_LOADER: Arc<FileLoader> = Arc::new(FileLoader::new());
 }
 
 thread_local! {
@@ -28,7 +28,7 @@ thread_local! {
 }
 
 /// Initialize
-pub fn init(logger: JsValue, load_file: Function, check_changed: Function) {
+pub fn init(logger: JsValue, load_file: Function) {
     if let Err(e) = logger::bind_logger(logger) {
         web_sys::console::error_1(&e);
     }
@@ -41,8 +41,8 @@ pub fn init(logger: JsValue, load_file: Function, check_changed: Function) {
         }
     }
     info!("initializing compiler...");
-    FILE_CACHE.with(|cache| {
-        cache.init(load_file, check_changed);
+    FILE_LOADER.with(|loader| {
+        loader.init(load_file);
     });
 
     info!("compiler initialized");
@@ -53,7 +53,7 @@ pub fn init(logger: JsValue, load_file: Function, check_changed: Function) {
 /// Return None if the compilation was interrupted
 pub async fn compile_document() -> Option<ExecDoc> {
     // create root resource
-    let fs_loader = FILE_CACHE.with(|x| {
+    let fs_loader = FILE_LOADER.with(|x| {
         x.clone()
     });
     let url_loader = URL_LOADER.with(|x| {

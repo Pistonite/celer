@@ -61,11 +61,9 @@ export class Kernel {
             this.store = store;
         }
 
-        this.initStage();
+        this.initStage(store);
         this.initUi(store);
 
-        // this.test(store);
-        // window.onbeforeunload = () => "key";
         window.addEventListener("beforeunload", (e) => {
             if (this.editor && this.editor.hasUnsavedChangesSync()) {
                 e.preventDefault();
@@ -73,33 +71,22 @@ export class Kernel {
                     "There are unsaved changes in the editor which will be lost. Are you sure you want to leave?");
             }
         });
-
-        // this.showAlert("Alert", "This is a test alert", "Ok", "Cancel");
     }
 
     /// Initialize stage info based on window.location
-    private initStage() {
+    private async initStage(store: AppStore) {
         this.log.info("initializing stage...");
         const path = window.location.pathname;
         if (path === "/edit") {
-            this.store?.dispatch(viewActions.setStageMode("edit"));
+            const { initEditor } = await import("./editor");
+            const editor = initEditor(store);
+            await editor.init();
+            this.editor = editor;
+            store.dispatch(viewActions.setStageMode("edit"));
         } else {
-            this.store?.dispatch(viewActions.setStageMode("view"));
+            store.dispatch(viewActions.setStageMode("view"));
         }
     }
-
-    // private async test(store: AppStore) {
-    //     const wasm = await import("low/celerc");
-    //     const testFn = async (test: any) => {
-    //         const result = await wasm.tryCompileFromCompDoc(test);
-    //         store.dispatch(documentActions.setDocument(result));
-    //     };
-    //     (window as any).testFn = testFn;
-    //     console.log("window api ready");
-    //
-    //     const testr = await wasmCall(() => wasm.testSomething("hello world"));
-    //     console.log(testr);
-    // }
 
     /// Initialize the store
     private initStore(): AppStore {
@@ -189,11 +176,7 @@ export class Kernel {
     ): Promise<boolean> {
         return new Promise((resolve) => {
             this.alertCallback = (ok) => {
-                const store = this.store;
-                // if there's no store then we don't care
-                if (store) {
-                    store.dispatch(viewActions.clearAlert());
-                }
+                this.store?.dispatch(viewActions.clearAlert());
                 resolve(ok);
                 this.alertCallback = undefined;
             };
@@ -218,17 +201,6 @@ export class Kernel {
         if (this.alertCallback) {
             this.alertCallback(ok);
         }
-    }
-
-    public async initEditor() {
-        const { initEditor } = await import("./editor");
-        const store = this.store;
-        if (!store) {
-            throw new Error("store not initialized");
-        }
-        const editor = initEditor(store);
-        await editor.init();
-        this.editor = editor;
     }
 
     public getEditor(): EditorKernel | null {

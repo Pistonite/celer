@@ -21,8 +21,8 @@ into!{ExecDoc}
 
 ffi!(
     /// Initialize
-    pub async fn initCompiler(logger: JsValue, load_file: Function, check_changed: Function) -> void {
-        api::init(logger, load_file, check_changed);
+    pub async fn initCompiler(logger: JsValue, load_file: Function) -> void {
+        api::init(logger, load_file);
         JsValue::UNDEFINED
     }
 

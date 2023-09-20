@@ -26,12 +26,6 @@ export class FsFile {
     /// The last modified time of the file on fs when last checked
     private lastModified: number | undefined;
 
-    /// A flag for the compiler to mark if the file is changed
-    /// since the last compile
-    ///
-    /// If the flag is unchanged, the compiler can use the cached result to skip parsing
-    private changedSinceLastCompile: boolean;
-
     constructor(fs: FileSys, path: FsPath) {
         this.fs = fs;
         this.path = path;
@@ -41,7 +35,6 @@ export class FsFile {
         this.content = undefined;
         this.isContentNewer = false;
         this.lastModified = undefined;
-        this.changedSinceLastCompile = false;
     }
 
     public getDisplayPath(): string {
@@ -59,10 +52,7 @@ export class FsFile {
     /// If the file is not a text file, it will return InvalidEncoding
     ///
     /// If clearChangedSinceLastCompile is true, it will clear the flag.
-    public async getText(clearChangedSinceLastCompile?: boolean): Promise<FsResult<string>> {
-        if (clearChangedSinceLastCompile) {
-            this.changedSinceLastCompile = false;
-        }
+    public async getText(): Promise<FsResult<string>> {
         if (this.buffer === undefined) {
             const result = await this.load();
             if (result.isErr()) {
@@ -75,10 +65,7 @@ export class FsFile {
         return allocOk(this.content ?? "");
     }
 
-    public async getBytes(clearChangedSinceLastCompile?: boolean): Promise<FsResult<Uint8Array>> {
-        if (clearChangedSinceLastCompile) {
-            this.changedSinceLastCompile = false;
-        }
+    public async getBytes(): Promise<FsResult<Uint8Array>> {
         this.updateBuffer();
         if (this.buffer === undefined) {
             const result = await this.load();
@@ -100,7 +87,6 @@ export class FsFile {
         }
         this.content = content;
         this.isContentNewer = true;
-        this.changedSinceLastCompile = true;
     }
 
     /// Load the file's content if it's not newer than fs
@@ -134,7 +120,6 @@ export class FsFile {
             }
         }
         this.lastModified = file.lastModified;
-        this.changedSinceLastCompile = true;
         // load the buffer
         try {
             this.buffer = new Uint8Array(await file.arrayBuffer());
@@ -193,10 +178,5 @@ export class FsFile {
         this.buffer = encoder.encode(this.content);
         this.isBufferDirty = true;
         this.isContentNewer = false;
-    }
-
-    public wasChangedSinceLastCompile(): boolean {
-        // also return true if the file was never loaded
-        return this.buffer === undefined || this.changedSinceLastCompile;
     }
 }

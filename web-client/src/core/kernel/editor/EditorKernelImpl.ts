@@ -24,6 +24,8 @@ export class EditorKernelImpl implements EditorKernel {
     private fileMgr: FileMgr;
     private compMgr: CompMgr;
 
+    private shouldRecompile = false;
+
     private cleanup: () => void;
 
     constructor(store: AppStore) {
@@ -39,6 +41,7 @@ export class EditorKernelImpl implements EditorKernel {
         });
         monacoEditor.onKeyDown(() => {
             this.idleMgr.notifyActivity();
+            this.shouldRecompile = true;
         });
         monacoEditor.onMouseDown(() => {
             this.idleMgr.notifyActivity();
@@ -79,8 +82,7 @@ export class EditorKernelImpl implements EditorKernel {
 
     public async init(): Promise<void> {
         await this.compMgr.init(
-            this.fileMgr.getFileAsBytes.bind(this.fileMgr),
-            this.fileMgr.wasFileChangedSinceLastCompile.bind(this.fileMgr),
+            this.fileMgr.getFileAsBytes.bind(this.fileMgr)
         );
     }
 
@@ -149,12 +151,19 @@ export class EditorKernelImpl implements EditorKernel {
         if (isUserAction) {
             this.idleMgr.notifyActivity();
         }
-        return await this.idleMgr.pauseIdleScope(async () => {
+        const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.saveChangesToFs();
         });
+        if (result.isErr()) {
+            return result;
+        }
+        const { unsavedFiles } = viewSelector( this.store.getState());
+        this.fileMgr.updateDirtyFileList(unsavedFiles);
+        return result.makeOk(undefined);
     }
 
     public compile(): void {
+        this.shouldRecompile = false;
         if (!this.fileMgr.isFsLoaded()) {
             return;
         }
@@ -203,6 +212,8 @@ export class EditorKernelImpl implements EditorKernel {
         // pull changes from monaco editor first to make sure current file is marked dirty if needed
         await this.fileMgr.syncEditorToCurrentFile();
 
+        let shouldRecompile = this.shouldRecompile;
+
         if (isLong) {
             const {
                 autoSaveEnabled,
@@ -219,7 +230,7 @@ export class EditorKernelImpl implements EditorKernel {
                     // make sure file system view is rerendered in case there are directory updates
                     shouldRerenderFs = true;
                     // trigger a compile after reloading fs
-                    this.compile();
+                    shouldRecompile = true;
                 }
                 if (deactivateAutoLoadAfterMinutes > 0) {
                     if (duration > deactivateAutoLoadAfterMinutes * 60 * 1000) {
@@ -247,7 +258,10 @@ export class EditorKernelImpl implements EditorKernel {
         // do this last so we can get the latest save status after auto-save
         this.fileMgr.updateDirtyFileList(unsavedFiles);
 
-        if (await this.fileMgr.needsRecompile()) {
+        // if (!shouldRecompile && await this.fileMgr.needsRecompile()) {
+        //     shouldRecompile = true;
+        // }
+        if (shouldRecompile) {
             this.compile();
         }
     }
