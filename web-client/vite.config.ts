@@ -54,6 +54,9 @@ export default defineConfig({
                         if (info.moduleIds[i].includes("MapRoot")) {
                             return "assets/map-[hash].js";
                         }
+                        if (info.moduleIds[i].includes("EditorKernel")) {
+                            return "assets/editor-[hash].js";
+                        }
                     }
                     const name = kebabCase(info.name);
                     return name.startsWith("assets/")
@@ -63,6 +66,7 @@ export default defineConfig({
                 manualChunks: {
                     "assets/react": ["react", "react-dom"],
                     "assets/fluentui": ["@fluentui/react-components"],
+                    "assets/monaco": ["monaco-editor"],
                 },
             },
         },

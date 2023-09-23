@@ -34,7 +34,7 @@ dev-client +FLAGS="":
 
 # Start the server locally and watch for changes
 dev-server:
-    cargo watch -B 1 -s "cargo run -- --debug --docs-dir docs/src/.vitepress/dist"
+    cargo watch -B 1 -s "cargo run --bin celerserver -- --debug --docs-dir docs/src/.vitepress/dist"
 
 # Format the code
 fmt:

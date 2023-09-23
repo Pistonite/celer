@@ -11,6 +11,9 @@ export interface EditorKernel {
     /// Initialize
     init(): Promise<void>;
 
+    /// Delete the editor instance
+    delete(): void;
+
     /// Reset the editor with a new file system. Unsaved changes will be lost
     reset(fs?: FileSys): Promise<void>;
 

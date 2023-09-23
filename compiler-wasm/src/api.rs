@@ -1,4 +1,3 @@
-use std::borrow::BorrowMut;
 use std::cell::RefCell;
 use std::sync::Arc;
 
@@ -9,6 +8,7 @@ use celerctypes::ExecDoc;
 use js_sys::Function;
 use log::{info, LevelFilter};
 use wasm_bindgen::JsValue;
+use web_sys::console;
 
 use crate::resource::FileLoader;
 use crate::logger::{Logger, self};
@@ -30,14 +30,14 @@ thread_local! {
 /// Initialize
 pub fn init(logger: JsValue, load_file: Function) {
     if let Err(e) = logger::bind_logger(logger) {
-        web_sys::console::error_1(&e);
+        console::error_1(&e);
     }
     match log::set_logger(&LOGGER) {
         Ok(_) => {
             log::set_max_level(LevelFilter::Info);
         }
         Err(_) => {
-            web_sys::console::warn_1(&"failed to initialize compiler logger. It might have already been initialized".into());
+            console::warn_1(&"failed to initialize compiler logger. It might have already been initialized".into());
         }
     }
     info!("initializing compiler...");

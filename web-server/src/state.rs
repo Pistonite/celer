@@ -1,18 +1,16 @@
 //! Server state
 
-use std::collections::HashMap;
-use tide::http::headers::HeaderName;
-use tide::{Body, Redirect, Request, Response, StatusCode};
+// use tide::http::headers::HeaderName;
+// use tide::{Body, Redirect, Request, Response, StatusCode};
 //use surf::Client;
 
-/// Runtime state of the server
-#[derive(Debug, Clone)]
-pub struct State {
-    //// Http client
-    //pub http_client: Client,
-    ///// Proxy /docs/* to a different URL
-    //pub docs_proxy: Option<String>
-}
+// #[derive(Debug, Clone)]
+// pub struct State {
+//     //// Http client
+//     //pub http_client: Client,
+//     ///// Proxy /docs/* to a different URL
+//     //pub docs_proxy: Option<String>
+// }
 
 ///// Handles proxying
 ////
