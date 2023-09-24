@@ -1,0 +1,75 @@
+version: '3'
+
+includes:
+  compiler-core:
+    taskfile: ./compiler-core
+    aliases: [core]
+    dir: ./compiler-core
+
+  docs:
+    taskfile: ./docs
+    dir: ./docs
+
+  web-server:
+    taskfile: ./web-server
+    aliases: [server, s]
+    dir: ./web-server
+
+  web-themes:
+    taskfile: ./web-themes
+    aliases: [themes, th]
+    dir: ./web-themes
+
+
+
+tasks:
+  docker:
+    desc: Build docker container
+    cmds:
+    - echo "not ready yet"
+
+  build:
+    desc: Build production assets
+    deps:
+    - build-docs
+    - build-server
+
+  build-docs:
+    internal: true
+    deps:
+    - docs:build
+    cmds:
+    - mkdir -p dist/docs
+    - cp -r docs/src/.vitepress/dist/* dist/docs
+
+  build-server:
+    internal: true
+    deps:
+    - core:grammar
+    cmds:
+    - mkdir -p dist
+    - rustup default stable
+    - cross build --bin celerserver --release --target x86_64-unknown-linux-musl
+    - cp target/x86_64-unknown-linux-musl/release/celerserver dist/celerserver
+
+  build-themes:
+
+
+  test2:
+    deps:
+    - test1
+    cmds:
+    - echo test2
+
+  test3:
+    deps:
+    - test1
+    cmds:
+    - echo test3
+
+  test4:
+    deps:
+    - test2
+    - test3
+    cmds:
+    - echo test4

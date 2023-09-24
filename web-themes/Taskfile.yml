@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build theme assets and copy them to web-client
+    aliases: [b]
+    cmds:
+    - node build.js

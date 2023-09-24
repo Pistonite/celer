@@ -7,13 +7,13 @@ export default defineConfig({
     description: "Documentation for Celer Route Engine",
     head: [
         // Favicon
-        [ 'link', { rel: 'icon', href: '/docs/icon.svg', type: 'image/svg+xml' } ],
+        [ 'link', { rel: 'icon', href: '/static/celer-3.svg', type: 'image/svg+xml' } ],
         // Color
         [ 'meta', { property: 'theme-color', content: 'rgb(173,255,184)' } ],
         // Open Graph
         [ 'meta', { property: 'og:site_name', content: 'celer.pistonite.org' } ],
         [ 'meta', { property: 'og:type', content: 'website' } ],
-        [ 'meta', { property: 'og:image', content: 'https://celer.pistonite.org/docs/icon.png' } ],
+        [ 'meta', { property: 'og:image', content: 'https://celer.pistonite.org/static/celer-3.png' } ],
         [ 'meta', { property: 'og:description', content: 'Documentation for Celer Route Engine' } ],
     ],
     transformHead: async (context: TransformContext) => {

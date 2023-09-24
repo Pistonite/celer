@@ -3,18 +3,14 @@ name = "compiler-types"
 version = "0.0.0"
 description = "Interface types between compiler and clients"
 edition = "2021"
-default-run = "generate"
+default-run = "buildtypes"
 
 [dependencies]
 serde = { version = "1.0.174", features = ["derive"] }
 ts-rs = "6.2.1"
-# wasm-bindgen = { version = "0.2.87", optional = false }
-
-[features]
-# wasm = ["wasm-bindgen"]
 
 [[bin]]
-name = "generate"
+name = "buildtypes"
 path = "src/build.rs"
 
 [lib]

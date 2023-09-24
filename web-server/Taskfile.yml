@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  dev:
+    desc: Start server in watch mode
+    aliases: [d]
+    env:
+      CELERSERVER_LOG: INFO
+      CELERSERVER_PORT: 8173
+      CELERSERVER_DOCS_DIR: ../docs/src/.vitepress/dist
+    cmds:
+    - cargo watch -B 1 -s "cargo run --bin celerserver -- {{.CLI_ARGS}}"

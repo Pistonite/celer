@@ -33,8 +33,8 @@ dev-client +FLAGS="":
     cd web-client && npm run dev -- --host {{FLAGS}}
 
 # Start the server locally and watch for changes
-dev-server:
-    cargo watch -B 1 -s "cargo run --bin celerserver -- --debug --docs-dir docs/src/.vitepress/dist"
+dev-server +FLAGS="":
+    cargo watch -B 1 -s "cargo run --bin celerserver -- --docs-dir docs/src/.vitepress/dist {{FLAGS}}"
 
 # Format the code
 fmt:

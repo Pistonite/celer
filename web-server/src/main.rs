@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use std::convert::Infallible;
 use std::future::Future;
 use std::io::{self, Bytes, Empty};
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
@@ -16,43 +16,164 @@ use axum::body::Body;
 use axum::response::{Response, IntoResponse};
 use axum::{Server, Router};
 use axum::http::{Request, Uri, StatusCode};
-use clap::Parser;
-use futures::future::BoxFuture;
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
+use tower_http::trace::{DefaultOnResponse, DefaultOnRequest, DefaultMakeSpan};
+use tracing::{Level, debug, info};
 
-mod state;
-// use state::State;
+mod env;
+use env::Environment;
+mod services;
+use services::{NestedRouteRedirectService, AddHtmlExtService};
 
-#[derive(Debug, Parser)]
-#[command(name = "start-server")]
-struct Cli {
-    /// Enable debug output
-    #[arg(short, long)]
-    debug: bool,
-    /// The port to listen on.
-    #[arg(short, long, default_value = "8173")]
-    port: u16,
-    /// Serve docs from a different location
-    #[arg(long, default_value = "docs")]
-    docs_dir: String,
-}
 
 #[tokio::main]
-async fn main() -> Result<(), std::io::Error> {
-    let args = Cli::parse();
-    if args.debug {
-        std::env::set_var("RUST_LOG", "debug");
-    } else {
-        std::env::set_var("RUST_LOG", "info");
-    }
-    env_logger::init();
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let env = Environment::parse();
+    tracing_subscriber::fmt()
+        .compact()
+        .with_max_level(env.logging_level.clone())
+        .init();
+    info!("configuring routes...");
 
-    let address = format!("0.0.0.0:{}", args.port);
+    let router = Router::new();
+    let router = init_docs(router, &env.docs_dir)?;
 
-    log::info!("Starting web server on {address}");
 
-    let router = Router::new().nest_service("/docs", create_serve_dir(&args.docs_dir));
+    let router = router.layer(tower_http::trace::TraceLayer::new_for_http()
+        .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+        .on_request(DefaultOnRequest::new().level(Level::INFO))
+        .on_response(DefaultOnResponse::new().level(Level::INFO))
 
+    );
+
+    let address = format!("0.0.0.0:{}", env.port).parse()?;
+    info!("starting server on {address}");
+    Server::bind(&address)
+        .serve(router.into_make_service())
+        .await?;
+
+    Ok(())
+}
+
+/// Setup the /docs route
+fn init_docs(router: Router, docs_dir: &str) -> Result<Router, io::Error> {
+    let docs_dir = Path::new(docs_dir).canonicalize()?;
+    debug!("/docs -> {}", docs_dir.display());
+    let docs_404_path = docs_dir.join("404.html").canonicalize()?;
+    let service = NestedRouteRedirectService::new("/docs", 
+        ServeDir::new(&docs_dir).fallback(
+            AddHtmlExtService(ServeDir::new(&docs_dir).fallback(
+                ServeFile::new(&docs_404_path)
+            ))
+        )
+    );
+    Ok(router.nest_service("/docs", service))
+}
+
+// fn create_serve_dir(fs_path: &str, not_found_path: &str) -> ServeDirWrapper {
+//     ServeDirWrapper::new(ServeDir::new(fs_path), ServeFile::new(not_found_path))
+// }
+
+// #[derive(Debug, Clone)]
+// struct ServeDirWrapper {
+//     // location_cache: BTreeMap<String, Uri>,
+//     serve_dir: ServeDir,
+//     serve_404: ServeFile,
+// }
+//
+// impl ServeDirWrapper {
+//     fn new(serve_dir: ServeDir, serve_404: ServeFile) -> Self {
+//         Self {
+//             // location_cache: BTreeMap::new(),
+//             serve_dir,
+//             serve_404,
+//         }
+//     }
+// }
+//
+// use tower::Service;
+// use tower_http::trace;
+// use tracing::Level;
+//
+// impl Service<Request<Body>> for ServeDirWrapper {
+//     type Response = Response;
+//     type Error = Infallible;
+//     type Future =BoxFuture<'static, Result<Response, Infallible>>;
+//
+//     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+//         <ServeDir as Service<Request<Body>>>::poll_ready(&mut self.serve_dir, cx)
+//     }
+//
+//     fn call(&mut self, req: Request<Body>) -> Self::Future {
+//         let path = req.uri().path().to_string();
+//         // if path ends with / or .html, there's no guessing needed
+//         if path.ends_with('/')  || path.ends_with(".html") {
+//             let future = self.serve_dir.call(req);
+//             return Box::pin(async move {
+//                 Ok(future.await?.into_response())
+//             });
+//         }
+//        
+//         // try adding .html extension
+//         let html_uri: Uri = match format!("{}.html", path).parse() {
+//             Ok(uri) => uri,
+//             _ => return Box::pin( async { Ok(StatusCode::NOT_FOUND.into_response()) })
+//         };
+//         let req_html = replace_uri(&req, html_uri);
+//         // try adding /index.html
+//         let index_html_uri: Uri = match format!("{}/index.html", path).parse() {
+//             Ok(uri) => uri,
+//             _ => return Box::pin( async { Ok(StatusCode::NOT_FOUND.into_response()) })
+//         };
+//         let req_index_html = replace_uri(&req, index_html_uri);
+//         let future_original = self.serve_dir.call(req);
+//         let future_html = self.serve_dir.call(req_html);
+//         let future_index_html = self.serve_dir.call(req_index_html);
+//
+//         Box::pin(async move {
+//             if let Ok(res) = future_original.await {
+//                 let status = res.status();
+//                 match status {
+//                     StatusCode::NOT_FOUND => {
+//                         // try adding .html
+//                         if let Ok(res) = future_html.await {
+//                             return Ok(res.into_response());
+//                         }
+//                     }
+//                     StatusCode::TEMPORARY_REDIRECT => {
+//                         // try adding /index.html
+//                         if let Ok(res) = future_index_html.await {
+//                             return Ok(res.into_response());
+//                         }
+//                     }
+//                     _ => {
+//                         return Ok(res.into_response());
+//                     }
+//                 }
+//             }
+//             return Ok(StatusCode::NOT_FOUND.into_response())
+//         })
+//     }
+//
+// }
+
+// /// Clone the request without the body and extensions
+// fn clone_request<ReqBody>(base: &Request<ReqBody>) -> Request<()> {
+//     let mut new_req = Request::new(());
+//     *new_req.method_mut() = base.method().clone();
+//     *new_req.headers_mut() = base.headers().clone();
+//     *new_req.uri_mut() = base.uri().clone();
+//     new_req
+// }
+//
+// fn replace_uri<ReqBody>(base: &Request<ReqBody>, uri: Uri) -> Request<()> {
+//     let mut new_req = Request::new(());
+//     *new_req.method_mut() = base.method().clone();
+//     *new_req.headers_mut() = base.headers().clone();
+//     *new_req.uri_mut() = uri;
+//     new_req
+// }
+//
     // TODO: state
     //app.with(security::CorsMiddleware::new());
     // app.with(driftwood::ApacheCombinedLogger);
@@ -96,142 +217,3 @@ async fn main() -> Result<(), std::io::Error> {
     // // log::info!("Setting up index.heml");
     // // app.at("/").serve_file(format!("{}index.html", static_dir))?;
     //
-    Server::bind(&address.parse().expect("invalid address"))
-        .serve(router.into_make_service())
-        .await.expect("fail to convert router into service");
-
-    Ok(())
-}
-
-fn create_serve_dir(fs_path: &str) -> ServeDirWrapper {
-    ServeDirWrapper::new(ServeDir::new(fs_path))
-}
-
-#[derive(Debug, Clone)]
-struct ServeDirWrapper {
-    // location_cache: BTreeMap<String, Uri>,
-    serve_dir: ServeDir,
-}
-
-impl ServeDirWrapper {
-    fn new(serve_dir: ServeDir) -> Self {
-        Self {
-            // location_cache: BTreeMap::new(),
-            serve_dir
-        }
-    }
-}
-
-use tower::Service;
-use tower_http::services::fs::ServeFileSystemResponseBody;
-
-impl Service<Request<Body>> for ServeDirWrapper {
-    type Response = Response;
-    type Error = Infallible;
-    type Future =BoxFuture<'static, Result<Response, Infallible>>;
-
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        <ServeDir as Service<Request<Body>>>::poll_ready(&mut self.serve_dir, cx)
-    }
-
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
-        let path = req.uri().path().to_string();
-        // if path ends with / or .html, there's no guessing needed
-        if path.ends_with('/')  || path.ends_with(".html") {
-            let future = self.serve_dir.call(req);
-            return Box::pin(async move {
-                // unwrap is safe because call is infallible
-                Ok(future.await.unwrap().into_response())
-            });
-        }
-        // if let Some(location) = self.location_cache.get(&path) {
-        //     // redirect cache found, replace the uri and call the underlying service
-        //     *req.uri_mut() = location.clone();
-        //     let future = self.serve_dir.call(req);
-        //     return Box::pin(async move {
-        //         // unwrap is safe because call is infallible
-        //         Ok(future.await.unwrap().into_response())
-        //     });
-        // };
-        // try adding .html extension
-        let html_uri: Uri = match format!("{}.html", path).parse() {
-            Ok(uri) => uri,
-            _ => return Box::pin( async { Ok(StatusCode::NOT_FOUND.into_response()) })
-        };
-        let req_html = replace_uri(&req, html_uri.clone());
-        // try adding /index.html
-        let index_html_uri: Uri = match format!("{}/index.html", path).parse() {
-            Ok(uri) => uri,
-            _ => return Box::pin( async { Ok(StatusCode::NOT_FOUND.into_response()) })
-        };
-        let req_index_html = replace_uri(&req, index_html_uri.clone());
-        let future_original = self.serve_dir.try_call(req);
-        let future_html = self.serve_dir.try_call(req_html);
-        let future_index_html = self.serve_dir.try_call(req_index_html);
-
-        Box::pin(async move {
-            if let Ok(res) = future_original.await {
-                return Ok(res.into_response());
-            }
-            if let Ok(res) = future_html.await {
-                // add cache
-                return Ok(res.into_response());
-            }
-            if let Ok(res) = future_index_html.await {
-                // add cache
-                return Ok(res.into_response());
-            }
-            return Ok(StatusCode::NOT_FOUND.into_response())
-        })
-    }
-
-}
-
-/// Clone the request without the body and extensions
-fn clone_request<ReqBody>(base: &Request<ReqBody>) -> Request<()> {
-    let mut new_req = Request::new(());
-    *new_req.method_mut() = base.method().clone();
-    *new_req.headers_mut() = base.headers().clone();
-    *new_req.uri_mut() = base.uri().clone();
-    new_req
-}
-
-fn replace_uri<ReqBody>(base: &Request<ReqBody>, uri: Uri) -> Request<()> {
-    let mut new_req = Request::new(());
-    *new_req.method_mut() = base.method().clone();
-    *new_req.headers_mut() = base.headers().clone();
-    *new_req.uri_mut() = uri;
-    new_req
-}
-
-// #[derive(Debug, Clone)]
-// struct NotFoundMiddleware {
-//     path: AsyncPathBuf,
-// }
-// #[async_trait::async_trait]
-// impl Middleware<State> for NotFoundMiddleware {
-//     async fn handle(&self, req: Request<State>, next: tide::Next<'_, State>) -> tide::Result {
-//         let mut res = next.run(req).await;
-//         if res.status() != StatusCode::NotFound {
-//             return Ok(res);
-//         }
-//         match Body::from_file(&self.path).await {
-//             Ok(body) => {
-//                 res.set_body(body);
-//                 //res.set_status(StatusCode::Ok);
-//                 Ok(res)
-//             }
-//             Err(e) if e.kind() == io::ErrorKind::NotFound => {
-//                 log::warn!("File not found: {:?}", &self.path);
-//                 Ok(res)
-//             }
-//             Err(e) => Err(e.into()),
-//         }
-//     }
-// }
-
-// async fn handle_docs_proxy(req: Request<State>) -> tide::Result {
-//     let location = req.state().docs_proxy.as_ref().expect("docs_proxy must exist, check the routes");
-//     let client = &req.state().http_client;
-//     state::handle_get_proxy(client, location, &req).await
-// }
