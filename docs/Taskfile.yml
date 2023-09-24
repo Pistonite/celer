@@ -4,7 +4,7 @@ tasks:
   txtpp:
     desc: Preprocess source files
     cmds:
-    - txtpp -r
+    - echo "txtpp disabled for now"
 
   dev:
     desc: Start docs in watch mode

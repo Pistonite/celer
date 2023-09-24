@@ -6,6 +6,11 @@ includes:
     aliases: [core]
     dir: ./compiler-core
 
+  compiler-wasm:
+    taskfile: ./compiler-wasm
+    aliases: [wasm]
+    dir: ./compiler-wasm
+
   docs:
     taskfile: ./docs
     dir: ./docs
@@ -52,8 +57,12 @@ tasks:
     - cross build --bin celerserver --release --target x86_64-unknown-linux-musl
     - cp target/x86_64-unknown-linux-musl/release/celerserver dist/celerserver
 
-  build-themes:
-
+  build-wasm:
+    internal: true
+    deps:
+    - core:grammar
+    cmds:
+    - cargo run --bin buildwasm --release
 
   test2:
     deps:

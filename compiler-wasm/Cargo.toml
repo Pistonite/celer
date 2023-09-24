@@ -3,7 +3,7 @@ name = "compiler-wasm"
 version = "0.0.0"
 description = "WASM interface of the compiler"
 edition = "2021"
-default-run = "generate"
+default-run = "buildwasm"
 
 [dependencies]
 compiler-types = { path = "../compiler-types" }
@@ -24,7 +24,6 @@ path = "src/lib.rs"
 crate-type = ["cdylib", "lib"]
 
 [[bin]]
-name = "generate"
+name = "buildwasm"
 path = "src/build.rs"
-
 
