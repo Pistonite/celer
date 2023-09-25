@@ -1,10 +1,15 @@
 FROM alpine:latest
 EXPOSE 80
-ENV APP_DIR=/opt/app 
+ENV APP_DIR=/opt/app
 RUN mkdir -p $APP_DIR
 # Copy outputs
 COPY ./dist $APP_DIR
 
 WORKDIR $APP_DIR
 
-CMD ["./start-server", "--port", "80"]
+ENV CELERSERVER_LOG=INFO
+ENV CELERSERVER_PORT=80
+ENV CELERSERVER_DOCS_DIR=/opt/app/docs
+ENV CELERSERVER_APP_DIR=/opt/app/app
+
+CMD ["./celerserver"]

@@ -8,5 +8,6 @@ tasks:
       CELERSERVER_LOG: INFO
       CELERSERVER_PORT: 8173
       CELERSERVER_DOCS_DIR: ../docs/src/.vitepress/dist
+      CELERSERVER_APP_DIR: ../web-client/dist
     cmds:
     - cargo watch -B 1 -s "cargo run --bin celerserver -- {{.CLI_ARGS}}"

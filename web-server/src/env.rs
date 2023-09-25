@@ -9,6 +9,8 @@ pub struct Environment {
     pub port: u16,
     /// Directory to serve docs
     pub docs_dir: String,
+    /// Directory to serve web client
+    pub app_dir: String,
 }
 
 impl Environment {
@@ -47,6 +49,12 @@ impl Environment {
             panic!("CELERSERVER_DOCS_DIR not set");
         };
 
+        let app_dir = if let Ok(x) = env::var("CELERSERVER_APP_DIR") {
+            x
+        } else {
+            panic!("CELERSERVER_APP_DIR not set");
+        };
+
         for arg in env::args() {
             if arg == "--debug" {
                 logging_level = Level::DEBUG;
@@ -57,6 +65,7 @@ impl Environment {
             logging_level,
             port,
             docs_dir,
+            app_dir,
         }
     }
 }

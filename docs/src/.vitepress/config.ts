@@ -26,7 +26,7 @@ export default defineConfig({
     base: "/docs/",
     cleanUrls: true,
     themeConfig: {
-        logo: "/icon.svg",
+        logo: "https://celer.pistonite.org/static/celer-3.svg",
 
         // https://vitepress.dev/reference/default-theme-config
         nav: [

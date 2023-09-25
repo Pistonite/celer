@@ -1,6 +1,11 @@
 version: '3'
 
 includes:
+  compiler-types:
+    taskfile: ./compiler-types
+    aliases: [types]
+    dir: ./compiler-types
+
   compiler-core:
     taskfile: ./compiler-core
     aliases: [core]
@@ -15,6 +20,11 @@ includes:
     taskfile: ./docs
     dir: ./docs
 
+  web-client:
+    taskfile: ./web-client
+    aliases: [client, c]
+    dir: ./web-client
+
   web-server:
     taskfile: ./web-server
     aliases: [server, s]
@@ -25,60 +35,70 @@ includes:
     aliases: [themes, th]
     dir: ./web-themes
 
-
-
 tasks:
   docker:
+    deps: [build]
     desc: Build docker container
     cmds:
-    - echo "not ready yet"
+    - docker build -t pistonite/celer . --no-cache
+
+  docker:run:
+    desc: Run docker container
+    cmds:
+    - docker run -p 8000:80 pistonite/celer
+
+  docker:stop:
+    desc: Stop docker container
+    cmds:
+    - docker stop $(docker ps -q -a --filter ancestor=pistonite/celer)
 
   build:
     desc: Build production assets
     deps:
-    - build-docs
-    - build-server
+    - build:docs
+    - build:server
+    - build:client
 
-  build-docs:
+  build:docs:
     internal: true
     deps:
     - docs:build
     cmds:
+    - rm -rf dist/docs
     - mkdir -p dist/docs
     - cp -r docs/src/.vitepress/dist/* dist/docs
 
-  build-server:
+  build:server:
     internal: true
     deps:
     - core:grammar
     cmds:
+    - rm -f dist/celerserver
     - mkdir -p dist
     - rustup default stable
     - cross build --bin celerserver --release --target x86_64-unknown-linux-musl
     - cp target/x86_64-unknown-linux-musl/release/celerserver dist/celerserver
 
-  build-wasm:
-    internal: true
+  build:client:
+    deps:
+    - themes:build
+    - build:wasm
+    - build:types
+    cmds:
+    - rm -rf dist/app
+    - mkdir -p dist/app
+    - task: client:build
+    - cp -r web-client/dist/* dist/app
+
+  build:wasm:
+    dir: ./compiler-wasm
     deps:
     - core:grammar
     cmds:
-    - cargo run --bin buildwasm --release
+    - cargo run --bin buildwasm --release > ../.task/build_wasm.out.log 2> ../.task/build_wasm.err.log
 
-  test2:
-    deps:
-    - test1
+  build:types:
+    dir: ./compiler-types
     cmds:
-    - echo test2
+    - cargo run --bin buildtypes --release > ../.task/build_types.out.log 2> ../.task/build_types.err.log
 
-  test3:
-    deps:
-    - test1
-    cmds:
-    - echo test3
-
-  test4:
-    deps:
-    - test2
-    - test3
-    cmds:
-    - echo test4

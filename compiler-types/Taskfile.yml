@@ -1,0 +1,14 @@
+version: '3'
+
+tasks:
+  dev:
+    desc: Start types builds in watch mode
+    aliases: [d]
+    cmds:
+    - cargo watch -x run
+
+  build:
+    desc: Build types to TypeScript
+    aliases: [b]
+    cmds:
+    - cargo run

@@ -17,6 +17,6 @@ tasks:
     aliases: [b]
     deps: [txtpp]
     cmds:
-    - npm run build
+    - npm run build > /dev/null 2> /dev/null
 
 
