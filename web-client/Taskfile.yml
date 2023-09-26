@@ -12,7 +12,7 @@ tasks:
   dev:
     desc: Start web client in watch mode
     cmds:
-    - npx vite -- --host
+    - npx vite --host
 
   build:
     desc: Build web client assets

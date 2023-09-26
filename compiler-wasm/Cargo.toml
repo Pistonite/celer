@@ -17,6 +17,7 @@ js-sys = "0.3.64"
 async-trait = "0.1.73"
 log = { version = "0.4.20", features = ["std"] } 
 web-sys = { version = "0.3.64", features = ["console"] }
+base64 = "0.21.4"
 
 [lib]
 name = "celercwasm"

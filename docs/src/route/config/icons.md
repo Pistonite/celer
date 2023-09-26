@@ -11,17 +11,19 @@ Icons IDs are by convention written in `kebab-case`
 config:
 - icons:
     shrine: https://icons.pistonite.org/icon/shrine.shrine.none.69a2d5.c1fefe.69a2d5.c1fefe.69a2d5.c1fefe.png
-    foo: use: ./icons/foo.png
-    bar: use: someone/repo/bar.png
+    foo:
+      use: ./icons/foo.png
+    bar:
+      use: someone/repo/bar.png
 ```
 
 ## Support
-Check below for which icon formats are supported:
+Check below for which icon formats are supported. The icon format is determined
+from the extension, so make sure your icon file name or URL has one of the supported extensions as well.
 
-|Format|Render in Document|Render On Map|As Split Icon|
-|-|-|-|-|
-|`png`|Yes|Yes|Yes|
-|`jpg`|Yes|Yes|Yes|
-|`gif`|Yes|Unknown|No|
-|`svg`|Yes|Unknown|No|
-|`webp`|Yes|Unknown|No|
+|Format|Extensions|Support Note|
+|-|-|-|
+|`image/png`|`.png`|Full Support|
+|`image/jpeg`|`.jpg`, `.jpeg`|Full Support|
+|`image/gif`|`.gif`|Animated in document. Not animated in map|
+|`image/webp`|`.webp`|Animated in document. Not animated in map. Converted to GIF in LiveSplit export|

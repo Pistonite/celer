@@ -20,7 +20,7 @@ thread_local! {
 }
 
 thread_local! {
-    static URL_LOADER: ArcLoader = Arc::new(GlobalCacheLoader::new(UrlLoader));
+    static URL_LOADER: ArcLoader = Arc::new(GlobalCacheLoader::new(Arc::new(UrlLoader)));
 }
 
 thread_local! {

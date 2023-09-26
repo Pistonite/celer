@@ -15,17 +15,26 @@
 .docsection-head {
     background-color: #001a00;
 }
+.docsection-container {
+    background-color: #001a00;
+}
 
 /* Alternating colors for the lines*/
 @media (prefers-color-scheme: dark) {
     .docline-container:nth-child(odd) .docline-head {
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: #242424;
+    }
+    .docline-container:nth-child(even) .docline-head {
+        background-color: #292929;
     }
 }
 
 @media (prefers-color-scheme: light) {
     .docline-container:nth-child(odd) .docline-head {
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: #dddddd;
+    }
+    .docline-container:nth-child(even) .docline-head {
+        background-color: #ffffff;
     }
 }
 
@@ -81,6 +90,14 @@
 }
 
 /* Darken the line on hover */
-.docline-head:hover {
-    background-color: rgba(0, 0, 0, 0.4) !important;
+
+@media (prefers-color-scheme: dark) {
+    .docline-head:hover {
+        background-color: #393939 !important;
+    }
+}
+@media (prefers-color-scheme: light) {
+    .docline-head:hover {
+        background-color: #bbbbbb !important;
+    }
 }

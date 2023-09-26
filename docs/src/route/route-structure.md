@@ -12,7 +12,8 @@ that references another file as the entry point to the route.
 For example:
 ```yaml
 # project.yaml
-route: use: ./main.yaml
+route: 
+  use: ./main.yaml
 ```
 This is because Celer sometimes only loads `project.yaml` to grab necessary
 metadata for the route, such as the name and version. Having a small

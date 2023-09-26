@@ -1,7 +1,9 @@
 //! Compiler resource resolver and loader implementation for WASM context
 use std::cell::RefCell;
+use base64::Engine;
+use base64::engine::general_purpose;
 
-use celerc::pack::{PackerResult, ResourceLoader, PackerError};
+use celerc::pack::{PackerResult, ResourceLoader, PackerError, ImageFormat};
 use celerc::yield_now;
 use js_sys::{Function, Uint8Array};
 use wasm_bindgen::{JsValue, JsCast};
@@ -10,7 +12,6 @@ use crate::wasm::{into_future, stub_function};
 
 /// Loader for files from web editor
 pub struct FileLoader {
-
     /// Callback function to ask JS to load a file
     ///
     /// Takes in a string as argument.
@@ -46,9 +47,13 @@ impl ResourceLoader for FileLoader {
     }
 
     async fn load_image_url(&self, path: &str) -> PackerResult<String> {
-        Err(PackerError::NotImpl(
-            "FileLoader::load_image_url is not implemented".to_string(),
-        ))
+        let image_format = ImageFormat::try_from_path(path).ok_or_else(|| {
+            PackerError::LoadFile(format!("Cannot determine image format from path: {path}"))
+        })?.media_type();
+        let mut data_url = format!("data:{image_format};base64,");
+        let vec = self.load_raw(path).await?;
+        general_purpose::STANDARD.encode_string(&vec, &mut data_url);
+        Ok(data_url)
     }
 }
 
