@@ -1,5 +1,4 @@
 //! Reducers for editor settings
-//
 import { ReducerDeclWithPayload, withPayload } from "low/store";
 
 import { EditorSettingsState } from "./state";
