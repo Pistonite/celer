@@ -65,7 +65,7 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({
                             "",
                         );
                         return;
-                    } else if ( code === FsResultCodes.IsFile) {
+                    } else if (code === FsResultCodes.IsFile) {
                         await kernel.showAlert(
                             "Error",
                             "You dropped a file. Make sure you are dropping the project folder and not individual files.",

@@ -15,7 +15,7 @@ import {
 } from "@fluentui/react-components";
 import { ListBarTree20Regular } from "@fluentui/react-icons";
 import isEqual from "is-equal";
-import React, { forwardRef } from "react";
+import { forwardRef, memo } from "react";
 import { useSelector } from "react-redux";
 import { useDocSections } from "core/doc";
 import { viewActions, viewSelector } from "core/store";
@@ -83,7 +83,7 @@ type SelectSectionInternalProps = ControlComponentProps & {
     /// Callback to select a section
     selectSection: (section: number) => void;
 };
-const SelectSectionInternal = React.memo(
+const SelectSectionInternal = memo(
     ({
         sections,
         current,

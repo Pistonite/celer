@@ -1,22 +1,46 @@
 version: '3'
 
 tasks:
-  txtpp:
-    desc: Preprocess source files
+  install:
     cmds:
-    - echo "txtpp disabled for now"
+    - npm install
+
+  ci:
+    cmds:
+    - npm ci
 
   dev:
     desc: Start docs in watch mode
-    aliases: [d]
     cmds:
-    - npm run dev
+    - npx vitepress dev src --port 3173 --host
 
   build:
     desc: Build docs assets
-    aliases: [b]
     deps: [txtpp]
     cmds:
-    - npm run build > /dev/null 2> /dev/null
+    - npx vitepress build src > /dev/null 2> /dev/null
 
+  check:
+    desc: Check for issues in the docs
+    cmds:
+    - txtpp verify src -r
+    - task: prettier
+      vars:
+        PRETTIER_ARGS: --check
 
+  fix:
+    desc: Fix issues in the docs
+    deps: [txtpp]
+    cmds:
+    - task: prettier
+      vars:
+        PRETTIER_ARGS: --write
+
+  txtpp:
+    desc: Preprocess source files
+    cmds:
+      - echo "txtpp disabled for now"
+
+  prettier:
+    cmds:
+    - npx prettier "./**/*.{ts,tsx,json,js,jsx,cjs,css,html}" {{.PRETTIER_ARGS}} --config ../web-client/.prettierrc.cjs

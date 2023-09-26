@@ -9,10 +9,12 @@ export const setStageMode: ReducerDeclWithPayload<StageViewState, StageMode> =
         state.stageMode = mode;
     });
 
-export const setSettingsTab: ReducerDeclWithPayload<StageViewState, SettingsTab> =
-    withPayload((state: StageViewState, tab: SettingsTab) => {
-        state.settingsTab = tab;
-    });
+export const setSettingsTab: ReducerDeclWithPayload<
+    StageViewState,
+    SettingsTab
+> = withPayload((state: StageViewState, tab: SettingsTab) => {
+    state.settingsTab = tab;
+});
 
 export const setAlert: ReducerDeclWithPayload<
     StageViewState,

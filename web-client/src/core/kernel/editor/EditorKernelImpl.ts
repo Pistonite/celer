@@ -81,9 +81,7 @@ export class EditorKernelImpl implements EditorKernel {
     }
 
     public async init(): Promise<void> {
-        await this.compMgr.init(
-            this.fileMgr.getFileAsBytes.bind(this.fileMgr)
-        );
+        await this.compMgr.init(this.fileMgr.getFileAsBytes.bind(this.fileMgr));
     }
 
     /// Reset the editor with a new file system. Unsaved changes will be lost
@@ -147,7 +145,9 @@ export class EditorKernelImpl implements EditorKernel {
         });
     }
 
-    public async saveChangesToFs(isUserAction: boolean): Promise<FsResult<void>> {
+    public async saveChangesToFs(
+        isUserAction: boolean,
+    ): Promise<FsResult<void>> {
         if (isUserAction) {
             this.idleMgr.notifyActivity();
         }
@@ -157,7 +157,7 @@ export class EditorKernelImpl implements EditorKernel {
         if (result.isErr()) {
             return result;
         }
-        const { unsavedFiles } = viewSelector( this.store.getState());
+        const { unsavedFiles } = viewSelector(this.store.getState());
         this.fileMgr.updateDirtyFileList(unsavedFiles);
         return result.makeOk(undefined);
     }

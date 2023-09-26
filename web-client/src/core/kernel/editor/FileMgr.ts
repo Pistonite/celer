@@ -4,7 +4,12 @@ import { AppDispatcher, viewActions } from "core/store";
 import { FileSys, FsFile, FsPath, FsResult, FsResultCodes } from "low/fs";
 import { allocErr, allocOk, sleep } from "low/utils";
 
-import { EditorContainerId, EditorLog, detectLanguageByFileName, toFsPath } from "./utils";
+import {
+    EditorContainerId,
+    EditorLog,
+    detectLanguageByFileName,
+    toFsPath,
+} from "./utils";
 
 type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -284,7 +289,9 @@ export class FileMgr {
             async () => {
                 const result = await fsFile.writeIfNewer();
                 if (result.isErr()) {
-                    EditorLog.error(`save ${idPath} failed with code ${result.inner()}`);
+                    EditorLog.error(
+                        `save ${idPath} failed with code ${result.inner()}`,
+                    );
                 }
                 return result;
             },
@@ -331,8 +338,8 @@ export class FileMgr {
     }
 
     private switchLanguage(languageId: string) {
-                const model = this.monacoEditor.getModel();
-                if (!model) {
+        const model = this.monacoEditor.getModel();
+        if (!model) {
             return;
         }
         if (model.getLanguageId() !== languageId) {
@@ -397,7 +404,9 @@ export class FileMgr {
             }
             const result = await fsFile.getBytes();
             if (result.isErr()) {
-                throw new Error(`getFileAsBytes failed with code ${result.inner()}`);
+                throw new Error(
+                    `getFileAsBytes failed with code ${result.inner()}`,
+                );
             }
             return result.inner();
         });

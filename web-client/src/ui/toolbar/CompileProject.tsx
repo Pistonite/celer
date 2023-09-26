@@ -7,12 +7,12 @@ import { Box20Regular, BoxCheckmark20Regular } from "@fluentui/react-icons";
 
 import { useKernel } from "core/kernel";
 
-import { ToolbarControl } from "./util";
 import { viewSelector } from "core/store";
+import { ToolbarControl } from "./util";
 
 export const CompileProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
-        const {handler, disabled, icon, tooltip} = useCompileProjectControl();
+        const { handler, disabled, icon, tooltip } = useCompileProjectControl();
         return (
             <Tooltip content={tooltip} relationship="label">
                 <ToolbarButton
@@ -25,14 +25,10 @@ export const CompileProject: ToolbarControl = {
         );
     }),
     MenuItem: () => {
-        const {handler, disabled, icon, tooltip} = useCompileProjectControl();
+        const { handler, disabled, icon, tooltip } = useCompileProjectControl();
         return (
             <Tooltip content={tooltip} relationship="label">
-                <MenuItem
-                    icon={icon}
-                    disabled={disabled}
-                    onClick={handler}
-                >
+                <MenuItem icon={icon} disabled={disabled} onClick={handler}>
                     Compile project
                 </MenuItem>
             </Tooltip>
@@ -53,21 +49,22 @@ const useCompileProjectControl = () => {
         editor.compile();
     }, [kernel]);
 
-    const icon = compileInProgress ? <Box20Regular className="color-progress"/> : <BoxCheckmark20Regular />;
+    const icon = compileInProgress ? (
+        <Box20Regular className="color-progress" />
+    ) : (
+        <BoxCheckmark20Regular />
+    );
     const tooltip = getTooltip(!!rootPath, compileInProgress);
 
     return {
         handler,
         disabled: !rootPath,
         icon,
-        tooltip
-    }
+        tooltip,
+    };
 };
 
-const getTooltip = (
-    isOpened: boolean,
-    compileInProgress: boolean,
-) => {
+const getTooltip = (isOpened: boolean, compileInProgress: boolean) => {
     if (isOpened) {
         if (compileInProgress) {
             return "Compiler is running, click to cancel and trigger a fresh run.";

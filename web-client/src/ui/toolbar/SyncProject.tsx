@@ -25,8 +25,8 @@ import clsx from "clsx";
 import { useKernel } from "core/kernel";
 import { settingsSelector, viewActions, viewSelector } from "core/store";
 
-import { ToolbarControl } from "./util";
 import { useActions } from "low/store";
+import { ToolbarControl } from "./util";
 
 export const SyncProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {

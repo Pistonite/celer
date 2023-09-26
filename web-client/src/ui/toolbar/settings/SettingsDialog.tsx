@@ -6,7 +6,11 @@ import clsx from "clsx";
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import { TabList, Tab, Divider } from "@fluentui/react-components";
-import { Document20Regular, Map20Regular, Code20Regular } from "@fluentui/react-icons";
+import {
+    Document20Regular,
+    Map20Regular,
+    Code20Regular,
+} from "@fluentui/react-icons";
 
 import { useWindowSize } from "ui/shared";
 import { viewActions, viewSelector } from "core/store";
@@ -44,14 +48,16 @@ export const SettingsDialog: React.FC = () => {
                 Icon: Map20Regular,
                 Page: MapSettings,
             },
-            ...(stageMode === "edit" ? [
-                {
-                    id: "editor",
-                    text: "Editor",
-                    Icon: Code20Regular,
-                    Page: EditorSettings,
-                } as const,
-            ] : []),
+            ...(stageMode === "edit"
+                ? [
+                      {
+                          id: "editor",
+                          text: "Editor",
+                          Icon: Code20Regular,
+                          Page: EditorSettings,
+                      } as const,
+                  ]
+                : []),
         ] satisfies TabData[];
     }, [stageMode]);
 
@@ -69,16 +75,11 @@ export const SettingsDialog: React.FC = () => {
                     setSettingsTab(data.value as SettingsTab);
                 }}
             >
-                {
-                    tabs.map(({id, text, Icon}) => (
-                        <Tab
-                        key={id}
-                            id={id}
-                            value={id}
-                            icon={<Icon />}
-                            >{text}</Tab>
-                    ))
-                }
+                {tabs.map(({ id, text, Icon }) => (
+                    <Tab key={id} id={id} value={id} icon={<Icon />}>
+                        {text}
+                    </Tab>
+                ))}
             </TabList>
             <Divider
                 id="settings-separator"
@@ -88,11 +89,11 @@ export const SettingsDialog: React.FC = () => {
                 vertical={verticalTabs}
             />
             <div id="settings-panel">
-                {
-                    tabs.filter(({id}) => id === settingsTab).map(({id, Page}) => (
+                {tabs
+                    .filter(({ id }) => id === settingsTab)
+                    .map(({ id, Page }) => (
                         <Page key={id} />
-                    ))
-                }
+                    ))}
             </div>
         </div>
     );

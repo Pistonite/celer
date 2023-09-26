@@ -68,14 +68,14 @@ export const setUnsavedFiles: ReducerDeclWithPayload<
     state.unsavedFiles = unsavedFiles;
 });
 
-export const addUnsavedFile: ReducerDeclWithPayload<
-    EditorViewState,
-    string
-> = withPayload((state: EditorViewState, unsavedFile: string) => {
-    state.unsavedFiles.push(unsavedFile);
-});
-
-export const setCompileInProgress: ReducerDeclWithPayload<EditorViewState, boolean> =
-    withPayload((state: EditorViewState, compileInProgress: boolean) => {
-        state.compileInProgress = compileInProgress;
+export const addUnsavedFile: ReducerDeclWithPayload<EditorViewState, string> =
+    withPayload((state: EditorViewState, unsavedFile: string) => {
+        state.unsavedFiles.push(unsavedFile);
     });
+
+export const setCompileInProgress: ReducerDeclWithPayload<
+    EditorViewState,
+    boolean
+> = withPayload((state: EditorViewState, compileInProgress: boolean) => {
+    state.compileInProgress = compileInProgress;
+});

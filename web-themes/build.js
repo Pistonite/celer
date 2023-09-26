@@ -1,11 +1,11 @@
 //! build script
-//! 
+//!
 //! abc.css => postcss => clean-css => abc.min.css
 
 const fs = require("fs");
 const path = require("path");
-const autoprefixer = require('autoprefixer')
-const postcss = require('postcss')
+const autoprefixer = require("autoprefixer");
+const postcss = require("postcss");
 const preprocessor = postcss([autoprefixer]);
 const CleanCSS = require("clean-css");
 const minifier = new CleanCSS({});
@@ -22,9 +22,9 @@ fs.rmSync(intermediateDistDir, { recursive: true, force: true });
 fs.mkdirSync(intermediateDistDir);
 
 function writeIntermediateOutput(filePath, result) {
-    fs.writeFile(filePath, result.css, () => true)
-    if ( result.map ) {
-        fs.writeFile(filePath + ".map", result.map.toString(), () => true)
+    fs.writeFile(filePath, result.css, () => true);
+    if (result.map) {
+        fs.writeFile(filePath + ".map", result.map.toString(), () => true);
     }
 }
 
@@ -36,10 +36,10 @@ async function processSrcFile(fileName) {
     const srcFile = path.join(srcDir, fileName);
     const cssInput = await fs.promises.readFile(srcFile, "utf8");
     const interDistFile = path.join(intermediateDistDir, fileName);
-    const cssProcessed = await preprocessor.process(
-        cssInput, 
-        { from: srcFile, to: interDistFile }
-    );
+    const cssProcessed = await preprocessor.process(cssInput, {
+        from: srcFile,
+        to: interDistFile,
+    });
     // no need to wait for intermediate output to finish
     writeIntermediateOutput(interDistFile, cssProcessed);
     const { styles: cssMinified } = minifier.minify(cssProcessed.css);
@@ -50,12 +50,16 @@ async function processSrcFile(fileName) {
 
 async function processSrcDir() {
     const files = await fs.promises.readdir(srcDir);
-    const baseNames = (await Promise.all(files.map(async (file) => {
-        if (path.extname(file) === ".css") {
-            await processSrcFile(file);
-            return path.basename(file, ".css");
-        }
-    }))).filter(Boolean);
+    const baseNames = (
+        await Promise.all(
+            files.map(async (file) => {
+                if (path.extname(file) === ".css") {
+                    await processSrcFile(file);
+                    return path.basename(file, ".css");
+                }
+            }),
+        )
+    ).filter(Boolean);
     console.log();
     console.log(`Intermediate output saved to ${intermediateDistDir}`);
     console.log(`Minified output saved to ${minifiedDistDir}`);
@@ -70,10 +74,9 @@ function createThemeDef(baseNames) {
 //!
 //! See the web-themes project for how to regenerate this
 
-export const ThemeIds = [${baseNames.map(name => `"${name}"`).join(", ")}];
-`
+export const ThemeIds = [${baseNames.map((name) => `"${name}"`).join(", ")}];
+`;
     fs.writeFileSync(path.join(defDistDir, "themes.g.ts"), content, "utf8");
-
 }
 
 processSrcDir();

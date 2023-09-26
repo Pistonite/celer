@@ -1,10 +1,7 @@
 {
-  "devDependencies": {
-    "vitepress": "^1.0.0-beta.2",
-    "vue": "^3.3.4"
-  },
-  "scripts": {
-    "dev": "vitepress dev src --port 3173",
-    "build": "vitepress build src"
-  }
+    "devDependencies": {
+        "prettier": "^3.0.3",
+        "vitepress": "^1.0.0-beta.2",
+        "vue": "^3.3.4"
+    }
 }

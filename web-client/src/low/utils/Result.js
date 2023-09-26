@@ -1,5 +1,4 @@
 class ResultImpl {
-
     constructor(ok, value) {
         this.ok = ok;
         this.value = value;
@@ -26,7 +25,7 @@ class ResultImpl {
     }
 
     inner() {
-        return this.value ;
+        return this.value;
     }
 
     map(fn) {
