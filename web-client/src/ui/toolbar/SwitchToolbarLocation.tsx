@@ -6,7 +6,7 @@
 //! Moreover, since the default layout cannot be edited, the toolbar
 //! location cannot be changed in the default layout.
 
-import React from "react";
+import React, { forwardRef } from "react";
 import {
     Menu,
     MenuDivider,
@@ -35,7 +35,7 @@ import {
 
 /// Switch toolbar location control
 export const SwitchToolbarLocation: ToolbarControl = {
-    ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
+    ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
         const { disabled, props } = useControlPropsInternal();
         return (
             <SwitchToolbarLocationInternal {...props}>

@@ -125,7 +125,10 @@ export const DocLine: React.FC<DocLineProps> = ({
                             `docline-diagnostic-${type}`,
                         )}
                     >
-                        <Poor content={msg} textProps={{ size: 300, font: "monospace" }} />
+                        <Poor
+                            content={msg}
+                            textProps={{ size: 300, font: "monospace" }}
+                        />
                     </div>
                 </div>
             ))}

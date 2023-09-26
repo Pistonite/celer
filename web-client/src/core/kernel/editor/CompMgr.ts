@@ -1,4 +1,3 @@
-
 import { AppDispatcher, documentActions, viewActions } from "core/store";
 import { Debouncer, Logger, wrapAsync } from "low/utils";
 import { compileDocument, initCompiler, requestCancel } from "low/celerc";
@@ -24,7 +23,6 @@ export class CompMgr {
         this.compilerDebouncer = new Debouncer(100, this.compile.bind(this));
         this.needCompile = false;
         this.compiling = false;
-
     }
 
     public async init(loadFile: RequestFileFunction) {
@@ -85,5 +83,4 @@ export class CompMgr {
         //wasm api should be something like:
         //compile(requestfunction) -> Promise<result>
     }
-
 }

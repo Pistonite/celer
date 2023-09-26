@@ -24,7 +24,6 @@ export interface UncheckedResult<T, E> {
     /// Apply fn to value if this is an Err, leaving an Ok unchanged
     /// May mutate `this`. The previous reference should no longer be used
     mapErr: <E2>(fn: (value: E) => E2) => Result<T, E2>;
-
 }
 
 export interface Ok<T> extends UncheckedResult<T, never> {

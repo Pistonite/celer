@@ -1,5 +1,5 @@
 import "./Editor.css";
-import { useCallback, } from "react";
+import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { Body1 } from "@fluentui/react-components";
 
@@ -34,7 +34,7 @@ export const EditorRoot: React.FC = () => {
             <div id="editor-root">
                 {rootPath !== undefined ? (
                     <>
-                        { showFileTree &&
+                        {showFileTree && (
                             <div id="editor-tree-container">
                                 <EditorTree
                                     rootName={rootPath}
@@ -42,16 +42,20 @@ export const EditorRoot: React.FC = () => {
                                     openedFile={openedFile}
                                     unsavedFiles={unsavedFiles}
                                     onClickFile={(path) => {
-                                        tryWithEditorRef(kernel, 10, (editor) => {
-                                            editor.openFile(
-                                                path,
-                                                true /* isUserAction */,
-                                            );
-                                        });
+                                        tryWithEditorRef(
+                                            kernel,
+                                            10,
+                                            (editor) => {
+                                                editor.openFile(
+                                                    path,
+                                                    true /* isUserAction */,
+                                                );
+                                            },
+                                        );
                                     }}
                                 />
                             </div>
-                        }
+                        )}
                         <div id="editor-panel">
                             {openedFile !== undefined ? (
                                 <>
@@ -77,12 +81,10 @@ export const EditorRoot: React.FC = () => {
                                 </>
                             ) : (
                                 <Body1>
-                                        {
-                                            showFileTree ?
-                                            "Click a file to open it"
-                                            : "File tree is hidden. Go to Settings > Editor and show the file tree to open files."
-                                        }
-                                    </Body1>
+                                    {showFileTree
+                                        ? "Click a file to open it"
+                                        : "File tree is hidden. Go to Settings > Editor and show the file tree to open files."}
+                                </Body1>
                             )}
                         </div>
                     </>

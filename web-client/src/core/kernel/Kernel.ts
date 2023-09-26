@@ -105,6 +105,8 @@ export class Kernel {
         // persist settings to local storage TODO
         const unwatchSettings = store.subscribe(
             watchSettings((newVal: SettingsState, oldVal: SettingsState) => {
+                // TODO #46: persist settings to local storage
+                // eslint-disable-next-line no-console
                 console.log({
                     message: "settings changed",
                     new: newVal,

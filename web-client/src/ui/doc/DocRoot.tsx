@@ -1,7 +1,7 @@
 //! The doc component
 
 import "./Doc.css";
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { useSelector, useStore } from "react-redux";
 import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";
 import { ExecDoc } from "low/compiler.g";
@@ -24,7 +24,7 @@ export const DocRoot: React.FC = () => {
     const { isEditingLayout } = useSelector(viewSelector);
     const { document, serial } = useSelector(documentSelector);
     const store = useStore();
-    const controller = React.useMemo(() => {
+    const controller = useMemo(() => {
         return initDocController(store as AppStore);
     }, [store]);
 
@@ -102,7 +102,11 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                     diagnostics={line.diagnostics}
                                     lineColor={line.lineColor}
                                     text={resolveTags(tagMap, line.text)}
-                                    iconUrl={line.icon ? document.project.icons[line.icon] : undefined}
+                                    iconUrl={
+                                        line.icon
+                                            ? document.project.icons[line.icon]
+                                            : undefined
+                                    }
                                     secondaryText={resolveTags(
                                         tagMap,
                                         line.secondaryText,
@@ -135,7 +139,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
         </div>
     );
 };
-const CachedDocInternal = React.memo(
+const CachedDocInternal = memo(
     DocInternal,
     (prev, next) =>
         prev.serial === next.serial && prev.controller === next.controller,

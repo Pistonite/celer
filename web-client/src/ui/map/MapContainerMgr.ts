@@ -33,9 +33,13 @@ export class MapContainerMgr {
         }
         if (attempt) {
             if (attempt === 10) {
-                MapLog.warn("failed to attach to root container after max retries. Futher failures will be ignored");
+                MapLog.warn(
+                    "failed to attach to root container after max retries. Futher failures will be ignored",
+                );
             } else if (attempt < 10) {
-                MapLog.warn("failed to attach to root container. Will retry in 1s");
+                MapLog.warn(
+                    "failed to attach to root container. Will retry in 1s",
+                );
             }
         }
         this.attachUpdateHandle = window.setTimeout(() => {

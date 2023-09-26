@@ -1,7 +1,7 @@
 export const writingRoutesNav = {
     text: "Writing Routes",
     link: "/route/",
-}
+};
 
 export const writingRoutesSidebar = {
     "/route/": [
@@ -15,11 +15,14 @@ export const writingRoutesSidebar = {
                 { text: "Route Structure", link: "/route/route-structure" },
                 { text: "Customizing Lines", link: "/route/customizing-lines" },
                 { text: "Customizing Text", link: "/route/customizing-text" },
-                { text: "Customizing Movements", link: "/route/customizing-movements" },
+                {
+                    text: "Customizing Movements",
+                    link: "/route/customizing-movements",
+                },
                 { text: "Using Presets", link: "/route/using-presets" },
                 // { text: "Configuring Plugins", link: "/route/custoimizing-movements" },
                 // { text: "Built-in Plugins", link: "/route/customiziing-movements" },
-            ]
+            ],
         },
         {
             text: "Configuration Reference",
@@ -29,7 +32,7 @@ export const writingRoutesSidebar = {
                 { text: "Presets", link: "/route/config/presets" },
                 { text: "Map", link: "/route/config/map" },
                 { text: "Other", link: "/route/config/other" },
-            ]
-        }
+            ],
+        },
     ],
-}
+};

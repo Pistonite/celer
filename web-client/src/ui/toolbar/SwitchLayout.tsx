@@ -7,7 +7,7 @@
 //! User can switch between the "default" layout and a set of saved layouts.
 //! The default layout cannot be edited or deleted, while the saved layouts can.
 
-import React from "react";
+import React, { forwardRef } from "react";
 import { useSelector } from "react-redux";
 import {
     Menu,
@@ -44,7 +44,7 @@ import {
 
 /// Switch layout control
 export const SwitchLayout: ToolbarControl = {
-    ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
+    ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
         return (
             <SwitchLayoutInternal>
                 <Tooltip content="Layout" relationship="label">

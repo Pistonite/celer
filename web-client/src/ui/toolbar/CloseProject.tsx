@@ -7,8 +7,8 @@ import { Dismiss20Regular } from "@fluentui/react-icons";
 
 import { useKernel } from "core/kernel";
 
-import { ToolbarControl } from "./util";
 import { viewSelector } from "core/store";
+import { ToolbarControl } from "./util";
 
 export const CloseProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {

@@ -71,4 +71,4 @@ export const removeTag = (text: Omit<RichText, "tag">): string => {
 /// Return just the text content of poor texts
 export const removeLinks = (text: DocPoorText[]): string => {
     return text.map((t) => t.data).join("");
-}
+};

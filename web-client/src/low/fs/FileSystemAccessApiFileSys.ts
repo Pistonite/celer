@@ -86,31 +86,31 @@ export class FileSystemAccessAPIFileSys implements FileSys {
 
     public async listDir(path: FsPath): Promise<FsResult<string[]>> {
         // return await retryIfCacheFailed(async (useCache: boolean) => {
-            const result = await this.resolveDir(path);
-            if (result.isErr()) {
-                return result;
-            }
-            // if (result.code !== FsResultCodes.Ok) {
-            //     return result;
-            // }
-            const dir = result.inner();
-            const entries: string[] = [];
+        const result = await this.resolveDir(path);
+        if (result.isErr()) {
+            return result;
+        }
+        // if (result.code !== FsResultCodes.Ok) {
+        //     return result;
+        // }
+        const dir = result.inner();
+        const entries: string[] = [];
 
-            try {
-                // @ts-expect-error FileSystemDirectoryHandle should have a values() method
-                for await (const entry of dir.values()) {
-                    if (entry.kind === "directory") {
-                        entries.push(entry.name + "/");
-                    } else {
-                        entries.push(entry.name);
-                    }
+        try {
+            // @ts-expect-error FileSystemDirectoryHandle should have a values() method
+            for await (const entry of dir.values()) {
+                if (entry.kind === "directory") {
+                    entries.push(entry.name + "/");
+                } else {
+                    entries.push(entry.name);
                 }
-            } catch (e) {
-                console.error(e);
-                return result.makeErr(FsResultCodes.Fail);
             }
+        } catch (e) {
+            console.error(e);
+            return result.makeErr(FsResultCodes.Fail);
+        }
 
-            return result.makeOk(entries);
+        return result.makeOk(entries);
 
         // });
     }
@@ -142,7 +142,7 @@ export class FileSystemAccessAPIFileSys implements FileSys {
 
         const parentPathResult = path.parent;
         if (parentPathResult.isErr()) {
-            return parentPathResult;//.propagate();
+            return parentPathResult; //.propagate();
         }
 
         const parentDirResult = await this.resolveDir(
@@ -160,9 +160,7 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         }
 
         const result = await wrapAsync(() => {
-            return parentDirHandle.getDirectoryHandle(
-                pathNameResult.inner(),
-            );
+            return parentDirHandle.getDirectoryHandle(pathNameResult.inner());
         });
         if (result.isErr()) {
             console.error(result.inner());
@@ -232,20 +230,20 @@ export class FileSystemAccessAPIFileSys implements FileSys {
 
     public async readFile(path: FsPath): Promise<FsResult<File>> {
         // return await retryIfCacheFailed(async (useCache: boolean) => {
-            const result = await this.resolveFile(path);
-            if (result.isErr()) {
-                return result;
+        const result = await this.resolveFile(path);
+        if (result.isErr()) {
+            return result;
         }
-            // if (result.code !== FsResultCodes.Ok) {
-            //     return result;
-            // }
-            try {
-                const file = await result.inner().getFile();
-                return result.makeOk(file);
-            } catch (e) {
-                console.error(e);
-                return result.makeErr(FsResultCodes.Fail);
-            }
+        // if (result.code !== FsResultCodes.Ok) {
+        //     return result;
+        // }
+        try {
+            const file = await result.inner().getFile();
+            return result.makeOk(file);
+        } catch (e) {
+            console.error(e);
+            return result.makeErr(FsResultCodes.Fail);
+        }
         // });
     }
 
@@ -254,23 +252,23 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         content: string | Uint8Array,
     ): Promise<FsResult<void>> {
         // return await retryIfCacheFailed2(async (useCache: boolean) => {
-            const result = await this.resolveFile(path);
-            
-            if (result.isErr()) {
-                return result;
-            }
-            try {
-                // @ts-expect-error FileSystemWritableFileStream is not in tslib
-                const file: FileSystemWritableFileStream =
-                    // @ts-expect-error FileSystemFileHandle should have a createWritable() method
-                    await result.inner().createWritable();
-                await file.write(content);
-                await file.close();
-                return result.makeOk(undefined);
-            } catch (e) {
-                console.error(e);
-                return result.makeErr(FsResultCodes.Fail);
-            }
+        const result = await this.resolveFile(path);
+
+        if (result.isErr()) {
+            return result;
+        }
+        try {
+            // @ts-expect-error FileSystemWritableFileStream is not in tslib
+            const file: FileSystemWritableFileStream =
+                // @ts-expect-error FileSystemFileHandle should have a createWritable() method
+                await result.inner().createWritable();
+            await file.write(content);
+            await file.close();
+            return result.makeOk(undefined);
+        } catch (e) {
+            console.error(e);
+            return result.makeErr(FsResultCodes.Fail);
+        }
         // });
     }
 
@@ -309,9 +307,9 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         }
 
         try {
-            const fileHandle = await parentDirHandleResult.inner().getFileHandle(
-                result.inner(),
-            );
+            const fileHandle = await parentDirHandleResult
+                .inner()
+                .getFileHandle(result.inner());
             // this.fileHandles[filePath] = fileHandle;
             return result.makeOk(fileHandle);
         } catch (e) {

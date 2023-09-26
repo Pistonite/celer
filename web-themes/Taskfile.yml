@@ -1,8 +1,34 @@
 version: '3'
 
 tasks:
+  install:
+    cmds:
+    - npm install
+
+  ci:
+    cmds:
+    - npm ci
+
   build:
     desc: Build theme assets and copy them to web-client
-    aliases: [b]
     cmds:
     - node build.js
+
+  check:
+    desc: Check for linting and formatting issues in theme files
+    aliases: [lint]
+    cmds:
+    - task: prettier
+      vars:
+        PRETTIER_ARGS: --check
+
+  fix:
+    desc: Fix linting and formatting issues in theme files
+    cmds:
+    - task: prettier
+      vars:
+        PRETTIER_ARGS: --write
+  
+  prettier:
+    cmds:
+    - npx prettier "./**/*.{ts,tsx,json,js,jsx,cjs,css,html}" {{.PRETTIER_ARGS}} --config ../web-client/.prettierrc.cjs

@@ -1,16 +1,53 @@
 version: '3'
 
 tasks:
+  install:
+    cmds:
+    - npm install
+
+  ci:
+    cmds:
+    - npm ci
+
   dev:
     desc: Start web client in watch mode
-    aliases: [d]
     cmds:
-    - npm run dev -- --host
+    - npx vite -- --host
 
   build:
     desc: Build web client assets
-    aliases: [b]
     cmds:
-    - npm run build
+    - npx tsc
+    - npx vite build
     - node tools/post-build.cjs
     - rm dist/index.html
+
+  check:
+    desc: Check for linting and formatting issues in web client
+    aliases: [lint]
+    cmds:
+    - node tools/lint/react-hooks.cjs
+    - task: prettier
+      vars:
+        PRETTIER_ARGS: --check
+    - task: eslint
+      vars:
+        ESLINT_ARGS: ""
+
+  fix:
+    desc: Fix linting and formatting issues in web client
+    cmds:
+    - task: prettier
+      vars:
+        PRETTIER_ARGS: --write
+    - task: eslint
+      vars:
+        ESLINT_ARGS: --fix
+
+  prettier:
+    cmds:
+    - npx prettier "./**/*.{ts,tsx,json,js,jsx,cjs,css,html}" {{.PRETTIER_ARGS}}
+
+  eslint:
+    cmds:
+    - npx eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache {{.ESLINT_ARGS}}

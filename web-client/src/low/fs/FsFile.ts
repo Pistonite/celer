@@ -77,7 +77,6 @@ export class FsFile {
             return allocErr(FsResultCodes.Fail);
         }
         return allocOk(this.buffer);
-
     }
 
     /// Set the content in memory. Does not save to FS.
@@ -106,7 +105,7 @@ export class FsFile {
     ///
     /// If it fails, the file's content will not be changed
     public async load(): Promise<FsResult<void>> {
-        const result = await this.fs.readFile( this.path);
+        const result = await this.fs.readFile(this.path);
 
         if (result.isErr()) {
             return result;
@@ -130,7 +129,9 @@ export class FsFile {
         this.isBufferDirty = false;
         // Try decoding the buffer as text
         try {
-            this.content = new TextDecoder("utf-8", { fatal: true }).decode( this.buffer,);
+            this.content = new TextDecoder("utf-8", { fatal: true }).decode(
+                this.buffer,
+            );
             this.isText = true;
         } catch (e) {
             console.error(e);

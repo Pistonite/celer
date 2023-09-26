@@ -31,7 +31,7 @@
 
 /* Background color of the primary column */
 .docline-body {
-    background-color: #001a00; 
+    background-color: #001a00;
 }
 
 /* Note blocks */
@@ -84,4 +84,3 @@
 .docline-head:hover {
     background-color: rgba(0, 0, 0, 0.4) !important;
 }
-

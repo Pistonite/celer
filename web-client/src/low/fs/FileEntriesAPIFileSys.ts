@@ -1,10 +1,7 @@
 import { allocErr, allocOk } from "low/utils";
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
-import {
-    FsResult,
-    FsResultCodes,
-} from "./FsResult";
+import { FsResult, FsResultCodes } from "./FsResult";
 
 export const isFileEntriesAPISupported = (): boolean => {
     if (!window) {
@@ -161,11 +158,11 @@ export class FileEntriesAPIFileSys implements FileSys {
         const dirEntry = result.inner();
 
         try {
-            const fileEntry = await new Promise<FileSystemEntry>(
+            const fileEntry = (await new Promise<FileSystemEntry>(
                 (resolve, reject) => {
                     dirEntry.getFile(nameResult.inner(), {}, resolve, reject);
                 },
-            ) as FileSystemFileEntry;
+            )) as FileSystemFileEntry;
             const file = await new Promise<File>((resolve, reject) => {
                 fileEntry.file(resolve, reject);
             });
@@ -176,7 +173,10 @@ export class FileEntriesAPIFileSys implements FileSys {
         }
     }
 
-    public async writeFile( _path: FsPath, _content: string | Uint8Array): Promise<FsResult<void>> {
+    public async writeFile(
+        _path: FsPath,
+        _content: string | Uint8Array,
+    ): Promise<FsResult<void>> {
         // Entries API does not support writing
         return allocErr(FsResultCodes.NotSupported);
     }
