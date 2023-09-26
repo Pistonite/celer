@@ -39,7 +39,7 @@ tasks:
   txtpp:
     desc: Preprocess source files
     cmds:
-      - echo "txtpp disabled for now"
+    - txtpp src -r
 
   prettier:
     cmds:
