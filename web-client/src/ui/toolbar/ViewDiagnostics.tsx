@@ -2,7 +2,7 @@
 //!
 //! Diagnostics are extracted from the document and cached
 
-import React from "react";
+import { forwardRef, memo } from "react";
 import {
     Tooltip,
     Menu,
@@ -23,7 +23,7 @@ import { viewActions } from "core/store";
 import { ControlComponentProps, ToolbarControl } from "./util";
 
 export const ViewDiagnostics: ToolbarControl = {
-    ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
+    ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
         const diagnostics = useDocDiagnostics();
         const { setDocLocation } = useActions(viewActions);
         return (
@@ -91,7 +91,7 @@ type ViewDiagnosticInternalProps = ControlComponentProps & {
     /// Callback to go to a diagnostic
     gotoDiagnostic: (sectionIndex: number, lineIndex: number) => void;
 };
-const ViewDiagnosticInternal = React.memo(
+const ViewDiagnosticInternal = memo(
     ({ children, data, gotoDiagnostic }: ViewDiagnosticInternalProps) => {
         return (
             <Menu>

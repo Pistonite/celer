@@ -3,7 +3,7 @@
 //! The map layer control allows the user to switch between
 //! different map layers defined in the document.
 //!
-import React from "react";
+import React, { forwardRef } from "react";
 import { useSelector } from "react-redux";
 import {
     Menu,
@@ -27,7 +27,7 @@ import {
 
 /// The map layer switch control
 export const SwitchMapLayer: ToolbarControl = {
-    ToolbarButton: React.forwardRef<HTMLButtonElement>((_, ref) => {
+    ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
         const layerNames = useMapLayerNames();
         return (
             <SwitchMapLayerInternal layerNames={layerNames}>
