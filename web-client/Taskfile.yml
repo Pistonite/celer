@@ -5,7 +5,7 @@ tasks:
     desc: Start web client in watch mode
     aliases: [d]
     cmds:
-    - npm run dev
+    - npm run dev -- --host
 
   build:
     desc: Build web client assets

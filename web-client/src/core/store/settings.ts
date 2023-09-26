@@ -18,7 +18,7 @@ import {
     initialMapSettingsState,
     mapSettingsReducers,
 } from "core/map";
-import { EditorSettingsState, initialEditorSettingsState } from "core/editor";
+import { EditorSettingsState, editorSettingsReducers, initialEditorSettingsState } from "core/editor";
 import { configureSlice } from "low/store";
 
 /// Local storage key
@@ -52,5 +52,6 @@ export const { settingsReducer, settingsActions, settingsSelector } =
             ...layoutSettingsReducers,
             ...mapSettingsReducers,
             ...docSettingsReducers,
+            ...editorSettingsReducers
         },
     });

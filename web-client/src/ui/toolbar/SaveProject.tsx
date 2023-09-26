@@ -119,6 +119,9 @@ const getIcon = (
     if (!isOpened) {
         return <Save20Regular />;
     }
+    if (!supportsSave) {
+        return <Save20Regular className="color-error" />;
+    }
     if (saveInProgress) {
         return (
             <SaveEdit20Regular
@@ -132,7 +135,7 @@ const getIcon = (
     if (autoSaveEnabled) {
         return <SaveSync20Regular className="color-success" />;
     }
-    return <Save20Regular className={clsx(!supportsSave && "color-error")} />;
+    return <Save20Regular className="color-error" />;
 };
 
 const getTooltip = (
@@ -142,6 +145,9 @@ const getTooltip = (
     lastSaveError: boolean,
     autoSaveEnabled: boolean,
 ) => {
+    if (!supportsSave) {
+        return "Save is not supported by your browser";
+    }
     if (isOpened) {
         if (saveInProgress) {
             return "Saving changes to file system...";
@@ -152,9 +158,6 @@ const getTooltip = (
         if (autoSaveEnabled) {
             return "Auto-save is enabled. Any change you made in the editor will be saved automatically after a while. (Click to manually save)";
         }
-    }
-    if (!supportsSave) {
-        return "Save is not supported by your browser";
     }
     return "Save changes to file system";
 };

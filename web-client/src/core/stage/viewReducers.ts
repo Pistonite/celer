@@ -2,11 +2,16 @@
 
 import { ReducerDecl, ReducerDeclWithPayload, withPayload } from "low/store";
 
-import { StageMode, StageViewState } from "./state";
+import { SettingsTab, StageMode, StageViewState } from "./state";
 
 export const setStageMode: ReducerDeclWithPayload<StageViewState, StageMode> =
     withPayload((state: StageViewState, mode: "view" | "edit") => {
         state.stageMode = mode;
+    });
+
+export const setSettingsTab: ReducerDeclWithPayload<StageViewState, SettingsTab> =
+    withPayload((state: StageViewState, tab: SettingsTab) => {
+        state.settingsTab = tab;
     });
 
 export const setAlert: ReducerDeclWithPayload<

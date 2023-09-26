@@ -13,8 +13,6 @@ export type EditorViewState = {
     currentFileSupported: boolean;
     unsavedFiles: string[];
 
-    showFileTree: boolean;
-
     autoLoadActive: boolean;
 
     loadInProgress: boolean;
@@ -31,7 +29,6 @@ export const initialEditorViewState: EditorViewState = {
     openedFile: undefined,
     currentFileSupported: true,
     unsavedFiles: [],
-    showFileTree: true,
     autoLoadActive: true,
     loadInProgress: false,
     lastLoadError: false,
@@ -43,11 +40,13 @@ export const initialEditorViewState: EditorViewState = {
 export type EditorSettingsState = {
     autoSaveEnabled: boolean;
     autoLoadEnabled: boolean;
+    showFileTree: boolean;
     deactivateAutoLoadAfterMinutes: number;
 };
 
 export const initialEditorSettingsState: EditorSettingsState = {
     autoSaveEnabled: true,
     autoLoadEnabled: false,
-    deactivateAutoLoadAfterMinutes: 5,
+    showFileTree: true,
+    deactivateAutoLoadAfterMinutes: 30,
 };

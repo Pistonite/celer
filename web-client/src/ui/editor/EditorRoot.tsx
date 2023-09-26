@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { Body1 } from "@fluentui/react-components";
 
 import { ErrorBoundary } from "ui/shared";
-import { viewSelector } from "core/store";
+import { settingsSelector, viewSelector } from "core/store";
 import { EditorKernel, Kernel, useKernel } from "core/kernel";
 
 import { EditorTree } from "./tree";
@@ -14,6 +14,7 @@ export const EditorRoot: React.FC = () => {
     const kernel = useKernel();
     const { serial, rootPath, openedFile, unsavedFiles, currentFileSupported } =
         useSelector(viewSelector);
+    const { showFileTree } = useSelector(settingsSelector);
 
     // Disabling this rule as we are using serial to signal when to update
     // A new listDir reference will cause the tree to update
@@ -33,22 +34,24 @@ export const EditorRoot: React.FC = () => {
             <div id="editor-root">
                 {rootPath !== undefined ? (
                     <>
-                        <div id="editor-tree-container">
-                            <EditorTree
-                                rootName={rootPath}
-                                listDir={listDir}
-                                openedFile={openedFile}
-                                unsavedFiles={unsavedFiles}
-                                onClickFile={(path) => {
-                                    tryWithEditorRef(kernel, 10, (editor) => {
-                                        editor.openFile(
-                                            path,
-                                            true /* isUserAction */,
-                                        );
-                                    });
-                                }}
-                            />
-                        </div>
+                        { showFileTree &&
+                            <div id="editor-tree-container">
+                                <EditorTree
+                                    rootName={rootPath}
+                                    listDir={listDir}
+                                    openedFile={openedFile}
+                                    unsavedFiles={unsavedFiles}
+                                    onClickFile={(path) => {
+                                        tryWithEditorRef(kernel, 10, (editor) => {
+                                            editor.openFile(
+                                                path,
+                                                true /* isUserAction */,
+                                            );
+                                        });
+                                    }}
+                                />
+                            </div>
+                        }
                         <div id="editor-panel">
                             {openedFile !== undefined ? (
                                 <>
@@ -73,7 +76,13 @@ export const EditorRoot: React.FC = () => {
                                     </div>
                                 </>
                             ) : (
-                                <Body1>Click a file to open it</Body1>
+                                <Body1>
+                                        {
+                                            showFileTree ?
+                                            "Click a file to open it"
+                                            : "File tree is hidden. Go to Settings > Editor and show the file tree to open files."
+                                        }
+                                    </Body1>
                             )}
                         </div>
                     </>

@@ -23,7 +23,7 @@ export class MapContainerMgr {
     }
 
     /// Attempt to attach the map to the root container until success
-    public attach(map: L.Map) {
+    public attach(map: L.Map, attempt?: number) {
         if (this.attachUpdateHandle) {
             // already trying
             return;
@@ -31,10 +31,16 @@ export class MapContainerMgr {
         if (this.attachInternal(map)) {
             return;
         }
-        MapLog.warn("failed to attach to root container. Will retry in 1s");
+        if (attempt) {
+            if (attempt === 10) {
+                MapLog.warn("failed to attach to root container after max retries. Futher failures will be ignored");
+            } else if (attempt < 10) {
+                MapLog.warn("failed to attach to root container. Will retry in 1s");
+            }
+        }
         this.attachUpdateHandle = window.setTimeout(() => {
             this.attachUpdateHandle = null;
-            this.attach(map);
+            this.attach(map, attempt ? attempt + 1 : 1);
         }, 1000);
     }
 

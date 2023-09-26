@@ -3,28 +3,57 @@
 import "./SettingsDialog.css";
 
 import clsx from "clsx";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useSelector } from "react-redux";
 import { TabList, Tab, Divider } from "@fluentui/react-components";
-import { Document20Regular, Map20Regular } from "@fluentui/react-icons";
+import { Document20Regular, Map20Regular, Code20Regular } from "@fluentui/react-icons";
 
 import { useWindowSize } from "ui/shared";
+import { viewActions, viewSelector } from "core/store";
+import { SettingsTab } from "core/stage";
 import { useActions } from "low/store";
-import { viewActions } from "core/store";
 
 import { MapSettings } from "./MapSettings";
 import { DocSettings } from "./DocSettings";
+import { EditorSettings } from "./EditorSettings";
 
-const Tabs = {
-    doc: "doc",
-    map: "map",
-    info: "info",
+type TabData = {
+    id: SettingsTab;
+    text: string;
+    Icon: React.ComponentType;
+    Page: React.ComponentType;
 };
 
 export const SettingsDialog: React.FC = () => {
-    const [selectedTab, setSelectedTab] = useState<string>(Tabs.doc);
     const { windowWidth } = useWindowSize();
-    const { setEditingKeyBinding } = useActions(viewActions);
+    const { setEditingKeyBinding, setSettingsTab } = useActions(viewActions);
+    const { stageMode, settingsTab } = useSelector(viewSelector);
     const verticalTabs = windowWidth > 400;
+
+    const tabs: TabData[] = useMemo(() => {
+        return [
+            {
+                id: "doc",
+                text: "Document",
+                Icon: Document20Regular,
+                Page: DocSettings,
+            },
+            {
+                id: "map",
+                text: "Map",
+                Icon: Map20Regular,
+                Page: MapSettings,
+            },
+            ...(stageMode === "edit" ? [
+                {
+                    id: "editor",
+                    text: "Editor",
+                    Icon: Code20Regular,
+                    Page: EditorSettings,
+                } as const,
+            ] : []),
+        ] satisfies TabData[];
+    }, [stageMode]);
 
     return (
         <div
@@ -33,26 +62,23 @@ export const SettingsDialog: React.FC = () => {
         >
             <TabList
                 vertical={verticalTabs}
-                selectedValue={selectedTab}
+                selectedValue={settingsTab}
                 onTabSelect={(_, data) => {
                     // cancel editing key binding when switching tabs
                     setEditingKeyBinding(undefined);
-                    setSelectedTab(data.value as string);
+                    setSettingsTab(data.value as SettingsTab);
                 }}
             >
-                <Tab
-                    id={Tabs.doc}
-                    value={Tabs.doc}
-                    icon={<Document20Regular />}
-                >
-                    Document
-                </Tab>
-                <Tab id={Tabs.map} value={Tabs.map} icon={<Map20Regular />}>
-                    Map
-                </Tab>
-                <Tab id={Tabs.info} value={Tabs.info} icon={<Map20Regular />}>
-                    Info
-                </Tab>
+                {
+                    tabs.map(({id, text, Icon}) => (
+                        <Tab
+                        key={id}
+                            id={id}
+                            value={id}
+                            icon={<Icon />}
+                            >{text}</Tab>
+                    ))
+                }
             </TabList>
             <Divider
                 id="settings-separator"
@@ -62,8 +88,11 @@ export const SettingsDialog: React.FC = () => {
                 vertical={verticalTabs}
             />
             <div id="settings-panel">
-                {selectedTab === Tabs.doc && <DocSettings key={Tabs.doc} />}
-                {selectedTab === Tabs.map && <MapSettings key={Tabs.map} />}
+                {
+                    tabs.filter(({id}) => id === settingsTab).map(({id, Page}) => (
+                        <Page key={id} />
+                    ))
+                }
             </div>
         </div>
     );
