@@ -1,4 +1,4 @@
-name: Lint TypeScript
+name: Lint
 on:
   push:
     branches:
