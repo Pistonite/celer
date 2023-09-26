@@ -4,7 +4,7 @@ import { AppDispatcher, viewActions } from "core/store";
 import { FileSys, FsFile, FsPath, FsResult, FsResultCodes } from "low/fs";
 import { allocErr, allocOk, sleep } from "low/utils";
 
-import { EditorContainerId, EditorLog, toFsPath } from "./utils";
+import { EditorContainerId, EditorLog, detectLanguageByFileName, toFsPath } from "./utils";
 
 type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -318,19 +318,8 @@ export class FileMgr {
                     this.monacoEditor.setValue(content);
                 }
 
-                // TODO: actually have language detection
-                const model = this.monacoEditor.getModel();
-                if (model) {
-                    if (path.endsWith(".js")) {
-                        if (model.getLanguageId() !== "javascript") {
-                            monaco.editor.setModelLanguage(model, "javascript");
-                        }
-                    } else {
-                        if (model.getLanguageId() !== "text") {
-                            monaco.editor.setModelLanguage(model, "text");
-                        }
-                    }
-                }
+                // TODO #20: language feature support
+                this.switchLanguage(detectLanguageByFileName(path));
 
                 await this.attachEditor();
                 this.isEditorOpen = true;
@@ -339,6 +328,16 @@ export class FileMgr {
                 this.isEditorOpen = false;
             }
         });
+    }
+
+    private switchLanguage(languageId: string) {
+                const model = this.monacoEditor.getModel();
+                if (!model) {
+            return;
+        }
+        if (model.getLanguageId() !== languageId) {
+            monaco.editor.setModelLanguage(model, languageId);
+        }
     }
 
     public async syncEditorToCurrentFile() {

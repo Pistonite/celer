@@ -12,3 +12,16 @@ export const toFsPath = (path: string[]): FsPath => {
     }
     return fsPath;
 };
+
+export const detectLanguageByFileName = (fileName: string): string => {
+    if (fileName.match(/\.(j|t)s$/i)) {
+        return "typescript";
+    }
+    if (fileName.match(/\.ya?ml/i)) {
+        return "yaml";
+    }
+    if (fileName.match(/\.json/i)) {
+        return "json";
+    }
+    return "text";
+}

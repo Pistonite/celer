@@ -155,12 +155,12 @@ export class FsFile {
     ///
     /// This is private - outside code should only use writeIfDirty
     private async write(): Promise<FsResult<void>> {
+        this.updateBuffer();
         const buffer = this.buffer;
         if (this.content === undefined || buffer === undefined) {
             // file was never read or modified
             return allocOk();
         }
-        this.updateBuffer();
         const result = await this.fs.writeFile(this.path, buffer);
         if (result.isErr()) {
             return result;
@@ -171,7 +171,7 @@ export class FsFile {
 
     /// Encode the content to buffer if it is newer
     private updateBuffer() {
-        if (!this.isContentNewer) {
+        if (!this.isContentNewer || this.content === undefined) {
             return;
         }
         const encoder = new TextEncoder();
