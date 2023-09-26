@@ -1,5 +1,5 @@
 //! Server environment settings
-use std::{env, path::Path};
+use std::env;
 use tracing::Level;
 
 pub struct Environment {

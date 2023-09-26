@@ -1,13 +1,9 @@
-use std::collections::HashMap;
-
-use celerctypes::{DocDiagnostic, GameCoord, RouteMetadata};
-use derivative::Derivative;
+use celerctypes::DocDiagnostic;
 use serde_json::Value;
 
-use crate::{
-    lang::{parse_poor, Preset},
-    pack::{PackerError, PackerValue}, util::WasmError,
-};
+use crate::lang::parse_poor;
+use crate::pack::PackerError;
+use crate::util::WasmError;
 
 mod comp_coord;
 pub use comp_coord::*;
@@ -249,7 +245,7 @@ pub(crate) use validate_not_array_or_object;
 
 #[cfg(test)]
 mod test_utils {
-    use celerctypes::{Axis, MapCoordMap, MapMetadata};
+    use celerctypes::{Axis, MapCoordMap, MapMetadata, RouteMetadata};
 
     use super::*;
 
