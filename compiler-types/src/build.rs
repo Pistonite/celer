@@ -48,8 +48,7 @@ fn main_internal() -> io::Result<()> {
         OUTPUT_FILE,
         output)?;
 
-    // run prettier
-    run_prettier()
+    Ok(())
 }
 
 fn generate_bindings() -> io::Result<()> {
@@ -80,23 +79,5 @@ fn transform_file(file_path: &Path) -> io::Result<String> {
         Some(line)
     }).collect::<Vec<_>>().join("\n");
     Ok(transformed)
-}
-
-fn run_prettier() -> io::Result<()> {
-    println!("formatting with prettier");
-    let result = process::Command::new("npm")
-        .args(&["run", "fmt:compiler"])
-        .current_dir("../web-client")
-        .spawn()?
-        .wait_with_output()?;
-
-    if !result.status.success() {
-        eprintln!("prettier finished with error");
-        eprintln!("{}", String::from_utf8_lossy(&result.stderr));
-        return Err(io::Error::new(io::ErrorKind::Other, "prettier failed"));
-    } else {
-        println!("{}", String::from_utf8_lossy(&result.stdout));
-    }
-    Ok(())
 }
 

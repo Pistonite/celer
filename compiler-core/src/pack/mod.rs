@@ -7,7 +7,7 @@
 //! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
 //! and a json blob of the route.
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, convert::Infallible};
 use serde_json::{Map, Value};
 
 use celerctypes::DocDiagnostic;
@@ -32,6 +32,7 @@ pub use resource::*;
 
 use crate::json::Cast;
 use crate::lang::parse_poor;
+#[cfg(feature = "wasm")]
 use crate::util::{WasmError, Path};
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
@@ -130,6 +131,12 @@ impl PackerError {
         #[cfg(not(feature = "wasm"))]
         let x = false;
         x
+    }
+}
+
+impl From<Infallible> for PackerError {
+    fn from(_: Infallible) -> Self {
+        unreachable!()
     }
 }
 

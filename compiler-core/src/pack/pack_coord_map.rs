@@ -350,5 +350,18 @@ mod test {
                 mapping_3d: (Axis::X, Axis::Z, Axis::Z),
             })
         );
+
+        let v = json!({
+            "2d": ["-x", "x"],
+            "3d": ["x", "-z", "-y"],
+        });
+        let result = pack_coord_map(v, 0).await;
+        assert_eq!(
+            result,
+            Ok(MapCoordMap {
+                mapping_2d: (Axis::NegX, Axis::X),
+                mapping_3d: (Axis::X, Axis::NegZ, Axis::NegY),
+            })
+        );
     }
 }

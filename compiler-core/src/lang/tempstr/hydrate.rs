@@ -11,7 +11,7 @@ impl TempStr {
         S: AsRef<str>,
     {
         let mut s = String::new();
-        async_for!(block in &self.0, {
+        let _ = async_for!(block in &self.0, {
             match block {
                 TempStrBlock::Lit(lit) => s.push_str(lit),
                 TempStrBlock::Var(idx) => {

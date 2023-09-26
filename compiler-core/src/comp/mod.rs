@@ -1,8 +1,11 @@
+use std::convert::Infallible;
+
 use celerctypes::DocDiagnostic;
 use serde_json::Value;
 
 use crate::lang::parse_poor;
 use crate::pack::PackerError;
+#[cfg(feature = "wasm")]
 use crate::util::WasmError;
 
 mod comp_coord;
@@ -123,6 +126,12 @@ pub enum CompilerError {
     Wasm(#[from] WasmError),
 }
 
+impl From<Infallible> for CompilerError {
+    fn from(_: Infallible) -> Self {
+        unreachable!()
+    }
+}
+
 impl CompilerError {
     /// Get the more info url for a compiler error
     pub fn get_info_url(&self) -> String {
@@ -164,6 +173,7 @@ impl CompilerError {
             CompilerError::InvalidRouteType => {
                 "https://celer.pistonite.org/docs/route/route-structure#entry-point".to_string()
             }
+            #[cfg(feature = "wasm")]
             CompilerError::Wasm(_) => "".to_string(),
         }
     }
@@ -187,10 +197,11 @@ impl CompilerError {
             | CompilerError::IsPreface(_)
             | CompilerError::InvalidSectionType
             | CompilerError::PackerErrors(_)
-            | CompilerError::Wasm(_)
             | CompilerError::InvalidRouteType => "error",
 
             CompilerError::UnusedProperty(_) | CompilerError::TooManyTagsInCounter => "warn",
+            #[cfg(feature = "wasm")]
+            CompilerError::Wasm(_) => "error",
         };
 
         s.to_string()

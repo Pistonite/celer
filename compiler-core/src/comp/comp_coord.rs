@@ -14,6 +14,9 @@ macro_rules! map_coord {
                     Axis::X => $output.0 = n,
                     Axis::Y => $output.1 = n,
                     Axis::Z => $output.2 = n,
+                    Axis::NegX => $output.0 = -n,
+                    Axis::NegY => $output.1 = -n,
+                    Axis::NegZ => $output.2 = -n,
                 }
                 Ok(())
             }

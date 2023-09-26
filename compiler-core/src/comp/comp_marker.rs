@@ -54,7 +54,7 @@ impl Compiler {
         let mut should_fail = false;
 
         // ignore error from async loop
-        let _ = async_for!((key, value) in mapping, {
+        let _: Result<(), _> = async_for!((key, value) in mapping, {
             match key.as_ref() {
                 prop::AT => match self.transform_coord(value) {
                     Ok(coord) => at = Some(coord),

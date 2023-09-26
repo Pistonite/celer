@@ -8,7 +8,7 @@ use crate::util::Path;
 use super::ResourceLoader;
 
 #[cfg(not(feature = "wasm"))]
-pub type ArcLoader<R> = Arc<dyn ResourceLoader<Ref=R> + Send + Sync>;
+pub type ArcLoader = Arc<dyn ResourceLoader + Send + Sync>;
 #[cfg(not(feature = "wasm"))]
 pub type ArcResolver = Arc<dyn ResourceResolver + Send + Sync>;
 #[cfg(feature = "wasm")]

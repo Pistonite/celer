@@ -50,7 +50,7 @@ async fn pack_route_internal(
     let route = match route.try_into_array() {
         Ok(arr) => {
             let mut output = vec![];
-            async_for!(x in arr.into_iter(), {
+            let _ = async_for!(x in arr.into_iter(), {
                 match Use::from(x) {
                     Use::Invalid(path) => {
                         output.push(PackerValue::Err(PackerError::InvalidUse(path)));

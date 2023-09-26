@@ -191,7 +191,7 @@ impl Compiler {
                 }
                 Value::Object(obj) => {
                     // ignore error from async loop
-                    let _ = async_for!((key, value) in obj, {
+                    let _: Result<(), _> = async_for!((key, value) in obj, {
                         match key.as_str() {
                             prop::DOC => {
                                 if validate_not_array_or_object!(

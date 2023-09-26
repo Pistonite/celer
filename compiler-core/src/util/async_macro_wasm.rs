@@ -59,7 +59,7 @@ pub async fn set_timeout_yield() -> Result<(), WasmError> {
 macro_rules! async_for {
     ($v:pat in $iter:expr, $body:stmt) => {
         {
-            let mut result = Ok(());
+            let mut result: Result<(), $crate::util::async_macro_wasm::WasmError> = Ok(());
             for $v in $iter {
                 result = $crate::util::async_macro_wasm::set_timeout_yield().await;
                 if result.is_err() {

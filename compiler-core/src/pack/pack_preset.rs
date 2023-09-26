@@ -64,7 +64,7 @@ async fn pack_presets_internal(
             })?;
             output.push((full_key, preset));
         }
-    });
+    })?;
 
     Ok(())
 }

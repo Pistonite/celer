@@ -4,6 +4,8 @@
 //! The [`CompDoc`] will be transformed into a [`ExecDoc`]
 //! for rendering
 
+use std::convert::Infallible;
+
 mod exec_line;
 pub use exec_line::*;
 mod exec_map;
@@ -13,10 +15,12 @@ pub use exec_section::*;
 mod exec_doc;
 pub use exec_doc::*;
 
+#[cfg(feature = "wasm")]
 use crate::util::WasmError;
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ExecError {
+    #[cfg(feature = "wasm")]
     #[error("wasm error: {0}")]
     Wasm(#[from] WasmError),
 }
@@ -29,5 +33,11 @@ impl ExecError {
         #[cfg(not(feature = "wasm"))]
         let x = false;
         x
+    }
+}
+
+impl From<Infallible> for ExecError {
+    fn from(_: Infallible) -> Self {
+        unreachable!()
     }
 }

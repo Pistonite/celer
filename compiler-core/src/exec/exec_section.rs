@@ -32,8 +32,7 @@ impl CompSection {
 mod test {
     use celerctypes::{GameCoord, MapIcon, MapLine, MapMarker};
 
-    use crate::comp::{CompMarker, CompMovement};
-    use crate::CompLine;
+    use crate::comp::{CompLine, CompMarker, CompMovement};
 
     use super::*;
 
