@@ -8,7 +8,7 @@ use crate::util::async_for;
 
 use super::{
     pack_config, pack_route, ConfigBuilder, PackerError, PackerResult, PackerValue, ResourceLoader,
-    ResourcePath, ResourceResolver,
+    ResourcePath, ResourceResolver, Resource,
 };
 
 macro_rules! check_metadata_not_array_or_object {
@@ -43,17 +43,14 @@ pub struct PackedProject {
 ///
 /// Returns the metadata and the route blob with all uses resolved
 pub async fn pack_project(
-    project: &ResourcePath,
-    resolver: &dyn ResourceResolver,
-    loader: &dyn ResourceLoader,
+    project_resource: &Resource,
     setting: &Setting,
 ) -> PackerResult<PackedProject> {
-    let project_json = project.load_structured(loader).await?;
-    let mut project_obj = match project_json {
+    let mut project_obj = match project_resource.load_structured().await? {
         Value::Object(o) => o,
         _ => {
             return Err(PackerError::InvalidResourceType(
-                project.name().to_string(),
+                project_resource.name().to_string(),
                 "object".to_string(),
             ))
         }
@@ -76,11 +73,11 @@ pub async fn pack_project(
 
     let mut builder = ConfigBuilder::default();
     async_for!((i, config) in config.into_iter().enumerate(), {
-        pack_config(&mut builder, resolver, loader, config, i, setting).await?;
+        pack_config(&mut builder, project_resource, config, i, setting).await?;
     });
 
     let route_metadata = RouteMetadata {
-        name: project.name().to_string(),
+        name: project_resource.name().to_string(),
         title,
         version,
         map: builder.map.ok_or(PackerError::MissingMap)?,
@@ -94,9 +91,8 @@ pub async fn pack_project(
     };
 
     let route = pack_route(
+        project_resource,
         route,
-        resolver,
-        loader,
         setting.max_use_depth,
         setting.max_ref_depth,
     )

@@ -103,7 +103,7 @@ impl DocRichText {
 
 /// Document poor text type. Just text or link
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone, TS)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type", content = "data", rename_all = "camelCase")]
 #[ts(export)]
 pub enum DocPoorText {
     Text(String),

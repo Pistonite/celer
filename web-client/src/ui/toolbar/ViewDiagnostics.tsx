@@ -16,7 +16,7 @@ import {
     DocumentError20Regular,
     DocumentCheckmark20Regular,
 } from "@fluentui/react-icons";
-import { DiagnosticSection, useDocDiagnostics } from "core/doc";
+import { DiagnosticSection, removeLinks, useDocDiagnostics } from "core/doc";
 import { useActions } from "low/store";
 import { viewActions } from "core/store";
 
@@ -108,7 +108,7 @@ const ViewDiagnosticInternal = React.memo(
                                         {section.diagnostics.map((d, i) => (
                                             <Tooltip
                                                 key={i}
-                                                content={d.msg}
+                                                content={removeLinks(d.msg)}
                                                 relationship="description"
                                             >
                                                 <MenuItem

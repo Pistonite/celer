@@ -1,24 +1,25 @@
 use celerctypes::ExecDoc;
 
 use crate::comp::CompDoc;
+use crate::util::async_for;
 
-use super::MapSectionBuilder;
+use super::{MapSectionBuilder, ExecResult};
 
 impl CompDoc {
     /// Execute the document
-    pub async fn exec(self) -> ExecDoc {
+    pub async fn exec(self) -> ExecResult<ExecDoc> {
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("", &self.project.map.initial_coord);
         let mut sections = vec![];
-        for (index, section) in self.route.into_iter().enumerate() {
-            let exec_section = section.exec(index, &mut map_builder).await;
+        async_for!((index, section) in self.route.into_iter().enumerate(), {
+            let exec_section = section.exec(index, &mut map_builder).await?;
             sections.push(exec_section);
-        }
-        ExecDoc {
+        })?;
+        Ok(ExecDoc {
             project: self.project,
             preface: self.preface,
             route: sections,
-        }
+        })
     }
 }
 
@@ -49,7 +50,7 @@ mod test {
             ..Default::default()
         };
 
-        let exec_doc = test_doc.exec().await;
+        let exec_doc = test_doc.exec().await.unwrap();
         assert_eq!(exec_doc.project, test_metadata);
         assert_eq!(exec_doc.preface, test_preface);
     }
@@ -89,7 +90,7 @@ mod test {
             ..Default::default()
         };
 
-        let exec_doc = test_doc.exec().await;
+        let exec_doc = test_doc.exec().await.unwrap();
         assert_eq!(
             exec_doc.route,
             vec![

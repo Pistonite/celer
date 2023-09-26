@@ -20,9 +20,14 @@ export class Debouncer {
 
     /// Trigger the callback after delay if not triggered again
     public dispatch() {
+        this.cancelPending();
+        this.handle = window.setTimeout(this.callback, this.delay);
+    }
+
+    /// Cancel the pending callback if there is one
+    public cancelPending() {
         if (this.handle !== undefined) {
             clearTimeout(this.handle);
         }
-        this.handle = window.setTimeout(this.callback, this.delay);
     }
 }

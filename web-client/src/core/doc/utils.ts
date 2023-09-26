@@ -1,6 +1,6 @@
 //! Utilities for document
 
-import { DocTag, ExecDoc } from "low/compiler.g";
+import { DocPoorText, DocRichText, DocTag, ExecDoc } from "low/compiler.g";
 
 import {
     DocSettingsState,
@@ -54,11 +54,9 @@ export const getRelativeLocation = (
 };
 
 /// Rich text type with resolved tag
-export type RichText = {
+export type RichText = Omit<DocRichText, "tag"> & {
     /// The tag of the text
     tag?: DocTag;
-    /// The text content
-    text: string;
 };
 
 /// Function to remove the tag from the text and return the just text content
@@ -69,3 +67,8 @@ export const removeTags = (text: Omit<RichText, "tag">[]): string => {
 export const removeTag = (text: Omit<RichText, "tag">): string => {
     return text.text;
 };
+
+/// Return just the text content of poor texts
+export const removeLinks = (text: DocPoorText[]): string => {
+    return text.map((t) => t.data).join("");
+}

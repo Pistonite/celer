@@ -1,13 +1,9 @@
-use std::collections::HashMap;
-
-use celerctypes::{DocDiagnostic, GameCoord, RouteMetadata};
-use derivative::Derivative;
+use celerctypes::DocDiagnostic;
 use serde_json::Value;
 
-use crate::{
-    lang::{parse_poor, Preset},
-    pack::{PackerError, PackerValue},
-};
+use crate::lang::parse_poor;
+use crate::pack::PackerError;
+use crate::util::WasmError;
 
 mod comp_coord;
 pub use comp_coord::*;
@@ -31,7 +27,7 @@ pub mod prop;
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
 
-#[derive(PartialEq, Debug, thiserror::Error)]
+#[derive(PartialEq, Debug, Clone, thiserror::Error)]
 pub enum CompilerError {
     /// When an array is specified as a line
     #[error("A line cannot be an array. Check the formatting of your route.")]
@@ -121,6 +117,10 @@ pub enum CompilerError {
     /// When the `route` property is invalid
     #[error("Route data is not the correct type.")]
     InvalidRouteType,
+
+    #[cfg(feature = "wasm")]
+    #[error("Wasm execution error: {0}")]
+    Wasm(#[from] WasmError),
 }
 
 impl CompilerError {
@@ -164,6 +164,7 @@ impl CompilerError {
             CompilerError::InvalidRouteType => {
                 "https://celer.pistonite.org/docs/route/route-structure#entry-point".to_string()
             }
+            CompilerError::Wasm(_) => "".to_string(),
         }
     }
 
@@ -186,6 +187,7 @@ impl CompilerError {
             | CompilerError::IsPreface(_)
             | CompilerError::InvalidSectionType
             | CompilerError::PackerErrors(_)
+            | CompilerError::Wasm(_)
             | CompilerError::InvalidRouteType => "error",
 
             CompilerError::UnusedProperty(_) | CompilerError::TooManyTagsInCounter => "warn",
@@ -216,7 +218,16 @@ impl CompilerError {
             }
         }
     }
+
+    pub fn is_cancel(&self) -> bool {
+        #[cfg(feature = "wasm")]
+        let x = matches!(self, Self::Wasm(WasmError::Cancel));
+        #[cfg(not(feature = "wasm"))]
+        let x = false;
+        x
+    }
 }
+
 
 /// Convenience macro for validating a json value and add error
 macro_rules! validate_not_array_or_object {
@@ -234,7 +245,7 @@ pub(crate) use validate_not_array_or_object;
 
 #[cfg(test)]
 mod test_utils {
-    use celerctypes::{Axis, MapCoordMap, MapMetadata};
+    use celerctypes::{Axis, MapCoordMap, MapMetadata, RouteMetadata};
 
     use super::*;
 

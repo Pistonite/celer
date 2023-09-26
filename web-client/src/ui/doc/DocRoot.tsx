@@ -102,7 +102,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                     diagnostics={line.diagnostics}
                                     lineColor={line.lineColor}
                                     text={resolveTags(tagMap, line.text)}
-                                    iconUrl={document.project.icons[line.icon]}
+                                    iconUrl={line.icon ? document.project.icons[line.icon] : undefined}
                                     secondaryText={resolveTags(
                                         tagMap,
                                         line.secondaryText,
@@ -122,6 +122,9 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                             ))}
                         </DocSection>
                     ))}
+                    <div id="doc-end">
+                        You have reached the end of the document :))
+                    </div>
                 </div>
                 <div id={DocNoteContainerId}>
                     {flatNotes.map((props, i) => (

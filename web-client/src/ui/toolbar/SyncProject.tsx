@@ -23,9 +23,10 @@ import {
 import clsx from "clsx";
 
 import { useKernel } from "core/kernel";
-import { settingsSelector, viewSelector } from "core/store";
+import { settingsSelector, viewActions, viewSelector } from "core/store";
 
 import { ToolbarControl } from "./util";
+import { useActions } from "low/store";
 
 export const SyncProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
@@ -58,6 +59,7 @@ const useSyncProjectControl = () => {
     const { rootPath, autoLoadActive, loadInProgress, lastLoadError } =
         useSelector(viewSelector);
     const { autoLoadEnabled } = useSelector(settingsSelector);
+    const { incFileSysSerial } = useActions(viewActions);
 
     const isOpened = rootPath !== undefined;
     const enabled = isOpened && !loadInProgress;
@@ -83,11 +85,11 @@ const useSyncProjectControl = () => {
         }
 
         const result = await editor.loadChangesFromFs(true /* isUserAction */);
-        const { FsResultCodes } = await import("low/fs");
-        if (result !== FsResultCodes.Ok) {
+        // const { FsResultCodes } = await import("low/fs");
+        if (result.isErr()) {
             // failure could be due to project structure change. try again
             const result2 = await editor.loadChangesFromFs(false);
-            if (result2 !== FsResultCodes.Ok) {
+            if (result2.isErr()) {
                 await kernel.showAlert(
                     "Error",
                     "Fail to load changes from file system. Please try again.",
@@ -96,7 +98,8 @@ const useSyncProjectControl = () => {
                 );
             }
         }
-    }, [kernel]);
+        incFileSysSerial();
+    }, [kernel, incFileSysSerial]);
 
     return { tooltip, enabled, icon, handler };
 };

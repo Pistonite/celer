@@ -4,128 +4,88 @@
 //! It is recommended to use a reverse proxy such as nginx to handle HTTPS.
 //! Alternatively, you can use a CDN such as Cloudflare to proxy the website.
 
-use async_std::path::PathBuf as AsyncPathBuf;
 use std::io;
-use std::path::PathBuf;
+use std::path::Path;
+use axum::{Server, Router};
+use tower_http::services::{ServeDir, ServeFile};
+use tower_http::trace::{DefaultOnResponse, DefaultOnRequest, DefaultMakeSpan};
+use tracing::{Level, debug, info};
 
-use clap::Parser;
-use tide::security;
-use tide::{Body, Middleware, Redirect, Request, Response, StatusCode};
-//use surf::{Client, Config};
+mod env;
+use env::Environment;
+mod services;
+use services::{NestedRouteRedirectService, AddHtmlExtService};
 
-mod state;
-use state::State;
-use tide_fluent_routes::fs::ServeFs;
-use tide_fluent_routes::root;
-use tide_fluent_routes::routebuilder::RouteBuilder;
-use tide_fluent_routes::router::Router;
 
-#[derive(Debug, Parser)]
-#[command(name = "start-server")]
-struct Cli {
-    /// Enable debug output
-    #[arg(short, long)]
-    debug: bool,
-    /// The port to listen on.
-    #[arg(short, long, default_value = "8173")]
-    port: u16,
-    /// Serve docs from a different location
-    #[arg(long, default_value = "docs")]
-    docs_dir: String,
-}
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let env = Environment::parse();
+    tracing_subscriber::fmt()
+        .compact()
+        .with_max_level(env.logging_level.clone())
+        .init();
+    info!("configuring routes...");
 
-#[async_std::main]
-async fn main() -> Result<(), std::io::Error> {
-    let args = Cli::parse();
-    if args.debug {
-        std::env::set_var("RUST_LOG", "debug");
-    } else {
-        std::env::set_var("RUST_LOG", "info");
-    }
-    env_logger::init();
+    let router = Router::new();
+    let router = init_docs(router, &env.docs_dir)?;
+    let router = init_edit(router, &env.app_dir)?;
+    let router = init_static(router, &env.app_dir, &["/static", "/assets", "/themes"])?;
 
-    let address = format!("0.0.0.0:{}", args.port);
 
-    log::info!("Starting web server on {address}");
-    // TODO: state
-    let mut app = tide::with_state(State {
-       // http_client: Client::new(),
-        //docs_proxy: args.docs_proxy.clone(),
-    });
-    //app.with(security::CorsMiddleware::new());
-    app.with(driftwood::ApacheCombinedLogger);
-    let not_found_middleware = NotFoundMiddleware {
-        path: AsyncPathBuf::from(&args.docs_dir).join("404.html"),
-    };
-    // if let Some(docs_dir) = args.docs_dir {
-    //     app.at("/docs/*").get(handle_docs_proxy);
-    //     app.at("/docs").get(handle_docs_proxy);
-    // } else {
-    //     todo!("docs")
-    // }
-    app.register(
-        root()
-            .at("docs", |r| {
-                r.serve_file(PathBuf::from(&args.docs_dir).join("index.html"))
-                    .expect("Failed to setup /docs route")
-            })
-            .at("docs/", |r| {
-                r.with(not_found_middleware, |r| {
-                    r.serve_dir(&args.docs_dir)
-                        .expect("Failed to setup /docs route")
-                })
-                .serve_file(PathBuf::from(&args.docs_dir).join("index.html"))
-                .expect("Failed to setup /docs route")
-            }),
+    let router = router.layer(tower_http::trace::TraceLayer::new_for_http()
+        .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+        .on_request(DefaultOnRequest::new().level(Level::INFO))
+        .on_response(DefaultOnResponse::new().level(Level::INFO))
+
     );
 
-    // app.at("/docs").with(NotFoundMiddleware {
-    //     path: AsyncPathBuf::from(&args.docs_dir).join("404.html"),
-    // }).serve_dir(&args.docs_dir)?;
-    // app.at("/docs").serve_file(PathBuf::from(&args.docs_dir).join("index.html"))?;
-    log::info!("Serving {} at /docs", args.docs_dir);
+    let address = format!("0.0.0.0:{}", env.port).parse()?;
+    info!("starting server on {address}");
+    Server::bind(&address)
+        .serve(router.into_make_service())
+        .await?;
 
-    // // log::info!("Setting up /icon");
-    // // app.at("/icon/:icon").get(get_icon);
-    // // log::info!("Setting up /icons");
-    // // app.at("/icons").get(get_icons);
-    // // log::info!("Setting up static files");
-    // // app.at("/").serve_dir(static_dir)?;
-    // // log::info!("Setting up index.heml");
-    // // app.at("/").serve_file(format!("{}index.html", static_dir))?;
-
-    app.listen(address).await?;
     Ok(())
 }
 
-#[derive(Debug, Clone)]
-struct NotFoundMiddleware {
-    path: AsyncPathBuf,
-}
-#[async_trait::async_trait]
-impl Middleware<State> for NotFoundMiddleware {
-    async fn handle(&self, req: Request<State>, next: tide::Next<'_, State>) -> tide::Result {
-        let mut res = next.run(req).await;
-        if res.status() != StatusCode::NotFound {
-            return Ok(res);
-        }
-        match Body::from_file(&self.path).await {
-            Ok(body) => {
-                res.set_body(body);
-                //res.set_status(StatusCode::Ok);
-                Ok(res)
-            }
-            Err(e) if e.kind() == io::ErrorKind::NotFound => {
-                log::warn!("File not found: {:?}", &self.path);
-                Ok(res)
-            }
-            Err(e) => Err(e.into()),
-        }
-    }
+/// Setup the /docs route
+fn init_docs(router: Router, docs_dir: &str) -> Result<Router, io::Error> {
+    let docs_dir = Path::new(docs_dir).canonicalize()?;
+    debug!("/docs -> {}", docs_dir.display());
+    let docs_404_path = docs_dir.join("404.html").canonicalize()?;
+    let service = NestedRouteRedirectService::new("/docs", 
+        ServeDir::new(&docs_dir).fallback(
+            AddHtmlExtService(ServeDir::new(&docs_dir).fallback(
+                ServeFile::new(&docs_404_path)
+            ))
+        )
+    );
+    Ok(router.nest_service("/docs", service))
 }
 
-// async fn handle_docs_proxy(req: Request<State>) -> tide::Result {
-//     let location = req.state().docs_proxy.as_ref().expect("docs_proxy must exist, check the routes");
-//     let client = &req.state().http_client;
-//     state::handle_get_proxy(client, location, &req).await
-// }
+/// Setup the /edit route
+fn init_edit(router: Router, app_dir: &str) -> Result<Router, io::Error> {
+    let edit_path = Path::new(app_dir).join("edit.html").canonicalize()?;
+    debug!("/edit -> {}", edit_path.display());
+
+    let service = ServeFile::new(&edit_path);
+    Ok(router.nest_service("/edit", service))
+}
+
+/// Setup static asset routes from web client
+fn init_static(mut router: Router, app_dir: &str, routes: &[&'static str]) -> Result<Router, io::Error> {
+    let app_dir = Path::new(app_dir);
+    
+    for route in routes {
+        // strip the leading slash
+        debug_assert_eq!(route.chars().next(), Some('/'));
+        let path = app_dir.join(&route[1..]).canonicalize()?;
+        debug!("/{route} -> {}", path.display());
+        let service = NestedRouteRedirectService::new(route,
+            ServeDir::new(&path)
+        );
+        router = router.nest_service(route, service);
+    }
+    Ok(router)
+}
+

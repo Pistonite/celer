@@ -52,4 +52,7 @@ Examples:
 - use: Pistonite/celer/README.md
 # View giz/file.yaml in the foo/bar repo on the `test` branch
 - use: foo/bar/giz/file.yaml:test
-
+:::tip
+When a file loaded from a GitHub reference uses a relative or absolute reference,
+it will resolve to the same branch/reference as that file.
+:::

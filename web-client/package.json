@@ -5,10 +5,6 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "theme": "cd ../themes && npm run build",
-        "compile": "npm run compile:worker && npm run compile:console",
-        "compile:worker": "tsc src/core/engine/worker.ts --lib dom,ES2020 && uglifyjs --compress --mangle --output src/core/engine/worker.min.js -- src/core/engine/worker.js",
-        "compile:console": "uglifyjs --compress --mangle --output src/core/engine/console.min.js -- src/core/engine/console.js",
         "build": "tsc && vite build",
         "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache",
         "fmt": "prettier \"./**/*.{ts,tsx,json,cjs,css,html}\"",

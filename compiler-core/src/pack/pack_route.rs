@@ -9,7 +9,7 @@ use serde_json::Value;
 use crate::json::Cast;
 use crate::util::async_for;
 
-use super::{PackerError, PackerResult, PackerValue, ResourceLoader, ResourceResolver, Use};
+use super::{PackerError, Use, Resource, ValidUse, PackerValue};
 
 /// Resolve `use`s inside the route json blob
 ///
@@ -20,20 +20,22 @@ use super::{PackerError, PackerResult, PackerValue, ResourceLoader, ResourceReso
 ///
 /// If a `use` cannot be resolved, a [`PackerValue::Err`] is placed in the place of the `use`
 pub async fn pack_route(
+    project_resource: &Resource,
     route: Value,
-    resolver: &dyn ResourceResolver,
-    loader: &dyn ResourceLoader,
     max_use_depth: usize,
     max_ref_depth: usize,
 ) -> PackerValue {
-    pack_route_internal(route, resolver, loader, 0, 0, max_use_depth, max_ref_depth).await
+    pack_route_internal(project_resource, route, 0, 0, max_use_depth, max_ref_depth).await
 }
 
-#[async_recursion::async_recursion]
+/// Pack a portion of the route
+#[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
+#[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
 async fn pack_route_internal(
+    // The resource that contains the route
+    resource: &Resource,
+    // The route blob
     route: Value,
-    resolver: &dyn ResourceResolver,
-    loader: &dyn ResourceLoader,
     use_depth: usize,
     ref_depth: usize,
     max_use_depth: usize,
@@ -55,9 +57,8 @@ async fn pack_route_internal(
                     }
                     Use::NotUse(x) => {
                         let result = pack_route_internal(
+                            resource,
                             x,
-                            resolver,
-                            loader,
                             use_depth,
                             ref_depth+1,
                             max_use_depth,
@@ -65,11 +66,10 @@ async fn pack_route_internal(
                         ).await;
                         output.push(result);
                     }
-                    other => {
+                    Use::Valid(valid_use) => {
                         let result = resolve_use(
-                            resolver,
-                            loader,
-                            &other,
+                            resource,
+                            valid_use,
                             use_depth,
                             max_use_depth,
                             max_ref_depth,
@@ -100,9 +100,8 @@ async fn pack_route_internal(
                     let mut new_obj = BTreeMap::new();
                     async_for!((key, value) in obj.into_iter(), {
                         let result = pack_route_internal(
+                            resource,
                             value,
-                            resolver,
-                            loader,
                             use_depth,
                             ref_depth+1,
                             max_use_depth,
@@ -118,11 +117,10 @@ async fn pack_route_internal(
                 }
             }
         }
-        other => {
+        Use::Valid(valid_use) => {
             resolve_use(
-                resolver,
-                loader,
-                &other,
+                resource,
+                valid_use,
                 use_depth,
                 max_use_depth,
                 max_ref_depth,
@@ -132,34 +130,29 @@ async fn pack_route_internal(
     }
 }
 
+/// Resolve a `use` in the route
 async fn resolve_use(
-    resolver: &dyn ResourceResolver,
-    loader: &dyn ResourceLoader,
-    use_prop: &Use,
+    // The resource that contains the `use`
+    resource: &Resource,
+    use_prop: ValidUse,
     use_depth: usize,
     max_use_depth: usize,
     max_ref_depth: usize,
 ) -> PackerValue {
     // Resolve the resource
-    let resource = match resolver.resolve(use_prop) {
+    let inner_resource = match resource.resolve(&use_prop).await {
         Ok(r) => r,
         Err(e) => return PackerValue::Err(e),
     };
     // Load the resource
-    let resource_json = match resource.load_structured(loader).await {
-        Ok(r) => r,
-        Err(e) => return PackerValue::Err(e),
-    };
-    // Get the resolver to resolve `use`s inside the resource
-    let inner_resolver = match resolver.get_resolver(use_prop) {
+    let data = match inner_resource.load_structured().await {
         Ok(r) => r,
         Err(e) => return PackerValue::Err(e),
     };
 
     pack_route_internal(
-        resource_json,
-        inner_resolver.as_ref(),
-        loader,
+        &inner_resource,
+        data,
         use_depth + 1,
         0, // ref depth can be reset
         max_use_depth,

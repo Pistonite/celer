@@ -1,12 +1,13 @@
 import { FsPath } from "./FsPath";
-import { FsResult, FsResultCode } from "./FsResult";
+import { FsResult } from "./FsResult";
 
+/// Interface for using the browser's various file system API to access Files
 export interface FileSys {
     /// Async init function
     ///
     /// The FileSys implementation may need to do some async initialization.
     /// For example, request permission from the user.
-    init: () => Promise<FsResultCode>;
+    init: () => Promise<FsResult<void>>;
 
     /// Get the root path of the file system for display
     ///
@@ -20,42 +21,35 @@ export interface FileSys {
     /// Directory names end with a slash.
     ///
     /// Returns Fail if the underlying file system operation fails.
-    ///
-    /// This function cannot throw.
     listDir: (path: FsPath) => Promise<FsResult<string[]>>;
 
-    /// Read the content of a file and last modified time
-    ///
-    /// Returns the content of the file as a string.
+    /// Read the file as a File object
     ///
     /// Returns Fail if the underlying file system operation fails.
-    /// Returns InvalidEncoding if the file is not valid UTF-8.
-    ///
-    /// This function cannot throw.
-    readFile: (path: FsPath) => Promise<FsResult<string>>;
-    readFileAndModifiedTime: (
-        path: FsPath,
-    ) => Promise<FsResult<[string, number]>>;
+    readFile: (path: FsPath) => Promise<FsResult<File>>;
 
-    /// Read if the file has been modified since
-    ///
-    /// Returns NotModified if not modified
-    ///
-    /// This function cannot throw.
-    readIfModified: (
-        path: FsPath,
-        lastModified?: number,
-    ) => Promise<FsResult<[string, number]>>;
+    // /// Read if the file has been modified since
+    // ///
+    // /// Returns NotModified if not modified
+    // readIfModified: (
+    //     path: FsPath,
+    //     lastModified?: number,
+    // ) => Promise<FsResult<[string, number]>>;
+
+    /// Read file as raw bytes
+    // readFileAsBytes: (path: FsPath) => Promise<FsResult<Uint8Array>>;
 
     /// Returns if this implementation supports writing to a file
     isWritable: () => boolean;
 
     /// Write content to a file
     ///
-    /// Writes the content to the path specified using UTF-8 encoding. Will overwrite existing file.
-    /// Will not create new file.
+    /// Writes the content to the path specified.
+    /// If the content is a string, UTF-8 encoding is used.
+    ///
+    /// Will overwrite existing file.
     ///
     /// Returns Fail if the underlying file system operation fails.
     /// Returns NotSupported if the browser does not support this
-    writeFile: (path: FsPath, content: string) => Promise<FsResultCode>;
+    writeFile: (path: FsPath, content: string | Uint8Array) => Promise<FsResult<void>>;
 }

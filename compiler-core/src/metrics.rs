@@ -1,4 +1,4 @@
-use std::time::Instant;
+use instant::Instant;
 
 /// Metrics collected during compilation
 #[derive(Debug, Clone)]
@@ -15,6 +15,12 @@ pub struct CompilerMetrics {
     pub exec_time_ms: Option<u64>,
 }
 
+impl Default for CompilerMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CompilerMetrics {
     pub fn new() -> Self {
         Self {
@@ -26,20 +32,28 @@ impl CompilerMetrics {
         }
     }
 
-    pub fn pack_done(&mut self) {
-        self.pack_time_ms = Some(self.start_time.elapsed().as_millis() as u64);
+    pub fn pack_done(&mut self) -> u64 {
+        let time = self.start_time.elapsed().as_millis() as u64;
+        self.pack_time_ms = Some(time);
         self.start_time = Instant::now();
+        time
     }
-    pub fn comp_done(&mut self) {
-        self.comp_time_ms = Some(self.start_time.elapsed().as_millis() as u64);
+    pub fn comp_done(&mut self) -> u64 {
+        let time = self.start_time.elapsed().as_millis() as u64;
+        self.comp_time_ms = Some(time);
         self.start_time = Instant::now();
+        time
     }
-    pub fn plug_done(&mut self) {
-        self.plug_time_ms = Some(self.start_time.elapsed().as_millis() as u64);
+    pub fn plug_done(&mut self) -> u64 {
+        let time = self.start_time.elapsed().as_millis() as u64;
+        self.plug_time_ms = Some(time);
         self.start_time = Instant::now();
+        time
     }
-    pub fn exec_done(&mut self) {
-        self.exec_time_ms = Some(self.start_time.elapsed().as_millis() as u64);
+    pub fn exec_done(&mut self) -> u64 {
+        let time = self.start_time.elapsed().as_millis() as u64;
+        self.exec_time_ms = Some(time);
         self.start_time = Instant::now();
+        time
     }
 }

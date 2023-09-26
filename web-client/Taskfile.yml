@@ -1,0 +1,16 @@
+version: '3'
+
+tasks:
+  dev:
+    desc: Start web client in watch mode
+    aliases: [d]
+    cmds:
+    - npm run dev
+
+  build:
+    desc: Build web client assets
+    aliases: [b]
+    cmds:
+    - npm run build
+    - node tools/post-build.cjs
+    - rm dist/index.html

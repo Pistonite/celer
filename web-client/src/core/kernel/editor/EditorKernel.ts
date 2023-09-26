@@ -1,6 +1,6 @@
 //! Editor logic that wraps monaco editor
 
-import { FileSys, FsResultCode } from "low/fs";
+import { FileSys, FsResult } from "low/fs";
 
 /// Interface used to access editor API
 ///
@@ -8,6 +8,12 @@ import { FileSys, FsResultCode } from "low/fs";
 /// The interface provides a way for TypeScript to know about the editor
 /// without importing the editor module.
 export interface EditorKernel {
+    /// Initialize
+    init(): Promise<void>;
+
+    /// Delete the editor instance
+    delete(): void;
+
     /// Reset the editor with a new file system. Unsaved changes will be lost
     reset(fs?: FileSys): Promise<void>;
 
@@ -18,7 +24,7 @@ export interface EditorKernel {
     listDir(path: string[], isUserAction: boolean): Promise<string[]>;
 
     /// Open a file in the editor
-    openFile(path: string[], isUserAction: boolean): Promise<FsResultCode>;
+    openFile(path: string[], isUserAction: boolean): Promise<FsResult<void>>;
 
     /// Check if there are unsaved changes
     hasUnsavedChanges(): Promise<boolean>;
@@ -30,8 +36,14 @@ export interface EditorKernel {
     hasUnsavedChangesSync(): boolean;
 
     /// Load changes from the file system for the opened files
-    loadChangesFromFs(isUserAction: boolean): Promise<FsResultCode>;
+    loadChangesFromFs(isUserAction: boolean): Promise<FsResult<void>>;
 
     /// Save changes to the file system for the opened files
-    saveChangesToFs(isUserAction: boolean): Promise<FsResultCode>;
+    saveChangesToFs(isUserAction: boolean): Promise<FsResult<void>>;
+
+    /// Trigger a compiler run. If one is running, there will be another run after it
+    compile(): void;
+
+    /// Cancel the current compiler run
+    cancelCompile(): void;
 }

@@ -74,7 +74,7 @@ impl Compiler {
                         Err((mut l, errors)) => {
                             async_for!(error in errors, {
                                 error.add_to_diagnostics(&mut l.diagnostics);
-                            });
+                            })?;
                             l
                         }
                     };
@@ -84,14 +84,15 @@ impl Compiler {
                     section.lines.push(self.create_empty_line_for_error(&[CompilerError::PackerErrors(errors)]).await);
                 }
             }
-        });
+        })?;
 
         Ok(section)
     }
 
     async fn create_empty_line_for_error(&self, errors: &[CompilerError]) -> CompLine {
         let mut diagnostics = vec![];
-        async_for!(error in errors, {
+        // ignore if async loop fails
+        let _ = async_for!(error in errors, {
             error.add_to_diagnostics(&mut diagnostics);
         });
         CompLine {

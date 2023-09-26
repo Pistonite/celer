@@ -7,14 +7,14 @@ export default defineConfig({
     description: "Documentation for Celer Route Engine",
     head: [
         // Favicon
-        [ 'link', { rel: 'icon', href: '/docs/icon.svg', type: 'image/svg+xml' } ],
+        [ 'link', { rel: 'icon', href: '/static/celer-3.svg', type: 'image/svg+xml' } ],
+        // Color
+        [ 'meta', { property: 'theme-color', content: 'rgb(173,255,184)' } ],
         // Open Graph
         [ 'meta', { property: 'og:site_name', content: 'celer.pistonite.org' } ],
         [ 'meta', { property: 'og:type', content: 'website' } ],
-        [ 'meta', { property: 'og:image', content: 'https://celer.pistonite.org/docs/icon.png' } ],
+        [ 'meta', { property: 'og:image', content: 'https://celer.pistonite.org/static/celer-3.png' } ],
         [ 'meta', { property: 'og:description', content: 'Documentation for Celer Route Engine' } ],
-        // <meta property="og:title" content="Regen"> dynamic
-        // <meta property="og:url" content="https://regen.pistonite.org"> dynamic
     ],
     transformHead: async (context: TransformContext) => {
         const page = context.page === "index.md" ? "" : ("/" + ( context.page.endsWith(".md") ? context.page.slice(0, -3) : context.page ));
@@ -24,9 +24,9 @@ export default defineConfig({
         ];
     },
     base: "/docs/",
-    cleanUrls: false, // tide has no easy way to support this
+    cleanUrls: true,
     themeConfig: {
-        logo: "/icon.svg",
+        logo: "https://celer.pistonite.org/static/celer-3.svg",
 
         // https://vitepress.dev/reference/default-theme-config
         nav: [

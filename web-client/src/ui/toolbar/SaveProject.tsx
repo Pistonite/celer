@@ -83,8 +83,7 @@ const useSaveProjectControl = () => {
         }
 
         const result = await editor.saveChangesToFs(true /* isUserAction */);
-        const { FsResultCodes } = await import("low/fs");
-        if (result !== FsResultCodes.Ok) {
+        if (result.isErr()) {
             await kernel.showAlert(
                 "Error",
                 "Fail to save changes to file system. Please try again.",

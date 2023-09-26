@@ -29,7 +29,7 @@ type RichBlockProps = RichText & {
     size: TextProps["size"];
 };
 
-const RichBlock: React.FC<RichBlockProps> = ({ text, tag, size }) => {
+const RichBlock: React.FC<RichBlockProps> = ({ text, tag, link, size }) => {
     if (!tag) {
         return (
             <Text as="span" size={size}>
@@ -51,7 +51,7 @@ const RichBlock: React.FC<RichBlockProps> = ({ text, tag, size }) => {
                 backgroundColor: tag.background || undefined,
             }}
         >
-            {tag.link ? <a href={tag.link}>{text}</a> : text}
+            {link ? <a href={link}>{text}</a> : text}
         </Text>
     );
 };

@@ -1,5 +1,5 @@
 import "./Editor.css";
-import { useCallback, useEffect } from "react";
+import { useCallback, } from "react";
 import { useSelector } from "react-redux";
 import { Body1 } from "@fluentui/react-components";
 
@@ -14,10 +14,6 @@ export const EditorRoot: React.FC = () => {
     const kernel = useKernel();
     const { serial, rootPath, openedFile, unsavedFiles, currentFileSupported } =
         useSelector(viewSelector);
-
-    useEffect(() => {
-        kernel.initEditor();
-    }, [kernel]);
 
     // Disabling this rule as we are using serial to signal when to update
     // A new listDir reference will cause the tree to update

@@ -1,4 +1,5 @@
-import { FsResult, FsResultCodes, setOkValue } from "./FsResult";
+import { allocErr, allocOk } from "low/utils";
+import { FsResult, FsResultCodes } from "./FsResult";
 
 /// File system path
 ///
@@ -65,43 +66,26 @@ class FsPathImpl implements FsPath {
 
     get parent(): FsResult<FsPath> {
         if (this.underlying === "") {
-            return {
-                code: FsResultCodes.IsRoot,
-            };
+            return allocErr(FsResultCodes.IsRoot);
         }
 
         const i = this.underlying.lastIndexOf("/");
         if (i < 0) {
-            return {
-                code: FsResultCodes.Ok,
-                value: fsRootPath,
-            };
+            return allocOk(fsRootPath);
         }
-        return {
-            code: FsResultCodes.Ok,
-            value: new FsPathImpl(this.underlying.substring(0, i)),
-        };
+        return allocOk(new FsPathImpl(this.underlying.substring(0, i)));
     }
 
     get name(): FsResult<string> {
         if (this.underlying === "") {
-            return {
-                code: FsResultCodes.IsRoot,
-            };
+            return allocErr(FsResultCodes.IsRoot);
         }
 
         const i = this.underlying.lastIndexOf("/");
         if (i < 0) {
-            return {
-                code: FsResultCodes.Ok,
-                value: this.underlying,
-            };
+            return allocOk(this.underlying);
         }
-
-        return {
-            code: FsResultCodes.Ok,
-            value: this.underlying.substring(i + 1),
-        };
+        return allocOk(this.underlying.substring(i + 1));
     }
 
     get path(): string {
@@ -119,13 +103,7 @@ class FsPathImpl implements FsPath {
     }
 
     public resolveSibling(path: string): FsResult<FsPath> {
-        const result = this.parent;
-        if (result.code !== FsResultCodes.Ok) {
-            return result;
-        }
-
-        const newPath = result.value.resolve(path);
-        return setOkValue(result, newPath);
+        return this.parent.map((parent) => parent.resolve(path));
     }
 }
 

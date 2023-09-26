@@ -7,12 +7,11 @@
 //! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
 //! and a json blob of the route.
 
-mod image;
-mod pack_config;
 use std::collections::BTreeMap;
+use serde_json::{Map, Value};
 
 use celerctypes::DocDiagnostic;
-use derivative::Derivative;
+mod pack_config;
 pub use pack_config::*;
 mod pack_coord_map;
 pub use pack_coord_map::*;
@@ -30,15 +29,21 @@ mod pack_use;
 pub use pack_use::*;
 mod resource;
 pub use resource::*;
-use serde_json::{Map, Value};
 
 use crate::json::Cast;
 use crate::lang::parse_poor;
+use crate::util::{WasmError, Path};
 
-#[derive(Debug, PartialEq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum PackerError {
-    #[error("Invalid `use` value: {0}")]
+    #[error("The project file (project.yaml) is missing or invalid.")]
+    InvalidProject,
+
+    #[error("Invalid `use` value: {0}. If you are specifying a relative path, make sure to start with ./ or ../")]
     InvalidUse(String),
+
+    #[error("Invalid path: {0}")]
+    InvalidPath(String),
 
     #[error("Max depth of {0} levels of `use` is reached. Please make sure there are no circular dependencies.")]
     MaxUseDepthExceeded(usize),
@@ -52,8 +57,14 @@ pub enum PackerError {
     #[error("The format of resource {0} cannot be determined")]
     UnknownFormat(String),
 
-    #[error("Error when parsing structured data")]
-    InvalidFormat,
+    #[error("Cannot load file: {0}")]
+    LoadFile(String),
+
+    #[error("Cannot load url: {0}")]
+    LoadUrl(String),
+
+    #[error("Error when parsing structured data in file {0}: {1}")]
+    InvalidFormat(String, String),
 
     #[error("")]
     InvalidIcon,
@@ -98,6 +109,10 @@ pub enum PackerError {
 
     #[error("{0}")]
     NotImpl(String),
+
+    #[cfg(feature = "wasm")]
+    #[error("Wasm execution error: {0}")]
+    Wasm(#[from] WasmError),
 }
 
 impl PackerError {
@@ -107,6 +122,14 @@ impl PackerError {
             msg_type: "error".to_string(),
             source: "celerc/packer".to_string(),
         });
+    }
+
+    pub fn is_cancel(&self) -> bool {
+        #[cfg(feature = "wasm")]
+        let x = matches!(self, Self::Wasm(WasmError::Cancel));
+        #[cfg(not(feature = "wasm"))]
+        let x = false;
+        x
     }
 }
 
@@ -197,7 +220,8 @@ impl PackerValue {
         }
     }
 
-    #[async_recursion::async_recursion]
+    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
+    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
     async fn flatten_internal(self, output_errors: &mut Vec<PackerError>) -> Option<Value> {
         match self {
             Self::Ok(x) => Some(x),

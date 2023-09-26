@@ -1,81 +1,40 @@
-use celerc::comp::CompDoc;
-use serde::{ser::SerializeStruct, Serialize, Serializer};
-use serde_json::Value;
+use celerctypes::ExecDoc;
+use js_sys::Function;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
+mod api;
 
+mod wasm;
+use wasm::*;
+
+mod resource;
+mod logger;
+
+// WASM output types
+import!{
+    import { ExecDoc } from "low/compiler.g";
+    import { Option } from "low/utils";
 }
 
-macro_rules! js_await {
-    ($($call:tt)*) => {
-        {
-            let promise_result = $($call)*;
-            let promise = promise_result?;
-            let promise = js_sys::Promise::resolve(&promise);
-            wasm_bindgen_futures::JsFuture::from(promise).await?
-        }
-    };
-}
+// WASM output type implementation
+into!{ExecDoc}
 
-macro_rules! wasm_api {
-    (
-        import {
-            $($import:ty),*
-        }
-        $(
-            $(#[doc = $doc:literal])*
-            export async fn $name:ident($($arg:ident: $arg_ty:ty),*) -> $ret_ty:ty $body:block
-        )*
-    ) => {
-        // define typescript doc and function
-
-        pub fn generate_d_ts() -> String {
-            let mut d_ts = String::new();
-            d_ts.push_str("import { ");
-            $(
-                d_ts.push_str(stringify!($import));
-                d_ts.push_str(", ");
-            )*
-            d_ts.push_str(" } from \"low/compiler.g\";\n\n");
-            $(
-                d_ts.push_str(concat!(
-                    $(
-                        "///", $doc, "\n",
-                    )*
-                    "export function ", stringify!($name), "(", $(stringify!($arg), ": ", stringify!($arg_ty), ",")*,
-                    "): Promise<", stringify!($ret_ty), ">;\n\n"
-                ));
-            )*
-            d_ts
-        }
-
-        $(
-            // define docs
-            $(#[doc = $doc])*
-            #[allow(non_snake_case)]
-            #[wasm_bindgen(js_name = $name, skip_typescript)]
-            pub async fn $name($($arg: JsValue),*) -> Result<JsValue, JsValue> $body
-        )*
+ffi!(
+    /// Initialize
+    pub async fn initCompiler(logger: JsValue, load_file: Function) -> void {
+        api::init(logger, load_file);
+        JsValue::UNDEFINED
     }
-}
 
-wasm_api!(
-    import { ExecDoc }
+    /// Compile a document from web editor
+    pub async fn compileDocument() -> Option<ExecDoc> {
+        api::compile_document().await
+    }
 
-    /// Test converting from compdoc
-    export async fn tryCompileFromCompDoc(comp_doc: any) -> ExecDoc {
-        log("here");
-        let comp_doc: CompDoc = serde_wasm_bindgen::from_value(comp_doc)?;
-        log("here1");
-        let exec_doc = comp_doc.exec().await;
-        log("here2");
-        let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-        let r = exec_doc.serialize(&serializer)?;
-
-        Ok(r)
+    /// Request current compilation be cancelled
+    pub async fn requestCancel() -> void {
+        celerc::api::cancel_current_compilation();
+        JsValue::UNDEFINED
     }
 );
+
