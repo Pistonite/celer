@@ -92,7 +92,7 @@ impl Compiler {
     async fn create_empty_line_for_error(&self, errors: &[CompilerError]) -> CompLine {
         let mut diagnostics = vec![];
         // ignore if async loop fails
-        let _: Result<(), _> = async_for!(error in errors, {
+        let _ = async_for!(error in errors, {
             error.add_to_diagnostics(&mut diagnostics);
         });
         CompLine {

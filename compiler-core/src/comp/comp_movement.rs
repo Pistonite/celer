@@ -84,7 +84,7 @@ impl Compiler {
                 let mut should_fail = false;
 
                 // ignore error from async loop
-                let _: Result<(), _> = async_for!((key, value) in props, {
+                let _ = async_for!((key, value) in props, {
                     match key.as_ref() {
                         prop::TO => match self.transform_coord(value) {
                             Ok(coord) => to = Some(coord),

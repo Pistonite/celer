@@ -7,7 +7,8 @@
 //! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
 //! and a json blob of the route.
 
-use std::{collections::BTreeMap, convert::Infallible};
+use std::collections::BTreeMap;
+use std::convert::Infallible;
 use serde_json::{Map, Value};
 
 use celerctypes::DocDiagnostic;

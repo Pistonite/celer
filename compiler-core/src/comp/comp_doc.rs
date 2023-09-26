@@ -83,7 +83,7 @@ impl Compiler {
 
     async fn create_empty_section_for_error(&self, errors: &[CompilerError]) -> CompSection {
         let mut diagnostics = vec![];
-        let _: Result<(), _> = async_for!(error in errors, {
+        let _ = async_for!(error in errors, {
             error.add_to_diagnostics(&mut diagnostics);
         });
         let line = CompLine {
