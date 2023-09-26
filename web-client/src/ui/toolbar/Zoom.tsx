@@ -32,7 +32,6 @@ const createZoomControl = (isZoomIn: boolean): ToolbarControl => {
         }),
         MenuItem: () => {
             const handler = useZoomControl(isZoomIn);
-            console.log("hi");
             return (
                 <MenuItem
                     icon={isZoomIn ? <ZoomIn20Regular /> : <ZoomOut20Regular />}
