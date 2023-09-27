@@ -65,7 +65,6 @@ mod test {
                     line_color: "color".to_string(),
                     ..Default::default()
                 }],
-                ..Default::default()
             },
             CompSection {
                 name: "test2".to_string(),
@@ -74,7 +73,6 @@ mod test {
                     line_color: "color".to_string(),
                     ..Default::default()
                 }],
-                ..Default::default()
             },
         ];
 

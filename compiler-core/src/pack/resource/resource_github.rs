@@ -57,7 +57,7 @@ impl ResourceResolver for GitHubResourceResolver {
             }
             ValidUse::Absolute(path) => {
                 let new_path =
-                    Path::try_from(&path).ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
+                    Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
                 if self.path == new_path {
                     return Ok(source.clone());
                 }
@@ -95,8 +95,8 @@ pub async fn create_github_resource(
     reference: Option<&str>,
     url_loader: ArcLoader,
 ) -> PackerResult<Resource> {
-    let path = Path::try_from(&path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
-    let url = get_github_url(&owner, &repo, &path, reference.as_deref()).await?;
+    let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
+    let url = get_github_url(owner, repo, &path, reference).await?;
     Ok(Resource::new(
         ResourcePath::Url(url),
         Arc::new(EmptyLoader),
@@ -112,8 +112,8 @@ pub async fn create_github_resource_from(
     path: &str,
     reference: Option<&str>,
 ) -> PackerResult<Resource> {
-    let path = Path::try_from(&path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
-    let url = get_github_url(&owner, &repo, &path, reference.as_deref()).await?;
+    let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
+    let url = get_github_url(owner, repo, &path, reference).await?;
     Ok(source.create(
         ResourcePath::Url(url),
         Arc::new(GitHubResourceResolver::new(owner, repo, path, reference)),

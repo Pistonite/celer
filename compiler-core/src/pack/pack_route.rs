@@ -98,7 +98,8 @@ async fn pack_route_internal(
             match x.try_into_object() {
                 Ok(obj) => {
                     let mut new_obj = BTreeMap::new();
-                    async_for!((key, value) in obj.into_iter(), {
+                    // ignore errors in iteration
+                    let _ = async_for!((key, value) in obj.into_iter(), {
                         let result = pack_route_internal(
                             resource,
                             value,

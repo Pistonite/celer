@@ -67,7 +67,7 @@ impl From<Value> for Use {
             let mut reference_split = v.splitn(2, ':');
             // unwrap is safe because we know there is at least one element
             let path = reference_split.next().unwrap();
-            if path.ends_with("/") {
+            if path.ends_with('/') {
                 return Self::Invalid(v);
             }
 
@@ -255,7 +255,7 @@ mod test {
         ];
 
         for test in tests {
-            assert_eq!(Use::from(make_use(&test)), Use::Invalid(test.to_string()));
+            assert_eq!(Use::from(make_use(test)), Use::Invalid(test.to_string()));
         }
     }
 }

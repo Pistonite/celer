@@ -91,7 +91,7 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
         let mut packed_layers = Vec::with_capacity(layers.len());
         async_for!((i, layer) in layers.into_iter().enumerate(), {
             packed_layers.push(pack_map_layer(layer, index, i)?);
-        });
+        })?;
         packed_layers
     };
 

@@ -27,7 +27,7 @@ impl ResourceResolver for LocalResourceResolver {
             }
             ValidUse::Absolute(path) => {
                 let new_path =
-                    Path::try_from(&path).ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
+                    Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
                 if self.0 == new_path {
                     return Ok(source.clone());
                 }

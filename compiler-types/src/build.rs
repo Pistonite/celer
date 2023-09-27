@@ -52,7 +52,7 @@ fn main_internal() -> io::Result<()> {
 
 fn generate_bindings() -> io::Result<()> {
     let result = process::Command::new("cargo")
-        .args(&["test"])
+        .args(["test"])
         .spawn()?
         .wait_with_output()?;
 
@@ -70,15 +70,7 @@ fn transform_file(file_path: &Path) -> io::Result<String> {
     let content = fs::read_to_string(file_path)?;
     let transformed = content
         .lines()
-        .filter_map(|line| {
-            if line.starts_with("//") {
-                return None;
-            }
-            if line.starts_with("import") {
-                return None;
-            }
-            Some(line)
-        })
+        .filter(|line| !line.starts_with("//") && line.starts_with("import"))
         .collect::<Vec<_>>()
         .join("\n");
     Ok(transformed)

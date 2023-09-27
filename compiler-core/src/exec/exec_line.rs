@@ -251,7 +251,7 @@ mod test {
             ..Default::default()
         };
         let mut builder = Default::default();
-        test_line.exec(4, 5, &mut builder).await;
+        test_line.exec(4, 5, &mut builder).await.unwrap();
         assert_eq!(
             builder.icons,
             vec![MapIcon {
@@ -290,7 +290,7 @@ mod test {
         };
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
-        test_line.exec(0, 0, &mut map_builder).await;
+        test_line.exec(0, 0, &mut map_builder).await.unwrap();
         let map_section = map_builder.build();
         assert_eq!(
             map_section.lines,
@@ -332,7 +332,7 @@ mod test {
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
         map_builder.add_coord("blue", &GameCoord::default());
-        test_line.exec(0, 0, &mut map_builder).await;
+        test_line.exec(0, 0, &mut map_builder).await.unwrap();
 
         map_builder.add_coord("test color", &GameCoord::default());
         let map = map_builder.build();

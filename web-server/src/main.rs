@@ -21,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env = Environment::parse();
     tracing_subscriber::fmt()
         .compact()
-        .with_max_level(env.logging_level.clone())
+        .with_max_level(env.logging_level)
         .init();
     info!("configuring routes...");
 
@@ -54,7 +54,7 @@ fn init_docs(router: Router, docs_dir: &str) -> Result<Router, io::Error> {
     let service = NestedRouteRedirectService::new(
         "/docs",
         ServeDir::new(&docs_dir).fallback(AddHtmlExtService(
-            ServeDir::new(&docs_dir).fallback(ServeFile::new(&docs_404_path)),
+            ServeDir::new(&docs_dir).fallback(ServeFile::new(docs_404_path)),
         )),
     );
     Ok(router.nest_service("/docs", service))

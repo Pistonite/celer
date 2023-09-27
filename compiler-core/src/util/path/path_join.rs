@@ -10,7 +10,7 @@ impl Path {
         } else {
             self.0.split('/').collect::<Vec<_>>()
         };
-        let path = path.as_ref().replace("\\", "/");
+        let path = path.as_ref().replace('\\', "/");
         for seg in path.split('/') {
             if seg.is_empty() {
                 continue;
@@ -19,9 +19,7 @@ impl Path {
                 continue;
             }
             if seg == ".." {
-                if segs.pop().is_none() {
-                    return None;
-                }
+                segs.pop()?;
             } else {
                 segs.push(seg);
             }
