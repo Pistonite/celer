@@ -36,6 +36,25 @@ includes:
     dir: ./web-themes
 
 tasks:
+  check:
+    desc: Check issues in all packages
+    deps: [check:ts, check:rs]
+
+  check:ts:
+    cmds:
+    - task: docs:check
+    - task: client:check
+    - task: themes:check
+
+  check:rs:
+    cmds:
+    - cargo fmt --check
+    - cargo clippy --all-features --all-targets -- -D warnings -D clippy::todo
+
+  fix:rs:
+    cmds:
+    - cargo fmt
+
   docker:
     deps: [build]
     desc: Build docker container
