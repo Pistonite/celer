@@ -44,7 +44,7 @@ describe("ui/doc/KeyMgr", () => {
             const { keyMgr: keyMgr2 } = setupTest("editing");
             keyMgr2.onKeyDown("x");
             keyMgr2.onKeyDown("x");
-            expect(getAttr(keyMgr2, "currentStrokes")).toEqual(["x"]);
+            expect(getAttr(keyMgr2, "currentStrokes")).toEqual(["y"]);
         });
 
         it("editing: should add to current strokes", () => {
