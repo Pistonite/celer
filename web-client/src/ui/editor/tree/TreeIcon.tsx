@@ -1,6 +1,7 @@
 import {
     Folder16Filled,
-    Document16Filled,
+    Document16Regular,
+    Image16Filled,
     Info16Filled,
     CodeJs16Filled,
     CodeTs16Filled,
@@ -23,30 +24,28 @@ const getFileTypeAndIcon = ({
     if (isDirectory) {
         return ["folder", <Folder16Filled />];
     }
-    if (
-        file.endsWith(".js") ||
-        file.endsWith(".jsx") ||
-        file.endsWith(".mjs") ||
-        file.endsWith(".cjs")
-    ) {
+    if (file.match(/\.(m|c)?jsx?$/i)) {
         return ["js", <CodeJs16Filled />];
     }
-    if (file.endsWith(".ts") || file.endsWith(".tsx")) {
+    if (file.match(/\.(m|c)?tsx?$/i)) {
         return ["ts", <CodeTs16Filled />];
     }
-    if (file.endsWith(".py")) {
+    if (file.match(/\.py$/i)) {
         return ["py", <CodePy16Filled />];
     }
-    if (file.endsWith(".json")) {
+    if (file.match(/\.json$/i)) {
         return ["json", <CodeBlock16Filled />];
     }
-    if (file.endsWith(".yaml") || file.endsWith(".yml")) {
+    if (file.match(/\.ya?ml$/i)) {
         return ["yaml", <CodeBlock16Filled />];
     }
-    if (file.endsWith(".md")) {
+    if (file.match(/\.md$/i)) {
         return ["md", <Info16Filled />];
     }
-    return ["unknown", <Document16Filled />];
+    if (file.match(/\.(png|jpe?g|gif|webp)$/i)) {
+        return ["image", <Image16Filled />];
+    }
+    return ["unknown", <Document16Regular />];
 };
 
 export const TreeIcon: React.FC<TreeIconProps> = (props) => {

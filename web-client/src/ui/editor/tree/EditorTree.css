@@ -57,5 +57,8 @@
 
 .file-type-md {
     color: #61afef;
-    fill: #61afef;
+}
+
+.file-type-image {
+    color: #af81af;
 }

@@ -15,13 +15,25 @@
     color: #ff8888;
     fill: #ff8888;
 }
+@media (prefers-color-scheme: light) {
+    .color-success {
+        color: #44cc44;
+        fill: #44cc44;
+    }
 
-.color-success {
-    color: #88ff88;
-    fill: #88ff88;
+    .color-progress {
+        color: #cc8844;
+        fill: #cc8844;
+    }
 }
+@media (prefers-color-scheme: dark) {
+    .color-success {
+        color: #88ff88;
+        fill: #88ff88;
+    }
 
-.color-progress {
-    color: #ffcc88;
-    fill: #ffcc88;
+    .color-progress {
+        color: #ffcc88;
+        fill: #ffcc88;
+    }
 }

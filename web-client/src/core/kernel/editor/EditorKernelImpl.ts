@@ -140,9 +140,11 @@ export class EditorKernelImpl implements EditorKernel {
         if (isUserAction) {
             this.idleMgr.notifyActivity();
         }
-        return await this.idleMgr.pauseIdleScope(async () => {
+        const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.loadChangesFromFs();
         });
+        this.compile();
+        return result;
     }
 
     public async saveChangesToFs(
@@ -202,9 +204,6 @@ export class EditorKernelImpl implements EditorKernel {
         if (!this.fileMgr.isFsLoaded()) {
             return;
         }
-        EditorLog.info(
-            "idle" + (isLong ? " (long)" : "") + ` duration= ${duration}ms`,
-        );
         const { autoLoadActive, unsavedFiles } = viewSelector(
             this.store.getState(),
         );
@@ -225,7 +224,6 @@ export class EditorKernelImpl implements EditorKernel {
 
             if (autoLoadActive) {
                 if (autoLoadEnabled) {
-                    EditorLog.info("auto loading changes...");
                     await this.loadChangesFromFs(false /* isUserAction */);
                     // make sure file system view is rerendered in case there are directory updates
                     shouldRerenderFs = true;
@@ -245,7 +243,6 @@ export class EditorKernelImpl implements EditorKernel {
             }
 
             if (autoSaveEnabled) {
-                EditorLog.info("auto saving changes...");
                 await this.saveChangesToFs(false /* isUserAction */);
                 // make sure file system view is rerendered in case there are directory updates
                 shouldRerenderFs = true;
@@ -257,10 +254,6 @@ export class EditorKernelImpl implements EditorKernel {
 
         // do this last so we can get the latest save status after auto-save
         this.fileMgr.updateDirtyFileList(unsavedFiles);
-
-        // if (!shouldRecompile && await this.fileMgr.needsRecompile()) {
-        //     shouldRecompile = true;
-        // }
         if (shouldRecompile) {
             this.compile();
         }

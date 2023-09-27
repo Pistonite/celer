@@ -5,6 +5,8 @@ use tracing::Level;
 pub struct Environment {
     /// If server is running in debug mode
     pub logging_level: Level,
+    /// If ANSI formatting is enabled in logs
+    pub ansi: bool,
     /// Port to listen on
     pub port: u16,
     /// Directory to serve docs
@@ -18,6 +20,7 @@ impl Environment {
     pub fn parse() -> Self {
         let mut logging_level = Level::INFO;
         let mut port = 8173;
+        let mut ansi = true;
 
         if let Ok(x) = env::var("CELERSERVER_LOG") {
             match x.to_uppercase().as_ref() {
@@ -43,6 +46,12 @@ impl Environment {
             }
         }
 
+        if let Ok(x) = env::var("CELERSERVER_ANSI") {
+            if x == "0" {
+                ansi = false;
+            }
+        }
+
         let docs_dir = if let Ok(x) = env::var("CELERSERVER_DOCS_DIR") {
             x
         } else {
@@ -63,6 +72,7 @@ impl Environment {
 
         Self {
             logging_level,
+            ansi,
             port,
             docs_dir,
             app_dir,

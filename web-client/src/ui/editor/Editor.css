@@ -14,11 +14,18 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 
 @media (prefers-color-scheme: dark) {
     #editor-panel {
+        border-left: 1px solid #333;
         background-color: #1e1e1e;
+    }
+}
+@media (prefers-color-scheme: light) {
+    #editor-panel {
+        border-left: 1px solid #ccc;
     }
 }
 
