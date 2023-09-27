@@ -24,10 +24,10 @@ const getFileTypeAndIcon = ({
     if (isDirectory) {
         return ["folder", <Folder16Filled />];
     }
-    if ( file.match(/\.(m|c)?jsx?$/i)) {
+    if (file.match(/\.(m|c)?jsx?$/i)) {
         return ["js", <CodeJs16Filled />];
     }
-    if ( file.match(/\.(m|c)?tsx?$/i)) {
+    if (file.match(/\.(m|c)?tsx?$/i)) {
         return ["ts", <CodeTs16Filled />];
     }
     if (file.match(/\.py$/i)) {
