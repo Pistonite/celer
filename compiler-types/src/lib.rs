@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 // this is only so that LSP server can detect the script
@@ -70,4 +70,3 @@ pub struct DocTag {
     /// Background color of the text
     background: Option<String>,
 }
-

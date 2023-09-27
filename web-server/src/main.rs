@@ -4,25 +4,24 @@
 //! It is recommended to use a reverse proxy such as nginx to handle HTTPS.
 //! Alternatively, you can use a CDN such as Cloudflare to proxy the website.
 
+use axum::{Router, Server};
 use std::io;
 use std::path::Path;
-use axum::{Server, Router};
 use tower_http::services::{ServeDir, ServeFile};
-use tower_http::trace::{DefaultOnResponse, DefaultOnRequest, DefaultMakeSpan};
-use tracing::{Level, debug, info};
+use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse};
+use tracing::{debug, info, Level};
 
 mod env;
 use env::Environment;
 mod services;
-use services::{NestedRouteRedirectService, AddHtmlExtService};
-
+use services::{AddHtmlExtService, NestedRouteRedirectService};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env = Environment::parse();
     tracing_subscriber::fmt()
         .compact()
-        .with_max_level(env.logging_level.clone())
+        .with_max_level(env.logging_level)
         .init();
     info!("configuring routes...");
 
@@ -31,12 +30,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let router = init_edit(router, &env.app_dir)?;
     let router = init_static(router, &env.app_dir, &["/static", "/assets", "/themes"])?;
 
-
-    let router = router.layer(tower_http::trace::TraceLayer::new_for_http()
-        .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
-        .on_request(DefaultOnRequest::new().level(Level::INFO))
-        .on_response(DefaultOnResponse::new().level(Level::INFO))
-
+    let router = router.layer(
+        tower_http::trace::TraceLayer::new_for_http()
+            .make_span_with(DefaultMakeSpan::new().level(Level::INFO))
+            .on_request(DefaultOnRequest::new().level(Level::INFO))
+            .on_response(DefaultOnResponse::new().level(Level::INFO)),
     );
 
     let address = format!("0.0.0.0:{}", env.port).parse()?;
@@ -53,12 +51,11 @@ fn init_docs(router: Router, docs_dir: &str) -> Result<Router, io::Error> {
     let docs_dir = Path::new(docs_dir).canonicalize()?;
     debug!("/docs -> {}", docs_dir.display());
     let docs_404_path = docs_dir.join("404.html").canonicalize()?;
-    let service = NestedRouteRedirectService::new("/docs", 
-        ServeDir::new(&docs_dir).fallback(
-            AddHtmlExtService(ServeDir::new(&docs_dir).fallback(
-                ServeFile::new(&docs_404_path)
-            ))
-        )
+    let service = NestedRouteRedirectService::new(
+        "/docs",
+        ServeDir::new(&docs_dir).fallback(AddHtmlExtService(
+            ServeDir::new(&docs_dir).fallback(ServeFile::new(docs_404_path)),
+        )),
     );
     Ok(router.nest_service("/docs", service))
 }
@@ -73,19 +70,20 @@ fn init_edit(router: Router, app_dir: &str) -> Result<Router, io::Error> {
 }
 
 /// Setup static asset routes from web client
-fn init_static(mut router: Router, app_dir: &str, routes: &[&'static str]) -> Result<Router, io::Error> {
+fn init_static(
+    mut router: Router,
+    app_dir: &str,
+    routes: &[&'static str],
+) -> Result<Router, io::Error> {
     let app_dir = Path::new(app_dir);
-    
+
     for route in routes {
         // strip the leading slash
         debug_assert_eq!(route.chars().next(), Some('/'));
         let path = app_dir.join(&route[1..]).canonicalize()?;
         debug!("/{route} -> {}", path.display());
-        let service = NestedRouteRedirectService::new(route,
-            ServeDir::new(&path)
-        );
+        let service = NestedRouteRedirectService::new(route, ServeDir::new(&path));
         router = router.nest_service(route, service);
     }
     Ok(router)
 }
-

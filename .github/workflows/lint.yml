@@ -8,7 +8,7 @@ on:
     - main
 
 jobs:
-  check:
+  lint-typescript:
     name: Lint TypeScript Packages
     runs-on: ubuntu-latest
     steps:
@@ -27,3 +27,18 @@ jobs:
         features: cli
     - run: task themes:ci client:ci docs:ci --output group
     - run: task themes:check client:check docs:check --output group
+
+  lint-rust:
+    name: Lint Rust Packages
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: regen-lang
+    - run: task check:rs

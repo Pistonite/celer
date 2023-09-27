@@ -6,11 +6,9 @@ mod loader_empty;
 pub use loader_empty::*;
 mod loader_url;
 pub use loader_url::*;
-mod resource;
-pub use resource::*;
 mod resource_github;
 pub use resource_github::*;
+mod resource_impl;
+pub use resource_impl::*;
 mod resource_local;
 pub use resource_local::*;
-
-

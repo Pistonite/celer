@@ -1,11 +1,11 @@
 //! GitHub resource resolver and loader impl
 use std::sync::Arc;
 
-use cached::proc_macro::cached;
 use crate::util::Path;
+use cached::proc_macro::cached;
 
-use super::{ResourceResolver,  ResourcePath,   ResourceLoader, Resource, ArcLoader, EmptyLoader};
-use crate::pack::{PackerResult, PackerError, ValidUse};
+use super::{ArcLoader, EmptyLoader, Resource, ResourcePath, ResourceResolver};
+use crate::pack::{PackerError, PackerResult, ValidUse};
 
 pub struct GitHubResourceResolver {
     owner: String,
@@ -23,7 +23,6 @@ impl GitHubResourceResolver {
             reference: reference.map(|s| s.to_string()),
         }
     }
-
 }
 
 #[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
@@ -32,34 +31,59 @@ impl ResourceResolver for GitHubResourceResolver {
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
         match target {
             ValidUse::Relative(path) => {
-                let new_path = self.path.join(&format!("../{path}")).ok_or_else(||PackerError::InvalidPath(path.clone()))?;
+                let new_path = self
+                    .path
+                    .join(&format!("../{path}"))
+                    .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
                 if self.path == new_path {
                     return Ok(source.clone());
                 }
-                let url = get_github_url(&self.owner, &self.repo, &new_path, self.reference.as_deref()).await?;
-                Ok(source.create(ResourcePath::Url(url), Arc::new(Self::new(
-                    &self.owner, 
-                    &self.repo, 
-                    new_path,
-                    self.reference.as_deref())
-                )))
+                let url = get_github_url(
+                    &self.owner,
+                    &self.repo,
+                    &new_path,
+                    self.reference.as_deref(),
+                )
+                .await?;
+                Ok(source.create(
+                    ResourcePath::Url(url),
+                    Arc::new(Self::new(
+                        &self.owner,
+                        &self.repo,
+                        new_path,
+                        self.reference.as_deref(),
+                    )),
+                ))
             }
             ValidUse::Absolute(path) => {
-                let new_path = Path::try_from(&path).ok_or_else(||PackerError::InvalidPath(path.clone()))?;
+                let new_path =
+                    Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
                 if self.path == new_path {
                     return Ok(source.clone());
                 }
-                let url = get_github_url(&self.owner, &self.repo, &new_path, self.reference.as_deref()).await?;
-                Ok(source.create(ResourcePath::Url(url), Arc::new(Self::new(
-                    &self.owner, 
-                    &self.repo, 
-                    new_path,
-                    self.reference.as_deref())
-                )))
+                let url = get_github_url(
+                    &self.owner,
+                    &self.repo,
+                    &new_path,
+                    self.reference.as_deref(),
+                )
+                .await?;
+                Ok(source.create(
+                    ResourcePath::Url(url),
+                    Arc::new(Self::new(
+                        &self.owner,
+                        &self.repo,
+                        new_path,
+                        self.reference.as_deref(),
+                    )),
+                ))
             }
-            ValidUse::Remote { owner, repo, path, reference } => {
-                create_github_resource_from(source, owner, repo, path, reference.as_deref()).await
-            },
+            ValidUse::Remote {
+                owner,
+                repo,
+                path,
+                reference,
+            } => create_github_resource_from(source, owner, repo, path, reference.as_deref()).await,
         }
     }
 }
@@ -71,18 +95,14 @@ pub async fn create_github_resource(
     reference: Option<&str>,
     url_loader: ArcLoader,
 ) -> PackerResult<Resource> {
-    let path = Path::try_from(&path).ok_or_else(||PackerError::InvalidPath(path.to_string()))?;
-    let url = get_github_url(&owner, &repo, &path, reference.as_deref()).await?;
+    let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
+    let url = get_github_url(owner, repo, &path, reference).await?;
     Ok(Resource::new(
-        ResourcePath::Url(url), 
+        ResourcePath::Url(url),
         Arc::new(EmptyLoader),
-        url_loader, 
-        Arc::new(GitHubResourceResolver::new(
-            owner, 
-            repo, 
-            path,
-            reference
-        ))))
+        url_loader,
+        Arc::new(GitHubResourceResolver::new(owner, repo, path, reference)),
+    ))
 }
 
 pub async fn create_github_resource_from(
@@ -92,26 +112,29 @@ pub async fn create_github_resource_from(
     path: &str,
     reference: Option<&str>,
 ) -> PackerResult<Resource> {
-    let path = Path::try_from(&path).ok_or_else(||PackerError::InvalidPath(path.to_string()))?;
-    let url = get_github_url(&owner, &repo, &path, reference.as_deref()).await?;
-    Ok(source.create(ResourcePath::Url(url), Arc::new(GitHubResourceResolver::new(
-        owner, 
-        repo, 
-        path,
-        reference)
-    )))
+    let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
+    let url = get_github_url(owner, repo, &path, reference).await?;
+    Ok(source.create(
+        ResourcePath::Url(url),
+        Arc::new(GitHubResourceResolver::new(owner, repo, path, reference)),
+    ))
 }
 
 /// Get a github URL
-async fn get_github_url(owner: &str, repo: &str, path: &Path, reference: Option<&str>) -> PackerResult<String> {
+async fn get_github_url(
+    owner: &str,
+    repo: &str,
+    path: &Path,
+    reference: Option<&str>,
+) -> PackerResult<String> {
     let path = path.as_ref();
     let url = match reference {
         Some(reference) => {
-            format!( "https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{path}")
+            format!("https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{path}")
         }
         None => {
             let default_branch = get_default_branch(owner, repo).await?;
-            format!( "https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{path}")
+            format!("https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{path}")
         }
     };
     Ok(url)
@@ -120,10 +143,13 @@ async fn get_github_url(owner: &str, repo: &str, path: &Path, reference: Option<
 /// Get the default branch of a repository.
 #[cached(
     key="String", 
-    convert = r#"{ format!("{}/{}", owner, repo) }"#,
+    convert = r#"{ format!("{}/{}", _owner, _repo) }"#,
     // 1 hour TTL
     time=3600,
 )]
-async fn get_default_branch(owner: &str, repo: &str) -> PackerResult<String> {
-    Err(PackerError::NotImpl("getting default branch not implemented".to_string()))
+async fn get_default_branch(_owner: &str, _repo: &str) -> PackerResult<String> {
+    // TODO #31
+    Err(PackerError::NotImpl(
+        "getting default branch not implemented".to_string(),
+    ))
 }

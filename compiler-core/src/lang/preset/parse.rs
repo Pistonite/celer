@@ -58,7 +58,7 @@ fn parse_arg(pt: &pt::ArgText) -> String {
                     out.push_str(&pt_escape.m_t[1..]);
                 }
             }
-            pt::ArgBlock::ArgSymbol(pt_symbol) => {
+            pt::ArgBlock::ArgSymbol(_) => {
                 out.push(':');
             }
         }

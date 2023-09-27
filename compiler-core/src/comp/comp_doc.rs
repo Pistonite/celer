@@ -24,7 +24,10 @@ pub struct CompDoc {
 }
 
 impl Compiler {
-    pub async fn comp_doc(mut self, route: PackerValue) -> Result<(CompDoc, CompilerMetadata), CompilerError> {
+    pub async fn comp_doc(
+        mut self,
+        route: PackerValue,
+    ) -> Result<(CompDoc, CompilerMetadata), CompilerError> {
         let mut route_vec = vec![];
         let mut preface = vec![];
 
@@ -100,9 +103,10 @@ impl Compiler {
 
     pub async fn create_empty_doc_for_packer_error(
         self,
-        error: PackerError
+        error: PackerError,
     ) -> (CompDoc, CompilerMetadata) {
-        self.create_empty_doc_for_error(&[CompilerError::PackerErrors(vec![error])]).await
+        self.create_empty_doc_for_error(&[CompilerError::PackerErrors(vec![error])])
+            .await
     }
 
     pub async fn create_empty_doc_for_error(

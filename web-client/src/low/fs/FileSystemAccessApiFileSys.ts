@@ -1,14 +1,7 @@
 import { allocErr, allocOk, wrapAsync } from "low/utils";
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
-import {
-    FsResult,
-    // FsResultCode,
-    FsResultCodes,
-    // setErrValue,
-    // setOkValue,
-} from "./FsResult";
-// import { decodeFile } from "./decode";
+import { FsResult, FsResultCodes } from "./FsResult";
 
 export const isFileSystemAccessAPISupported = (): boolean => {
     if (!window) {
@@ -49,16 +42,9 @@ export class FileSystemAccessAPIFileSys implements FileSys {
     private rootHandle: FileSystemDirectoryHandle;
     private permissionStatus: PermissionStatus;
 
-    // private dirHandles: Record<string, FileSystemDirectoryHandle> = {};
-    // private fileHandles: Record<string, FileSystemFileHandle> = {};
-
     constructor(rootPath: string, rootHandle: FileSystemDirectoryHandle) {
         this.rootPath = rootPath;
         this.rootHandle = rootHandle;
-        // this.dirHandles = {
-        //     "": rootHandle,
-        // };
-        // this.fileHandles = {};
         this.permissionStatus = "prompt";
     }
 
@@ -85,14 +71,10 @@ export class FileSystemAccessAPIFileSys implements FileSys {
     }
 
     public async listDir(path: FsPath): Promise<FsResult<string[]>> {
-        // return await retryIfCacheFailed(async (useCache: boolean) => {
         const result = await this.resolveDir(path);
         if (result.isErr()) {
             return result;
         }
-        // if (result.code !== FsResultCodes.Ok) {
-        //     return result;
-        // }
         const dir = result.inner();
         const entries: string[] = [];
 
@@ -111,44 +93,21 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         }
 
         return result.makeOk(entries);
-
-        // });
     }
 
     async resolveDir(
         path: FsPath,
-        // useCache: boolean,
     ): Promise<FsResult<FileSystemDirectoryHandle>> {
-        // const dirPath = path.path;
-        // if (useCache) {
-        //     if (dirPath in this.dirHandles) {
-        //         return {
-        //             code: FsResultCodes.Ok,
-        //             value: this.dirHandles[dirPath],
-        //         };
-        //     }
-        // } else {
-        //     delete this.dirHandles[dirPath];
-        // }
-
         if (path.isRoot) {
             return allocOk(this.rootHandle);
-            // this.dirHandles[dirPath] = this.rootHandle;
-            // return {
-            //     code: FsResultCodes.Ok,
-            //     value: this.dirHandles[dirPath],
-            // };
         }
 
         const parentPathResult = path.parent;
         if (parentPathResult.isErr()) {
-            return parentPathResult; //.propagate();
+            return parentPathResult;
         }
 
-        const parentDirResult = await this.resolveDir(
-            parentPathResult.inner(),
-            // useCache,
-        );
+        const parentDirResult = await this.resolveDir(parentPathResult.inner());
         if (parentDirResult.isErr()) {
             return parentDirResult;
         }
@@ -170,73 +129,11 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         return result;
     }
 
-    // public async readFile(path: FsPath): Promise<FsResult<File>> {
-    //     const result = await this.readFileAndModifiedTime(path);
-    //     if (result.code !== FsResultCodes.Ok) {
-    //         return result;
-    //     }
-    //     return setOkValue(result, result.value[0]);
-    // }
-    //
-    // public async readFileAndModifiedTime(
-    //     path: FsPath,
-    // ): Promise<FsResult<[string, number]>> {
-    //     const fileResult = await this.readFileInternal(path);
-    //     if (fileResult.code !== FsResultCodes.Ok) {
-    //         return fileResult;
-    //     }
-    //     const file = fileResult.value;
-    //     const result = await decodeFile(file);
-    //     if (result.code !== FsResultCodes.Ok) {
-    //         return result;
-    //     }
-    //     return setOkValue(result, [result.value, file.lastModified]);
-    // }
-    //
-    // public async readIfModified(
-    //     path: FsPath,
-    //     lastModified?: number,
-    // ): Promise<FsResult<[string, number]>> {
-    //     const fileResult = await this.readFileInternal(path);
-    //     if (fileResult.code !== FsResultCodes.Ok) {
-    //         return fileResult;
-    //     }
-    //     const file = fileResult.value;
-    //     if (lastModified !== undefined && file.lastModified <= lastModified) {
-    //         return setErrValue(fileResult, FsResultCodes.NotModified);
-    //     }
-    //     const result = await decodeFile(file);
-    //     if (result.code !== FsResultCodes.Ok) {
-    //         return result;
-    //     }
-    //     return setOkValue(result, [result.value, file.lastModified]);
-    // }
-    //
-    // public async readFileAsBytes(path: FsPath): Promise<FsResult<Uint8Array>> {
-    //     const fileResult = await this.readFileInternal(path);
-    //     if (fileResult.code !== FsResultCodes.Ok) {
-    //         return fileResult;
-    //     }
-    //     const file = fileResult.value;
-    //     try {
-    //         const buffer = await file.arrayBuffer();
-    //         const array = new Uint8Array(buffer);
-    //         return setOkValue(fileResult, array);
-    //     } catch (e) {
-    //         console.error(e);
-    //         return setErrValue(fileResult, FsResultCodes.Fail);
-    //     }
-    // }
-
     public async readFile(path: FsPath): Promise<FsResult<File>> {
-        // return await retryIfCacheFailed(async (useCache: boolean) => {
         const result = await this.resolveFile(path);
         if (result.isErr()) {
             return result;
         }
-        // if (result.code !== FsResultCodes.Ok) {
-        //     return result;
-        // }
         try {
             const file = await result.inner().getFile();
             return result.makeOk(file);
@@ -244,14 +141,12 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             console.error(e);
             return result.makeErr(FsResultCodes.Fail);
         }
-        // });
     }
 
     public async writeFile(
         path: FsPath,
         content: string | Uint8Array,
     ): Promise<FsResult<void>> {
-        // return await retryIfCacheFailed2(async (useCache: boolean) => {
         const result = await this.resolveFile(path);
 
         if (result.isErr()) {
@@ -269,25 +164,9 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             console.error(e);
             return result.makeErr(FsResultCodes.Fail);
         }
-        // });
     }
 
-    async resolveFile(
-        path: FsPath,
-        // useCache: boolean,
-    ): Promise<FsResult<FileSystemFileHandle>> {
-        // const filePath = path.path;
-        // if (useCache) {
-        //     if (filePath in this.fileHandles) {
-        //         return {
-        //             code: FsResultCodes.Ok,
-        //             value: this.fileHandles[filePath],
-        //         };
-        //     }
-        // } else {
-        //     delete this.fileHandles[filePath];
-        // }
-
+    async resolveFile(path: FsPath): Promise<FsResult<FileSystemFileHandle>> {
         const parentDirResult = path.parent;
         if (parentDirResult.isErr()) {
             return parentDirResult;
@@ -295,7 +174,6 @@ export class FileSystemAccessAPIFileSys implements FileSys {
 
         const parentDirHandleResult = await this.resolveDir(
             parentDirResult.inner(),
-            // useCache,
         );
         if (parentDirHandleResult.isErr()) {
             return parentDirHandleResult;
@@ -310,7 +188,6 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             const fileHandle = await parentDirHandleResult
                 .inner()
                 .getFileHandle(result.inner());
-            // this.fileHandles[filePath] = fileHandle;
             return result.makeOk(fileHandle);
         } catch (e) {
             console.error(e);
@@ -318,23 +195,3 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         }
     }
 }
-
-// const retryIfCacheFailed = async <T>(
-//     func: (useCache: boolean) => Promise<FsResult<T>>,
-// ): Promise<FsResult<T>> => {
-//     const result = await func(true);
-//     if (result.code !== FsResultCodes.Fail) {
-//         return result;
-//     }
-//     return await func(false);
-// };
-//
-// const retryIfCacheFailed2 = async (
-//     func: (useCache: boolean) => Promise<FsResultCode>,
-// ): Promise<FsResultCode> => {
-//     const result = await func(true);
-//     if (result !== FsResultCodes.Fail) {
-//         return result;
-//     }
-//     return await func(false);
-// };

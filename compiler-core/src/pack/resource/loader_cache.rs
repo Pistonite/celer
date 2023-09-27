@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use crate::pack::PackerResult;
 
-use super::{ResourceLoader, ArcLoader};
+use super::{ArcLoader, ResourceLoader};
 
 /// A loader that caches loaded resources in memory. The cache is global.
 pub struct GlobalCacheLoader {
@@ -12,16 +12,13 @@ pub struct GlobalCacheLoader {
 
 impl GlobalCacheLoader {
     pub fn new(delegate: ArcLoader) -> Self {
-        Self {
-            delegate,
-        }
+        Self { delegate }
     }
 }
 
 #[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
 #[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
 impl ResourceLoader for GlobalCacheLoader {
-
     async fn load_raw(&self, r: &str) -> PackerResult<Vec<u8>> {
         self.delegate.load_raw(r).await
     }
@@ -47,4 +44,3 @@ impl ResourceLoader for GlobalCacheLoader {
 async fn load_structured_internal(loader: &ArcLoader, path: &str) -> PackerResult<Value> {
     loader.load_structured(path).await
 }
-

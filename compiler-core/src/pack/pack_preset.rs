@@ -43,9 +43,8 @@ async fn pack_presets_internal(
     })?;
 
     async_for!((key, value) in obj.into_iter(), {
-        if key.starts_with('_') {
+        if let Some(namespace) = key.strip_prefix('_') {
             // sub namespace
-            let namespace = &key[1..];
             let full_key = if preset_name.is_empty() {
                 format!("_{namespace}")
             } else {

@@ -51,14 +51,14 @@ impl From<Value> for Use {
             return Self::NotUse(value);
         }
         let v = v.coerce_to_string();
-        if v.starts_with("/") {
-            if v.ends_with("/") {
+        if v.starts_with('/') {
+            if v.ends_with('/') {
                 Self::Invalid(v)
             } else {
                 Self::Valid(ValidUse::Absolute(v))
             }
         } else if v.starts_with("./") || v.starts_with("../") {
-            if v.ends_with("/") {
+            if v.ends_with('/') {
                 Self::Invalid(v)
             } else {
                 Self::Valid(ValidUse::Relative(v))
@@ -67,7 +67,7 @@ impl From<Value> for Use {
             let mut reference_split = v.splitn(2, ':');
             // unwrap is safe because we know there is at least one element
             let path = reference_split.next().unwrap();
-            if path.ends_with("/") {
+            if path.ends_with('/') {
                 return Self::Invalid(v);
             }
 
@@ -255,7 +255,7 @@ mod test {
         ];
 
         for test in tests {
-            assert_eq!(Use::from(make_use(&test)), Use::Invalid(test.to_string()));
+            assert_eq!(Use::from(make_use(test)), Use::Invalid(test.to_string()));
         }
     }
 }

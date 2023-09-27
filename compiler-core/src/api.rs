@@ -1,29 +1,30 @@
-use std::collections::HashMap;
 use log::{error, info};
+use std::collections::HashMap;
 
 use celerctypes::ExecDoc;
 use derivative::Derivative;
 
-use crate::comp::{Compiler, CompilerError, CompDoc};
+use crate::comp::{CompDoc, Compiler, CompilerError};
 use crate::lang::Preset;
 use crate::metrics::CompilerMetrics;
-use crate::pack::{
-    self, PackedProject,     Resource, ValidUse, PackerError, PackerResult,
-};
+use crate::pack::{self, PackedProject, PackerError, PackerResult, Resource, ValidUse};
 use crate::plug::run_plugins;
 
 /// Output of the compiler API
 #[derive(Debug, Clone)]
 pub enum CompilerOutput {
-    Ok {
-        /// The final document to be rendered
-        exec_doc: ExecDoc,
-        /// The metadata of the compiler
-        metadata: CompilerMetadata,
-        /// Metrics collected during compilation
-        metrics: CompilerMetrics,
-    },
+    Ok(Box<OkOutput>),
     Cancelled,
+}
+
+#[derive(Debug, Clone)]
+pub struct OkOutput {
+    /// The final document to be rendered
+    pub exec_doc: ExecDoc,
+    /// The metadata of the compiler
+    pub metadata: CompilerMetadata,
+    /// Metrics collected during compilation
+    pub metrics: CompilerMetrics,
 }
 
 /// Metadata of the compiler
@@ -73,7 +74,9 @@ pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOut
                 return CompilerOutput::Cancelled;
             }
             error!("pack phase failed.");
-            Compiler::default().create_empty_doc_for_packer_error(e).await
+            Compiler::default()
+                .create_empty_doc_for_packer_error(e)
+                .await
         }
         Ok(packed_project) => {
             let ms = metrics.pack_done();
@@ -86,9 +89,9 @@ pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOut
                     }
                     return CompilerOutput::Cancelled;
                 }
-                Ok(x) => x
+                Ok(x) => x,
             }
-        },
+        }
     };
     let ms = metrics.comp_done();
     info!("comp phase done in {ms}ms");
@@ -104,16 +107,16 @@ pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOut
             }
             return CompilerOutput::Cancelled;
         }
-        Ok(x) => x
+        Ok(x) => x,
     };
     let ms = metrics.exec_done();
     info!("exec phase done in {ms}ms");
 
-    CompilerOutput::Ok {
+    CompilerOutput::Ok(Box::new(OkOutput {
         exec_doc,
         metadata: comp_meta,
         metrics,
-    }
+    }))
 }
 
 async fn pack_phase(root_resource: &Resource, setting: &Setting) -> PackerResult<PackedProject> {
@@ -122,14 +125,17 @@ async fn pack_phase(root_resource: &Resource, setting: &Setting) -> PackerResult
         Ok(resource) => resource,
         Err(_) => {
             error!("fail to resolve project.yaml");
-            return Err(PackerError::InvalidProject.into());
+            return Err(PackerError::InvalidProject);
         }
     };
 
     pack::pack_project(&project_resource, setting).await
 }
 
-async fn comp_phase(packed_project: PackedProject, setting: &Setting) -> Result<(CompDoc, CompilerMetadata), CompilerError> {
+async fn comp_phase(
+    packed_project: PackedProject,
+    setting: &Setting,
+) -> Result<(CompDoc, CompilerMetadata), CompilerError> {
     let PackedProject {
         route_metadata,
         compiler_metadata,

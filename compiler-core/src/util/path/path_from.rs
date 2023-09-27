@@ -49,5 +49,4 @@ mod test {
         let path = Path::try_from("\\\\a\\/b/c/hello/");
         assert_eq!(path.unwrap().as_ref(), "a/b/c/hello");
     }
-
 }

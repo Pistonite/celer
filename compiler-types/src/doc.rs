@@ -1,8 +1,8 @@
 //! Types for the doc
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
-use crate::{GameCoord, ExecMapSection};
+use crate::{ExecMapSection, GameCoord};
 
 /// A section in the executed document
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
@@ -16,7 +16,6 @@ pub struct ExecSection {
     /// The map items in this section
     pub map: ExecMapSection,
 }
-
 
 /// A line in the executed document
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone, TS)]
@@ -115,13 +114,7 @@ pub enum DocPoorText {
 #[serde(tag = "type", rename_all = "camelCase")]
 #[ts(export)]
 pub enum DocNote {
-    Text {
-        content: Vec<DocRichText>,
-    },
-    Image {
-        link: String,
-    },
-    Video {
-        link: String,
-    },
+    Text { content: Vec<DocRichText> },
+    Image { link: String },
+    Video { link: String },
 }

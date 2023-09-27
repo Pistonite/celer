@@ -1,24 +1,25 @@
 use super::Path;
 
 impl Path {
-    pub fn join<T>(&self, path: &T) -> Option<Self> where T: AsRef<str> + ?Sized {
+    pub fn join<T>(&self, path: &T) -> Option<Self>
+    where
+        T: AsRef<str> + ?Sized,
+    {
         let mut segs = if self.0.is_empty() {
             vec![]
         } else {
             self.0.split('/').collect::<Vec<_>>()
         };
-        let path = path.as_ref().replace("\\", "/");
+        let path = path.as_ref().replace('\\', "/");
         for seg in path.split('/') {
             if seg.is_empty() {
                 continue;
-            } 
+            }
             if seg == "." {
                 continue;
-            } 
+            }
             if seg == ".." {
-                if segs.pop().is_none() {
-                    return None;
-                }
+                segs.pop()?;
             } else {
                 segs.push(seg);
             }
@@ -28,7 +29,10 @@ impl Path {
     }
 
     #[inline]
-    pub fn join_in_place<T>(self, path: &T) -> Result<Self, Self> where T: AsRef<str> + ?Sized {
+    pub fn join_in_place<T>(self, path: &T) -> Result<Self, Self>
+    where
+        T: AsRef<str> + ?Sized,
+    {
         self.join(path).ok_or(self)
     }
 
@@ -103,5 +107,4 @@ mod test {
         assert!(Path::try_from("a").unwrap().join("../..").is_none());
         assert!(Path::try_from("").unwrap().join("..").is_none());
     }
-
 }

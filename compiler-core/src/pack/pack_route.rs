@@ -9,7 +9,7 @@ use serde_json::Value;
 use crate::json::Cast;
 use crate::util::async_for;
 
-use super::{PackerError, Use, Resource, ValidUse, PackerValue};
+use super::{PackerError, PackerValue, Resource, Use, ValidUse};
 
 /// Resolve `use`s inside the route json blob
 ///
@@ -98,7 +98,8 @@ async fn pack_route_internal(
             match x.try_into_object() {
                 Ok(obj) => {
                     let mut new_obj = BTreeMap::new();
-                    async_for!((key, value) in obj.into_iter(), {
+                    // ignore errors in iteration
+                    let _ = async_for!((key, value) in obj.into_iter(), {
                         let result = pack_route_internal(
                             resource,
                             value,
@@ -118,14 +119,7 @@ async fn pack_route_internal(
             }
         }
         Use::Valid(valid_use) => {
-            resolve_use(
-                resource,
-                valid_use,
-                use_depth,
-                max_use_depth,
-                max_ref_depth,
-            )
-            .await
+            resolve_use(resource, valid_use, use_depth, max_use_depth, max_ref_depth).await
         }
     }
 }

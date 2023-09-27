@@ -262,7 +262,7 @@ impl Compiler {
                     Value::Array(array) => {
                         // need to track the coordinate of the final position with a stack
                         let mut ref_stack = vec![];
-                        async_for!((i, v) in array.into_iter().enumerate(), {
+                        let _ = async_for!((i, v) in array.into_iter().enumerate(), {
                             if let Some(m) = self
                                 .comp_movement(&format!("{p}[{i}]", p = prop::MOVEMENTS), v, errors)
                                 .await
@@ -299,7 +299,7 @@ impl Compiler {
             }
             prop::MARKERS => match value {
                 Value::Array(array) => {
-                    async_for!((i, v) in array.into_iter().enumerate(), {
+                    let _ = async_for!((i, v) in array.into_iter().enumerate(), {
                         if let Some(m) = self
                             .comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
                             .await

@@ -7,9 +7,9 @@
 //! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
 //! and a json blob of the route.
 
+use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::convert::Infallible;
-use serde_json::{Map, Value};
 
 use celerctypes::DocDiagnostic;
 mod pack_config;
@@ -34,7 +34,7 @@ pub use resource::*;
 use crate::json::Cast;
 use crate::lang::parse_poor;
 #[cfg(feature = "wasm")]
-use crate::util::{WasmError, Path};
+use crate::util::WasmError;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum PackerError {

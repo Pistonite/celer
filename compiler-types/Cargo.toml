@@ -7,7 +7,7 @@ default-run = "buildtypes"
 
 [dependencies]
 serde = { version = "1.0.174", features = ["derive"] }
-ts-rs = "6.2.1"
+ts-rs = "7.0.0"
 
 [[bin]]
 name = "buildtypes"

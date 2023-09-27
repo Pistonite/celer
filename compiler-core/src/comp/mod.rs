@@ -1,8 +1,10 @@
 use std::convert::Infallible;
 
-use celerctypes::DocDiagnostic;
+use celerctypes::{DocDiagnostic, GameCoord, RouteMetadata};
+use derivative::Derivative;
 use serde_json::Value;
 
+use crate::api::CompilerMetadata;
 use crate::lang::parse_poor;
 use crate::pack::PackerError;
 #[cfg(feature = "wasm")]
@@ -22,13 +24,28 @@ mod comp_preset;
 pub use comp_preset::*;
 mod comp_section;
 pub use comp_section::*;
-mod compiler;
-pub use compiler::*;
+#[cfg(test)]
+mod compiler_builder;
+#[cfg(test)]
+pub use compiler_builder::*;
 mod desugar;
 use desugar::*;
 pub mod prop;
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
+
+#[derive(Derivative, Debug, Clone)]
+#[derivative(Default)]
+pub struct Compiler {
+    pub project: RouteMetadata,
+    pub meta: CompilerMetadata,
+    /// Current color of the map line
+    pub color: String,
+    /// Current position on the map
+    pub coord: GameCoord,
+    #[derivative(Default(value = "8"))]
+    pub max_preset_depth: usize,
+}
 
 #[derive(PartialEq, Debug, Clone, thiserror::Error)]
 pub enum CompilerError {
@@ -215,11 +232,7 @@ impl CompilerError {
                 }
             }
             other => {
-                let msg = format!(
-                    "{} See {} for more info.",
-                    other.to_string(),
-                    other.get_info_url()
-                );
+                let msg = format!("{} See {} for more info.", other, other.get_info_url());
 
                 output.push(DocDiagnostic {
                     msg: parse_poor(&msg),
@@ -238,7 +251,6 @@ impl CompilerError {
         x
     }
 }
-
 
 /// Convenience macro for validating a json value and add error
 macro_rules! validate_not_array_or_object {

@@ -3,7 +3,7 @@ use celerctypes::ExecDoc;
 use crate::comp::CompDoc;
 use crate::util::async_for;
 
-use super::{MapSectionBuilder, ExecResult};
+use super::{ExecResult, MapSectionBuilder};
 
 impl CompDoc {
     /// Execute the document
@@ -65,7 +65,6 @@ mod test {
                     line_color: "color".to_string(),
                     ..Default::default()
                 }],
-                ..Default::default()
             },
             CompSection {
                 name: "test2".to_string(),
@@ -74,7 +73,6 @@ mod test {
                     line_color: "color".to_string(),
                     ..Default::default()
                 }],
-                ..Default::default()
             },
         ];
 

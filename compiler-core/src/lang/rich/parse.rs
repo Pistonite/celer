@@ -110,7 +110,7 @@ fn append_unit_to_string(pt: &pt::Unit, out: &mut String) {
         }
         pt::Unit::UnitEscape(pt_escape) => {
             // remove the leading backslash
-            debug_assert!(pt_escape.m_t.starts_with("\\"));
+            debug_assert!(pt_escape.m_t.starts_with('\\'));
             if pt_escape.m_t == "\\" {
                 out.push('\\');
             } else {

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_json::Value;
 
-use crate::pack::{PackerResult, PackerError, ValidUse};
+use crate::pack::{PackerResult, ValidUse};
 use crate::util::Path;
 
 use super::ResourceLoader;
@@ -25,7 +25,7 @@ macro_rules! loader_delegate {
                 ResourcePath::FsPath(path) => self.fs_loader.$func(path.as_ref()).await,
             }
         }
-    }
+    };
 }
 
 /// A resource contains:
@@ -67,7 +67,7 @@ impl Resource {
     /// File path or URL
     pub fn name(&self) -> &str {
         match &self.path {
-            ResourcePath::Url(url) => &url,
+            ResourcePath::Url(url) => url,
             ResourcePath::FsPath(path) => path.as_ref(),
         }
     }
@@ -75,20 +75,8 @@ impl Resource {
     loader_delegate!(load_structured, Value);
     loader_delegate!(load_image_url, String);
 
-    // /// Load resource as image URL
-    // ///
-    // /// Return value can be a data URL
-    // pub async fn load_image_url(&self) -> PackerResult<String> {
-    //     match &self.path {
-    //         ResourcePath::Url(url) => Ok(url.to_string()),
-    //         ResourcePath::FsPath(path) => Err(PackerError::NotImpl(
-    //             "Local image is not implemented yet.".to_string(),
-    //         )),
-    //     }
-    // }
-
     pub async fn resolve(&self, target: &ValidUse) -> PackerResult<Resource> {
-        self.resolver.resolve(&self, target).await
+        self.resolver.resolve(self, target).await
     }
 }
 
@@ -104,4 +92,3 @@ pub enum ResourcePath {
     Url(String),
     FsPath(Path),
 }
-

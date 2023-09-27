@@ -7,8 +7,7 @@ use crate::json::{Cast, Coerce};
 use crate::util::async_for;
 
 use super::{
-    pack_config, pack_route, ConfigBuilder, PackerError, PackerResult, PackerValue, ResourceLoader,
-    ResourcePath, ResourceResolver, Resource,
+    pack_config, pack_route, ConfigBuilder, PackerError, PackerResult, PackerValue, Resource,
 };
 
 macro_rules! check_metadata_not_array_or_object {
@@ -74,7 +73,7 @@ pub async fn pack_project(
     let mut builder = ConfigBuilder::default();
     async_for!((i, config) in config.into_iter().enumerate(), {
         pack_config(&mut builder, project_resource, config, i, setting).await?;
-    });
+    })?;
 
     let route_metadata = RouteMetadata {
         name: project_resource.name().to_string(),

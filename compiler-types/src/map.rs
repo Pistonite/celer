@@ -1,5 +1,5 @@
 //! Map types
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 /// Metadata of the map
@@ -24,7 +24,7 @@ pub struct MapMetadata {
 
 /// The mapping if 2 coordinates are specified in the route
 ///
-/// For example, ["x", "z"] will map the coordinates 
+/// For example, ["x", "z"] will map the coordinates
 /// to the x (horizontal) and z (height) axis of the map.
 ///
 /// Default value of 0 will be assigned to the unmapped axis.
@@ -50,7 +50,7 @@ pub struct MapLayerAttr {
     pub name: String,
     /// The tileset url template, with {x} {y} {z} as placeholders.
     ///
-    /// The url should conform to the leaflet tile layer API: 
+    /// The url should conform to the leaflet tile layer API:
     /// https://leafletjs.com/reference.html#tilelayer
     pub template_url: String,
     /// The raster coordinate size
@@ -74,7 +74,7 @@ pub struct MapLayerAttr {
     /// This value is ignored for the first (lowest) layer
     #[ts(type = "number")]
     pub start_z: f64,
-    /// Attribution 
+    /// Attribution
     pub attribution: MapAttribution,
 }
 

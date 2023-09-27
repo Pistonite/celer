@@ -29,9 +29,7 @@ fn wasm_pack_build() -> io::Result<()> {
     }
 
     let mut command = build_wasm_pack_command();
-    let result = command
-        .spawn()?
-        .wait_with_output()?;
+    let result = command.spawn()?.wait_with_output()?;
 
     if !result.status.success() {
         eprintln!("wasm-pack build finished with error");
@@ -50,7 +48,7 @@ fn wasm_pack_build() -> io::Result<()> {
 #[cfg(debug_assertions)]
 fn build_wasm_pack_command() -> Command {
     let mut command = Command::new("wasm-pack");
-    command.args(&["build", "--out-dir", OUTPUT_DIR, "--dev"]);
+    command.args(["build", "--out-dir", OUTPUT_DIR, "--dev"]);
     command
 }
 
