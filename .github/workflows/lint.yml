@@ -38,4 +38,7 @@ jobs:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: dtolnay/rust-toolchain@stable
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: regen-lang
     - run: task check:rs
