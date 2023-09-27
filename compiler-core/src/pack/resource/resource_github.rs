@@ -4,7 +4,7 @@ use std::sync::Arc;
 use crate::util::Path;
 use cached::proc_macro::cached;
 
-use super::{ArcLoader, EmptyLoader, Resource, ResourceLoader, ResourcePath, ResourceResolver};
+use super::{ArcLoader, EmptyLoader, Resource, ResourcePath, ResourceResolver};
 use crate::pack::{PackerError, PackerResult, ValidUse};
 
 pub struct GitHubResourceResolver {
@@ -143,11 +143,12 @@ async fn get_github_url(
 /// Get the default branch of a repository.
 #[cached(
     key="String", 
-    convert = r#"{ format!("{}/{}", owner, repo) }"#,
+    convert = r#"{ format!("{}/{}", _owner, _repo) }"#,
     // 1 hour TTL
     time=3600,
 )]
-async fn get_default_branch(owner: &str, repo: &str) -> PackerResult<String> {
+async fn get_default_branch(_owner: &str, _repo: &str) -> PackerResult<String> {
+    // TODO #31
     Err(PackerError::NotImpl(
         "getting default branch not implemented".to_string(),
     ))

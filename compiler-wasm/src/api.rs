@@ -73,13 +73,12 @@ pub async fn compile_document() -> Option<ExecDoc> {
 
     match celerc::api::compile(&resource, &setting).await {
         CompilerOutput::Cancelled => None,
-        CompilerOutput::Ok {
-            exec_doc, metadata, ..
-        } => {
+        CompilerOutput::Ok(output) => {
+            let metadata = output.metadata;
             COMPILER_META.with(|x| {
                 x.borrow_mut().replace(metadata);
             });
-            Some(exec_doc)
+            Some(output.exec_doc)
         }
     }
 }

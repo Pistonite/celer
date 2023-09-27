@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_json::Value;
 
-use crate::pack::{PackerError, PackerResult, ValidUse};
+use crate::pack::{PackerResult, ValidUse};
 use crate::util::Path;
 
 use super::ResourceLoader;

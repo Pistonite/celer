@@ -51,14 +51,14 @@ impl From<Value> for Use {
             return Self::NotUse(value);
         }
         let v = v.coerce_to_string();
-        if v.starts_with("/") {
-            if v.ends_with("/") {
+        if v.starts_with('/') {
+            if v.ends_with('/') {
                 Self::Invalid(v)
             } else {
                 Self::Valid(ValidUse::Absolute(v))
             }
         } else if v.starts_with("./") || v.starts_with("../") {
-            if v.ends_with("/") {
+            if v.ends_with('/') {
                 Self::Invalid(v)
             } else {
                 Self::Valid(ValidUse::Relative(v))

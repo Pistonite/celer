@@ -1,25 +1,13 @@
+//! Builder for making a compiler in tests
 use std::collections::HashMap;
 
-use celerctypes::{GameCoord, MapCoordMap, RouteMetadata};
-use derivative::Derivative;
+use celerctypes::{GameCoord, RouteMetadata};
 
 use crate::api::CompilerMetadata;
 use crate::lang::Preset;
 
-#[derive(Derivative, Debug, Clone)]
-#[derivative(Default)]
-pub struct Compiler {
-    pub project: RouteMetadata,
-    pub meta: CompilerMetadata,
-    /// Current color of the map line
-    pub color: String,
-    /// Current position on the map
-    pub coord: GameCoord,
-    #[derivative(Default(value = "8"))]
-    pub max_preset_depth: usize,
-}
+use super::Compiler;
 
-#[cfg(test)]
 #[derive(Default, Debug, Clone)]
 pub struct CompilerBuilder {
     project: RouteMetadata,
@@ -29,7 +17,6 @@ pub struct CompilerBuilder {
     default_icon_priority: i64,
 }
 
-#[cfg(test)]
 impl CompilerBuilder {
     pub fn new(project: RouteMetadata, color: String, coord: GameCoord) -> Self {
         CompilerBuilder {

@@ -1,8 +1,3 @@
-use std::{collections::HashMap, sync::Mutex};
-
-use cached::proc_macro::cached;
-use serde_json::Value;
-
 use crate::pack::{PackerError, PackerResult};
 
 use super::ResourceLoader;

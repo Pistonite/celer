@@ -42,7 +42,7 @@ pub fn from_pts(pts: Vec<pt::Block>) -> Vec<TempStrBlock> {
                             output.push(block);
                         }
                         Some(TempStrBlock::Lit(s)) => {
-                            s.push_str(&block_str);
+                            s.push_str(block_str);
                         }
                     },
                     TempStrBlock::Var(_) => {

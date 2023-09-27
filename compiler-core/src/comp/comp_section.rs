@@ -39,9 +39,7 @@ impl Compiler {
         };
 
         let mut iter = section_obj.into_iter();
-        let (section_name, section_value) = iter
-            .next()
-            .ok_or_else(|| CompilerError::InvalidSectionType)?;
+        let (section_name, section_value) = iter.next().ok_or(CompilerError::InvalidSectionType)?;
         if iter.next().is_some() {
             return Err(CompilerError::InvalidSectionType);
         }

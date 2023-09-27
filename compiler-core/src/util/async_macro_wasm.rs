@@ -70,4 +70,3 @@ macro_rules! yield_now {
         $crate::util::async_macro_wasm::set_timeout_yield().await
     };
 }
-pub(crate) use yield_now;

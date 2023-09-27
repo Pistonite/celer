@@ -1,10 +1,7 @@
 import { allocErr, allocOk, wrapAsync } from "low/utils";
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
-import {
-    FsResult,
-    FsResultCodes,
-} from "./FsResult";
+import { FsResult, FsResultCodes } from "./FsResult";
 
 export const isFileSystemAccessAPISupported = (): boolean => {
     if (!window) {
@@ -110,9 +107,7 @@ export class FileSystemAccessAPIFileSys implements FileSys {
             return parentPathResult;
         }
 
-        const parentDirResult = await this.resolveDir(
-            parentPathResult.inner(),
-        );
+        const parentDirResult = await this.resolveDir(parentPathResult.inner());
         if (parentDirResult.isErr()) {
             return parentDirResult;
         }
@@ -171,9 +166,7 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         }
     }
 
-    async resolveFile(
-        path: FsPath,
-    ): Promise<FsResult<FileSystemFileHandle>> {
+    async resolveFile(path: FsPath): Promise<FsResult<FileSystemFileHandle>> {
         const parentDirResult = path.parent;
         if (parentDirResult.isErr()) {
             return parentDirResult;

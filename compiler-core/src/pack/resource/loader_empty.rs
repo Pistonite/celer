@@ -1,5 +1,3 @@
-use serde_json::Value;
-
 use crate::pack::{PackerError, PackerResult};
 
 use super::ResourceLoader;

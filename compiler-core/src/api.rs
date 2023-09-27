@@ -13,15 +13,18 @@ use crate::plug::run_plugins;
 /// Output of the compiler API
 #[derive(Debug, Clone)]
 pub enum CompilerOutput {
-    Ok {
-        /// The final document to be rendered
-        exec_doc: ExecDoc,
-        /// The metadata of the compiler
-        metadata: CompilerMetadata,
-        /// Metrics collected during compilation
-        metrics: CompilerMetrics,
-    },
+    Ok(Box<OkOutput>),
     Cancelled,
+}
+
+#[derive(Debug, Clone)]
+pub struct OkOutput {
+    /// The final document to be rendered
+    pub exec_doc: ExecDoc,
+    /// The metadata of the compiler
+    pub metadata: CompilerMetadata,
+    /// Metrics collected during compilation
+    pub metrics: CompilerMetrics,
 }
 
 /// Metadata of the compiler
@@ -109,11 +112,11 @@ pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOut
     let ms = metrics.exec_done();
     info!("exec phase done in {ms}ms");
 
-    CompilerOutput::Ok {
+    CompilerOutput::Ok(Box::new(OkOutput {
         exec_doc,
         metadata: comp_meta,
         metrics,
-    }
+    }))
 }
 
 async fn pack_phase(root_resource: &Resource, setting: &Setting) -> PackerResult<PackedProject> {
@@ -122,7 +125,7 @@ async fn pack_phase(root_resource: &Resource, setting: &Setting) -> PackerResult
         Ok(resource) => resource,
         Err(_) => {
             error!("fail to resolve project.yaml");
-            return Err(PackerError::InvalidProject.into());
+            return Err(PackerError::InvalidProject);
         }
     };
 
