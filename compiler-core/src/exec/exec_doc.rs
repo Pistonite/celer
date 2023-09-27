@@ -3,7 +3,7 @@ use celerctypes::ExecDoc;
 use crate::comp::CompDoc;
 use crate::util::async_for;
 
-use super::{MapSectionBuilder, ExecResult};
+use super::{ExecResult, MapSectionBuilder};
 
 impl CompDoc {
     /// Execute the document

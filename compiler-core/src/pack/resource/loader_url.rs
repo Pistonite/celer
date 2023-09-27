@@ -1,9 +1,9 @@
-use std::{sync::Mutex, collections::HashMap};
+use std::{collections::HashMap, sync::Mutex};
 
 use cached::proc_macro::cached;
 use serde_json::Value;
 
-use crate::pack::{PackerResult, PackerError};
+use crate::pack::{PackerError, PackerResult};
 
 use super::ResourceLoader;
 
@@ -12,7 +12,6 @@ pub struct UrlLoader;
 #[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
 #[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
 impl ResourceLoader for UrlLoader {
-
     async fn load_raw(&self, _: &str) -> PackerResult<Vec<u8>> {
         Err(PackerError::NotImpl(
             "UrlLoader::load_raw is not implemented".to_string(),

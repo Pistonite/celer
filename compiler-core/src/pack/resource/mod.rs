@@ -12,5 +12,3 @@ mod resource_github;
 pub use resource_github::*;
 mod resource_local;
 pub use resource_local::*;
-
-

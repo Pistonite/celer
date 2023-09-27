@@ -9,9 +9,7 @@ use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
 use crate::util::async_for;
 
-use super::{
-    pack_map, pack_presets, PackerError, PackerResult, Use, Resource, ValidUse,
-};
+use super::{pack_map, pack_presets, PackerError, PackerResult, Resource, Use, ValidUse};
 
 #[derive(Default, Debug)]
 pub struct ConfigBuilder {
@@ -34,8 +32,7 @@ pub async fn pack_config(
     let config_value = match Use::from(config) {
         Use::Invalid(path) => return Err(PackerError::InvalidUse(path)),
         Use::NotUse(v) => v,
-        Use::Valid(valid_use) => 
-            load_config_from_use(project_resource, valid_use, index).await?,
+        Use::Valid(valid_use) => load_config_from_use(project_resource, valid_use, index).await?,
     };
 
     // Resolve `use`s inside the properties

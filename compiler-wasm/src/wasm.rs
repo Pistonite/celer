@@ -1,9 +1,9 @@
 //! Utils for gluing WASM and JS
 
-use js_sys::{Promise, Function};
-use web_sys::console;
+use js_sys::{Function, Promise};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
+use web_sys::console;
 
 /// Import types from compiler-types in the generated TS code
 ///
@@ -64,7 +64,7 @@ macro_rules! ffi {
                 $(
                     "///", $doc, "\n",
                 )*
-                "export function ", stringify!($name), "(", $(stringify!($arg), ": ", stringify!($arg_ty), ",", )* 
+                "export function ", stringify!($name), "(", $(stringify!($arg), ": ", stringify!($arg_ty), ",", )*
                 "): Promise<", stringify!($ret_ty), ">;\n\n"
             ));
         )*
@@ -87,7 +87,7 @@ macro_rules! ffi {
 
 pub(crate) use ffi;
 
-pub trait WasmFrom : Sized {
+pub trait WasmFrom: Sized {
     fn from_wasm(value: JsValue) -> Result<Self, JsValue>;
 }
 impl WasmFrom for JsValue {
@@ -109,7 +109,10 @@ impl WasmInto for JsValue {
         Ok(self)
     }
 }
-impl<T> WasmInto for Option<T> where T: WasmInto {
+impl<T> WasmInto for Option<T>
+where
+    T: WasmInto,
+{
     fn into_wasm(self) -> Result<JsValue, JsValue> {
         match self {
             Some(v) => v.into_wasm(),
@@ -119,29 +122,30 @@ impl<T> WasmInto for Option<T> where T: WasmInto {
 }
 
 macro_rules! from {
-($ty:ty) => {
-    impl WasmFrom for $ty {
-        fn from_wasm(value: wasm_bindgen::JsValue) -> Result<Self, wasm_bindgen::JsValue> {
-            let x = serde_wasm_bindgen::from_value::<Self>(value)?;
-            Ok(x)
+    ($ty:ty) => {
+        impl WasmFrom for $ty {
+            fn from_wasm(value: wasm_bindgen::JsValue) -> Result<Self, wasm_bindgen::JsValue> {
+                let x = serde_wasm_bindgen::from_value::<Self>(value)?;
+                Ok(x)
+            }
         }
-    }
-};
+    };
 }
 pub(crate) use from;
 
-from!{String}
+from! {String}
 
 macro_rules! into {
-($ty:ty) => {
-    impl WasmInto for $ty {
-        fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
-            let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-            let result = <Self as serde::Serialize>::serialize(&self, &serializer)?;
-            Ok(result)
+    ($ty:ty) => {
+        impl WasmInto for $ty {
+            fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
+                let serializer =
+                    serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+                let result = <Self as serde::Serialize>::serialize(&self, &serializer)?;
+                Ok(result)
+            }
         }
-    }
-};
+    };
 }
 pub(crate) use into;
 
@@ -160,4 +164,3 @@ pub fn stub_function() -> Function {
 pub fn console_error(s: &JsValue) {
     console::error_1(&s);
 }
-

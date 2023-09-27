@@ -26,7 +26,10 @@ impl<F> NestedRouteRedirectService<F> {
 
 impl<ReqBody, F, FResBody> Service<Request<ReqBody>> for NestedRouteRedirectService<F>
 where
-    F: Service<Request<ReqBody>, Response = Response<FResBody>, Error = Infallible> + Clone + Send + 'static,
+    F: Service<Request<ReqBody>, Response = Response<FResBody>, Error = Infallible>
+        + Clone
+        + Send
+        + 'static,
     F::Future: Send + 'static,
     FResBody: Body<Data = Bytes> + Send + 'static,
     FResBody::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
@@ -66,4 +69,3 @@ where
         })
     }
 }
-

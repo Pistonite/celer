@@ -239,7 +239,6 @@ impl CompilerError {
     }
 }
 
-
 /// Convenience macro for validating a json value and add error
 macro_rules! validate_not_array_or_object {
     ($value:expr, $errors:ident, $property:expr) => {{

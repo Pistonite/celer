@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use serde_json::Value;
 
-use crate::pack::{PackerResult, PackerError, ValidUse};
+use crate::pack::{PackerError, PackerResult, ValidUse};
 use crate::util::Path;
 
 use super::ResourceLoader;
@@ -25,7 +25,7 @@ macro_rules! loader_delegate {
                 ResourcePath::FsPath(path) => self.fs_loader.$func(path.as_ref()).await,
             }
         }
-    }
+    };
 }
 
 /// A resource contains:
@@ -104,4 +104,3 @@ pub enum ResourcePath {
     Url(String),
     FsPath(Path),
 }
-

@@ -24,7 +24,7 @@ fn main_internal() -> io::Result<()> {
     }
     generate_bindings()?;
 
-    // scan the bindings 
+    // scan the bindings
     let mut output_chunks = vec![];
     for entry in fs::read_dir("bindings")? {
         let entry = entry?;
@@ -42,11 +42,10 @@ fn main_internal() -> io::Result<()> {
     let mut output = r#"//! low/compiler
 //!
 //! Bindings generated from rust types
-"#.to_owned();
+"#
+    .to_owned();
     output.push_str(&output_chunks.join("\n"));
-    fs::write(
-        OUTPUT_FILE,
-        output)?;
+    fs::write(OUTPUT_FILE, output)?;
 
     Ok(())
 }
@@ -69,15 +68,18 @@ fn generate_bindings() -> io::Result<()> {
 
 fn transform_file(file_path: &Path) -> io::Result<String> {
     let content = fs::read_to_string(file_path)?;
-    let transformed = content.lines().filter_map(|line| {
-        if line.starts_with("//") {
-            return None;
-        }
-        if line.starts_with("import") {
-            return None;
-        }
-        Some(line)
-    }).collect::<Vec<_>>().join("\n");
+    let transformed = content
+        .lines()
+        .filter_map(|line| {
+            if line.starts_with("//") {
+                return None;
+            }
+            if line.starts_with("import") {
+                return None;
+            }
+            Some(line)
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
     Ok(transformed)
 }
-

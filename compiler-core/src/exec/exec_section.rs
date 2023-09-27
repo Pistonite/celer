@@ -3,8 +3,7 @@ use celerctypes::ExecSection;
 use crate::comp::CompSection;
 use crate::util::async_for;
 
-
-use super::{MapSectionBuilder, ExecResult};
+use super::{ExecResult, MapSectionBuilder};
 
 impl CompSection {
     /// Execute the section.
@@ -44,7 +43,8 @@ mod test {
         };
         let exec_section = test_section
             .exec(1, &mut MapSectionBuilder::default())
-            .await.unwrap();
+            .await
+            .unwrap();
 
         assert_eq!(exec_section.name, "test");
     }
@@ -57,7 +57,8 @@ mod test {
         };
         let exec_section = test_section
             .exec(3, &mut MapSectionBuilder::default())
-            .await.unwrap();
+            .await
+            .unwrap();
         assert_eq!(exec_section.lines[0].section, 3);
         assert_eq!(exec_section.lines[0].index, 0);
         assert_eq!(exec_section.lines[1].section, 3);
@@ -82,7 +83,8 @@ mod test {
 
         let exec_section = test_section
             .exec(4, &mut MapSectionBuilder::default())
-            .await.unwrap();
+            .await
+            .unwrap();
         assert_eq!(
             exec_section.map.icons,
             vec![
@@ -132,7 +134,8 @@ mod test {
 
         let exec_section = test_section
             .exec(4, &mut MapSectionBuilder::default())
-            .await.unwrap();
+            .await
+            .unwrap();
         assert_eq!(
             exec_section.map.markers,
             vec![

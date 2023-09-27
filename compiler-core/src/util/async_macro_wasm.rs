@@ -21,10 +21,8 @@ pub enum WasmError {
 }
 
 pub fn set_cancelled(value: bool) {
-    CANCELLED.with(|cancelled| {
-        unsafe {
-            *cancelled.get() = value;
-        }
+    CANCELLED.with(|cancelled| unsafe {
+        *cancelled.get() = value;
     });
 }
 
@@ -34,21 +32,16 @@ pub fn set_cancelled(value: bool) {
 pub async fn set_timeout_yield() -> Result<(), WasmError> {
     let promise = WINDOW.with(|window| {
         Promise::new(&mut |resolve, _| {
-            let _ = window.set_timeout_with_callback_and_timeout_and_arguments_0(
-                &resolve,
-                0,
-            );
+            let _ = window.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);
         })
     });
     let _ = JsFuture::from(promise).await;
-    CANCELLED.with(|cancelled| {
-        unsafe {
-            if *cancelled.get() {
-                warn!("cancelling...");
-                Err(WasmError::Cancel)
-            } else {
-                Ok(())
-            }
+    CANCELLED.with(|cancelled| unsafe {
+        if *cancelled.get() {
+            warn!("cancelling...");
+            Err(WasmError::Cancel)
+        } else {
+            Ok(())
         }
     })
 }
@@ -57,19 +50,17 @@ pub async fn set_timeout_yield() -> Result<(), WasmError> {
 ///
 /// Each iteration will call window.__yield() to yield control back to the browser
 macro_rules! async_for {
-    ($v:pat in $iter:expr, $body:stmt) => {
-        {
-            let mut result: Result<(), $crate::util::async_macro_wasm::WasmError> = Ok(());
-            for $v in $iter {
-                result = $crate::util::async_macro_wasm::set_timeout_yield().await;
-                if result.is_err() {
-                    break;
-                }
-                $body
+    ($v:pat in $iter:expr, $body:stmt) => {{
+        let mut result: Result<(), $crate::util::async_macro_wasm::WasmError> = Ok(());
+        for $v in $iter {
+            result = $crate::util::async_macro_wasm::set_timeout_yield().await;
+            if result.is_err() {
+                break;
             }
-            result
+            $body
         }
-    };
+        result
+    }};
 }
 pub(crate) use async_for;
 

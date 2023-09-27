@@ -7,17 +7,17 @@ mod api;
 mod wasm;
 use wasm::*;
 
-mod resource;
 mod logger;
+mod resource;
 
 // WASM output types
-import!{
+import! {
     import { ExecDoc } from "low/compiler.g";
     import { Option } from "low/utils";
 }
 
 // WASM output type implementation
-into!{ExecDoc}
+into! {ExecDoc}
 
 ffi!(
     /// Initialize
@@ -37,4 +37,3 @@ ffi!(
         JsValue::UNDEFINED
     }
 );
-

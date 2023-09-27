@@ -3,7 +3,7 @@ use celerctypes::{ExecLine, MapIcon, MapMarker};
 use crate::comp::{CompLine, CompMovement};
 use crate::util::async_for;
 
-use super::{MapSectionBuilder, ExecResult};
+use super::{ExecResult, MapSectionBuilder};
 
 impl CompLine {
     /// Execute the line.
@@ -378,7 +378,8 @@ mod test {
 
         let exec_line = test_line
             .exec(0, 0, &mut MapSectionBuilder::default())
-            .await.unwrap();
+            .await
+            .unwrap();
         assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
     }
 }

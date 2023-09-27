@@ -1,4 +1,3 @@
-
 mod path;
 pub use path::*;
 
@@ -10,4 +9,3 @@ pub(crate) use async_macro::*;
 pub mod async_macro_wasm;
 #[cfg(feature = "wasm")]
 pub(crate) use async_macro_wasm::*;
-

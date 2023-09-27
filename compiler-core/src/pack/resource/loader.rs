@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use crate::pack::{PackerResult, PackerError};
+use crate::pack::{PackerError, PackerResult};
 
 /// Loader that loads resources from external place
 #[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
@@ -40,4 +40,3 @@ pub trait ResourceLoader {
     /// Load an image resource as URL
     async fn load_image_url(&self, path: &str) -> PackerResult<String>;
 }
-
