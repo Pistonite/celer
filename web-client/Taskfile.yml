@@ -51,3 +51,19 @@ tasks:
   eslint:
     cmds:
     - npx eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --cache {{.ESLINT_ARGS}}
+
+  test:
+    desc: Run tests in web client
+    cmds:
+    - task: jest
+
+  watch:
+    desc: Run tests in web client in watch mode
+    cmds:
+    - task: jest
+      vars:
+        ARGS: --watch
+
+  jest:
+    cmds:
+    - npx jest --config tools/test/jest.config.cjs {{.ARGS}}

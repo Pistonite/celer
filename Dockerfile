@@ -3,7 +3,9 @@ EXPOSE 80
 ENV APP_DIR=/opt/app
 RUN mkdir -p $APP_DIR
 # Copy outputs
-COPY ./dist $APP_DIR
+COPY ./target/x86_64-unknown-linux-musl/release/celerserver $APP_DIR/celerserver
+COPY ./docs/src/.vitepress/dist $APP_DIR/docs
+COPY ./web-client/dist $APP_DIR/app
 
 WORKDIR $APP_DIR
 
