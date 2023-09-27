@@ -99,11 +99,12 @@
 .docnote-container {
     display: none; /* hide by default */
     transition-duration: 0.1s;
+    left: 0px;
+    right: 0px;
 }
 
 .docnote-container-expanded {
-    /* make the notes stick to the right side*/
-    right: 0px;
+    left: unset;
     z-index: 100;
 }
 

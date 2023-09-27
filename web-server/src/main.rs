@@ -21,6 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let env = Environment::parse();
     tracing_subscriber::fmt()
         .compact()
+        .with_ansi(env.ansi)
         .with_max_level(env.logging_level)
         .init();
     info!("configuring routes...");

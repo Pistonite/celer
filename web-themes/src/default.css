@@ -101,3 +101,8 @@
         background-color: #bbbbbb !important;
     }
 }
+
+/* Ending block */
+#doc-end {
+    background-color: #001a00;
+}

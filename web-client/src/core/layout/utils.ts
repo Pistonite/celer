@@ -239,6 +239,6 @@ export const getAvailableToolbarLocations = (
         return [];
     }
     return WidgetTypes.map((type) => {
-        return layout[type] ? null : type;
+        return layout[type] ? type : null;
     }).filter(Boolean) as WidgetType[];
 };
