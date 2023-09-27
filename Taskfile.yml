@@ -60,6 +60,10 @@ tasks:
     deps: [build]
     desc: Build docker container
     cmds:
+    - task: docker:build
+
+  docker:build:
+    cmds:
     - docker build -t pistonite/celer . --no-cache
 
   docker:run:
@@ -75,29 +79,16 @@ tasks:
   build:
     desc: Build production assets
     deps:
-    - build:docs
+    - docs:build
     - build:server
     - build:client
 
-  build:docs:
-    internal: true
-    deps:
-    - docs:build
-    cmds:
-    - rm -rf dist/docs
-    - mkdir -p dist/docs
-    - cp -r docs/src/.vitepress/dist/* dist/docs
-
   build:server:
-    internal: true
     deps:
     - core:grammar
     cmds:
-    - rm -f dist/celerserver
-    - mkdir -p dist
     - rustup default stable
     - cross build --bin celerserver --release --target x86_64-unknown-linux-musl
-    - cp target/x86_64-unknown-linux-musl/release/celerserver dist/celerserver
 
   build:client:
     deps:
@@ -105,10 +96,7 @@ tasks:
     - build:wasm
     - build:types
     cmds:
-    - rm -rf dist/app
-    - mkdir -p dist/app
     - task: client:build
-    - cp -r web-client/dist/* dist/app
 
   build:wasm:
     dir: ./compiler-wasm
