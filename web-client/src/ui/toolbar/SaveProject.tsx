@@ -135,7 +135,7 @@ const getIcon = (
     if (autoSaveEnabled) {
         return <SaveSync20Regular className="color-success" />;
     }
-    return <Save20Regular className="color-error" />;
+    return <Save20Regular />;
 };
 
 const getTooltip = (

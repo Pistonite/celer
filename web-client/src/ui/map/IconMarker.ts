@@ -89,9 +89,9 @@ export class IconMarker extends L.CircleMarker {
     /// Draw the icon marker. If the icon is not loaded yet, it will retry later
     private redrawInternal(retryCount: number) {
         if (!this.icon.loaded) {
-            if (retryCount > 5) {
+            if (retryCount > 50) {
                 MapLog.warn(
-                    `resource from ${this.icon.img.src} is taking too long to load.`,
+                    `resource is taking too long to load: ${this.icon.img.src}`,
                 );
                 // give up on retrying
                 return;

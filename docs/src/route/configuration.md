@@ -25,7 +25,8 @@ config:
 - use: Pistonite/celer/presets/botw-map.yaml
 - use: Pistonite/celer/presets/botw-presets.yaml
 - icons:
-    example-icon: use: hello/world/example.png
+    example-icon:
+      use: hello/world/example.png
   tags:
     colorful:
       color: blue
@@ -37,7 +38,8 @@ be a YAML file that defines a mapping on the root level. For example:
 ```yaml
 # something.yaml
 icons:
-  foo: use: bar/biz/boo.png
+  foo:
+    use: bar/biz/boo.png
 tags:
   colorful:
     color: blue

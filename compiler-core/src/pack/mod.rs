@@ -8,6 +8,7 @@
 //! and a json blob of the route.
 
 use std::collections::BTreeMap;
+use std::convert::Infallible;
 use serde_json::{Map, Value};
 
 use celerctypes::DocDiagnostic;
@@ -32,6 +33,7 @@ pub use resource::*;
 
 use crate::json::Cast;
 use crate::lang::parse_poor;
+#[cfg(feature = "wasm")]
 use crate::util::{WasmError, Path};
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
@@ -130,6 +132,12 @@ impl PackerError {
         #[cfg(not(feature = "wasm"))]
         let x = false;
         x
+    }
+}
+
+impl From<Infallible> for PackerError {
+    fn from(_: Infallible) -> Self {
+        unreachable!()
     }
 }
 
@@ -247,6 +255,39 @@ impl PackerValue {
                 }
                 Some(Value::Object(new_obj))
             }
+        }
+    }
+}
+
+pub enum ImageFormat {
+    PNG,
+    JPEG,
+    GIF,
+    WEBP,
+}
+
+impl ImageFormat {
+    pub fn try_from_path(path: &str) -> Option<Self> {
+        let path = path.to_lowercase();
+        if path.ends_with(".png") {
+            Some(Self::PNG)
+        } else if path.ends_with(".jpg") || path.ends_with(".jpeg") {
+            Some(Self::JPEG)
+        } else if path.ends_with(".gif") {
+            Some(Self::GIF)
+        } else if path.ends_with(".webp") {
+            Some(Self::WEBP)
+        } else {
+            None
+        }
+    }
+
+    pub fn media_type(&self) -> &'static str {
+        match self {
+            Self::PNG => "image/png",
+            Self::JPEG => "image/jpeg",
+            Self::GIF => "image/gif",
+            Self::WEBP => "image/webp",
         }
     }
 }

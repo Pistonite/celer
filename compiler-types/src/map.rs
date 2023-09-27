@@ -121,6 +121,15 @@ pub enum Axis {
     Y,
     /// Height axis
     Z,
+    /// Negative Horizontal axis
+    #[serde(rename = "-x")]
+    NegX,
+    /// Negative Vertical axis
+    #[serde(rename = "-y")]
+    NegY,
+    /// Negative Height axis
+    #[serde(rename = "-z")]
+    NegZ,
 }
 
 /// Map features for one section

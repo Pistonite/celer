@@ -133,8 +133,7 @@ export class FsFile {
                 this.buffer,
             );
             this.isText = true;
-        } catch (e) {
-            console.error(e);
+        } catch (_) {
             this.content = undefined;
             this.isText = false;
         }

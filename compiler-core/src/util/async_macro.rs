@@ -6,7 +6,8 @@ macro_rules! async_for {
             tokio::task::yield_now().await;
             $body
         }
-        Ok(())
+        let r: Result<(), std::convert::Infallible> = Ok(());
+        r
     }};
 }
 pub(crate) use async_for;
