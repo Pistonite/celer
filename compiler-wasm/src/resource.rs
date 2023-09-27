@@ -57,7 +57,7 @@ impl ResourceLoader for FileLoader {
             .media_type();
         let mut data_url = format!("data:{image_format};base64,");
         let vec = self.load_raw(path).await?;
-        general_purpose::STANDARD.encode_string(&vec, &mut data_url);
+        general_purpose::STANDARD.encode_string(vec, &mut data_url);
         Ok(data_url)
     }
 }

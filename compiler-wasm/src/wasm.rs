@@ -3,7 +3,6 @@
 use js_sys::{Function, Promise};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::console;
 
 /// Import types from compiler-types in the generated TS code
 ///
@@ -158,9 +157,4 @@ pub async fn into_future(promise: JsValue) -> Result<JsValue, JsValue> {
 /// Create a stub JS function to fill in for a function slot that is not yet initialized
 pub fn stub_function() -> Function {
     Function::new_no_args("throw new Error(\"not initialized\")")
-}
-
-/// Log an error to the console
-pub fn console_error(s: &JsValue) {
-    console::error_1(&s);
 }

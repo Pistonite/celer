@@ -48,7 +48,7 @@ fn wasm_pack_build() -> io::Result<()> {
 #[cfg(debug_assertions)]
 fn build_wasm_pack_command() -> Command {
     let mut command = Command::new("wasm-pack");
-    command.args(&["build", "--out-dir", OUTPUT_DIR, "--dev"]);
+    command.args(["build", "--out-dir", OUTPUT_DIR, "--dev"]);
     command
 }
 

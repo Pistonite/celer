@@ -18,10 +18,12 @@ use crate::resource::FileLoader;
 const LOGGER: Logger = Logger;
 
 thread_local! {
+    #[allow(clippy::arc_with_non_send_sync)]
     static FILE_LOADER: Arc<FileLoader> = Arc::new(FileLoader::new());
 }
 
 thread_local! {
+    #[allow(clippy::arc_with_non_send_sync)]
     static URL_LOADER: ArcLoader = Arc::new(GlobalCacheLoader::new(Arc::new(UrlLoader)));
 }
 
