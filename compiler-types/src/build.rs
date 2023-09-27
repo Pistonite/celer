@@ -70,7 +70,7 @@ fn transform_file(file_path: &Path) -> io::Result<String> {
     let content = fs::read_to_string(file_path)?;
     let transformed = content
         .lines()
-        .filter(|line| !line.starts_with("//") && line.starts_with("import"))
+        .filter(|line| !line.starts_with("//") && !line.starts_with("import"))
         .collect::<Vec<_>>()
         .join("\n");
     Ok(transformed)
