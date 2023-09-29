@@ -11,9 +11,9 @@ map:
     start-z: -5000
     attribution:
       link: "https://objmap.zeldamods.org"
-    coord-map:
-      "2d": ["x", "y"]
-      "3d": ["x", "z", "y"]
-    initial-coord: [0, 0, 0]
-    initial-zoom: 3
+  coord-map:
+    "2d": ["x", "y"]
+    "3d": ["x", "z", "y"]
+  initial-coord: [0, 0, 0]
+  initial-zoom: 3
 

@@ -6,10 +6,8 @@ export const fetchAsBytes = async (url: string): Promise<Uint8Array> => {
     for (let i = 0; i < RETRY_COUNT; i++) {
         try {
             const response = await fetch(url);
-            console.log(response)
             if (response.ok) {
                 const buffer = await response.arrayBuffer();
-                console.log(buffer)
                 return new Uint8Array(buffer);
             }
         } catch (e) {
@@ -18,5 +16,8 @@ export const fetchAsBytes = async (url: string): Promise<Uint8Array> => {
             await sleep(50);
         }
     }
-    throw error;
+    if (error) {
+        throw error;
+    }
+    throw new Error("unknown error");
 }
