@@ -1,9 +1,9 @@
-use std::cell::RefCell;
+use std::cell::{RefCell, UnsafeCell};
 use std::sync::Arc;
 
 use celerc::api::{CompilerMetadata, CompilerOutput, Setting};
 use celerc::pack::{
-    ArcLoader, GlobalCacheLoader, LocalResourceResolver, Resource, ResourcePath, UrlLoader,
+    ArcLoader, GlobalCacheLoader, LocalResourceResolver, Resource, ResourcePath,
 };
 use celerc::util::Path;
 use celerctypes::ExecDoc;
@@ -13,7 +13,8 @@ use wasm_bindgen::JsValue;
 use web_sys::console;
 
 use crate::logger::{self, Logger};
-use crate::resource::FileLoader;
+use crate::loader_file::FileLoader;
+use crate::loader_url::UrlLoader;
 
 const LOGGER: Logger = Logger;
 
@@ -24,7 +25,12 @@ thread_local! {
 
 thread_local! {
     #[allow(clippy::arc_with_non_send_sync)]
-    static URL_LOADER: ArcLoader = Arc::new(GlobalCacheLoader::new(Arc::new(UrlLoader)));
+    static URL_LOADER: UnsafeCell<Arc<GlobalCacheLoader>> = UnsafeCell::new(Arc::new(GlobalCacheLoader::new(Arc::new(UrlLoader::new()))));
+}
+
+thread_local! {
+    #[allow(clippy::arc_with_non_send_sync)]
+    static URL_LOADER_NO_CACHE: Arc<UrlLoader> = Arc::new(UrlLoader::new());
 }
 
 thread_local! {
@@ -32,7 +38,7 @@ thread_local! {
 }
 
 /// Initialize
-pub fn init(logger: JsValue, load_file: Function) {
+pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
     if let Err(e) = logger::bind_logger(logger) {
         console::error_1(&e);
     }
@@ -51,6 +57,17 @@ pub fn init(logger: JsValue, load_file: Function) {
     FILE_LOADER.with(|loader| {
         loader.init(load_file);
     });
+    let fetch2 = fetch.clone();
+    URL_LOADER.with(|loader| {
+        let url_loader = UrlLoader::new();
+        url_loader.init(fetch2);
+        unsafe {
+            *loader.get() = Arc::new(GlobalCacheLoader::new(Arc::new(url_loader)));
+        }
+    });
+    URL_LOADER_NO_CACHE.with(|loader| {
+        loader.init(fetch);
+    });
 
     info!("compiler initialized");
 }
@@ -58,16 +75,19 @@ pub fn init(logger: JsValue, load_file: Function) {
 /// Compile a document from web editor
 ///
 /// Return None if the compilation was interrupted
-pub async fn compile_document() -> Option<ExecDoc> {
+pub async fn compile_document(use_cache: bool) -> Option<ExecDoc> {
     // create root resource
     let fs_loader = FILE_LOADER.with(|x| x.clone());
-    let url_loader = URL_LOADER.with(|x| x.clone());
     let root_path = Path::new();
     let resolver = Arc::new(LocalResourceResolver(root_path.clone()));
     let resource = Resource::new(
         ResourcePath::FsPath(root_path),
         fs_loader,
-        url_loader,
+        if use_cache {
+            URL_LOADER.with(|x| unsafe { (*x.get()).clone() })
+        } else {
+            URL_LOADER_NO_CACHE.with(|x| x.clone())
+        },
         resolver,
     );
 

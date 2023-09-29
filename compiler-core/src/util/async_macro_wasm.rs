@@ -1,7 +1,6 @@
 use std::cell::UnsafeCell;
 
 use js_sys::Promise;
-use log::warn;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::Window;
 
@@ -11,6 +10,11 @@ thread_local! {
 
 thread_local! {
     static CANCELLED: UnsafeCell<bool> = UnsafeCell::new(false);
+}
+
+const BUDGET_MAX: u8 = 64;
+thread_local! {
+    static BUDGET: UnsafeCell<u8> = UnsafeCell::new(BUDGET_MAX);
 }
 
 /// A signal for cancellation
@@ -30,6 +34,18 @@ pub fn set_cancelled(value: bool) {
 ///
 /// Shared code for server and WASM should use the [`yield_now`] macro instead of calling this directly.
 pub async fn set_timeout_yield() -> Result<(), WasmError> {
+    if BUDGET.with(|budget| unsafe { 
+        let b_ref = budget.get();
+        if *b_ref == 0 {
+            *b_ref = BUDGET_MAX;
+            false
+        } else {
+            *b_ref -= 1;
+            true
+        }
+    }) {
+        return Ok(());
+    }
     let promise = WINDOW.with(|window| {
         Promise::new(&mut |resolve, _| {
             let _ = window.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);
@@ -38,7 +54,7 @@ pub async fn set_timeout_yield() -> Result<(), WasmError> {
     let _ = JsFuture::from(promise).await;
     CANCELLED.with(|cancelled| unsafe {
         if *cancelled.get() {
-            warn!("cancelling...");
+            tracing::warn!("cancelling...");
             Err(WasmError::Cancel)
         } else {
             Ok(())
