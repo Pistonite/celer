@@ -1,6 +1,6 @@
 //! Utils for gluing WASM and JS
 
-use js_sys::{Function, Promise};
+use js_sys::{Function, Promise, Boolean};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 
@@ -147,6 +147,13 @@ macro_rules! into {
     };
 }
 pub(crate) use into;
+
+impl WasmFrom for bool {
+    fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
+        let b: Boolean = value.dyn_into()?;
+        Ok(b.into())
+    }
+}
 
 /// Take a promise and return a future
 pub async fn into_future(promise: JsValue) -> Result<JsValue, JsValue> {

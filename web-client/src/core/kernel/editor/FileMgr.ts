@@ -2,7 +2,7 @@ import * as monaco from "monaco-editor";
 
 import { AppDispatcher, viewActions } from "core/store";
 import { FileSys, FsFile, FsPath, FsResult, FsResultCodes } from "low/fs";
-import { allocErr, allocOk, sleep } from "low/utils";
+import { allocErr, allocOk, createYielder, sleep } from "low/utils";
 
 import {
     EditorContainerId,
@@ -146,6 +146,7 @@ export class FileMgr {
                 // so the current file is marked dirty
                 await this.syncEditorToCurrentFile();
                 let success = true;
+                const _yield = createYielder(64);
                 for (const id in this.files) {
                     const fsFile = this.files[id];
                     const result = await this.loadChangesFromFsForFsFile(
@@ -155,8 +156,7 @@ export class FileMgr {
                     if (result.isErr()) {
                         success = false;
                     }
-                    // yield to UI thread
-                    await sleep(0);
+                    await _yield();
                 }
                 return success;
             },
@@ -259,6 +259,7 @@ export class FileMgr {
                 // so the current file is marked dirty
                 await this.syncEditorToCurrentFile();
                 let success = true;
+                const _yield = createYielder(64);
                 for (const id in this.files) {
                     const fsFile = this.files[id];
                     const result = await this.saveChangesToFsForFsFile(
@@ -268,8 +269,7 @@ export class FileMgr {
                     if (result.isErr()) {
                         success = false;
                     }
-                    // yield to UI thread
-                    await sleep(0);
+                    await _yield();
                 }
                 return success;
             },
@@ -411,35 +411,6 @@ export class FileMgr {
             return result.inner();
         });
     }
-
-    // public async needsRecompile(): Promise<boolean> {
-    //     return await this.ensureLockedFs("needsRecompile", async () => {
-    //         if (!this.fs) {
-    //             return false;
-    //         }
-    //         for (const id in this.files) {
-    //             const fsFile = this.files[id];
-    //             if (fsFile.wasChangedSinceLastCompile()) {
-    //                 return true;
-    //             }
-    //             await sleep(0);
-    //         }
-    //         return false;
-    //     });
-    // }
-    //
-    // public wasFileChangedSinceLastCompile(path: string): boolean {
-    //     if (!this.fs) {
-    //         return false;
-    //     }
-    //     let fsFile = this.files[path];
-    //     if (!fsFile) {
-    //         const fsPath = toFsPath(path.split("/"));
-    //         fsFile = new FsFile(this.fs, fsPath);
-    //         this.files[fsPath.path] = fsFile;
-    //     }
-    //     return fsFile.wasChangedSinceLastCompile();
-    // }
 
     private async attachEditor() {
         let div = document.getElementById(EditorContainerId);

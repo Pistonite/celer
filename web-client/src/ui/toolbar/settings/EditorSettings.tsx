@@ -20,12 +20,14 @@ export const EditorSettings: React.FC = () => {
         autoSaveEnabled,
         autoLoadEnabled,
         deactivateAutoLoadAfterMinutes,
+        compilerUseCache,
     } = useSelector(settingsSelector);
     const {
         setShowFileTree,
         setAutoSaveEnabled,
         setAutoLoadEnabled,
         setDeactivateAutoLoadAfterMinutes,
+        setCompilerUseCache,
     } = useActions(settingsActions);
     const { setAutoLoadActive } = useActions(viewActions);
     const deactivateAutoLoadMinutesOptions = [5, 10, 15, 30, 60];
@@ -106,6 +108,19 @@ export const EditorSettings: React.FC = () => {
                             Never
                         </Option>
                     </Dropdown>
+                </Field>
+            </SettingsSection>
+            <SettingsSection title="Compiler">
+                <Field
+                    label="Cache remote resources"
+                    hint="Cache resources loaded from the internet to speed up compilation. The cache has a TTL of 5 minutes. You may want to disable this for debugging purposes."
+                >
+                    <Switch
+                        checked={!!compilerUseCache}
+                        onChange={(_, data) => {
+                            setCompilerUseCache(data.checked);
+                        }}
+                    />
                 </Field>
             </SettingsSection>
         </>

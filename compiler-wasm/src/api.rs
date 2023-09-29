@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use celerc::api::{CompilerMetadata, CompilerOutput, Setting};
 use celerc::pack::{
-    ArcLoader, GlobalCacheLoader, LocalResourceResolver, Resource, ResourcePath,
+    GlobalCacheLoader, LocalResourceResolver, Resource, ResourcePath,
 };
 use celerc::util::Path;
 use celerctypes::ExecDoc;

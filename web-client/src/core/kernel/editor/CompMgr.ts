@@ -1,4 +1,4 @@
-import { AppDispatcher, documentActions, viewActions } from "core/store";
+import { AppStore, documentActions, settingsSelector, viewActions } from "core/store";
 import { Debouncer, Logger, wrapAsync } from "low/utils";
 import { compileDocument, initCompiler, requestCancel } from "low/celerc";
 
@@ -13,20 +13,23 @@ export type RequestFileFunction = (path: string) => Promise<Uint8Array>;
 /// and no 2 compilations are running at the same time.
 export class CompMgr {
     private compilerDebouncer: Debouncer;
-    private dispatcher: AppDispatcher;
+    private store: AppStore;
 
     private needCompile: boolean;
     private compiling: boolean;
 
-    constructor(dispatcher: AppDispatcher) {
-        this.dispatcher = dispatcher;
+    constructor(store: AppStore) {
+        this.store = store;
         this.compilerDebouncer = new Debouncer(100, this.compile.bind(this));
         this.needCompile = false;
         this.compiling = false;
     }
 
-    public async init(loadFile: RequestFileFunction) {
-        initCompiler(CompilerLog, loadFile);
+    public async init(loadFile: RequestFileFunction, loadUrl: RequestFileFunction) {
+        initCompiler(CompilerLog, loadFile, (url: string) => {
+            CompilerLog.info(`loading ${url}`);
+            return loadUrl(url);
+        });
     }
 
     /// Trigger compilation of the document
@@ -56,7 +59,7 @@ export class CompMgr {
             return;
         }
         const handle = window.setTimeout(() => {
-            this.dispatcher.dispatch(viewActions.setCompileInProgress(true));
+            this.store.dispatch(viewActions.setCompileInProgress(true));
         }, 200);
         this.compiling = true;
         while (this.needCompile) {
@@ -65,22 +68,22 @@ export class CompMgr {
             // to trigger another compile
             this.needCompile = false;
             CompilerLog.info("invoking compiler...");
-            const result = await wrapAsync(compileDocument);
+            const result = await wrapAsync(() => {
+                return compileDocument(settingsSelector(this.store.getState()).compilerUseCache);
+            });
             if (result.isErr()) {
                 console.error(result.inner());
             } else {
                 const doc = result.inner();
                 if (doc !== undefined) {
-                    this.dispatcher.dispatch(documentActions.setDocument(doc));
+                    this.store.dispatch(documentActions.setDocument(doc));
                 }
             }
         }
         CompilerLog.info("finished compiling");
 
         window.clearTimeout(handle);
-        this.dispatcher.dispatch(viewActions.setCompileInProgress(false));
+        this.store.dispatch(viewActions.setCompileInProgress(false));
         this.compiling = false;
-        //wasm api should be something like:
-        //compile(requestfunction) -> Promise<result>
     }
 }
