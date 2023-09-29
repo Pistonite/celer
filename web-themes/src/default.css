@@ -74,6 +74,9 @@
 .docline-diagnostic-body.docline-diagnostic-error {
     background-color: #ff6666;
 }
+.docline-diagnostic-body.docline-diagnostic-error a{
+    color: #0000ff;
+}
 /* Warning */
 .docline-diagnostic-head.docline-diagnostic-warn {
     background-color: #883300;

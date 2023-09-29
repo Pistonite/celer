@@ -6,8 +6,11 @@ export const fetchAsBytes = async (url: string): Promise<Uint8Array> => {
     for (let i = 0; i < RETRY_COUNT; i++) {
         try {
             const response = await fetch(url);
+            console.log(response)
             if (response.ok) {
-                return new Uint8Array(await response.arrayBuffer());
+                const buffer = await response.arrayBuffer();
+                console.log(buffer)
+                return new Uint8Array(buffer);
             }
         } catch (e) {
             console.error(e);

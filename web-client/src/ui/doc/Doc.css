@@ -82,6 +82,25 @@
     display: flex;
 }
 
+.docline-primary-text span {
+    word-wrap: break-word;
+}
+.docline-primary-text {
+    width: 308px;
+}
+.docline-primary-text.docline-icon-text {
+    width: 258px;
+}
+.docline-secondary-text span {
+    word-wrap: break-word;
+}
+.docline-secondary-text {
+    width: 308px;
+}
+.docline-secondary-text.docline-icon-text {
+    width: 258px;
+}
+
 .docline-icon-container {
     min-width: 50px;
     height: 50px;
@@ -136,4 +155,5 @@
 }
 .docline-diagnostic-body {
     padding: 4px 0 4px 4px;
+    word-break: break-word;
 }
