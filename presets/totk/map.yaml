@@ -1,0 +1,41 @@
+map: 
+  layers:
+  - name: Depths
+    template-url: https://objmap-totk.zeldamods.org/game_files/map/Depths/maptex/{z}/{x}/{y}.png
+    size: [24000, 20000]
+    max-native-zoom: 7
+    zoom-bounds: [2, 9]
+    transform:   
+      translate: [12000, 10000]
+      scale: [2, 2]
+    start-z: -5000
+    attribution:
+      link: https://objmap-totk.zeldamods.org
+  - name: Surface
+    template-url: https://objmap-totk.zeldamods.org/game_files/map/Ground/maptex/{z}/{x}/{y}.png
+    size: [24000, 20000]
+    max-native-zoom: 7
+    zoom-bounds: [2, 9]
+    transform:
+      translate: [12000, 10000]
+      scale: [2, 2]
+    start-z: 0
+    attribution: 
+      link: https://objmap-totk.zeldamods.org
+  - name: Sky
+    template-url: https://objmap-totk.zeldamods.org/game_files/map/Sky/maptex/{z}/{x}/{y}.png
+    size: [24000, 20000]
+    max-native-zoom: 7
+    zoom-bounds: [2, 9]
+    transform:
+      translate: [12000, 10000]
+      scale: [2, 2]
+    start-z: 750
+    attribution: 
+      link: "https;//objmap-totk.zeldamods.org"
+  coord-map:
+    "2d": ["x", "-y"]
+    "3d": ["x", "z", "-y"]
+  initial-coord: [369, 1752, 2280]
+  initial-color: white
+  initial-zoom: 3
