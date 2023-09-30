@@ -8,8 +8,35 @@ on:
     - main
 
 jobs:
-  build-assets:
-    name: Build Assets
+  build-client:
+    name: Build Client
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: regen-lang
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: wasm-pack
+    - run: task themes:ci client:ci --output group
+    - run: task build:client --output group
+    - uses: actions/upload-artifact@v3
+      with:
+        path: web-client/dist
+        name: app-${{ github.sha }}
+
+  build-docs:
+    name: Build Docs
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -26,22 +53,12 @@ jobs:
       with:
         crate: txtpp
         features: cli
-    - uses: baptiste0928/cargo-install@v2
-      with:
-        crate: regen-lang
-    - uses: baptiste0928/cargo-install@v2
-      with:
-        crate: wasm-pack
-    - run: task themes:ci client:ci docs:ci --output group
-    - run: task docs:build build:client --output group
+    - run: task docs:ci
+    - run: task docs:build
     - uses: actions/upload-artifact@v3
       with:
         path: docs/src/.vitepress/dist
         name: docs-${{ github.sha }}
-    - uses: actions/upload-artifact@v3
-      with:
-        path: web-client/dist
-        name: web-client-${{ github.sha }}
 
   build-server:
     name: Build Server
