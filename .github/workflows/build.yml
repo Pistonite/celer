@@ -1,0 +1,57 @@
+name: Build
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build-assets:
+    name: Build Assets
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: txtpp
+        features: cli
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: regen-lang
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: wasm-pack
+    - run: task themes:ci client:ci docs:ci --output group
+    - run: task docs:build build:client --output group
+
+  build-server:
+    name: Build Server
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: regen-lang
+    - run: task core:grammar
+    - uses: houseabsolute/actions-rust-cross@v0
+      with:
+        command: build
+        target: x86_64-unknown-linux-musl
+        toolchain: stable
+        args: --bin celerserver --release
+
