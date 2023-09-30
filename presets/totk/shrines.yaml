@@ -1,0 +1,765 @@
+icons:
+  shrine:
+    use: ./shrine.png
+presets:
+  _Shrine:
+    Tauyosipun:
+      coord: [-4538.6, 381.58, 2880.47]
+      text: Tauyosipun Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xf62e7d091c5981f8'
+    Gasas:
+      coord: [-4153.18, 159.69, 98.3]
+      text: Gasas Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xb928eb376a87ab9e'
+    Otutsum:
+      coord: [-4469.01, 628.53, -671.47]
+      text: Otutsum Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xcfe11fb48805f8ef'
+    Mayamats:
+      coord: [-4637.62, 571.78, -1513.27]
+      text: Mayamats Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xdebea0537326d37e'
+    Kudanisar:
+      coord: [-4167.11, 169.11, -2143.2]
+      text: Kudanisar Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x1881621def79c020'
+    Irasak:
+      coord: [-4158.71, 146.9, -3825.29]
+      text: Irasak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xbfae3d8e46abeb4f'
+    Miryotanog:
+      coord: [-4680.1, 173.72, -3086.44]
+      text: Miryotanog Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x6420b8cafe05b270'
+    Eutoum:
+      coord: [-3506.88, 506.16, 3570]
+      text: Eutoum Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x997a80033b57caa0'
+    Sahirow:
+      coord: [-3354.12, 479.9, 2386.29]
+      text: Sahirow Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xba09d859144441b9'
+    Gatakis:
+      coord: [-3651.68, 287.6, 1806.03]
+      text: Gatakis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5ccb57d194'
+    Oromuwak:
+      coord: [-3078.52, 361.96, 1617.27]
+      text: Oromuwak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x53958025f53db14c'
+    Ikatak:
+      coord: [-3951.06, 230.9, 1139.08]
+      text: Ikatak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xe061922ed3cf8489'
+    Turakawak:
+      coord: [-3497.68, 185, -197.19]
+      text: Turakawak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x81998cf12d68f342'
+    Rotsumamu:
+      coord: [-3407.01, 454.4, -1363.14]
+      text: Rotsumamu Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x7af5b9d84cbbc4c3'
+    Soryotanog:
+      coord: [-3882.2, 242.2, -2962.55]
+      text: Soryotanog Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x156f2d267b948e93'
+    Mayatat:
+      coord: [-3290.62, 143.4, -2512.21]
+      text: Mayatat Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x35eefd176375afca'
+    Karahatag:
+      coord: [-3727.7, 162.65, -3625.13]
+      text: Karahatag Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xcf13bfd0b95b159b'
+    Sisuran:
+      coord: [-2559.44, 364.04, 3353.76]
+      text: Sisuran Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x781ce419afc84d26'
+    Runakit:
+      coord: [-2529.98, 296.9, 1170.17]
+      text: Runakit Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xca5a209b38fa76c1'
+    Makurukis:
+      coord: [-2846.97, 352.52, 629.79]
+      text: Makurukis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xc17e28f77908552f'
+    Usazum:
+      coord: [-2138.98, 212.68, -874.44]
+      text: Usazum Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xc231b5782443c6c4'
+    Rakakudaj:
+      coord: [-2036.96, 183.9, -1853.4]
+      text: Rakakudaj Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x105a7c3fea24e754'
+    Turakamik:
+      coord: [-2657.25, 186.78, -2237.3]
+      text: Turakamik Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x63ced28d6fb3d22c'
+    Siwakama:
+      coord: [-2445.7, 160.82, -3344.32]
+      text: Siwakama Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xdae0a1e3b0d9e29d'
+    Oshozan-u:
+      coord: [-1404.5, 406.9, 3677.91]
+      text: Oshozan-u Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xcd6478a48a31b52a'
+    Orochium:
+      coord: [-1636.76, 358.27, 2641.82]
+      text: Orochium Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5c395dfb87'
+    Kiuyoyou:
+      coord: [-1106.74, 223.45, 2087.81]
+      text: Kiuyoyou Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x10ebe4941c07a900'
+    Mayausiy:
+      coord: [-1166.91, 34.96, 2602.43]
+      text: Mayausiy Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xce0d19eafdbb155c'
+    Sinakawak:
+      coord: [-1414.62, 208.04, 756.85]
+      text: Sinakawak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x83b96316edc870d0'
+    Sonapan:
+      coord: [-1921.5, 347.5, -358.5]
+      text: Sonapan Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xadb1f1e4ece6556f'
+    Tsutsu-um:
+      coord: [-1423.25, 186.9, -1350.75]
+      text: Tsutsu-um Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5cb98968e8'
+    Riogok:
+      coord: [-1441.4, 208.44, -1616.09]
+      text: Riogok Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x634cf2acb7131307'
+    Motsusis:
+      coord: [-1795.01, 164.68, -3486.56]
+      text: Motsusis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xa6fdad896cee2b0b'
+    Kitawak:
+      coord: [-1530.2, 440.32, -2928.76]
+      text: Kitawak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x60351a5ee8cc3950'
+    Mayaotaki:
+      coord: [-824.82, 353.83, 3535.03]
+      text: Mayaotaki Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xcd8c682984199784'
+    Kikakin:
+      coord: [-395.87, 406.62, 2735.85]
+      text: Kikakin Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x9d6452cbb11042d6'
+    Ishodag:
+      coord: [-879.39, 168.4, 422.54]
+      text: Ishodag Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x2c70a36dedd8a22a'
+    Kyononis:
+      coord: [-205.15, 139.9, 451.47]
+      text: Kyononis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x946e0d26b756fe20'
+    Susuyai:
+      coord: [-785.41, 137.38, -434.05]
+      text: Susuyai Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x730a3e096bf5cddc'
+    Mayachin:
+      coord: [-705.5, 150.61, -868.5]
+      text: Mayachin Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x51a90debd4726ada'
+    Jiosin:
+      coord: [-240.74, 145.9, -371.03]
+      text: Jiosin Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x319ec1829222c2ad'
+    Kamizun:
+      coord: [-177.79, 141.9, -1558.29]
+      text: Kamizun Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x81e8e427cd2c2846'
+    Teniten:
+      coord: [-74.91, 140.08, -1115.72]
+      text: Teniten Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd0a80e2d9df4ae9f'
+    Ishokin:
+      coord: [-565, 248.2, -3524]
+      text: Ishokin Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xdf2a03501ab8a752'
+    Sikukuu:
+      coord: [698.55, 344.95, 2793.06]
+      text: Sikukuu Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xe34e795d6999d285'
+    Musanokir:
+      coord: [407.76, 263.24, 2133.73]
+      text: Musanokir Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5c3b5dad08'
+    Pupunke:
+      coord: [621.1, 283.77, 2211.41]
+      text: Pupunke Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xdafb369defe167d6'
+    Sakunbomar:
+      coord: [166.66, 298.17, 2320.13]
+      text: Sakunbomar Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x6fb89ca2484eb39a'
+    Sepapa:
+      coord: [221.75, 147.03, 1085.05]
+      text: Sepapa Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xb76aae1d37cd5fbe'
+    Ninjis:
+      coord: [354.65, 297.71, 1891.89]
+      text: Ninjis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x9b5352ca80e391f3'
+    Yamiyo:
+      coord: [333.15, 148.04, 470.01]
+      text: Yamiyo Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x1d6109bf02c65594'
+    Ren-iz:
+      coord: [756.46, 201.35, 823.94]
+      text: Ren-iz Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xe58919860f04bcb6'
+    Tukarok:
+      coord: [915.49, 152.96, -251.01]
+      text: Tukarok Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5c2a400fec'
+    Tajikats:
+      coord: [343.86, 135.7, -1009.03]
+      text: Tajikats Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5cc790fa0d'
+    Jochisiu:
+      coord: [930.89, 149.14, -1903.42]
+      text: Jochisiu Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xae5754099e087d84'
+    Jiukoum:
+      coord: [867.5, 260.5, -2278.4]
+      text: Jiukoum Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xda2f58169b8c8299'
+    Utsushok:
+      coord: [670, 190.93, -3358.39]
+      text: Utsushok Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5ce0868774'
+    Mayak:
+      coord: [1269.9, 224.85, 3733.43]
+      text: Mayak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xaa884dd9f4cf585d'
+    Marakuguc:
+      coord: [1762.49, 555.9, 2509.65]
+      text: Marakuguc Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x7873cb582362dc32'
+    Timawak:
+      coord: [1799.55, 430.71, 1639.54]
+      text: Timawak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xb5b631d753833e0e'
+    Ekochiu:
+      coord: [1062.65, 164.78, 1280.46]
+      text: Ekochiu Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xaa7b68de35d8173b'
+    Jonsau:
+      coord: [1743.66, 144.45, 17.59]
+      text: Jonsau Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x5895320419a8c4ef'
+    Morok:
+      coord: [1181.58, 252.53, -779.39]
+      text: Morok Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd00d9a3b98fd38fb'
+    Eshos:
+      coord: [1565.84, 276.56, -1944.81]
+      text: Eshos Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5cb84cb76d'
+    Makasura:
+      coord: [1769.9, 285.05, -1051.93]
+      text: Makasura Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x243a8fbe58330eb8'
+    Joju-u-u:
+      coord: [1515.19, 261.14, -3577.11]
+      text: Joju-u-u Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5ce63a8f77'
+    Kimayat:
+      coord: [2864.04, 360.05, 3638.22]
+      text: Kimayat Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x4835252137cc42f3'
+    Sibajitak:
+      coord: [2400.27, 521.7, 3275.07]
+      text: Sibajitak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xbd2bc5ab111260a6'
+    Sitsum:
+      coord: [2369.07, 909.4, 2596.35]
+      text: Sitsum Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x423321e92960cb78'
+    Momosik:
+      coord: [2960.01, 643.47, 2758.11]
+      text: Momosik Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xabe15a38ae511827'
+    Kisinona:
+      coord: [2567.85, 292.07, 1245.94]
+      text: Kisinona Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5cad479312'
+    Kurakat:
+      coord: [2361.24, 275.39, -510.75]
+      text: Kurakat Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xfe411b86d0270761'
+    Sifumim:
+      coord: [2825.83, 196.97, -3270.35]
+      text: Sifumim Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5cca68594d'
+    Kamatukis:
+      coord: [3431.07, 189.97, 3356.72]
+      text: Kamatukis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xdd38e53e005c098b'
+    Sinatanika:
+      coord: [3841.97, 167.4, 2300.29]
+      text: Sinatanika Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x8535e0ad2ef7bbee'
+    Domizuin:
+      coord: [3304.88, 545.1, 1442.98]
+      text: Domizuin Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5c3ee7c44a'
+    Mayachideg:
+      coord: [3061, 335.48, 1824.02]
+      text: Mayachideg Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x7f4499146d9251f1'
+    Jochi-ihiga:
+      coord: [3810.52, 209.67, 1219.11]
+      text: Jochi-ihiga Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x166fe8014b89ff05'
+    Mogawak:
+      coord: [3299.95, 231.25, 423.79]
+      text: Mogawak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5ceabe4454'
+    Ihen-a:
+      coord: [3786.22, 604.87, 577.78]
+      text: Ihen-a Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x06881b053927764f'
+    Apogek:
+      coord: [3886.69, 283.2, -216.77]
+      text: Apogek Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x681c358ab0f0dec1'
+    Zakusu:
+      coord: [3526.22, 286.86, -1482.29]
+      text: Zakusu Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x4b8c96dc8faba31a'
+    Zanmik:
+      coord: [3469.54, 267.25, -2180.78]
+      text: Zanmik Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5ce4c58504'
+    Igashuk:
+      coord: [4654.99, 250, 3713.84]
+      text: Igashuk Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xf2a99004fcdbca65'
+    Rasiwak:
+      coord: [4664.12, 120.95, 3263.22]
+      text: Rasiwak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd0690e515a4158fa'
+    Jochi-iu:
+      coord: [4346.62, 284.2, 2876.19]
+      text: Jochi-iu Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5ca7115bf4'
+    Gemimik:
+      coord: [4512.71, 120.67, 2115.71]
+      text: Gemimik Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3f576bf0b1479fdb'
+    Rasitakiwak:
+      coord: [4166.7, 348.41, 1322.74]
+      text: Rasitakiwak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xda9187d1ab9f65e2'
+    Gatanisis:
+      coord: [4497.82, 214.6, 826.41]
+      text: Gatanisis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x2373503f8a996083'
+    Jikais:
+      coord: [4266.92, 301.05, -1673.44]
+      text: Jikais Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3370bc5c13d77579'
+    Joku-usin:
+      coord: [1075.28, 905.12, -3347.77]
+      text: Joku-usin Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd9bcdd9cc8c5447f'
+    Joku-u:
+      coord: [1376.41, 548.01, -3339.86]
+      text: Joku-u Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xe5cfba38513ff068'
+    Mayaumekis:
+      coord: [-2947.92, 1015.87, 3050.67]
+      text: Mayaumekis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x07dc9ad5d4757bf2'
+    Kahatanaum:
+      coord: [-3296.01, 1466.75, 3431.51]
+      text: Kahatanaum Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x68c655888dac90bf'
+    Igoshon:
+      coord: [3480.71, 1444.63, 665.88]
+      text: Igoshon Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xdb5f5d3dd6374c4c'
+    Natak:
+      coord: [3670.7, 1276.9, 1483.7]
+      text: Natak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x8f3cfda1895d20f5'
+    Gikaku:
+      coord: [4506, 1274.02, 2166.02]
+      text: Gikaku Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xb043259b1be4386e'
+    Jinodok:
+      coord: [-1257.24, 1127.17, -1486.96]
+      text: Jinodok Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x93412b7664c85faa'
+    Kadaunar:
+      coord: [1881.97, 1370.1, 1202.82]
+      text: Kadaunar Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd5bc8f5fd279aa56'
+    Ukoojisi:
+      coord: [1468.61, 704.81, -2168.89]
+      text: Ukoojisi Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x6482c9d4ed36f741'
+    Yansamin:
+      coord: [2350.99, 1594.76, -1782.81]
+      text: Yansamin Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xf523c857852e828b'
+    Kumamayn:
+      coord: [2856.85, 1331.03, -2856.47]
+      text: Kumamayn Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x52ee882746038e00'
+    Rakashog:
+      coord: [-1715.41, 1268.47, -2118.71]
+      text: Rakashog Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x3e3289c79762e485'
+    Taninoud:
+      coord: [-1802.02, 1067.9, 3406.81]
+      text: Taninoud Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x888673135e1c9386'
+    Mayam:
+      coord: [340.39, 1939.9, 2814.73]
+      text: Mayam Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x219a29367fab6767'
+    Simosiwak:
+      coord: [162.47, 877.93, 1971.65]
+      text: Simosiwak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x7fb74ab948d84852'
+    Taunhiy:
+      coord: [-2401.84, 734.32, 825.23]
+      text: Taunhiy Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xc50f46699744868c'
+    Josiu:
+      coord: [1758.49, 1042.97, -1208.38]
+      text: Josiu Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x34c8ba8550c8f555'
+    Sihajog:
+      coord: [4545.82, 1239.94, -846.09]
+      text: Sihajog Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xb137072a61817f47'
+    Mayanas:
+      coord: [4613.31, 1908.9, -947.13]
+      text: Mayanas Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x1f3aaefd8926f898'
+    Ijo-o:
+      coord: [-3861.15, 821.76, 2681.52]
+      text: Ijo-o Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xf743f42ea01ef03e'
+    Ga-ahisas:
+      coord: [-3596.15, 1817.97, 960.79]
+      text: Ga-ahisas Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x600aa155bea7c782'
+    Ganos:
+      coord: [-3369.64, 1814.48, 467.49]
+      text: Ganos Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xedfa77560c33c1d4'
+    Jirutagumac:
+      coord: [2915.88, 1070.28, 534.32]
+      text: Jirutagumac Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x517074bb057c58de'
+    Mayasiar:
+      coord: [-3546.68, 2083.99, -320.65]
+      text: Mayasiar Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x7bbaa1f76fb539d1'
+    Tenbez:
+      coord: [-970.18, 1130.75, 3535]
+      text: Tenbez Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x9e9589011d305db1'
+    Siyamotsus:
+      coord: [-1795, 1130.29, -3294.6]
+      text: Siyamotsus Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xfa734137bae08032'
+    Mogisari:
+      coord: [4655, 1129.77, 3499.54]
+      text: Mogisari Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x81828561ba3e90ea'
+    Nachoyah:
+      coord: [389.63, 2417.91, -1661.45]
+      text: Nachoyah Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x426d7b51721759a6'
+    Ukouh:
+      coord: [274.91, 1579.28, -912.71]
+      text: Ukouh Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x55f7e3779114f3a2'
+    In-isa:
+      coord: [26.07, 1527.75, -1503.6]
+      text: In-isa Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x5b5fddd2dac37eec'
+    Gutanbac:
+      coord: [709.13, 1703.65, -1382.69]
+      text: Gutanbac Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xec345bd882c085ec'
+    Kyokugon:
+      coord: [-709.25, 125.28, -1551.04]
+      text: Kyokugon Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x54aa42378ecc9e63'
+    Jiotak:
+      coord: [1834.45, 376.79, 3180.35]
+      text: Jiotak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd02461915bb3ee5f'
+    Moshapin:
+      coord: [2679.24, 249.98, 1904.45]
+      text: Moshapin Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x6f8d8b4a01ae02ba'
+    Isisim:
+      coord: [1842.02, 482.62, 2842.03]
+      text: Isisim Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xc83388829b580574'
+    Utojis:
+      coord: [1218.44, 215.78, -2543.16]
+      text: Utojis Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x23ca48d82fd212b0'
+    En-oma:
+      coord: [103.41, 30.97, -2518.05]
+      text: En-oma Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xc69e39c9b37ac9c5'
+    Tadarok:
+      coord: [-1081.88, 248.06, -2186.94]
+      text: Tadarok Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x4873c9a0411230cb'
+    Chichim:
+      coord: [-3211, 69, -3006.5]
+      text: Chichim Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x714329d23f716f30'
+    Suariwak:
+      coord: [-2524.26, 250.51, -1770.12]
+      text: Suariwak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xcd2fe6f657689c01'
+    Bamitok:
+      coord: [3093.98, 201.29, -3209.68]
+      text: Bamitok Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xac644094b1ef56ff'
+    Marari-in:
+      coord: [4631.17, 137.4, -3712.01]
+      text: Marari-in Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x74e1e0ec03d2fa93'
+    Otak:
+      coord: [-4390.57, 331.53, 3714.1]
+      text: Otak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xcaa940b23a14e3b8'
+    Rutafu-um:
+      coord: [-2997.81, 633.93, 3101.63]
+      text: Rutafu-um Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd95ede6ade4dcccd'
+    Nouda:
+      coord: [-2318.21, 292.7, 2201.21]
+      text: Nouda Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xa862a90b94edf9d4'
+    Wao-os:
+      coord: [-4058.44, 302.44, 1990]
+      text: Wao-os Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x1c8cba546538fdfd'
+    Minetak:
+      coord: [393.86, 187.54, 3484.64]
+      text: Minetak Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xf3f341356ca9ad7b'
+    Taki-ihaban:
+      coord: [-1829.7, 266.78, 1195.27]
+      text: Taki-ihaban Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x1cc1b112dcdaf48b'
+    O-ogim:
+      coord: [2755.53, 219.2, -1089.25]
+      text: O-ogim Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x6f6efc06b0eecb67'
+    Tokiy:
+      coord: [2304.06, 90.04, -2377.93]
+      text: Tokiy Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xf31cc766b9de78e4'
+    Jogou:
+      coord: [3346.27, 176.64, -1186.89]
+      text: Jogou Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd8b9e896da29364e'
+    Anedamimik:
+      coord: [4232.21, 106.73, -2178.17]
+      text: Anedamimik Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xe1c894455bc42f29'
+    Mayahisik:
+      coord: [3729.38, 308.04, -2058.66]
+      text: Mayahisik Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0xd9cc0b607fd3e470'
+    Jojon:
+      coord: [1202.09, 146, 329.73]
+      text: Jojon Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x753cbb482d8e449a'
+    Maoikes:
+      coord: [2276.23, 197.88, 147.35]
+      text: Maoikes Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x51598b4e59a6b432'
+    Yomizuk:
+      coord: [4413.23, 153.65, -613.12]
+      text: Yomizuk Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x7f2cd7ce96446310'
+    Joniu:
+      coord: [2918.25, 274.15, 507]
+      text: Joniu Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x9addcceb0a82feb1'
+    Iun-orok:
+      coord: [-3538.9, -14.32, 851]
+      text: Iun-orok Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x305b0d5f08283993'
+    Tenmaten:
+      coord: [-594.51, 104.64, 1550.62]
+      text: Tenmaten Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x04ff4d4c4013b029'
+    Susub:
+      coord: [349.28, 92.15, -2051.54]
+      text: Susub Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x0394b07beb765096'
+    Serutabomac:
+      coord: [-178.78, 399.1, 1170.12]
+      text: Serutabomac Shrine
+      icon: {doc: shrine, map: shrine, priority: 0}
+      hash_id: '0x810b64f8867e9fd3'

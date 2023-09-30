@@ -1,0 +1,65 @@
+icons:
+  tower:
+    use: ./tower.png
+presets:
+  _Tower:
+    RosproPass:
+      coord: [-3679.58, 331.74, 2346.4]
+      text: Rospro Pass Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    GerudoHighlands:
+      coord: [-3960.88, 521.37, -1305.6]
+      text: Gerudo Highlands Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    PikidaStonegrove:
+      coord: [-2311.49, 542, 3062.49]
+      text: Pikida Stonegrove Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    GerudoCanyon:
+      coord: [-2438.85, 405.62, -2182.76]
+      text: Gerudo Canyon Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    LindorsBrow:
+      coord: [-1909.59, 395.71, 1245.3]
+      text: Lindor's Brow Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    LookoutLanding:
+      coord: [-298.85, 123.94, 142.85]
+      text: Lookout Landing Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    HyruleField:
+      coord: [-761.28, 163.42, -1019.23]
+      text: Hyrule Field Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    ThyphloRuins:
+      coord: [343.67, 278.56, 3141.65]
+      text: Thyphlo Ruins Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    PoplaFoothills:
+      coord: [604.84, 197.33, -2126.88]
+      text: Popla Foothills Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    EldinCanyon:
+      coord: [1641.81, 324.42, 1190.82]
+      text: Eldin Canyon Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    SahasraSlope:
+      coord: [1341.11, 265.26, -1177.86]
+      text: Sahasra Slope Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    UplandZorana:
+      coord: [2866.06, 478.33, 581.19]
+      text: Upland Zorana Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    RabellaWetlands:
+      coord: [2420, 321, -2754.89]
+      text: Rabella Wetlands Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    UlriMountain:
+      coord: [3499, 286.86, 2026]
+      text: Ulri Mountain Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}
+    MountLanayru:
+      coord: [3847.64, 637.81, -1314.91]
+      text: Mount Lanayru Skyview Tower
+      icon: {doc: tower, map: tower, priority: 0}

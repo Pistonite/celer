@@ -122,10 +122,10 @@ tasks:
     deps:
     - core:grammar
     cmds:
-    - cargo run --bin buildwasm --release > ../.task/build_wasm.out.log 2> ../.task/build_wasm.err.log
+    - cargo run --bin buildwasm --release
 
   build:types:
     dir: ./compiler-types
     cmds:
-    - cargo run --bin buildtypes --release > ../.task/build_types.out.log 2> ../.task/build_types.err.log
+    - cargo run --bin buildtypes --release
 
