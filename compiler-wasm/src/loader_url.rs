@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 
-use celerc::pack::{PackerError, PackerResult};
-use celerc::{pack::ResourceLoader, yield_now};
+use celerc::pack::{PackerError, PackerResult, ResourceLoader};
+use celerc::yield_now;
 use js_sys::{Function, Uint8Array};
 use wasm_bindgen::{JsCast, JsValue};
 

@@ -51,7 +51,13 @@ const RichBlock: React.FC<RichBlockProps> = ({ text, tag, link, size }) => {
                 backgroundColor: tag.background || undefined,
             }}
         >
-            {link ? <a href={link}>{text}</a> : text}
+            {link ? (
+                <a href={link} target="_blank">
+                    {text}
+                </a>
+            ) : (
+                text
+            )}
         </Text>
     );
 };
