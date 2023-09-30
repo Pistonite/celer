@@ -1,8 +1,6 @@
 //! Server environment settings
-use std::{
-    env,
-    path::{Path, PathBuf},
-};
+use std::env;
+use std::path::{Path, PathBuf};
 use tracing::Level;
 
 pub struct Environment {
