@@ -1,0 +1,88 @@
+name: Build
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build-client:
+    name: Build Client
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: regen-lang
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: wasm-pack
+    - run: task themes:ci client:ci --output group
+    - run: task build:client --output group
+    - uses: actions/upload-artifact@v3
+      with:
+        path: web-client/dist
+        name: app-${{ github.sha }}
+
+  build-docs:
+    name: Build Docs
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: txtpp
+        features: cli
+    - run: task docs:ci
+    - run: task docs:build
+    - uses: actions/upload-artifact@v3
+      with:
+        path: docs/src/.vitepress/dist
+        name: docs-${{ github.sha }}
+
+  build-server:
+    name: Build Server
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: musl-tools
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: x86_64-unknown-linux-musl
+    - uses: Swatinem/rust-cache@v2
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: regen-lang
+    - run: task core:grammar
+    - run: cargo build --bin celerserver --release --target x86_64-unknown-linux-musl
+    - uses: actions/upload-artifact@v3
+      with:
+        path: target/x86_64-unknown-linux-musl/release/celerserver
+        name: celerserver-${{ github.sha }}
+
