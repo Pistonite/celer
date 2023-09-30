@@ -9,6 +9,7 @@ default-run = "celerserver"
 [dependencies]
 async-trait = "0.1.68"
 axum = "0.6.20"
+axum-server = { version = "0.5.1", features = ["tls-rustls"] }
 env_logger = "0.10.0"
 futures = "0.3.28"
 http-body = "0.4.5"
