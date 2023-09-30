@@ -76,6 +76,14 @@ tasks:
     cmds:
     - docker stop $(docker ps -q -a --filter ancestor=pistonite/celer)
 
+  docker:push:
+    desc: Push the container to docker hub. Takes in the tag [defaults to latest]
+    interactive: true
+    cmds:
+    - docker login
+    - docker push pistonite/celer:{{.CLI_ARGS | default "latest" }}
+    - docker logout
+
   build:
     desc: Build production assets
     deps:

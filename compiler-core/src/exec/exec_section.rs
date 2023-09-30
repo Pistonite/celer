@@ -199,7 +199,7 @@ mod test {
                     GameCoord(1.0, 2.0, 3.0),
                     GameCoord(1.0, 3.0, 3.0),
                     GameCoord(1.0, 4.0, 3.0),
-                    GameCoord(1.0, 5.0, 3.0),
+                    GameCoord(1.0, 5.0, 4.0),
                 ],
             }]
         );
