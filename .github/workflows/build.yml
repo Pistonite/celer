@@ -21,7 +21,7 @@ jobs:
       with:
         node-version: 18.x
     - uses: dtolnay/rust-toolchain@stable
-    - use: Swatinem/rust-cache@v2
+    - uses: Swatinem/rust-cache@v2
     - uses: baptiste0928/cargo-install@v2
       with:
         crate: txtpp
@@ -58,7 +58,7 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: x86_64-unknown-linux-musl
-    - use: Swatinem/rust-cache@v2
+    - uses: Swatinem/rust-cache@v2
     - uses: baptiste0928/cargo-install@v2
       with:
         crate: regen-lang
