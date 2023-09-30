@@ -1,4 +1,4 @@
-use tracing::{error, info};
+use log::{error, info};
 use std::collections::HashMap;
 
 use celerctypes::ExecDoc;

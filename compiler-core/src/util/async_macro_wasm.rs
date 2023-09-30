@@ -1,6 +1,7 @@
 use std::cell::UnsafeCell;
 
 use js_sys::Promise;
+use log::warn;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::Window;
 
@@ -54,7 +55,7 @@ pub async fn set_timeout_yield() -> Result<(), WasmError> {
     let _ = JsFuture::from(promise).await;
     CANCELLED.with(|cancelled| unsafe {
         if *cancelled.get() {
-            tracing::warn!("cancelling...");
+            warn!("cancelling...");
             Err(WasmError::Cancel)
         } else {
             Ok(())

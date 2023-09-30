@@ -25,12 +25,7 @@ thread_local! {
 
 thread_local! {
     #[allow(clippy::arc_with_non_send_sync)]
-    static URL_LOADER: UnsafeCell<Arc<GlobalCacheLoader>> = UnsafeCell::new(Arc::new(GlobalCacheLoader::new(Arc::new(UrlLoader::new()))));
-}
-
-thread_local! {
-    #[allow(clippy::arc_with_non_send_sync)]
-    static URL_LOADER_NO_CACHE: Arc<UrlLoader> = Arc::new(UrlLoader::new());
+    static URL_LOADER: Arc<UrlLoader> = Arc::new(UrlLoader::new());
 }
 
 thread_local! {
@@ -57,15 +52,7 @@ pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
     FILE_LOADER.with(|loader| {
         loader.init(load_file);
     });
-    let fetch2 = fetch.clone();
     URL_LOADER.with(|loader| {
-        let url_loader = UrlLoader::new();
-        url_loader.init(fetch2);
-        unsafe {
-            *loader.get() = Arc::new(GlobalCacheLoader::new(Arc::new(url_loader)));
-        }
-    });
-    URL_LOADER_NO_CACHE.with(|loader| {
         loader.init(fetch);
     });
 
@@ -75,19 +62,16 @@ pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
 /// Compile a document from web editor
 ///
 /// Return None if the compilation was interrupted
-pub async fn compile_document(use_cache: bool) -> Option<ExecDoc> {
+pub async fn compile_document() -> Option<ExecDoc> {
     // create root resource
     let fs_loader = FILE_LOADER.with(|x| x.clone());
+            let url_loader = URL_LOADER.with(|x| x.clone());
     let root_path = Path::new();
     let resolver = Arc::new(LocalResourceResolver(root_path.clone()));
     let resource = Resource::new(
         ResourcePath::FsPath(root_path),
         fs_loader,
-        if use_cache {
-            URL_LOADER.with(|x| unsafe { (*x.get()).clone() })
-        } else {
-            URL_LOADER_NO_CACHE.with(|x| x.clone())
-        },
+        url_loader,
         resolver,
     );
 

@@ -36,13 +36,3 @@ export const setDeactivateAutoLoadAfterMinutes: ReducerDeclWithPayload<
         state.deactivateAutoLoadAfterMinutes = deactivateAutoLoadAfterMinutes;
     },
 );
-
-/// Set if compiler should use cache
-export const setCompilerUseCache: ReducerDeclWithPayload<
-    EditorSettingsState,
-    boolean
-> = withPayload(
-    (state: EditorSettingsState, compilerUseCache: boolean) => {
-        state.compilerUseCache = compilerUseCache;
-    },
-);

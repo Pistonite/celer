@@ -1,4 +1,4 @@
-import { AppStore, documentActions, settingsSelector, viewActions } from "core/store";
+import { AppDispatcher, documentActions, viewActions } from "core/store";
 import { Debouncer, Logger, wrapAsync } from "low/utils";
 import { compileDocument, initCompiler, requestCancel } from "low/celerc";
 
@@ -13,13 +13,13 @@ export type RequestFileFunction = (path: string) => Promise<Uint8Array>;
 /// and no 2 compilations are running at the same time.
 export class CompMgr {
     private compilerDebouncer: Debouncer;
-    private store: AppStore;
+    private dispatcher: AppDispatcher;
 
     private needCompile: boolean;
     private compiling: boolean;
 
-    constructor(store: AppStore) {
-        this.store = store;
+    constructor(dispatcher: AppDispatcher) {
+        this.dispatcher = dispatcher;
         this.compilerDebouncer = new Debouncer(100, this.compile.bind(this));
         this.needCompile = false;
         this.compiling = false;
@@ -59,7 +59,7 @@ export class CompMgr {
             return;
         }
         const handle = window.setTimeout(() => {
-            this.store.dispatch(viewActions.setCompileInProgress(true));
+            this.dispatcher.dispatch(viewActions.setCompileInProgress(true));
         }, 200);
         this.compiling = true;
         while (this.needCompile) {
@@ -68,22 +68,20 @@ export class CompMgr {
             // to trigger another compile
             this.needCompile = false;
             CompilerLog.info("invoking compiler...");
-            const result = await wrapAsync(() => {
-                return compileDocument(settingsSelector(this.store.getState()).compilerUseCache);
-            });
+            const result = await wrapAsync(compileDocument);
             if (result.isErr()) {
                 console.error(result.inner());
             } else {
                 const doc = result.inner();
                 if (doc !== undefined) {
-                    this.store.dispatch(documentActions.setDocument(doc));
+                    this.dispatcher.dispatch(documentActions.setDocument(doc));
                 }
             }
         }
         CompilerLog.info("finished compiling");
 
         window.clearTimeout(handle);
-        this.store.dispatch(viewActions.setCompileInProgress(false));
+        this.dispatcher.dispatch(viewActions.setCompileInProgress(false));
         this.compiling = false;
     }
 }
