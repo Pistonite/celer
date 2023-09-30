@@ -21,6 +21,7 @@ jobs:
       with:
         node-version: 18.x
     - uses: dtolnay/rust-toolchain@stable
+    - use: Swatinem/rust-cache@v2
     - uses: baptiste0928/cargo-install@v2
       with:
         crate: txtpp
@@ -33,6 +34,14 @@ jobs:
         crate: wasm-pack
     - run: task themes:ci client:ci docs:ci --output group
     - run: task docs:build build:client --output group
+    - uses: actions/upload-artifact@v3
+      with:
+        path: docs/src/.vitepress/dist
+        name: docs-${{ github.sha }}
+    - uses: actions/upload-artifact@v3
+      with:
+        path: web-client/dist
+        name: web-client-${{ github.sha }}
 
   build-server:
     name: Build Server
@@ -49,9 +58,14 @@ jobs:
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: x86_64-unknown-linux-musl
+    - use: Swatinem/rust-cache@v2
     - uses: baptiste0928/cargo-install@v2
       with:
         crate: regen-lang
     - run: task core:grammar
     - run: cargo build --bin celerserver --release --target x86_64-unknown-linux-musl
+    - uses: actions/upload-artifact@v3
+      with:
+        path: target/x86_64-unknown-linux-musl/release/celerserver
+        name: celerserver-${{ github.sha }}
 
