@@ -36,6 +36,17 @@ includes:
     dir: ./web-themes
 
 tasks:
+  install:
+    desc: Install development dependencies and packages
+    cmds:
+    - rustup update
+    - cargo install cargo-watch wasm-pack regen-lang
+    - cargo install cross --git https://github.com/cross-rs/cross
+    - cargo install txtpp --features cli
+    - task: themes:install
+    - task: docs:install
+    - task: client:install
+
   check:
     desc: Check issues in all packages
     deps: [check:ts, check:rs]
