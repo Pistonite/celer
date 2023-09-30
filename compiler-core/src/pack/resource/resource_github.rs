@@ -2,7 +2,6 @@
 use std::sync::Arc;
 
 use crate::util::Path;
-use cached::proc_macro::cached;
 
 use super::{ArcLoader, EmptyLoader, Resource, ResourcePath, ResourceResolver};
 use crate::pack::{PackerError, PackerResult, ValidUse};
@@ -128,28 +127,7 @@ async fn get_github_url(
     reference: Option<&str>,
 ) -> PackerResult<String> {
     let path = path.as_ref();
-    let url = match reference {
-        Some(reference) => {
-            format!("https://raw.githubusercontent.com/{owner}/{repo}/{reference}/{path}")
-        }
-        None => {
-            let default_branch = get_default_branch(owner, repo).await?;
-            format!("https://raw.githubusercontent.com/{owner}/{repo}/{default_branch}/{path}")
-        }
-    };
+    let branch = reference.unwrap_or("main");
+    let url = format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}");
     Ok(url)
-}
-
-/// Get the default branch of a repository.
-#[cached(
-    key="String", 
-    convert = r#"{ format!("{}/{}", _owner, _repo) }"#,
-    // 1 hour TTL
-    time=3600,
-)]
-async fn get_default_branch(_owner: &str, _repo: &str) -> PackerResult<String> {
-    // TODO #31
-    Err(PackerError::NotImpl(
-        "getting default branch not implemented".to_string(),
-    ))
 }

@@ -2,9 +2,7 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 use celerc::api::{CompilerMetadata, CompilerOutput, Setting};
-use celerc::pack::{
-    ArcLoader, GlobalCacheLoader, LocalResourceResolver, Resource, ResourcePath, UrlLoader,
-};
+use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
 use celerc::util::Path;
 use celerctypes::ExecDoc;
 use js_sys::Function;
@@ -12,8 +10,9 @@ use log::{info, LevelFilter};
 use wasm_bindgen::JsValue;
 use web_sys::console;
 
+use crate::loader_file::FileLoader;
+use crate::loader_url::UrlLoader;
 use crate::logger::{self, Logger};
-use crate::resource::FileLoader;
 
 const LOGGER: Logger = Logger;
 
@@ -24,7 +23,7 @@ thread_local! {
 
 thread_local! {
     #[allow(clippy::arc_with_non_send_sync)]
-    static URL_LOADER: ArcLoader = Arc::new(GlobalCacheLoader::new(Arc::new(UrlLoader)));
+    static URL_LOADER: Arc<UrlLoader> = Arc::new(UrlLoader::new());
 }
 
 thread_local! {
@@ -32,7 +31,7 @@ thread_local! {
 }
 
 /// Initialize
-pub fn init(logger: JsValue, load_file: Function) {
+pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
     if let Err(e) = logger::bind_logger(logger) {
         console::error_1(&e);
     }
@@ -50,6 +49,9 @@ pub fn init(logger: JsValue, load_file: Function) {
     info!("initializing compiler...");
     FILE_LOADER.with(|loader| {
         loader.init(load_file);
+    });
+    URL_LOADER.with(|loader| {
+        loader.init(fetch);
     });
 
     info!("compiler initialized");

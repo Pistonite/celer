@@ -47,6 +47,9 @@ pub enum PackerError {
     #[error("Invalid path: {0}")]
     InvalidPath(String),
 
+    #[error("Invalid url: {0}")]
+    InvalidUrl(String),
+
     #[error("Max depth of {0} levels of `use` is reached. Please make sure there are no circular dependencies.")]
     MaxUseDepthExceeded(usize),
 

@@ -43,7 +43,8 @@ If the path does not start with `.`, `..`, or `/`, it will be considered a GitHu
 ```
 {owner}/{repo}/{path/to/file}:{ref}
 ```
-The `:{ref}` can be a branch, tag, or commit hash. It is optional and when omitted, it will resolve to the default branch of that repo.
+The `:{ref}` can be a branch, tag, or commit hash. 
+It is optional and when omitted, it will resolve to the `main` branch.
 
 Examples:
 ```yaml

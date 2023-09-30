@@ -32,7 +32,7 @@ log = "0.4.20"
 default = [
     "tokio", 
     "tokio-stream", 
-    "cached/async_tokio_rt_multi_thread"
+    "cached/async_tokio_rt_multi_thread",
 ]
 wasm = [
     "cached/wasm", 

@@ -1,0 +1,20 @@
+map:
+  layers:
+  - name: Overworld
+    template-url: https://objmap.zeldamods.org/game_files/maptex/{z}/{x}/{y}.png
+    size: [24000, 20000]
+    max-native-zoom: 7
+    zoom-bounds: [2, 9]
+    transform:
+      translate: [12000, 10000]
+      scale: [2, 2]
+    start-z: -5000
+    attribution:
+      link: https://objmap.zeldamods.org
+  coord-map:
+    "2d": [x, y]
+    "3d": [x, z, y]
+  initial-coord: [-1099.10, 242.00, 1876.31]
+  initial-zoom: 3
+  initial-color: "#38F"
+

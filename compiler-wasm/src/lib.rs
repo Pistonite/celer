@@ -7,8 +7,9 @@ mod api;
 mod wasm;
 use wasm::*;
 
+mod loader_file;
+mod loader_url;
 mod logger;
-mod resource;
 
 // WASM output types
 import! {
@@ -21,12 +22,14 @@ into! {ExecDoc}
 
 ffi!(
     /// Initialize
-    pub async fn initCompiler(logger: JsValue, load_file: Function) -> void {
-        api::init(logger, load_file);
+    pub async fn initCompiler(logger: JsValue, load_file: Function, fetch: Function) -> void {
+        api::init(logger, load_file, fetch);
         JsValue::UNDEFINED
     }
 
     /// Compile a document from web editor
+    ///
+    /// If use_cache is true, the compiler will use cached results loaded from URLs
     pub async fn compileDocument() -> Option<ExecDoc> {
         api::compile_document().await
     }

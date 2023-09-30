@@ -25,8 +25,14 @@ export class CompMgr {
         this.compiling = false;
     }
 
-    public async init(loadFile: RequestFileFunction) {
-        initCompiler(CompilerLog, loadFile);
+    public async init(
+        loadFile: RequestFileFunction,
+        loadUrl: RequestFileFunction,
+    ) {
+        initCompiler(CompilerLog, loadFile, (url: string) => {
+            CompilerLog.info(`loading ${url}`);
+            return loadUrl(url);
+        });
     }
 
     /// Trigger compilation of the document
@@ -80,7 +86,5 @@ export class CompMgr {
         window.clearTimeout(handle);
         this.dispatcher.dispatch(viewActions.setCompileInProgress(false));
         this.compiling = false;
-        //wasm api should be something like:
-        //compile(requestfunction) -> Promise<result>
     }
 }

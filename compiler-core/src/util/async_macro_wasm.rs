@@ -13,6 +13,11 @@ thread_local! {
     static CANCELLED: UnsafeCell<bool> = UnsafeCell::new(false);
 }
 
+const BUDGET_MAX: u8 = 64;
+thread_local! {
+    static BUDGET: UnsafeCell<u8> = UnsafeCell::new(BUDGET_MAX);
+}
+
 /// A signal for cancellation
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum WasmError {
@@ -30,6 +35,19 @@ pub fn set_cancelled(value: bool) {
 ///
 /// Shared code for server and WASM should use the [`yield_now`] macro instead of calling this directly.
 pub async fn set_timeout_yield() -> Result<(), WasmError> {
+    let has_budget = BUDGET.with(|budget| unsafe {
+        let b_ref = budget.get();
+        if *b_ref == 0 {
+            *b_ref = BUDGET_MAX;
+            false
+        } else {
+            *b_ref -= 1;
+            true
+        }
+    });
+    if has_budget {
+        return Ok(());
+    }
     let promise = WINDOW.with(|window| {
         Promise::new(&mut |resolve, _| {
             let _ = window.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);
