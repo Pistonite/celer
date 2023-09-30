@@ -1,5 +1,6 @@
 //! Server environment settings
 use std::env;
+use std::path::{Path, PathBuf};
 use tracing::Level;
 
 pub struct Environment {
@@ -13,6 +14,8 @@ pub struct Environment {
     pub docs_dir: String,
     /// Directory to serve web client
     pub app_dir: String,
+    /// Path to certificate file and key file
+    pub cert_key_path: Option<(PathBuf, PathBuf)>,
 }
 
 impl Environment {
@@ -64,6 +67,26 @@ impl Environment {
             panic!("CELERSERVER_APP_DIR not set");
         };
 
+        let cert_key_path = if let Ok(x) = env::var("CELERSERVER_HTTPS_CERT") {
+            if let Ok(cert_path) = Path::new(&x).canonicalize() {
+                if let Ok(x) = env::var("CELERSERVER_HTTPS_KEY") {
+                    if let Ok(key_path) = Path::new(&x).canonicalize() {
+                        Some((cert_path, key_path))
+                    } else {
+                        eprintln!("Invalid certificate path, https mode will be disabled");
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                eprintln!("Invalid certificate path, https mode will be disabled");
+                None
+            }
+        } else {
+            None
+        };
+
         for arg in env::args() {
             if arg == "--debug" {
                 logging_level = Level::DEBUG;
@@ -76,6 +99,7 @@ impl Environment {
             port,
             docs_dir,
             app_dir,
+            cert_key_path,
         }
     }
 }

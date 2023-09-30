@@ -5,11 +5,12 @@
 //! Alternatively, you can use a CDN such as Cloudflare to proxy the website.
 
 use axum::{Router, Server};
+use axum_server::tls_rustls::RustlsConfig;
 use std::io;
 use std::path::Path;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse};
-use tracing::{debug, info, Level};
+use tracing::{debug, error, info, Level};
 
 mod env;
 use env::Environment;
@@ -39,10 +40,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let address = format!("0.0.0.0:{}", env.port).parse()?;
-    info!("starting server on {address}");
-    Server::bind(&address)
-        .serve(router.into_make_service())
-        .await?;
+    let tls_config = if let Some((cert_path, key_path)) = env.cert_key_path {
+        RustlsConfig::from_pem_file(cert_path, key_path)
+            .await
+            .map_err(|e| {
+                error!("Failed to load TLS certificate: {}", e);
+                error!("Falling back to HTTP");
+                e
+            })
+            .ok()
+    } else {
+        None
+    };
+    if let Some(tls_config) = tls_config {
+        info!("starting server on https://{address}");
+        axum_server::bind_rustls(address, tls_config)
+            .serve(router.into_make_service())
+            .await?;
+    } else {
+        info!("starting server on http://{address}");
+        Server::bind(&address)
+            .serve(router.into_make_service())
+            .await?;
+    }
 
     Ok(())
 }
@@ -54,9 +74,13 @@ fn init_docs(router: Router, docs_dir: &str) -> Result<Router, io::Error> {
     let docs_404_path = docs_dir.join("404.html").canonicalize()?;
     let service = NestedRouteRedirectService::new(
         "/docs",
-        ServeDir::new(&docs_dir).fallback(AddHtmlExtService(
-            ServeDir::new(&docs_dir).fallback(ServeFile::new(docs_404_path)),
-        )),
+        ServeDir::new(&docs_dir)
+            .precompressed_gzip()
+            .fallback(AddHtmlExtService(
+                ServeDir::new(&docs_dir)
+                    .precompressed_gzip()
+                    .fallback(ServeFile::new(docs_404_path).precompressed_gzip()),
+            )),
     );
     Ok(router.nest_service("/docs", service))
 }
@@ -66,7 +90,7 @@ fn init_edit(router: Router, app_dir: &str) -> Result<Router, io::Error> {
     let edit_path = Path::new(app_dir).join("edit.html").canonicalize()?;
     debug!("/edit -> {}", edit_path.display());
 
-    let service = ServeFile::new(&edit_path);
+    let service = ServeFile::new(&edit_path).precompressed_gzip();
     Ok(router.nest_service("/edit", service))
 }
 
@@ -83,7 +107,8 @@ fn init_static(
         debug_assert_eq!(route.chars().next(), Some('/'));
         let path = app_dir.join(&route[1..]).canonicalize()?;
         debug!("/{route} -> {}", path.display());
-        let service = NestedRouteRedirectService::new(route, ServeDir::new(&path));
+        let service =
+            NestedRouteRedirectService::new(route, ServeDir::new(&path).precompressed_gzip());
         router = router.nest_service(route, service);
     }
     Ok(router)

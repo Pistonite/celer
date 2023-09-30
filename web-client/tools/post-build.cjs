@@ -39,7 +39,7 @@ const viewerHtml = processHtml(indexHtml, VIEWER_TAG)
         return !l.includes("monaco");
     })
     .join("\n");
-const editorHtml = processHtml(indexHtml, EDITOR_TAG).join("\n");
+const editorHtml = processHtml(indexHtml, EDITOR_TAG).join("");
 
 fs.writeFileSync(viewerHtmlPath, viewerHtml);
 fs.writeFileSync(editorHtmlPath, editorHtml);

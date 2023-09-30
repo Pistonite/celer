@@ -15,7 +15,7 @@ export type StageMode = "view" | "edit";
 export type SettingsTab = "map" | "doc" | "editor" | "info";
 
 export const initialStageViewState: StageViewState = {
-    stageMode: "view",
+    stageMode: window.location.pathname.startsWith("/edit") ? "edit" : "view",
     alertTitle: "",
     alertText: "",
     alertOkButton: "",

@@ -10,5 +10,7 @@ tasks:
       CELERSERVER_PORT: 8173
       CELERSERVER_DOCS_DIR: ../docs/src/.vitepress/dist
       CELERSERVER_APP_DIR: ../web-client/dist
+      CELERSERVER_HTTPS_CERT: ../cert/cert.pem
+      CELERSERVER_HTTPS_KEY: ../cert/cert-key.pem
     cmds:
     - cargo watch -B 1 -s "cargo run --bin celerserver -- {{.CLI_ARGS}}"
