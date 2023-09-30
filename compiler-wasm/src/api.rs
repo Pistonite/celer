@@ -1,10 +1,8 @@
-use std::cell::{RefCell, UnsafeCell};
+use std::cell::RefCell;
 use std::sync::Arc;
 
 use celerc::api::{CompilerMetadata, CompilerOutput, Setting};
-use celerc::pack::{
-    GlobalCacheLoader, LocalResourceResolver, Resource, ResourcePath,
-};
+use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
 use celerc::util::Path;
 use celerctypes::ExecDoc;
 use js_sys::Function;
@@ -12,9 +10,9 @@ use log::{info, LevelFilter};
 use wasm_bindgen::JsValue;
 use web_sys::console;
 
-use crate::logger::{self, Logger};
 use crate::loader_file::FileLoader;
 use crate::loader_url::UrlLoader;
+use crate::logger::{self, Logger};
 
 const LOGGER: Logger = Logger;
 
@@ -65,7 +63,7 @@ pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
 pub async fn compile_document() -> Option<ExecDoc> {
     // create root resource
     let fs_loader = FILE_LOADER.with(|x| x.clone());
-            let url_loader = URL_LOADER.with(|x| x.clone());
+    let url_loader = URL_LOADER.with(|x| x.clone());
     let root_path = Path::new();
     let resolver = Arc::new(LocalResourceResolver(root_path.clone()));
     let resource = Resource::new(

@@ -92,7 +92,12 @@ export const DocLine: React.FC<DocLineProps> = ({
                         </div>
                     )}
                     <div className="docline-text-container">
-                        <div className={clsx("docline-primary-text", iconUrl && "docline-icon-text")}>
+                        <div
+                            className={clsx(
+                                "docline-primary-text",
+                                iconUrl && "docline-icon-text",
+                            )}
+                        >
                             {removeTags(text).trim().length === 0 ? (
                                 <span>&nbsp;</span>
                             ) : (
@@ -100,7 +105,12 @@ export const DocLine: React.FC<DocLineProps> = ({
                             )}
                         </div>
                         {secondaryText.length > 0 && (
-                            <div className={clsx("docline-secondary-text", iconUrl && "docline-icon-text")}>
+                            <div
+                                className={clsx(
+                                    "docline-secondary-text",
+                                    iconUrl && "docline-icon-text",
+                                )}
+                            >
                                 <Rich size={400} content={secondaryText} />
                             </div>
                         )}

@@ -35,7 +35,7 @@ pub fn set_cancelled(value: bool) {
 ///
 /// Shared code for server and WASM should use the [`yield_now`] macro instead of calling this directly.
 pub async fn set_timeout_yield() -> Result<(), WasmError> {
-    if BUDGET.with(|budget| unsafe { 
+    let has_budget = BUDGET.with(|budget| unsafe {
         let b_ref = budget.get();
         if *b_ref == 0 {
             *b_ref = BUDGET_MAX;
@@ -44,7 +44,8 @@ pub async fn set_timeout_yield() -> Result<(), WasmError> {
             *b_ref -= 1;
             true
         }
-    }) {
+    });
+    if has_budget {
         return Ok(());
     }
     let promise = WINDOW.with(|window| {

@@ -25,7 +25,10 @@ export class CompMgr {
         this.compiling = false;
     }
 
-    public async init(loadFile: RequestFileFunction, loadUrl: RequestFileFunction) {
+    public async init(
+        loadFile: RequestFileFunction,
+        loadUrl: RequestFileFunction,
+    ) {
         initCompiler(CompilerLog, loadFile, (url: string) => {
             CompilerLog.info(`loading ${url}`);
             return loadUrl(url);

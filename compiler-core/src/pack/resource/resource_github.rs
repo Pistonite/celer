@@ -1,8 +1,7 @@
 //! GitHub resource resolver and loader impl
-use std::{sync::Arc, borrow::Cow};
+use std::sync::Arc;
 
 use crate::util::Path;
-use cached::proc_macro::cached;
 
 use super::{ArcLoader, EmptyLoader, Resource, ResourcePath, ResourceResolver};
 use crate::pack::{PackerError, PackerResult, ValidUse};
@@ -128,14 +127,7 @@ async fn get_github_url(
     reference: Option<&str>,
 ) -> PackerResult<String> {
     let path = path.as_ref();
-    let branch = match reference {
-        Some(reference) => {
-            reference
-        }
-        None => {
-            "main"
-        }
-    };
+    let branch = reference.unwrap_or("main");
     let url = format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}");
     Ok(url)
 }

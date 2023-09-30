@@ -22,4 +22,4 @@ export const fetchAsBytes = async (url: string): Promise<Uint8Array> => {
         throw error;
     }
     throw new Error("unknown error");
-}
+};

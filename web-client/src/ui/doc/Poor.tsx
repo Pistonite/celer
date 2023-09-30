@@ -32,7 +32,13 @@ type PoorBlockProps = DocPoorText & {
 const PoorBlock: React.FC<PoorBlockProps> = ({ type, data, textProps }) => {
     return (
         <Text as="span" {...textProps}>
-            {type === "link" ? <a href={data} target="_blank">{data}</a> : data}
+            {type === "link" ? (
+                <a href={data} target="_blank">
+                    {data}
+                </a>
+            ) : (
+                data
+            )}
         </Text>
     );
 };

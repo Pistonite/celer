@@ -1,6 +1,6 @@
 //! Utils for gluing WASM and JS
 
-use js_sys::{Function, Promise, Boolean};
+use js_sys::{Boolean, Function, Promise};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 

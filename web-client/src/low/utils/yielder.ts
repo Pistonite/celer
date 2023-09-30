@@ -10,5 +10,5 @@ export const createYielder = (budget: number) => {
         }
         currentBudget--;
         return Promise.resolve();
-    }
+    };
 };

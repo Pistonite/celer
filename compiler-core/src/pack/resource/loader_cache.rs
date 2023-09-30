@@ -67,4 +67,3 @@ async fn load_image_url_internal(loader: &ArcLoader, path: &str) -> PackerResult
 async fn load_structured_internal(loader: &ArcLoader, path: &str) -> PackerResult<Value> {
     loader.load_structured(path).await
 }
-

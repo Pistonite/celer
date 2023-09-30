@@ -7,9 +7,9 @@ mod api;
 mod wasm;
 use wasm::*;
 
-mod logger;
 mod loader_file;
 mod loader_url;
+mod logger;
 
 // WASM output types
 import! {

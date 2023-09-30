@@ -1,11 +1,11 @@
 use std::cell::RefCell;
 
-use celerc::{yield_now, pack::ResourceLoader};
-use celerc::pack::{PackerResult, PackerError};
-use js_sys::{Uint8Array, Function};
-use wasm_bindgen::{JsValue, JsCast};
+use celerc::pack::{PackerError, PackerResult};
+use celerc::{pack::ResourceLoader, yield_now};
+use js_sys::{Function, Uint8Array};
+use wasm_bindgen::{JsCast, JsValue};
 
-use crate::wasm::{stub_function, into_future};
+use crate::wasm::{into_future, stub_function};
 
 /// Loader for loading a URL using a provided JS function
 pub struct UrlLoader {

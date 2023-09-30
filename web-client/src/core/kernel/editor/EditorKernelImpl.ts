@@ -11,12 +11,12 @@ import {
 import { FileSys, FsResult } from "low/fs";
 import { isInDarkMode } from "low/utils";
 
+import { fetchAsBytes } from "low/fetch";
 import { EditorKernel } from "./EditorKernel";
 import { EditorLog, toFsPath } from "./utils";
 import { IdleMgr } from "./IdleMgr";
 import { FileMgr } from "./FileMgr";
 import { CompMgr } from "./CompMgr";
-import { fetchAsBytes } from "low/fetch";
 
 export class EditorKernelImpl implements EditorKernel {
     private store: AppStore;
@@ -82,7 +82,10 @@ export class EditorKernelImpl implements EditorKernel {
     }
 
     public async init(): Promise<void> {
-        await this.compMgr.init(this.fileMgr.getFileAsBytes.bind(this.fileMgr), fetchAsBytes);
+        await this.compMgr.init(
+            this.fileMgr.getFileAsBytes.bind(this.fileMgr),
+            fetchAsBytes,
+        );
     }
 
     /// Reset the editor with a new file system. Unsaved changes will be lost
