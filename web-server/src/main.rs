@@ -10,7 +10,7 @@ use std::io;
 use std::path::Path;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse};
-use tracing::{debug, info, error, Level};
+use tracing::{debug, error, info, Level};
 
 mod env;
 use env::Environment;
@@ -41,11 +41,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let address = format!("0.0.0.0:{}", env.port).parse()?;
     let tls_config = if let Some((cert_path, key_path)) = env.cert_key_path {
-        RustlsConfig::from_pem_file(cert_path, key_path).await.or_else(|e| {
-            error!("Failed to load TLS certificate: {}", e);
-            error!("Falling back to HTTP");
-            Err(())
-        }).ok()
+        RustlsConfig::from_pem_file(cert_path, key_path)
+            .await
+            .map_err(|e| {
+                error!("Failed to load TLS certificate: {}", e);
+                error!("Falling back to HTTP");
+                e
+            })
+            .ok()
     } else {
         None
     };
@@ -58,7 +61,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         info!("starting server on http://{address}");
         Server::bind(&address)
             .serve(router.into_make_service())
-        .await?;
+            .await?;
     }
 
     Ok(())
@@ -71,9 +74,13 @@ fn init_docs(router: Router, docs_dir: &str) -> Result<Router, io::Error> {
     let docs_404_path = docs_dir.join("404.html").canonicalize()?;
     let service = NestedRouteRedirectService::new(
         "/docs",
-        ServeDir::new(&docs_dir).precompressed_gzip().fallback(AddHtmlExtService(
-            ServeDir::new(&docs_dir).precompressed_gzip().fallback(ServeFile::new(docs_404_path).precompressed_gzip()),
-        )),
+        ServeDir::new(&docs_dir)
+            .precompressed_gzip()
+            .fallback(AddHtmlExtService(
+                ServeDir::new(&docs_dir)
+                    .precompressed_gzip()
+                    .fallback(ServeFile::new(docs_404_path).precompressed_gzip()),
+            )),
     );
     Ok(router.nest_service("/docs", service))
 }
@@ -100,7 +107,8 @@ fn init_static(
         debug_assert_eq!(route.chars().next(), Some('/'));
         let path = app_dir.join(&route[1..]).canonicalize()?;
         debug!("/{route} -> {}", path.display());
-        let service = NestedRouteRedirectService::new(route, ServeDir::new(&path).precompressed_gzip());
+        let service =
+            NestedRouteRedirectService::new(route, ServeDir::new(&path).precompressed_gzip());
         router = router.nest_service(route, service);
     }
     Ok(router)
