@@ -36,6 +36,17 @@ includes:
     dir: ./web-themes
 
 tasks:
+  install:
+    desc: Install development dependencies and packages
+    cmds:
+    - rustup update
+    - cargo install cargo-watch wasm-pack regen-lang
+    - cargo install cross --git https://github.com/cross-rs/cross
+    - cargo install txtpp --features cli
+    - task: themes:install
+    - task: docs:install
+    - task: client:install
+
   check:
     desc: Check issues in all packages
     deps: [check:ts, check:rs]
@@ -75,6 +86,14 @@ tasks:
     desc: Stop docker container
     cmds:
     - docker stop $(docker ps -q -a --filter ancestor=pistonite/celer)
+
+  docker:push:
+    desc: Push the container to docker hub. Takes in the tag [defaults to latest]
+    interactive: true
+    cmds:
+    - docker login
+    - docker push pistonite/celer:{{.CLI_ARGS | default "latest" }}
+    - docker logout
 
   build:
     desc: Build production assets

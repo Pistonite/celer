@@ -30,3 +30,19 @@ jobs:
     - run: task themes:ci client:ci --output group
     - run: task themes:build build:wasm build:types --output group
     - run: task client:test
+
+  test-rust:
+    name: Test Rust Packages
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: baptiste0928/cargo-install@v2
+      with:
+        crate: regen-lang
+    - run: task core:grammar
+    - run: cargo test --all-features --all-targets
