@@ -189,7 +189,10 @@ mod test {
         let mut builder = MapSectionBuilder::default();
         builder.add_coord("test", &GameCoord(1.0, 1.0, 3.0));
 
-        let exec_section = test_section.exec(&Default::default(), 4, &mut builder).await.unwrap();
+        let exec_section = test_section
+            .exec(&Default::default(), 4, &mut builder)
+            .await
+            .unwrap();
 
         assert_eq!(
             exec_section.map.lines,

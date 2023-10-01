@@ -1,9 +1,9 @@
-use celerctypes::{ExecLine, MapIcon, MapMarker, RouteMetadata, DocDiagnostic};
+use celerctypes::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
 
 use crate::comp::{CompLine, CompMovement};
 use crate::util::async_for;
 
-use super::{ExecResult, MapSectionBuilder, add_engine_diagnostics};
+use super::{add_engine_diagnostics, ExecResult, MapSectionBuilder};
 
 fn add_missing_icon_diagnostics(diagnostics: &mut Vec<DocDiagnostic>, icon: &str) {
     add_engine_diagnostics(diagnostics, "warning", &format!("Cannot find icon `{icon}`. Icons need to be defined in the config. See https://celer.pistonite.org/docs/route/config/icons for more details"));
@@ -104,7 +104,6 @@ impl CompLine {
 #[cfg(test)]
 mod test {
     use crate::comp::{CompMarker, CompMovement};
-    use crate::lang::parse_poor;
     use celerctypes::{DocDiagnostic, DocNote, DocPoorText, DocRichText, GameCoord, MapLine};
 
     use super::*;
@@ -230,8 +229,10 @@ mod test {
             notes: test_notes.clone(),
             ..Default::default()
         };
-        let project = RouteMetadata { 
-            icons: vec![("test-icon".to_string(), "".to_string())].into_iter().collect(),
+        let project = RouteMetadata {
+            icons: vec![("test-icon".to_string(), "".to_string())]
+                .into_iter()
+                .collect(),
             ..Default::default()
         };
         let exec_line = line.exec(&project, 3, 4, &mut map_section).await.unwrap();
@@ -253,7 +254,10 @@ mod test {
             ..Default::default()
         };
         let mut map_section = Default::default();
-        let exec_line = test_line.exec(&Default::default(), 0, 0, &mut map_section).await.unwrap();
+        let exec_line = test_line
+            .exec(&Default::default(), 0, 0, &mut map_section)
+            .await
+            .unwrap();
         let expected = vec![
             GameCoord(3.4, 5.0, 6.0),
             GameCoord(3.4, 7.0, 6.0),
@@ -283,40 +287,42 @@ mod test {
             ..Default::default()
         };
         let mut builder = Default::default();
-        let project = RouteMetadata { 
+        let project = RouteMetadata {
             icons: vec![
                 ("test icon".to_string(), "".to_string()),
                 ("test icon 1".to_string(), "".to_string()),
                 ("test icon 2".to_string(), "".to_string()),
-            ].into_iter().collect(),
+            ]
+            .into_iter()
+            .collect(),
             ..Default::default()
         };
         test_line.exec(&project, 4, 5, &mut builder).await.unwrap();
         assert_eq!(
             builder.icons,
             vec![
-        MapIcon {
-                id: "test icon".to_string(),
-                coord: GameCoord(1.2, 55.0, 87.8),
-                line_index: 5,
-                section_index: 4,
-                priority: 3,
-            },
-        MapIcon {
-                id: "test icon 1".to_string(),
-                coord: GameCoord(3.4, 7.0, 6.0),
-                line_index: 5,
-                section_index: 4,
-                priority: 3,
-            },
-        MapIcon {
-                id: "test icon 2".to_string(),
-                coord: GameCoord(3.5, 7.4, 6.2),
-                line_index: 5,
-                section_index: 4,
-                priority: 3,
-            },
-        ]
+                MapIcon {
+                    id: "test icon".to_string(),
+                    coord: GameCoord(1.2, 55.0, 87.8),
+                    line_index: 5,
+                    section_index: 4,
+                    priority: 3,
+                },
+                MapIcon {
+                    id: "test icon 1".to_string(),
+                    coord: GameCoord(3.4, 7.0, 6.0),
+                    line_index: 5,
+                    section_index: 4,
+                    priority: 3,
+                },
+                MapIcon {
+                    id: "test icon 2".to_string(),
+                    coord: GameCoord(3.5, 7.4, 6.2),
+                    line_index: 5,
+                    section_index: 4,
+                    priority: 3,
+                },
+            ]
         );
         assert_eq!(
             builder.markers,
@@ -346,7 +352,10 @@ mod test {
         };
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
-        test_line.exec(&Default::default(), 0, 0, &mut map_builder).await.unwrap();
+        test_line
+            .exec(&Default::default(), 0, 0, &mut map_builder)
+            .await
+            .unwrap();
         let map_section = map_builder.build();
         assert_eq!(
             map_section.lines,
@@ -388,7 +397,10 @@ mod test {
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
         map_builder.add_coord("blue", &GameCoord::default());
-        test_line.exec(&Default::default(), 0, 0, &mut map_builder).await.unwrap();
+        test_line
+            .exec(&Default::default(), 0, 0, &mut map_builder)
+            .await
+            .unwrap();
 
         map_builder.add_coord("test color", &GameCoord::default());
         let map = map_builder.build();
@@ -448,7 +460,10 @@ mod test {
             ..Default::default()
         };
         let mut builder = Default::default();
-        let exec_line = test_line.exec(&Default::default(), 4, 5, &mut builder).await.unwrap();
+        let exec_line = test_line
+            .exec(&Default::default(), 4, 5, &mut builder)
+            .await
+            .unwrap();
         assert_eq!(exec_line.diagnostics.len(), 3);
         assert_eq!(exec_line.diagnostics[0].msg_type, "warning");
         assert_eq!(exec_line.diagnostics[0].source, "celer/engine");

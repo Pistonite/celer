@@ -1260,7 +1260,7 @@ mod test {
             },
         )
         .await;
-       assert_eq!(compiler.coord, GameCoord(4.0, 5.0, 6.0));
+        assert_eq!(compiler.coord, GameCoord(4.0, 5.0, 6.0));
 
         let mut compiler = builder.clone().build();
         test_comp_ok(

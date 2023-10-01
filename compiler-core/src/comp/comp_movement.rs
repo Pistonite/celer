@@ -376,9 +376,12 @@ mod test {
                 icon: None,
             })
         );
-        assert_eq!(errors, vec![
-        CompilerError::InvalidLinePropertyType("te.icon".to_string())
-        ]);
+        assert_eq!(
+            errors,
+            vec![CompilerError::InvalidLinePropertyType(
+                "te.icon".to_string()
+            )]
+        );
 
         errors.clear();
         assert_eq!(
