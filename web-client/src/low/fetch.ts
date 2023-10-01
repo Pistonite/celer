@@ -6,7 +6,7 @@ export const fetchAsBytes = async (url: string): Promise<Uint8Array> => {
     for (let i = 0; i < RETRY_COUNT; i++) {
         try {
             const response = await fetch(url, {
-                cache: "reload",
+                // cache: "reload",
             });
             if (response.ok) {
                 const buffer = await response.arrayBuffer();

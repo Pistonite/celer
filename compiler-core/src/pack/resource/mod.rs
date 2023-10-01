@@ -1,7 +1,7 @@
 mod loader;
 pub use loader::*;
-mod loader_cache;
-pub use loader_cache::*;
+// mod loader_cache;
+// pub use loader_cache::*;
 mod loader_empty;
 pub use loader_empty::*;
 mod resource_github;

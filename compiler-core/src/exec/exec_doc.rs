@@ -12,7 +12,7 @@ impl CompDoc {
         map_builder.add_coord("", &self.project.map.initial_coord);
         let mut sections = vec![];
         async_for!((index, section) in self.route.into_iter().enumerate(), {
-            let exec_section = section.exec(index, &mut map_builder).await?;
+            let exec_section = section.exec(&self.project, index, &mut map_builder).await?;
             sections.push(exec_section);
         })?;
         Ok(ExecDoc {

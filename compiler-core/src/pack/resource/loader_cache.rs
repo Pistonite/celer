@@ -6,19 +6,19 @@ use crate::pack::PackerResult;
 use super::{ArcLoader, ResourceLoader};
 
 /// A loader that caches loaded resources in memory. The cache is global.
-pub struct GlobalCacheLoader {
-    delegate: ArcLoader,
+pub struct GlobalCacheLoader<L> {
+    delegate: L,
 }
 
-impl GlobalCacheLoader {
-    pub fn new(delegate: ArcLoader) -> Self {
+impl<L> GlobalCacheLoader<L> {
+    pub fn new(delegate: L) -> Self {
         Self { delegate }
     }
 }
 
 #[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
 #[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
-impl ResourceLoader for GlobalCacheLoader {
+impl<L> ResourceLoader for GlobalCacheLoader<L> where L: ResourceLoader {
     async fn load_raw(&self, r: &str) -> PackerResult<Vec<u8>> {
         load_raw_internal(&self.delegate, r).await
     }
@@ -39,10 +39,10 @@ impl ResourceLoader for GlobalCacheLoader {
     size=256,
     key="String",
     convert = r#"{ path.to_string() }"#,
-    // TTL of 5 minutes
-    time=300,
+    // TTL of 10 minutes
+    time=600,
 )]
-async fn load_raw_internal(loader: &ArcLoader, path: &str) -> PackerResult<Vec<u8>> {
+async fn load_raw_internal(loader: &dyn ResourceLoader, path: &str) -> PackerResult<Vec<u8>> {
     loader.load_raw(path).await
 }
 
@@ -50,10 +50,10 @@ async fn load_raw_internal(loader: &ArcLoader, path: &str) -> PackerResult<Vec<u
     size=256,
     key="String",
     convert = r#"{ path.to_string() }"#,
-    // TTL of 5 minutes
-    time=300,
+    // TTL of 10 minutes
+    time=600,
 )]
-async fn load_image_url_internal(loader: &ArcLoader, path: &str) -> PackerResult<String> {
+async fn load_image_url_internal(loader: &dyn ResourceLoader, path: &str) -> PackerResult<String> {
     loader.load_image_url(path).await
 }
 
@@ -61,9 +61,9 @@ async fn load_image_url_internal(loader: &ArcLoader, path: &str) -> PackerResult
     size=256,
     key="String",
     convert = r#"{ path.to_string() }"#,
-    // TTL of 5 minutes
-    time=300,
+    // TTL of 10 minutes
+    time=600,
 )]
-async fn load_structured_internal(loader: &ArcLoader, path: &str) -> PackerResult<Value> {
+async fn load_structured_internal(loader: &dyn ResourceLoader, path: &str) -> PackerResult<Value> {
     loader.load_structured(path).await
 }

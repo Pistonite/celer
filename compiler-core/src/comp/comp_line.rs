@@ -287,6 +287,7 @@ impl Compiler {
                         if let Some(i) = ref_stack.last() {
                             if let CompMovement::To { to, .. } = &output.movements[*i] {
                                 output.map_coord = to.clone();
+                                self.coord = to.clone();
                             } else {
                                 unreachable!();
                             }
@@ -1242,7 +1243,7 @@ mod test {
             "".to_string(),
             GameCoord(1.0, 2.0, 3.0),
         );
-        let mut compiler = builder.build();
+        let mut compiler = builder.clone().build();
 
         test_comp_ok(
             &mut compiler,
@@ -1259,7 +1260,9 @@ mod test {
             },
         )
         .await;
+       assert_eq!(compiler.coord, GameCoord(4.0, 5.0, 6.0));
 
+        let mut compiler = builder.clone().build();
         test_comp_ok(
             &mut compiler,
             json!({
@@ -1284,6 +1287,7 @@ mod test {
         )
         .await;
 
+        let mut compiler = builder.build();
         test_comp_err(
             &mut compiler,
             json!({

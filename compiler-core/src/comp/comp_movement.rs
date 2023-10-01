@@ -15,15 +15,21 @@ pub enum CompMovement {
     To {
         /// The target coord to move to
         to: GameCoord,
+
         /// If the movement is a warp
         warp: bool,
+
         /// If the movement coord should be excluded
         ///
         /// This affects if the map will consider this coord when
         /// changing view to the line
         exclude: bool,
+
         /// Optional color to override the color of the line
         color: Option<String>,
+
+        /// Optional icon at the movement point
+        icon: Option<String>,
     },
     Push,
     Pop,
@@ -37,6 +43,7 @@ impl CompMovement {
             warp: false,
             exclude: false,
             color: None,
+            icon: None,
         }
     }
 }
@@ -80,6 +87,7 @@ impl Compiler {
                 let mut warp = false;
                 let mut exclude = false;
                 let mut color = None;
+                let mut icon = None;
 
                 let mut should_fail = false;
 
@@ -121,6 +129,14 @@ impl Compiler {
                                 )));
                             }
                         },
+                        prop::ICON => match value {
+                            Value::Array(_) | Value::Object(_) => {
+                                errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                    "{prop_name}.{}", prop::ICON
+                                )));
+                    }
+                    _ => icon = Some(value.coerce_to_string()),
+                        }
                         _ => {
                             errors
                                 .push(CompilerError::UnusedProperty(format!("{prop_name}.{key}")));
@@ -142,6 +158,7 @@ impl Compiler {
                                 warp,
                                 exclude,
                                 color,
+                                icon,
                             })
                         }
                     }
@@ -244,6 +261,7 @@ mod test {
                 warp: true,
                 exclude: false,
                 color: None,
+                icon: None,
             })
         );
         assert_eq!(errors, vec![]);
@@ -266,6 +284,7 @@ mod test {
                 warp: true,
                 exclude: true,
                 color: None,
+                icon: None,
             })
         );
         assert_eq!(errors, vec![]);
@@ -288,6 +307,7 @@ mod test {
                 warp: false,
                 exclude: true,
                 color: Some("red".to_string()),
+                icon: None,
             })
         );
         assert_eq!(errors, vec![]);
@@ -309,9 +329,56 @@ mod test {
                 warp: false,
                 exclude: false,
                 color: None,
+                icon: None,
             })
         );
         assert_eq!(errors, vec![]);
+
+        errors.clear();
+        assert_eq!(
+            compiler
+                .comp_movement(
+                    "",
+                    json!({
+                        "to": [1, 2, 4],
+                        "icon": "something",
+                    }),
+                    &mut errors
+                )
+                .await,
+            Some(CompMovement::To {
+                to: GameCoord(1.0, 2.0, 4.0),
+                warp: false,
+                exclude: false,
+                color: None,
+                icon: Some("something".to_string()),
+            })
+        );
+        assert_eq!(errors, vec![]);
+
+        errors.clear();
+        assert_eq!(
+            compiler
+                .comp_movement(
+                    "te",
+                    json!({
+                        "to": [1, 2, 4],
+                        "icon": []
+                    }),
+                    &mut errors
+                )
+                .await,
+            Some(CompMovement::To {
+                to: GameCoord(1.0, 2.0, 4.0),
+                warp: false,
+                exclude: false,
+                color: None,
+                icon: None,
+            })
+        );
+        assert_eq!(errors, vec![
+        CompilerError::InvalidLinePropertyType("te.icon".to_string())
+        ]);
 
         errors.clear();
         assert_eq!(

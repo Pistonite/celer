@@ -7,6 +7,7 @@
 use std::convert::Infallible;
 
 mod exec_line;
+use celerctypes::DocDiagnostic;
 pub use exec_line::*;
 mod exec_map;
 pub use exec_map::*;
@@ -15,6 +16,7 @@ pub use exec_section::*;
 mod exec_doc;
 pub use exec_doc::*;
 
+use crate::lang::parse_poor;
 #[cfg(feature = "wasm")]
 use crate::util::WasmError;
 
@@ -40,4 +42,12 @@ impl From<Infallible> for ExecError {
     fn from(_: Infallible) -> Self {
         unreachable!()
     }
+}
+
+pub fn add_engine_diagnostics(diagnostics: &mut Vec<DocDiagnostic>, msg_type: &str, msg: &str) {
+    diagnostics.push(DocDiagnostic {
+        msg: parse_poor(msg),
+        msg_type: msg_type.to_string(),
+        source: "celer/engine".to_string(),
+    });
 }
