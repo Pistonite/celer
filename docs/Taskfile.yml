@@ -19,7 +19,7 @@ tasks:
     deps: [txtpp]
     cmds:
     - npx vitepress build src > /dev/null 2> /dev/null
-    - gzip src/.vitepress/dist/*.html src/.vitepress/dist/**/*.html src/.vitepress/dist/**/*.js src/.vitepress/dist/**/*.css -r -k -v
+    # - gzip src/.vitepress/dist/*.html src/.vitepress/dist/**/*.html src/.vitepress/dist/**/*.js src/.vitepress/dist/**/*.css -r -k -v
 
   check:
     desc: Check for issues in the docs

@@ -14,13 +14,13 @@ export default defineConfig({
         // Color
         ["meta", { property: "theme-color", content: "rgb(173,255,184)" }],
         // Open Graph
-        ["meta", { property: "og:site_name", content: "celer.pistonite.org" }],
+        ["meta", { property: "og:site_name", content: "celer.placeholder.domain" }],
         ["meta", { property: "og:type", content: "website" }],
         [
             "meta",
             {
                 property: "og:image",
-                content: "https://celer.pistonite.org/static/celer-3.png",
+                content: "scheme://celer.placeholder.domain/static/celer-3.png",
             },
         ],
         [
@@ -45,7 +45,7 @@ export default defineConfig({
                 "meta",
                 {
                     property: "og:url",
-                    content: `https://celer.pistonite.org/docs${page}`,
+                    content: `scheme://celer.placeholder.domain/docs${page}`,
                 },
             ],
         ];
@@ -53,7 +53,8 @@ export default defineConfig({
     base: "/docs/",
     cleanUrls: true,
     themeConfig: {
-        logo: "https://celer.pistonite.org/static/celer-3.svg",
+        // this will force vitepress to generate code that loads the logo from /static
+        logo: "/../static/celer-3.svg",
 
         // https://vitepress.dev/reference/default-theme-config
         nav: [

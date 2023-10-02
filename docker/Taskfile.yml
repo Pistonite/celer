@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  pull:
+    desc: Pull built production asssets locally
+    cmds:
+    - rm -rf ./dist/*
+    - mkdir -p dist/docs
+    - mkdir -p dist/app
+    - cp -r ../docs/src/.vitepress/dist/* dist/docs
+    - cp -r ../web-client/dist/* dist/app
+    - cp ../target/x86_64-unknown-linux-musl/release/celerserver dist

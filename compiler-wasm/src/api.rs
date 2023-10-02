@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use celerc::api::{CompilerMetadata, CompilerOutput, Setting};
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
-use celerc::util::Path;
+use celerc::util::{Path, self};
 use celerctypes::ExecDoc;
 use js_sys::Function;
-use log::{info, LevelFilter};
+use log::{info, warn, LevelFilter};
 use wasm_bindgen::JsValue;
-use web_sys::console;
+use web_sys::{console, window};
 
 use crate::loader_file::FileLoader;
 use crate::loader_url::UrlLoader;
@@ -53,6 +53,11 @@ pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
     URL_LOADER.with(|loader| {
         loader.init(fetch);
     });
+    if let Some(window) = web_sys::window() {
+        if let Ok(origin) = window.location().origin() {
+            let _ = util::init_site_origin(origin);
+        }
+    }
 
     info!("compiler initialized");
 }

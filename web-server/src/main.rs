@@ -5,7 +5,6 @@
 //! Alternatively, you can use a CDN such as Cloudflare to proxy the website.
 
 use axum::{Router, Server};
-use axum_server::tls_rustls::RustlsConfig;
 use std::io;
 use std::path::Path;
 use tower_http::services::{ServeDir, ServeFile};
@@ -16,6 +15,7 @@ mod env;
 use env::Environment;
 mod services;
 use services::{AddHtmlExtService, NestedRouteRedirectService};
+mod boot;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,6 +25,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_ansi(env.ansi)
         .with_max_level(env.logging_level)
         .init();
+    info!("preparing assets...");
+    boot::setup_site_origin(
+        Path::new(&env.docs_dir),
+        Path::new(&env.app_dir),
+        &env.site_origin,
+    ).await?;
     info!("configuring routes...");
 
     let router = Router::new();
@@ -40,19 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let address = format!("0.0.0.0:{}", env.port).parse()?;
-    let tls_config = if let Some((cert_path, key_path)) = env.cert_key_path {
-        RustlsConfig::from_pem_file(cert_path, key_path)
-            .await
-            .map_err(|e| {
-                error!("Failed to load TLS certificate: {}", e);
-                error!("Falling back to HTTP");
-                e
-            })
-            .ok()
-    } else {
-        None
-    };
-    if let Some(tls_config) = tls_config {
+    if let Some(tls_config) = env.get_https_config().await {
         info!("starting server on https://{address}");
         axum_server::bind_rustls(address, tls_config)
             .serve(router.into_make_service())
@@ -106,7 +100,7 @@ fn init_static(
         // strip the leading slash
         debug_assert_eq!(route.chars().next(), Some('/'));
         let path = app_dir.join(&route[1..]).canonicalize()?;
-        debug!("/{route} -> {}", path.display());
+        debug!("{route} -> {}", path.display());
         let service =
             NestedRouteRedirectService::new(route, ServeDir::new(&path).precompressed_gzip());
         router = router.nest_service(route, service);

@@ -89,9 +89,9 @@ checksum = "bddcadddf5e9015d310179a59bb28c4d4b9920ad0f11e8e14dbadf654890c9a6"
 
 [[package]]
 name = "async-recursion"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e97ce7de6cf12de5d7226c73f5ba9811622f4db3a5b91b55c53e987e5f91cba"
+checksum = "5fd55a5ba1179988837d24ab4c7cc8ed6efdeff578ede0416b4225a5fca35bd0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -439,6 +439,26 @@ dependencies = [
  "log",
  "regex",
  "termcolor",
+]
+
+[[package]]
+name = "envconfig"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea81cc7e21f55a9d9b1efb6816904978d0bfbe31a50347cb24b2e75564bcac9b"
+dependencies = [
+ "envconfig_derive",
+]
+
+[[package]]
+name = "envconfig_derive"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dfca278e5f84b45519acaaff758ebfa01f18e96998bc24b8f1b722dd804b9bf"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -1668,10 +1688,12 @@ checksum = "ca6ad05a4870b2bf5fe995117d3728437bd27d7cd5f06f13c17443ef369775a1"
 name = "web-server"
 version = "0.0.0"
 dependencies = [
+ "async-recursion",
  "async-trait",
  "axum",
  "axum-server",
  "env_logger",
+ "envconfig",
  "futures",
  "http-body",
  "tokio",

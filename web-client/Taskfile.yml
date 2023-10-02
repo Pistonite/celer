@@ -21,7 +21,7 @@ tasks:
     - npx vite build
     - node tools/post-build.cjs
     - rm dist/index.html
-    - gzip dist/*.html dist/**/*.js dist/**/*.css dist/**/*.wasm -k -v
+    # - gzip dist/*.html dist/**/*.js dist/**/*.css dist/**/*.wasm -k -v
 
   check:
     desc: Check for linting and formatting issues in web client

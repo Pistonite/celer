@@ -3,12 +3,10 @@ version: '3'
 tasks:
   dev:
     desc: Start wasm builds in watch mode
-    aliases: [d]
     cmds:
     - cargo watch -x run
 
   build:
     desc: Build debug wasm module
-    aliases: [b]
     cmds:
     - cargo run

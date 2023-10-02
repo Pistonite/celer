@@ -7,6 +7,7 @@ use serde_json::Value;
 use crate::api::CompilerMetadata;
 use crate::lang::parse_poor;
 use crate::pack::PackerError;
+use crate::util;
 #[cfg(feature = "wasm")]
 use crate::util::WasmError;
 
@@ -150,8 +151,10 @@ impl From<Infallible> for CompilerError {
 }
 
 impl CompilerError {
-    /// Get the more info url for a compiler error
-    pub fn get_info_url(&self) -> String {
+    /// Get the more info url path for a compiler error
+    ///
+    /// The returned path is relative to the site origin (i.e. /docs/...)
+    pub fn get_info_url_path(&self) -> &'static str {
         match self {
             CompilerError::ArrayCannotBeLine
             | CompilerError::EmptyObjectCannotBeLine
@@ -159,39 +162,39 @@ impl CompilerError {
             | CompilerError::LinePropertiesMustBeObject
             | CompilerError::InvalidLinePropertyType(_)
             | CompilerError::UnusedProperty(_) => {
-                "https://celer.pistonite.org/docs/route/customizing-lines".to_string()
+                "/docs/route/customizing-lines"
             }
             CompilerError::InvalidPresetString(_)
             | CompilerError::PresetNotFound(_)
             | CompilerError::MaxPresetDepthExceeded(_) => {
-                "https://celer.pistonite.org/docs/route/using-presets".to_string()
+                "/docs/route/using-presets"
             }
             CompilerError::TooManyTagsInCounter => {
-                "https://celer.pistonite.org/docs/route/customizing-lines#counter".to_string()
+                "/docs/route/customizing-lines#counter"
             }
             CompilerError::InvalidCoordinateType(_)
             | CompilerError::InvalidCoordinateArray
             | CompilerError::InvalidCoordinateValue(_)
             | CompilerError::InvalidMovementType => {
-                "https://celer.pistonite.org/docs/route/customizing-movements".to_string()
+                "/docs/route/customizing-movements"
             }
             CompilerError::InvalidMovementPreset(_) => {
-                "https://celer.pistonite.org/docs/route/customizing-movements#presets".to_string()
+                "/docs/route/customizing-movements#presets"
             }
             CompilerError::InvalidMarkerType => {
-                "https://celer.pistonite.org/docs/route/customizing-lines#markers".to_string()
+                "/docs/route/customizing-lines#markers"
             }
             CompilerError::IsPreface(_) => {
-                "https://celer.pistonite.org/docs/route/route-structure#preface".to_string()
+                "/docs/route/route-structure#preface"
             }
             CompilerError::PackerErrors(_) | CompilerError::InvalidSectionType => {
-                "https://celer.pistonite.org/docs/route/route-structure".to_string()
+                "/docs/route/route-structure"
             }
             CompilerError::InvalidRouteType => {
-                "https://celer.pistonite.org/docs/route/route-structure#entry-point".to_string()
+                "/docs/route/route-structure#entry-point"
             }
             #[cfg(feature = "wasm")]
-            CompilerError::Wasm(_) => "".to_string(),
+            CompilerError::Wasm(_) => ""
         }
     }
 
@@ -231,12 +234,14 @@ impl CompilerError {
                     error.add_to_diagnostics(output);
                 }
             }
-            other => {
-                let msg = format!("{} See {} for more info.", other, other.get_info_url());
+            other_error => {
+                let site_origin = util::get_site_origin();
+                let help_url_path = other_error.get_info_url_path();
+                let msg = format!("{other_error} See {site_origin}{help_url_path} for more info.");
 
                 output.push(DocDiagnostic {
                     msg: parse_poor(&msg),
-                    msg_type: other.get_type(),
+                    msg_type: other_error.get_type(),
                     source: "celerc/compiler".to_string(),
                 });
             }
