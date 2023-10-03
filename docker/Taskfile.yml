@@ -20,14 +20,14 @@ tasks:
 
   build-container:
     cmds:
-    - docker build -t ghcr.io/pistonite/celer . {{.CLI_ARGS}}
+    - docker build -t pistonite/celer . {{.CLI_ARGS}}
 
   run:
     desc: Run docker container
     cmds:
-      - docker run -p 8000:80 ghcr.io/pistonite/celer -e CELERSERVER_SITE_ORIGIN=http://pistonite.local
+      - docker run -p 8000:80 pistonite/celer -e CELERSERVER_SITE_ORIGIN=http://pistonite.local
 
   stop:
     desc: Stop docker container
     cmds:
-    - docker stop $(docker ps -q -a --filter ancestor=ghcr.io/pistonite/celer)
+    - docker stop $(docker ps -q -a --filter ancestor=pistonite/celer)

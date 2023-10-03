@@ -46,7 +46,7 @@ tasks:
 
   prettier:
     cmds:
-    - npx prettier "./**/*.{ts,tsx,json,js,jsx,cjs,css,html}" {{.PRETTIER_ARGS}}
+    - npx prettier "./**/*.{ts,tsx,json,js,jsx,cjs,css}" {{.PRETTIER_ARGS}}
 
   eslint:
     cmds:
