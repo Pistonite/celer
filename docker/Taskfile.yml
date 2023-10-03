@@ -17,12 +17,10 @@ tasks:
     deps: [pull]
     cmds:
     - task: build-container
-      vars:
-        ARGS: --no-cache
 
   build-container:
     cmds:
-    - docker build -t ghcr.io/pistonite/celer . {{.ARGS}}
+    - docker build -t ghcr.io/pistonite/celer . {{.CLI_ARGS}}
 
   run:
     desc: Run docker container

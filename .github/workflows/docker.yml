@@ -5,28 +5,58 @@ on:
       version:
         description: "Version tag of the image (e.g. 0.2.0-beta)"
         required: true
-  # pull_request:
-  #   branches:
-  #   - main
+  pull_request:
+    branches:
+    - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-docker:
     name: WIP Publish Docker Image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
     - uses: actions/checkout@v4
-    - uses: arduino/setup-task@v1
-      with:
-        version: 3.x
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    # - uses: arduino/setup-task@v1
+    #   with:
+    #     version: 3.x
+    #     repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: dawidd6/action-download-artifact@v2
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         workflow: build.yml
-        commit: a5dda8f40b034167ba31995f9a865dd2dfb1c138 #${{ github.sha }}
+        commit: 502edd56ce66a440dd2cca553e5eea624f5a8acc #${{ github.sha }}
         path: docker/dist
+    - run: ./make-version.sh 0.0.0-test ${{ github.sha }} # github.event.inputs.version
+      working-directory: docker
     - uses: actions/upload-artifact@v3
       with:
         path: docker
         name: docker
         retention-days: 1
+
+    # - uses: docker/login-action@v3
+    #   with:
+    #     registry: ${{ env.REGISTRY }}
+    #     username: ${{ github.actor }}
+    #     password: ${{ secrets.GITHUB_TOKEN }}
+    # - uses: docker/setup-buildx-action@v3
+    # - uses: docker/metadata-action@v5
+    #   with:
+    #     images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+    #     tags: |
+    #       type=sha
+    #       type=sha,format=long
+    #       type=raw,value=0.0.0-dev
+    #       type=raw,value=latest
+    # - uses: docker/build-push-action@v5
+    #   with:
+    #     push: true
+    #     context: docker
+
+
