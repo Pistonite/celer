@@ -103,7 +103,7 @@ impl Environment {
 }
 
 static VERSION: Lazy<String> = Lazy::new(|| {
-    std::fs::read_to_string("VERSION").unwrap_or_else(|_| "0.0.0-dev unknown".to_string())
+    std::fs::read_to_string("VERSION").map(|x| x.trim().to_string()).unwrap_or_else(|_| "0.0.0-dev unknown".to_string())
 });
 
 /// Get the version of the server
