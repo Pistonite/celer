@@ -14,7 +14,10 @@ export default defineConfig({
         // Color
         ["meta", { property: "theme-color", content: "rgb(173,255,184)" }],
         // Open Graph
-        ["meta", { property: "og:site_name", content: "celer.placeholder.domain" }],
+        [
+            "meta",
+            { property: "og:site_name", content: "celer.placeholder.domain" },
+        ],
         ["meta", { property: "og:type", content: "website" }],
         [
             "meta",

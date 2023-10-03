@@ -1,8 +1,8 @@
 //! Things to do on server boot
 
 use celerc::util;
-use flate2::Compression;
 use flate2::write::GzEncoder;
+use flate2::Compression;
 use futures::future;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -11,7 +11,11 @@ use tokio::join;
 use tracing::{debug, info};
 
 /// Setup site origin in static html files
-pub async fn setup_site_origin(docs_dir: PathBuf, app_dir: PathBuf, origin: &str) -> io::Result<()> {
+pub async fn setup_site_origin(
+    docs_dir: PathBuf,
+    app_dir: PathBuf,
+    origin: &str,
+) -> io::Result<()> {
     debug!("setting up site origin to {origin}");
     util::init_site_origin(origin.to_string())
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
@@ -42,7 +46,7 @@ async fn process_site_origin_for_path(
             result?;
         }
     } else if path.extension().map(|ext| ext == "html").unwrap_or(false) {
-        process_site_origin_in_file(path.as_ref(), &origin, &domain).await?;
+        process_site_origin_in_file(path.as_ref(), origin, domain).await?;
     }
     Ok(())
 }
@@ -60,7 +64,7 @@ async fn process_site_origin_in_file(path: &Path, origin: &str, domain: &str) ->
     Ok(())
 }
 
-static GZIP_EXTS: &'static [&str] = &["html", "js", "css", "wasm"];
+static GZIP_EXTS: &[&str] = &["html", "js", "css", "wasm"];
 
 /// Gzip static assets whose extension is in GZIP_EXTS
 pub async fn gzip_static_assets(docs_dir: PathBuf, app_dir: PathBuf) -> io::Result<()> {
@@ -74,7 +78,7 @@ pub async fn gzip_static_assets(docs_dir: PathBuf, app_dir: PathBuf) -> io::Resu
 }
 
 #[async_recursion::async_recursion]
-async fn gzip_static_assets_for_path( path: PathBuf, exts: &'static [&str]) -> io::Result<()> {
+async fn gzip_static_assets_for_path(path: PathBuf, exts: &'static [&str]) -> io::Result<()> {
     if path.is_dir() {
         let mut dir = tokio::fs::read_dir(path).await?;
         let mut futures = vec![];
@@ -84,9 +88,11 @@ async fn gzip_static_assets_for_path( path: PathBuf, exts: &'static [&str]) -> i
         for result in future::join_all(futures).await {
             result?;
         }
-    } else if path.extension().map(|ext| {
-        exts.iter().any(|e| e == &ext)
-    }).unwrap_or(false) {
+    } else if path
+        .extension()
+        .map(|ext| exts.iter().any(|e| e == &ext))
+        .unwrap_or(false)
+    {
         gzip_file(path).await?;
     }
     Ok(())

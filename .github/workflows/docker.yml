@@ -5,9 +5,6 @@ on:
       version:
         description: "Version tag of the image (e.g. 0.2.0-beta)"
         required: true
-  pull_request:
-    branches:
-    - main
 
 env:
   REGISTRY: ghcr.io
@@ -15,7 +12,7 @@ env:
 
 jobs:
   build-docker:
-    name: WIP Publish Docker Image
+    name: Publish Docker Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,16 +23,10 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         workflow: build.yml
-        commit: 8b8381b470e497b2d0f7861fa02c988573cc97bc #${{ github.sha }}
+        commit: ${{ github.sha }}
         path: docker/dist
-    - run: ./make-version.sh 0.0.0-test ${{ github.sha }} # github.event.inputs.version
+    - run: ./make-version.sh ${{ github.event.inputs.version }} ${{ github.sha }}
       working-directory: docker
-    # - uses: actions/upload-artifact@v3
-    #   with:
-    #     path: docker
-    #     name: docker
-    #     retention-days: 1
-
     - uses: docker/login-action@v3
       with:
         registry: ${{ env.REGISTRY }}
@@ -49,7 +40,7 @@ jobs:
         tags: |
           type=sha
           type=sha,format=long
-          type=raw,value=0.0.0-dev
+          type=raw,value=${{ github.event.inputs.version }}
           type=raw,value=latest
     - uses: docker/build-push-action@v5
       with:
@@ -57,5 +48,3 @@ jobs:
         context: docker
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-
-

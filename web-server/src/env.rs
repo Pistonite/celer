@@ -2,7 +2,7 @@
 use axum_server::tls_rustls::RustlsConfig;
 use envconfig::Envconfig;
 use once_cell::sync::Lazy;
-use std::{env, sync::OnceLock};
+use std::env;
 use std::path::Path;
 use tracing::{error, info, Level};
 
@@ -103,7 +103,9 @@ impl Environment {
 }
 
 static VERSION: Lazy<String> = Lazy::new(|| {
-    std::fs::read_to_string("VERSION").map(|x| x.trim().to_string()).unwrap_or_else(|_| "0.0.0-dev unknown".to_string())
+    std::fs::read_to_string("VERSION")
+        .map(|x| x.trim().to_string())
+        .unwrap_or_else(|_| "0.0.0-dev unknown".to_string())
 });
 
 /// Get the version of the server
@@ -112,4 +114,3 @@ static VERSION: Lazy<String> = Lazy::new(|| {
 pub fn version() -> &'static str {
     &VERSION
 }
-

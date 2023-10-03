@@ -9,7 +9,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse};
-use tracing::{debug, error, info, Level};
+use tracing::{debug, info, Level};
 
 mod env;
 use env::Environment;
@@ -35,10 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
     if env.gzip {
         info!("compressing assets...");
-        boot::gzip_static_assets(
-        PathBuf::from(&env.docs_dir),
-        PathBuf::from(&env.app_dir),
-            ).await?;
+        boot::gzip_static_assets(PathBuf::from(&env.docs_dir), PathBuf::from(&env.app_dir)).await?;
     } else {
         info!("skipping compression of assets. Specify CELERSERVER_GZIP=true to enable gzip compression.");
     }

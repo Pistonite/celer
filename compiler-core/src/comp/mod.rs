@@ -161,40 +161,24 @@ impl CompilerError {
             | CompilerError::TooManyKeysInObjectLine
             | CompilerError::LinePropertiesMustBeObject
             | CompilerError::InvalidLinePropertyType(_)
-            | CompilerError::UnusedProperty(_) => {
-                "/docs/route/customizing-lines"
-            }
+            | CompilerError::UnusedProperty(_) => "/docs/route/customizing-lines",
             CompilerError::InvalidPresetString(_)
             | CompilerError::PresetNotFound(_)
-            | CompilerError::MaxPresetDepthExceeded(_) => {
-                "/docs/route/using-presets"
-            }
-            CompilerError::TooManyTagsInCounter => {
-                "/docs/route/customizing-lines#counter"
-            }
+            | CompilerError::MaxPresetDepthExceeded(_) => "/docs/route/using-presets",
+            CompilerError::TooManyTagsInCounter => "/docs/route/customizing-lines#counter",
             CompilerError::InvalidCoordinateType(_)
             | CompilerError::InvalidCoordinateArray
             | CompilerError::InvalidCoordinateValue(_)
-            | CompilerError::InvalidMovementType => {
-                "/docs/route/customizing-movements"
-            }
-            CompilerError::InvalidMovementPreset(_) => {
-                "/docs/route/customizing-movements#presets"
-            }
-            CompilerError::InvalidMarkerType => {
-                "/docs/route/customizing-lines#markers"
-            }
-            CompilerError::IsPreface(_) => {
-                "/docs/route/route-structure#preface"
-            }
+            | CompilerError::InvalidMovementType => "/docs/route/customizing-movements",
+            CompilerError::InvalidMovementPreset(_) => "/docs/route/customizing-movements#presets",
+            CompilerError::InvalidMarkerType => "/docs/route/customizing-lines#markers",
+            CompilerError::IsPreface(_) => "/docs/route/route-structure#preface",
             CompilerError::PackerErrors(_) | CompilerError::InvalidSectionType => {
                 "/docs/route/route-structure"
             }
-            CompilerError::InvalidRouteType => {
-                "/docs/route/route-structure#entry-point"
-            }
+            CompilerError::InvalidRouteType => "/docs/route/route-structure#entry-point",
             #[cfg(feature = "wasm")]
-            CompilerError::Wasm(_) => ""
+            CompilerError::Wasm(_) => "",
         }
     }
 

@@ -3,12 +3,12 @@ use std::sync::Arc;
 
 use celerc::api::{CompilerMetadata, CompilerOutput, Setting};
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
-use celerc::util::{Path, self};
+use celerc::util::{self, Path};
 use celerctypes::ExecDoc;
 use js_sys::Function;
-use log::{info, warn, LevelFilter};
+use log::{info, LevelFilter};
 use wasm_bindgen::JsValue;
-use web_sys::{console, window};
+use web_sys::console;
 
 use crate::loader_file::FileLoader;
 use crate::loader_url::UrlLoader;
