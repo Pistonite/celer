@@ -9,3 +9,6 @@ pub(crate) use async_macro::*;
 pub mod async_macro_wasm;
 #[cfg(feature = "wasm")]
 pub(crate) use async_macro_wasm::*;
+
+mod site_origin;
+pub use site_origin::*;

@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use celerc::api::{CompilerMetadata, CompilerOutput, Setting};
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
-use celerc::util::Path;
+use celerc::util::{self, Path};
 use celerctypes::ExecDoc;
 use js_sys::Function;
 use log::{info, LevelFilter};
@@ -53,6 +53,11 @@ pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
     URL_LOADER.with(|loader| {
         loader.init(fetch);
     });
+    if let Some(window) = web_sys::window() {
+        if let Ok(origin) = window.location().origin() {
+            let _ = util::init_site_origin(origin);
+        }
+    }
 
     info!("compiler initialized");
 }

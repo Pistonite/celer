@@ -1,13 +1,9 @@
-# ![](./assets/celer-3-small.svg) celer
+# ![](./web-client/public/static/celer-3-small.svg) celer
 Celer Route Engine
 
 # Dev Setup
-need npm, cargo, docker
-use [`just`](https://github.com/casey/just) script runner
-```
-cargo install just
-just install
-```
+need npm, cargo,
+use [`task`](https://taskfile.dev) for command runner
 
 ## HTTPS
 To enable HTTPS for local testing. Follow https://vmsetup.pistonite.org/tool/cert

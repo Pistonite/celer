@@ -35,6 +35,10 @@ includes:
     aliases: [themes, th]
     dir: ./web-themes
 
+  docker:
+    taskfile: ./docker
+    dir: ./docker
+
 tasks:
   install:
     desc: Install development dependencies and packages
@@ -66,34 +70,6 @@ tasks:
   fix:rs:
     cmds:
     - cargo fmt
-
-  docker:
-    deps: [build]
-    desc: Build docker container
-    cmds:
-    - task: docker:build
-
-  docker:build:
-    cmds:
-    - docker build -t pistonite/celer . --no-cache
-
-  docker:run:
-    desc: Run docker container
-    cmds:
-    - docker run -p 8000:80 pistonite/celer
-
-  docker:stop:
-    desc: Stop docker container
-    cmds:
-    - docker stop $(docker ps -q -a --filter ancestor=pistonite/celer)
-
-  docker:push:
-    desc: Push the container to docker hub. Takes in the tag [defaults to latest]
-    interactive: true
-    cmds:
-    - docker login
-    - docker push pistonite/celer:{{.CLI_ARGS | default "latest" }}
-    - docker logout
 
   build:
     desc: Build production assets

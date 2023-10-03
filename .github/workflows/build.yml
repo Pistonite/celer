@@ -33,7 +33,8 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         path: web-client/dist
-        name: app-${{ github.sha }}
+        name: app
+        retention-days: 3
 
   build-docs:
     name: Build Docs
@@ -58,7 +59,8 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         path: docs/src/.vitepress/dist
-        name: docs-${{ github.sha }}
+        name: docs
+        retention-days: 3
 
   build-server:
     name: Build Server
@@ -84,5 +86,6 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         path: target/x86_64-unknown-linux-musl/release/celerserver
-        name: celerserver-${{ github.sha }}
+        name: bin
+        retention-days: 3
 

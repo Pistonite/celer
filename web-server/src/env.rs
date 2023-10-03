@@ -1,105 +1,116 @@
 //! Server environment settings
+use axum_server::tls_rustls::RustlsConfig;
+use envconfig::Envconfig;
+use once_cell::sync::Lazy;
 use std::env;
-use std::path::{Path, PathBuf};
-use tracing::Level;
+use std::path::Path;
+use tracing::{error, info, Level};
 
+#[derive(Envconfig)]
 pub struct Environment {
-    /// If server is running in debug mode
+    /// Logging level
+    #[envconfig(from = "CELERSERVER_LOG", default = "INFO")]
     pub logging_level: Level,
-    /// If ANSI formatting is enabled in logs
-    pub ansi: bool,
+
+    #[envconfig(from = "CELERSERVER_PORT", default = "8173")]
     /// Port to listen on
     pub port: u16,
+
+    /// If ANSI formatting is enabled in logs
+    #[envconfig(from = "CELERSERVER_ANSI", default = "true")]
+    pub ansi: bool,
+
+    #[envconfig(from = "CELERSERVER_DOCS_DIR")]
     /// Directory to serve docs
     pub docs_dir: String,
+
+    #[envconfig(from = "CELERSERVER_APP_DIR")]
     /// Directory to serve web client
     pub app_dir: String,
-    /// Path to certificate file and key file
-    pub cert_key_path: Option<(PathBuf, PathBuf)>,
+
+    /// Site origin of the server (e.g. https://celer.example.com)
+    #[envconfig(from = "CELERSERVER_SITE_ORIGIN")]
+    pub site_origin: String,
+
+    /// Enable gzip compression for static assets
+    #[envconfig(from = "CELERSERVER_GZIP", default = "false")]
+    pub gzip: bool,
+
+    #[envconfig(from = "CELERSERVER_HTTPS_CERT")]
+    cert_path: Option<String>,
+
+    #[envconfig(from = "CELERSERVER_HTTPS_KEY")]
+    key_path: Option<String>,
 }
 
 impl Environment {
     /// Parse environment from command line arguments and environment variables
     pub fn parse() -> Self {
-        let mut logging_level = Level::INFO;
-        let mut port = 8173;
-        let mut ansi = true;
-
-        if let Ok(x) = env::var("CELERSERVER_LOG") {
-            match x.to_uppercase().as_ref() {
-                "ERROR" => logging_level = Level::ERROR,
-                "WARN" => logging_level = Level::WARN,
-                "DEBUG" => logging_level = Level::DEBUG,
-                "INFO" => logging_level = Level::INFO,
-                _ => {
-                    eprintln!("Invalid CELERSERVER_LOG value: {}", x);
-                    eprintln!("Valid values: ERROR, WARN, DEBUG, INFO");
-                    eprintln!("Defaulting to INFO");
-                }
+        let mut env = match Environment::init_from_env() {
+            Ok(env) => env,
+            Err(envconfig::Error::EnvVarMissing { name }) => {
+                panic!("Server cannot start due to missing environment variable: {name}");
             }
-        }
-
-        if let Ok(x) = env::var("CELERSERVER_PORT") {
-            match x.parse::<u16>() {
-                Ok(x) => port = x,
-                Err(_) => {
-                    eprintln!("Invalid CELERSERVER_PORT value: {}", x);
-                    eprintln!("Defaulting to 8173");
-                }
+            Err(envconfig::Error::ParseError { name }) => {
+                panic!(
+                    "Server cannot start due to failure when parsing environment variable: {name}"
+                );
             }
-        }
-
-        if let Ok(x) = env::var("CELERSERVER_ANSI") {
-            if x == "0" {
-                ansi = false;
-            }
-        }
-
-        let docs_dir = if let Ok(x) = env::var("CELERSERVER_DOCS_DIR") {
-            x
-        } else {
-            panic!("CELERSERVER_DOCS_DIR not set");
-        };
-
-        let app_dir = if let Ok(x) = env::var("CELERSERVER_APP_DIR") {
-            x
-        } else {
-            panic!("CELERSERVER_APP_DIR not set");
-        };
-
-        let cert_key_path = if let Ok(x) = env::var("CELERSERVER_HTTPS_CERT") {
-            if let Ok(cert_path) = Path::new(&x).canonicalize() {
-                if let Ok(x) = env::var("CELERSERVER_HTTPS_KEY") {
-                    if let Ok(key_path) = Path::new(&x).canonicalize() {
-                        Some((cert_path, key_path))
-                    } else {
-                        eprintln!("Invalid certificate path, https mode will be disabled");
-                        None
-                    }
-                } else {
-                    None
-                }
-            } else {
-                eprintln!("Invalid certificate path, https mode will be disabled");
-                None
-            }
-        } else {
-            None
         };
 
         for arg in env::args() {
             if arg == "--debug" {
-                logging_level = Level::DEBUG;
+                env.logging_level = Level::DEBUG;
             }
         }
 
-        Self {
-            logging_level,
-            ansi,
-            port,
-            docs_dir,
-            app_dir,
-            cert_key_path,
-        }
+        env
     }
+
+    pub async fn get_https_config(&self) -> Option<RustlsConfig> {
+        let (cert_path, key_path) = match (&self.cert_path, &self.key_path) {
+            (Some(cert_path), Some(key_path)) => (cert_path, key_path),
+            _ => {
+                info!("No certificate path and key path provided, starting server in http mode. Set the environment variable CELERSERVER_HTTPS_CERT and CELERSERVER_HTTPS_KEY to the cert and key pem file to enable https");
+                return None;
+            }
+        };
+
+        let cert_path = Path::new(cert_path)
+            .canonicalize()
+            .map_err(|e| {
+                error!("failed to access certificate path for https: {e}");
+                error!("falling back to http");
+            })
+            .ok()?;
+
+        let key_path = Path::new(key_path)
+            .canonicalize()
+            .map_err(|e| {
+                error!("failed to access certificate key path for https: {e}");
+                error!("falling back to http");
+            })
+            .ok()?;
+
+        RustlsConfig::from_pem_file(cert_path, key_path)
+            .await
+            .map_err(|e| {
+                error!("failed to load certificate for https: {e}");
+                error!("falling back to http");
+            })
+            .ok()
+    }
+}
+
+static VERSION: Lazy<String> = Lazy::new(|| {
+    std::fs::read_to_string("VERSION")
+        .map(|x| x.trim().to_string())
+        .unwrap_or_else(|_| "0.0.0-dev unknown".to_string())
+});
+
+/// Get the version of the server
+///
+/// The server version is read from the file `VERSION` in the current working directory
+pub fn version() -> &'static str {
+    &VERSION
 }
