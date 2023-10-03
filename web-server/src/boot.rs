@@ -6,8 +6,7 @@ use flate2::Compression;
 use futures::future;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use tokio::io;
-use tokio::join;
+use tokio::{io, join};
 use tracing::{debug, info};
 
 /// Setup site origin in static html files
