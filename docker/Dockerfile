@@ -12,4 +12,4 @@ ENV CELERSERVER_LOG=INFO \
     CELERSERVER_APP_DIR=/opt/app/app \
     CELERSERVER_GZIP=true
 
-CMD ["./celerserver"]
+CMD ["./bin/celerserver"]

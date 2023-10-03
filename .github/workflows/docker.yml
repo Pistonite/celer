@@ -5,9 +5,9 @@ on:
       version:
         description: "Version tag of the image (e.g. 0.2.0-beta)"
         required: true
-  pull_request:
-    branches:
-    - main
+  # pull_request:
+  #   branches:
+  #   - main
 
 jobs:
   build-docker:

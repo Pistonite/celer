@@ -7,9 +7,10 @@ tasks:
     - rm -rf ./dist/*
     - mkdir -p dist/docs
     - mkdir -p dist/app
+    - mkdir -p dist/bin
     - cp -r ../docs/src/.vitepress/dist/* dist/docs
     - cp -r ../web-client/dist/* dist/app
-    - cp ../target/x86_64-unknown-linux-musl/release/celerserver dist
+    - cp ../target/x86_64-unknown-linux-musl/release/celerserver dist/bin
 
   build:
     desc: Build docker container locally (requires building assets first)
