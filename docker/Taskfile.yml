@@ -10,3 +10,25 @@ tasks:
     - cp -r ../docs/src/.vitepress/dist/* dist/docs
     - cp -r ../web-client/dist/* dist/app
     - cp ../target/x86_64-unknown-linux-musl/release/celerserver dist
+
+  build:
+    desc: Build docker container locally (requires building assets first)
+    deps: [pull]
+    cmds:
+    - task: build-container
+      vars:
+        ARGS: --no-cache
+
+  build-container:
+    cmds:
+    - docker build -t ghcr.io/pistonite/celer . {{.ARGS}}
+
+  run:
+    desc: Run docker container
+    cmds:
+      - docker run -p 8000:80 ghcr.io/pistonite/celer -e CELERSERVER_SITE_ORIGIN=http://pistonite.local
+
+  stop:
+    desc: Stop docker container
+    cmds:
+    - docker stop $(docker ps -q -a --filter ancestor=ghcr.io/pistonite/celer)

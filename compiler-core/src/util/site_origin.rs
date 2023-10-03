@@ -14,3 +14,12 @@ pub fn get_site_origin() -> &'static str {
         None => "",
     }
 }
+
+/// Get the site domain (origin without url scheme)
+pub fn get_site_domain() -> &'static str {
+    let origin = get_site_origin();
+    match origin.strip_prefix("https://") {
+        Some(domain) => domain,
+        None => origin.strip_prefix("http://").unwrap_or(origin),
+    }
+}

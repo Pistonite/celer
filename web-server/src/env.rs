@@ -1,13 +1,14 @@
 //! Server environment settings
-use std::env;
-use std::path::Path;
 use axum_server::tls_rustls::RustlsConfig;
-use tracing::{Level, info, error};
 use envconfig::Envconfig;
+use once_cell::sync::Lazy;
+use std::{env, sync::OnceLock};
+use std::path::Path;
+use tracing::{error, info, Level};
 
 #[derive(Envconfig)]
 pub struct Environment {
-    /// If server is running in debug mode
+    /// Logging level
     #[envconfig(from = "CELERSERVER_LOG", default = "INFO")]
     pub logging_level: Level,
 
@@ -47,11 +48,13 @@ impl Environment {
     pub fn parse() -> Self {
         let mut env = match Environment::init_from_env() {
             Ok(env) => env,
-            Err(envconfig::Error::EnvVarMissing {name}) => {
+            Err(envconfig::Error::EnvVarMissing { name }) => {
                 panic!("Server cannot start due to missing environment variable: {name}");
             }
-            Err(envconfig::Error::ParseError {name}) => {
-                panic!("Server cannot start due to failure when parsing environment variable: {name}");
+            Err(envconfig::Error::ParseError { name }) => {
+                panic!(
+                    "Server cannot start due to failure when parsing environment variable: {name}"
+                );
             }
         };
 
@@ -60,7 +63,7 @@ impl Environment {
                 env.logging_level = Level::DEBUG;
             }
         }
-        
+
         env
     }
 
@@ -73,19 +76,40 @@ impl Environment {
             }
         };
 
-        let cert_path = Path::new(cert_path).canonicalize().map_err(|e| {
-            error!("failed to access certificate path for https: {e}");
-            error!("falling back to http");
-        }).ok()?;
+        let cert_path = Path::new(cert_path)
+            .canonicalize()
+            .map_err(|e| {
+                error!("failed to access certificate path for https: {e}");
+                error!("falling back to http");
+            })
+            .ok()?;
 
-        let key_path = Path::new(key_path).canonicalize().map_err(|e| {
-            error!("failed to access certificate key path for https: {e}");
-            error!("falling back to http");
-        }).ok()?;
+        let key_path = Path::new(key_path)
+            .canonicalize()
+            .map_err(|e| {
+                error!("failed to access certificate key path for https: {e}");
+                error!("falling back to http");
+            })
+            .ok()?;
 
-        RustlsConfig::from_pem_file(cert_path, key_path).await.map_err(|e| {
-            error!("failed to load certificate for https: {e}");
-            error!("falling back to http");
-        }).ok()
+        RustlsConfig::from_pem_file(cert_path, key_path)
+            .await
+            .map_err(|e| {
+                error!("failed to load certificate for https: {e}");
+                error!("falling back to http");
+            })
+            .ok()
     }
 }
+
+static VERSION: Lazy<String> = Lazy::new(|| {
+    std::fs::read_to_string("VERSION").unwrap_or_else(|_| "0.0.0-dev unknown".to_string())
+});
+
+/// Get the version of the server
+///
+/// The server version is read from the file `VERSION` in the current working directory
+pub fn version() -> &'static str {
+    &VERSION
+}
+

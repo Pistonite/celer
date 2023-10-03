@@ -1,0 +1,32 @@
+name: Docker
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag of the image (e.g. 0.2.0-beta)"
+        required: true
+  pull_request:
+    branches:
+    - main
+
+jobs:
+  build-docker:
+    name: WIP Publish Docker Image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: arduino/setup-task@v1
+      with:
+        version: 3.x
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: dawidd6/action-download-artifact@v2
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        workflow: build.yml
+        commit: a5dda8f40b034167ba31995f9a865dd2dfb1c138 #${{ github.sha }}
+        path: docker/dist
+    - uses: actions/upload-artifact@v3
+      with:
+        path: docker
+        name: docker
+        retention-days: 1

@@ -6,7 +6,7 @@
 
 use axum::{Router, Server};
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse};
 use tracing::{debug, error, info, Level};
@@ -25,12 +25,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_ansi(env.ansi)
         .with_max_level(env.logging_level)
         .init();
+    info!("celer server version: {}", env::version());
     info!("preparing assets...");
     boot::setup_site_origin(
-        Path::new(&env.docs_dir),
-        Path::new(&env.app_dir),
+        PathBuf::from(&env.docs_dir),
+        PathBuf::from(&env.app_dir),
         &env.site_origin,
-    ).await?;
+    )
+    .await?;
+    if env.gzip {
+        info!("compressing assets...");
+        boot::gzip_static_assets(
+        PathBuf::from(&env.docs_dir),
+        PathBuf::from(&env.app_dir),
+            ).await?;
+    } else {
+        info!("skipping compression of assets. Specify CELERSERVER_GZIP=true to enable gzip compression.");
+    }
     info!("configuring routes...");
 
     let router = Router::new();
