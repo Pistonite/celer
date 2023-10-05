@@ -1,12 +1,13 @@
 use celerctypes::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
 
 use crate::comp::{CompLine, CompMovement};
-use crate::util::async_for;
+use crate::util::{self, async_for};
 
 use super::{add_engine_diagnostics, ExecResult, MapSectionBuilder};
 
 fn add_missing_icon_diagnostics(diagnostics: &mut Vec<DocDiagnostic>, icon: &str) {
-    add_engine_diagnostics(diagnostics, "warning", &format!("Cannot find icon `{icon}`. Icons need to be defined in the config. See https://celer.pistonite.org/docs/route/config/icons for more details"));
+    let site_origin = util::get_site_origin();
+    add_engine_diagnostics(diagnostics, "warning", &format!("Cannot find icon `{icon}`. Icons need to be defined in the config. See {site_origin}/docs/route/config/icons for more details"));
 }
 
 impl CompLine {
@@ -56,18 +57,18 @@ impl CompLine {
                         map_builder.commit(false);
                     }
                     map_builder.add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
-        if let Some(icon) = icon {
-            if !project.icons.contains_key(&icon) {
-                add_missing_icon_diagnostics(&mut self.diagnostics, &icon);
-            }
-            map_builder.icons.push(MapIcon {
-            id: icon,
-            coord: to.clone(),
-            line_index: line_number,
-            section_index: section_number,
-            priority: self.map_icon_priority,
-            })
-        }
+                    if let Some(icon) = icon {
+                        if !project.icons.contains_key(&icon) {
+                            add_missing_icon_diagnostics(&mut self.diagnostics, &icon);
+                        }
+                        map_builder.icons.push(MapIcon {
+                        id: icon,
+                        coord: to.clone(),
+                        line_index: line_number,
+                        section_index: section_number,
+                        priority: self.map_icon_priority,
+                        })
+                    }
 
                     if !exclude {
                         map_coords.push(to);
