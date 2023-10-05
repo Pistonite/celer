@@ -37,6 +37,7 @@ All properties except for `to` are optional.
 |`warp`|`boolean`|If `true`, no line is drawn from previous point to this point|
 |`exclude`|`boolean`|If `true`, this point is not considered part of the line when fitting the map to document. (Has no effect on the map line itself)|
 |`color`|`string`|Similar to the `color` property for the line, change the line color from this point on until next line|
+|`icon`|`string`|ID of an icon to show at the movement point. The icon will inherit the priority of the line.|
 
 Examples:
 ```yaml
@@ -56,6 +57,7 @@ movements:
 
   - to: [30, 40]
     warp: true
+    icon: chest
 ```
 
 ## Movement Stack

@@ -74,23 +74,23 @@ pub enum CompilerError {
     /// When a line property type is invalid.
     ///
     /// Arg is property name or path
-    #[error("Line property {0} has invalid type")]
+    #[error("Line property `{0}` has invalid type")]
     InvalidLinePropertyType(String),
 
     /// When a preset string is malformed, like `foo` or `_foo::` or `_bar<foo`
-    #[error("Preset string {0} is malformed")]
+    #[error("Preset string `{0}` is malformed")]
     InvalidPresetString(String),
 
     /// When a preset is not found
-    #[error("Preset {0} is not found")]
+    #[error("Preset `{0}` is not found")]
     PresetNotFound(String),
 
     /// When presets recurse too much
-    #[error("Maximum preset depth exceeded when processing the preset {0}. Did you have circular references in your presets?")]
+    #[error("Maximum preset depth exceeded when processing the preset `{0}`. Did you have circular references in your presets?")]
     MaxPresetDepthExceeded(String),
 
     /// When an unexpected property is specified and not used by compiler
-    #[error("Property {0} is unused. Did you misspell it?")]
+    #[error("Property `{0}` is unused. Did you misspell it?")]
     UnusedProperty(String),
 
     /// When the counter property has rich text with more than one tag
@@ -102,7 +102,7 @@ pub enum CompilerError {
     InvalidMovementType,
 
     /// When the coordinate specified as part of movement is not an array
-    #[error("The coordinate specified by {0} is not an array.")]
+    #[error("The coordinate specified by `{0}` is not an array.")]
     InvalidCoordinateType(String),
 
     /// When the coordinate specified as part of movement has too few or too many elements
@@ -110,11 +110,11 @@ pub enum CompilerError {
     InvalidCoordinateArray,
 
     /// When the coordinate value inside coordinate array is not valid
-    #[error("{0} is not a valid coordinate value.")]
+    #[error("`{0}` is not a valid coordinate value.")]
     InvalidCoordinateValue(String),
 
     /// When a preset specified as part of a movement does not contain the `movements` property
-    #[error("Preset {0} cannot be used inside hte `movements` property because it does not contain any movement.")]
+    #[error("Preset `{0}` cannot be used inside hte `movements` property because it does not contain any movement.")]
     InvalidMovementPreset(String),
 
     /// When the value specified as part of marker is invalid

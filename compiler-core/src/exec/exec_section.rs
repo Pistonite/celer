@@ -1,4 +1,4 @@
-use celerctypes::ExecSection;
+use celerctypes::{ExecSection, RouteMetadata};
 
 use crate::comp::CompSection;
 use crate::util::async_for;
@@ -11,12 +11,13 @@ impl CompSection {
     /// Map features will be added to the builder
     pub async fn exec(
         self,
+        project: &RouteMetadata,
         section_number: usize,
         map_builder: &mut MapSectionBuilder,
     ) -> ExecResult<ExecSection> {
         let mut lines = vec![];
         async_for!((index, line) in self.lines.into_iter().enumerate(), {
-            let exec_line = line.exec(section_number, index, map_builder).await?;
+            let exec_line = line.exec(project, section_number, index, map_builder).await?;
             lines.push(exec_line);
         })?;
         Ok(ExecSection {
@@ -42,7 +43,7 @@ mod test {
             ..Default::default()
         };
         let exec_section = test_section
-            .exec(1, &mut MapSectionBuilder::default())
+            .exec(&Default::default(), 1, &mut MapSectionBuilder::default())
             .await
             .unwrap();
 
@@ -56,7 +57,7 @@ mod test {
             ..Default::default()
         };
         let exec_section = test_section
-            .exec(3, &mut MapSectionBuilder::default())
+            .exec(&Default::default(), 3, &mut MapSectionBuilder::default())
             .await
             .unwrap();
         assert_eq!(exec_section.lines[0].section, 3);
@@ -82,7 +83,7 @@ mod test {
         };
 
         let exec_section = test_section
-            .exec(4, &mut MapSectionBuilder::default())
+            .exec(&Default::default(), 4, &mut MapSectionBuilder::default())
             .await
             .unwrap();
         assert_eq!(
@@ -133,7 +134,7 @@ mod test {
         };
 
         let exec_section = test_section
-            .exec(4, &mut MapSectionBuilder::default())
+            .exec(&Default::default(), 4, &mut MapSectionBuilder::default())
             .await
             .unwrap();
         assert_eq!(
@@ -188,7 +189,10 @@ mod test {
         let mut builder = MapSectionBuilder::default();
         builder.add_coord("test", &GameCoord(1.0, 1.0, 3.0));
 
-        let exec_section = test_section.exec(4, &mut builder).await.unwrap();
+        let exec_section = test_section
+            .exec(&Default::default(), 4, &mut builder)
+            .await
+            .unwrap();
 
         assert_eq!(
             exec_section.map.lines,

@@ -1,28 +1,37 @@
-use celerctypes::{ExecLine, MapIcon, MapMarker};
+use celerctypes::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
 
 use crate::comp::{CompLine, CompMovement};
-use crate::util::async_for;
+use crate::util::{self, async_for};
 
-use super::{ExecResult, MapSectionBuilder};
+use super::{add_engine_diagnostics, ExecResult, MapSectionBuilder};
+
+fn add_missing_icon_diagnostics(diagnostics: &mut Vec<DocDiagnostic>, icon: &str) {
+    let site_origin = util::get_site_origin();
+    add_engine_diagnostics(diagnostics, "warning", &format!("Cannot find icon `{icon}`. Icons need to be defined in the config. See {site_origin}/docs/route/config/icons for more details"));
+}
 
 impl CompLine {
     /// Execute the line.
     ///
     /// Map features will be added to the builder
     pub async fn exec(
-        self,
+        mut self,
+        project: &RouteMetadata,
         section_number: usize,
         line_number: usize,
         map_builder: &mut MapSectionBuilder,
     ) -> ExecResult<ExecLine> {
         if let Some(icon) = self.map_icon {
+            if !project.icons.contains_key(&icon) {
+                add_missing_icon_diagnostics(&mut self.diagnostics, &icon);
+            }
             map_builder.icons.push(MapIcon {
                 id: icon,
                 coord: self.map_coord,
                 line_index: line_number,
                 section_index: section_number,
                 priority: self.map_icon_priority,
-            })
+            });
         }
 
         async_for!(marker in self.markers, {
@@ -42,14 +51,27 @@ impl CompLine {
                     warp,
                     exclude,
                     color,
+                    icon,
                 } => {
                     if warp {
                         map_builder.commit(false);
                     }
                     map_builder.add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
+                    if let Some(icon) = icon {
+                        if !project.icons.contains_key(&icon) {
+                            add_missing_icon_diagnostics(&mut self.diagnostics, &icon);
+                        }
+                        map_builder.icons.push(MapIcon {
+                        id: icon,
+                        coord: to.clone(),
+                        line_index: line_number,
+                        section_index: section_number,
+                        priority: self.map_icon_priority,
+                        })
+                    }
 
                     if !exclude {
-                        map_coords.push(to.clone());
+                        map_coords.push(to);
                     }
                 }
                 CompMovement::Push => {
@@ -95,12 +117,14 @@ mod test {
                 warp: false,
                 exclude: false,
                 color: Some("blue".to_string()),
+                icon: None,
             },
             CompMovement::To {
                 to: GameCoord(3.4, 7.0, 6.0),
                 warp: false,
                 exclude: false,
                 color: Some("red".to_string()),
+                icon: Some("test icon 1".to_string()),
             },
             CompMovement::Pop,
             CompMovement::Push,
@@ -109,12 +133,14 @@ mod test {
                 warp: false,
                 exclude: false,
                 color: Some("blue".to_string()),
+                icon: None,
             },
             CompMovement::To {
                 to: GameCoord(3.5, 7.4, 6.2),
                 warp: false,
                 exclude: true,
                 color: Some("red".to_string()),
+                icon: Some("test icon 2".to_string()),
             },
             CompMovement::Pop,
             CompMovement::to(GameCoord(1.2, 55.0, 37.8)),
@@ -123,6 +149,7 @@ mod test {
                 warp: true,
                 exclude: false,
                 color: None,
+                icon: None,
             },
             CompMovement::to(GameCoord(1.2, 55.0, 37.8)),
         ]
@@ -203,7 +230,13 @@ mod test {
             notes: test_notes.clone(),
             ..Default::default()
         };
-        let exec_line = line.exec(3, 4, &mut map_section).await.unwrap();
+        let project = RouteMetadata {
+            icons: vec![("test-icon".to_string(), "".to_string())]
+                .into_iter()
+                .collect(),
+            ..Default::default()
+        };
+        let exec_line = line.exec(&project, 3, 4, &mut map_section).await.unwrap();
         assert_eq!(exec_line.section, 3);
         assert_eq!(exec_line.index, 4);
         assert_eq!(exec_line.text, test_text);
@@ -222,7 +255,10 @@ mod test {
             ..Default::default()
         };
         let mut map_section = Default::default();
-        let exec_line = test_line.exec(0, 0, &mut map_section).await.unwrap();
+        let exec_line = test_line
+            .exec(&Default::default(), 0, 0, &mut map_section)
+            .await
+            .unwrap();
         let expected = vec![
             GameCoord(3.4, 5.0, 6.0),
             GameCoord(3.4, 7.0, 6.0),
@@ -247,20 +283,47 @@ mod test {
                     color: Some("test marker override".to_string()),
                 },
             ],
-            map_coord: GameCoord(1.2, 0.0, 87.8),
+            map_coord: GameCoord(1.2, 55.0, 87.8),
+            movements: create_test_movements(),
             ..Default::default()
         };
         let mut builder = Default::default();
-        test_line.exec(4, 5, &mut builder).await.unwrap();
+        let project = RouteMetadata {
+            icons: vec![
+                ("test icon".to_string(), "".to_string()),
+                ("test icon 1".to_string(), "".to_string()),
+                ("test icon 2".to_string(), "".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+            ..Default::default()
+        };
+        test_line.exec(&project, 4, 5, &mut builder).await.unwrap();
         assert_eq!(
             builder.icons,
-            vec![MapIcon {
-                id: "test icon".to_string(),
-                coord: GameCoord(1.2, 0.0, 87.8),
-                line_index: 5,
-                section_index: 4,
-                priority: 3,
-            }]
+            vec![
+                MapIcon {
+                    id: "test icon".to_string(),
+                    coord: GameCoord(1.2, 55.0, 87.8),
+                    line_index: 5,
+                    section_index: 4,
+                    priority: 3,
+                },
+                MapIcon {
+                    id: "test icon 1".to_string(),
+                    coord: GameCoord(3.4, 7.0, 6.0),
+                    line_index: 5,
+                    section_index: 4,
+                    priority: 3,
+                },
+                MapIcon {
+                    id: "test icon 2".to_string(),
+                    coord: GameCoord(3.5, 7.4, 6.2),
+                    line_index: 5,
+                    section_index: 4,
+                    priority: 3,
+                },
+            ]
         );
         assert_eq!(
             builder.markers,
@@ -290,7 +353,10 @@ mod test {
         };
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
-        test_line.exec(0, 0, &mut map_builder).await.unwrap();
+        test_line
+            .exec(&Default::default(), 0, 0, &mut map_builder)
+            .await
+            .unwrap();
         let map_section = map_builder.build();
         assert_eq!(
             map_section.lines,
@@ -332,7 +398,10 @@ mod test {
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
         map_builder.add_coord("blue", &GameCoord::default());
-        test_line.exec(0, 0, &mut map_builder).await.unwrap();
+        test_line
+            .exec(&Default::default(), 0, 0, &mut map_builder)
+            .await
+            .unwrap();
 
         map_builder.add_coord("test color", &GameCoord::default());
         let map = map_builder.build();
@@ -377,9 +446,31 @@ mod test {
         };
 
         let exec_line = test_line
-            .exec(0, 0, &mut MapSectionBuilder::default())
+            .exec(&Default::default(), 0, 0, &mut MapSectionBuilder::default())
             .await
             .unwrap();
         assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
+    }
+
+    #[tokio::test]
+    async fn test_missing_icons() {
+        let test_line = CompLine {
+            map_icon: Some("test icon".to_string()),
+            map_coord: GameCoord(1.2, 55.0, 87.8),
+            movements: create_test_movements(),
+            ..Default::default()
+        };
+        let mut builder = Default::default();
+        let exec_line = test_line
+            .exec(&Default::default(), 4, 5, &mut builder)
+            .await
+            .unwrap();
+        assert_eq!(exec_line.diagnostics.len(), 3);
+        assert_eq!(exec_line.diagnostics[0].msg_type, "warning");
+        assert_eq!(exec_line.diagnostics[0].source, "celer/engine");
+        assert_eq!(exec_line.diagnostics[1].msg_type, "warning");
+        assert_eq!(exec_line.diagnostics[1].source, "celer/engine");
+        assert_eq!(exec_line.diagnostics[2].msg_type, "warning");
+        assert_eq!(exec_line.diagnostics[2].source, "celer/engine");
     }
 }

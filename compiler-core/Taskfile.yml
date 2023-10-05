@@ -14,3 +14,8 @@ tasks:
     - src/lang/tempstr/grammar.rs
     - src/lang/rich/grammar.rs
     - src/lang/preset/grammar.rs
+
+  watch:
+    desc: Run compiler core tests in watch mode
+    cmds:
+    - cargo watch -x test
