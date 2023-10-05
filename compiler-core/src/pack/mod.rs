@@ -115,6 +115,9 @@ pub enum PackerError {
     #[error("{0}")]
     NotImpl(String),
 
+    #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
+    InvalidPlugin(String),
+
     #[cfg(feature = "wasm")]
     #[error("Wasm execution error: {0}")]
     Wasm(#[from] WasmError),

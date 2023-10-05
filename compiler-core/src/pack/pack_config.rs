@@ -7,6 +7,7 @@ use crate::api::Setting;
 use crate::comp::prop;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
+use crate::plug::{Plugin, PluginRuntime};
 use crate::util::async_for;
 
 use super::{pack_map, pack_presets, PackerError, PackerResult, Resource, Use, ValidUse};
@@ -17,6 +18,7 @@ pub struct ConfigBuilder {
     pub icons: HashMap<String, String>,
     pub tags: HashMap<String, DocTag>,
     pub presets: HashMap<String, Preset>,
+    pub plugins: Vec<PluginRuntime>,
     pub default_icon_priority: Option<i64>,
 }
 
@@ -106,16 +108,23 @@ async fn process_config(
         _ => return Err(PackerError::InvalidConfigType(index)),
     };
 
-    let icons = match config_obj.get_mut(prop::ICONS) {
-        Some(v) => v,
-        None => return Ok(config_obj),
-    };
+    if let Some(icons) = config_obj.get_mut(prop::ICONS) {
+        process_icons_config(resource, icons).await?;
+    }
 
+
+    Ok(config_obj)
+}
+
+async fn process_icons_config(
+    resource: &Resource,
+    icons: &mut Value,
+) -> PackerResult<()> {
     let icons = match icons.as_object_mut() {
         Some(obj) => obj,
         // just returning ok here
         // the error will be caught later
-        _ => return Ok(config_obj),
+        _ => return Ok(()),
     };
 
     async_for!(value in icons.values_mut(), {
@@ -133,5 +142,36 @@ async fn process_config(
         }
     })?;
 
-    Ok(config_obj)
+    Ok(())
 }
+
+async fn process_plugins_config(
+    resource: &Resource,
+    plugins: &mut Value,
+    index: usize,
+) -> PackerResult<()> {
+    let plugins = match plugins.as_array_mut() {
+        Some(x) => x,
+        // just returning ok here
+        // the error will be caught later
+        _ => return Ok(()),
+    };
+
+    async_for!(value in plugins.iter_mut(), {
+        let v = value.take();
+        match Use::from(v) {
+            Use::Invalid(path) => return Err(PackerError::InvalidUse(path)),
+            Use::NotUse(v) => {
+                *value = v;
+            }
+            Use::Valid(valid_use) => {
+                let icon_resource = resource.resolve(&valid_use).await?;
+                let image_url = icon_resource.load_image_url().await?;
+                *value = Value::String(image_url);
+            }
+        }
+    })?;
+
+    todo!()
+}
+

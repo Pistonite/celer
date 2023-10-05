@@ -8,7 +8,7 @@ use crate::comp::{CompDoc, Compiler, CompilerError};
 use crate::lang::Preset;
 use crate::metrics::CompilerMetrics;
 use crate::pack::{self, PackedProject, PackerError, PackerResult, Resource, ValidUse};
-use crate::plug::run_plugins;
+use crate::plug::{run_plugins, PluginRuntime};
 
 /// Output of the compiler API
 #[derive(Debug, Clone)]
@@ -35,6 +35,7 @@ pub struct OkOutput {
 #[derive(Default, Debug, Clone)]
 pub struct CompilerMetadata {
     pub presets: HashMap<String, Preset>,
+    pub plugins: Vec<PluginRuntime>,
     pub default_icon_priority: i64,
 }
 
