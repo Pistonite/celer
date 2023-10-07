@@ -43,6 +43,7 @@ impl CompilerBuilder {
             meta: CompilerMetadata {
                 presets: self.presets,
                 default_icon_priority: self.default_icon_priority,
+                ..Default::default()
             },
             color: self.color,
             coord: self.coord,

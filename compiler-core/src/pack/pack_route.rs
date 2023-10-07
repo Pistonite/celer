@@ -51,11 +51,11 @@ async fn pack_route_internal(
         Ok(arr) => {
             let mut output = vec![];
             let _ = async_for!(x in arr.into_iter(), {
-                match Use::from(x) {
-                    Use::Invalid(path) => {
+                match Use::try_from(x) {
+                    Ok(Use::Invalid(path)) => {
                         output.push(PackerValue::Err(PackerError::InvalidUse(path)));
                     }
-                    Use::NotUse(x) => {
+                    Err(x) => {
                         let result = pack_route_internal(
                             resource,
                             x,
@@ -66,7 +66,7 @@ async fn pack_route_internal(
                         ).await;
                         output.push(result);
                     }
-                    Use::Valid(valid_use) => {
+                    Ok(Use::Valid(valid_use)) => {
                         let result = resolve_use(
                             resource,
                             valid_use,
@@ -91,9 +91,9 @@ async fn pack_route_internal(
         Err(route) => route,
     };
 
-    match Use::from(route) {
-        Use::Invalid(path) => PackerValue::Err(PackerError::InvalidUse(path)),
-        Use::NotUse(x) => {
+    match Use::try_from(route) {
+        Ok(Use::Invalid(path)) => PackerValue::Err(PackerError::InvalidUse(path)),
+        Err(x) => {
             // array case is covered above
             match x.try_into_object() {
                 Ok(obj) => {
@@ -118,7 +118,7 @@ async fn pack_route_internal(
                 }
             }
         }
-        Use::Valid(valid_use) => {
+        Ok(Use::Valid(valid_use)) => {
             resolve_use(resource, valid_use, use_depth, max_use_depth, max_ref_depth).await
         }
     }

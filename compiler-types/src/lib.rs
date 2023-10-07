@@ -27,6 +27,8 @@ pub struct ExecDoc {
     pub preface: Vec<Vec<DocPoorText>>,
     /// The route
     pub route: Vec<ExecSection>,
+    /// Overall diagnostics (that don't apply to any line)
+    pub diagnostics: Vec<DocDiagnostic>,
 }
 
 /// Metadata of the route project

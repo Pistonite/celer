@@ -19,6 +19,7 @@ impl CompDoc {
             project: self.project,
             preface: self.preface,
             route: sections,
+            diagnostics: self.diagnostics,
         })
     }
 }
@@ -27,10 +28,11 @@ impl CompDoc {
 mod test {
     use celerctypes::{
         DocPoorText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine, MapMetadata,
-        RouteMetadata,
+        RouteMetadata, DocDiagnostic,
     };
 
     use crate::comp::{CompLine, CompMovement, CompSection};
+    use crate::lang::parse_poor;
 
     use super::*;
 
@@ -44,15 +46,25 @@ mod test {
 
         let test_preface = vec![vec![DocPoorText::Text("test".to_string())]];
 
+        let test_diagnostics = vec![
+            DocDiagnostic {
+                msg: parse_poor("test msg"),
+                msg_type: "test".to_string(),
+                source: "test".to_string(),
+            }
+        ];
+
         let test_doc = CompDoc {
             project: test_metadata.clone(),
             preface: test_preface.clone(),
+            diagnostics: test_diagnostics.clone(),
             ..Default::default()
         };
 
         let exec_doc = test_doc.exec().await.unwrap();
         assert_eq!(exec_doc.project, test_metadata);
         assert_eq!(exec_doc.preface, test_preface);
+        assert_eq!(exec_doc.diagnostics, test_diagnostics);
     }
 
     #[tokio::test]

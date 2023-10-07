@@ -71,6 +71,9 @@ pub enum PackerError {
     #[error("Error when parsing structured data in file {0}: {1}")]
     InvalidFormat(String, String),
 
+    #[error("Error when parsing file {0}: file is not UTF-8")]
+    InvalidUtf8(String),
+
     #[error("")]
     InvalidIcon,
 
@@ -106,6 +109,9 @@ pub enum PackerError {
     )]
     DuplicateMap(usize),
 
+    #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
+    InvalidPlugin(String),
+
     #[error("No map defined in project config")]
     MissingMap,
 
@@ -114,9 +120,6 @@ pub enum PackerError {
 
     #[error("{0}")]
     NotImpl(String),
-
-    #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
-    InvalidPlugin(String),
 
     #[cfg(feature = "wasm")]
     #[error("Wasm execution error: {0}")]

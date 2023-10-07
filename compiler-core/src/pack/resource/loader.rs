@@ -9,6 +9,14 @@ pub trait ResourceLoader {
     /// Load a resource as raw bytes
     async fn load_raw(&self, path: &str) -> PackerResult<Vec<u8>>;
 
+    async fn load_utf8(&self, path: &str) -> PackerResult<String> {
+        let bytes = self.load_raw(path).await?;
+        match String::from_utf8(bytes) {
+            Ok(v) => Ok(v),
+            Err(e) => Err(PackerError::InvalidUtf8(path.to_string())),
+        }
+    }
+
     /// Load structured value. The type depends on the file extension read from the ref
     async fn load_structured(&self, path: &str) -> PackerResult<Value> {
         let v = if path.ends_with(".yaml") || path.ends_with(".yml") {

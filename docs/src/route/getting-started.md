@@ -17,7 +17,7 @@ config: []
 The file names are case-sensitive. This file should be named `project.yaml`,
 not `Project.yaml` or `project.yml`
 :::
-Then, create a `main.yaml` file with the following content:
+Then, create a `main.yaml` file in the same folder with the following content:
 ```yaml
 - hello world!
 - Section 1:

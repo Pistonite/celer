@@ -97,7 +97,7 @@ pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOut
     let ms = metrics.comp_done();
     info!("comp phase done in {ms}ms");
 
-    let comp_doc = run_plugins(comp_doc);
+    let comp_doc = run_plugins(comp_doc, &comp_meta.plugins).await;
     let ms = metrics.plug_done();
     info!("plug phase done in {ms}ms");
 

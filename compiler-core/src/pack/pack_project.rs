@@ -86,6 +86,7 @@ pub async fn pack_project(
 
     let compiler_metadata = CompilerMetadata {
         presets: builder.presets,
+        plugins: builder.plugins,
         default_icon_priority: builder.default_icon_priority.unwrap_or(2),
     };
 
