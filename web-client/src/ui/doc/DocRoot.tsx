@@ -11,6 +11,7 @@ import { DocLine } from "./DocLine";
 import { DocSection } from "./DocSection";
 import {
     DocContainerId,
+    DocContentContainerId,
     DocLog,
     DocScrollId,
     resolveTag,
@@ -19,6 +20,7 @@ import {
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
 import { DocController, initDocController } from "./DocController";
+import { DocPreface } from "./DocPreface";
 
 export const DocRoot: React.FC = () => {
     const { isEditingLayout } = useSelector(viewSelector);
@@ -91,49 +93,58 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
             }}
         >
             <div id={DocContainerId}>
-                <div id="doc-main">
-                    {document.route.map(({ name, lines }, i) => (
-                        <DocSection index={i} key={i} name={name}>
-                            {lines.map((line, j) => (
-                                <DocLine
-                                    sectionIndex={i}
-                                    lineIndex={j}
-                                    key={j}
-                                    diagnostics={line.diagnostics}
-                                    lineColor={line.lineColor}
-                                    text={resolveTags(tagMap, line.text)}
-                                    iconUrl={
-                                        line.icon
-                                            ? document.project.icons[line.icon]
-                                            : undefined
-                                    }
-                                    secondaryText={resolveTags(
-                                        tagMap,
-                                        line.secondaryText,
-                                    )}
-                                    counterText={
-                                        line.counterText
-                                            ? resolveTag(
-                                                  tagMap,
-                                                  line.counterText,
-                                              )
-                                            : undefined
-                                    }
-                                    counterType={
-                                        line.counterText?.tag || undefined
-                                    }
-                                />
-                            ))}
-                        </DocSection>
+                <div id="doc-preface-container">
+                    {document.preface.map((text, i) => (
+                        <DocPreface key={i} text={text} />
                     ))}
-                    <div id="doc-end">
-                        You have reached the end of the document :))
+                </div>
+                <div id={DocContentContainerId}>
+                    <div id="doc-main">
+                        {document.route.map(({ name, lines }, i) => (
+                            <DocSection index={i} key={i} name={name}>
+                                {lines.map((line, j) => (
+                                    <DocLine
+                                        sectionIndex={i}
+                                        lineIndex={j}
+                                        key={j}
+                                        diagnostics={line.diagnostics}
+                                        lineColor={line.lineColor}
+                                        text={resolveTags(tagMap, line.text)}
+                                        iconUrl={
+                                            line.icon
+                                                ? document.project.icons[
+                                                      line.icon
+                                                  ]
+                                                : undefined
+                                        }
+                                        secondaryText={resolveTags(
+                                            tagMap,
+                                            line.secondaryText,
+                                        )}
+                                        counterText={
+                                            line.counterText
+                                                ? resolveTag(
+                                                      tagMap,
+                                                      line.counterText,
+                                                  )
+                                                : undefined
+                                        }
+                                        counterType={
+                                            line.counterText?.tag || undefined
+                                        }
+                                    />
+                                ))}
+                            </DocSection>
+                        ))}
+                    </div>
+                    <div id={DocNoteContainerId}>
+                        {flatNotes.map((props, i) => (
+                            <DocNoteBlock key={i} {...props} />
+                        ))}
                     </div>
                 </div>
-                <div id={DocNoteContainerId}>
-                    {flatNotes.map((props, i) => (
-                        <DocNoteBlock key={i} {...props} />
-                    ))}
+                <div id="doc-end">
+                    There's nothing more to see past this point.
                 </div>
             </div>
         </div>

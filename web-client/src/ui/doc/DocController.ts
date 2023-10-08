@@ -17,6 +17,7 @@ import { Debouncer } from "low/utils";
 import { GameCoord } from "low/compiler.g";
 
 import {
+    DocContainerId,
     DocLog,
     DocScrollId,
     findLineByIndex,
@@ -146,7 +147,7 @@ export class DocController {
             needUpdateCurrentLine = true;
         } else {
             const { scrollTop, scrollBottom } = scrollView;
-            const containerOffsetY = getScrollContainerOffsetY();
+            const containerOffsetY = getScrollContainerOffsetY(DocContainerId);
             const {
                 scrollTop: currentLineTop,
                 scrollBottom: currentLineBottom,
@@ -251,7 +252,7 @@ export class DocController {
 
         // Scroll the current line to visible
         const { scrollTop, scrollBottom } = scrollView;
-        const containerOffsetY = getScrollContainerOffsetY();
+        const containerOffsetY = getScrollContainerOffsetY(DocContainerId);
         const { scrollTop: currentLineTop, scrollBottom: currentLineBottom } =
             getLineScrollView(newCurrentLine, containerOffsetY);
 

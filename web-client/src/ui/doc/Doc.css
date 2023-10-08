@@ -1,6 +1,12 @@
 #doc-container {
     display: flex;
+    flex-direction: column;
+    height: 100%;
     --note-min-width: 48px;
+}
+
+#doc-content-container {
+    display: flex;
 }
 
 #doc-scroll {
@@ -18,7 +24,10 @@
 }
 
 #doc-end {
-    height: 200px;
+    flex: 1;
+    text-align: center;
+    padding: 32px;
+    color: #888888;
 }
 
 #doc-side {
@@ -156,4 +165,9 @@
 .docline-diagnostic-body {
     padding: 4px 0 4px 4px;
     word-break: break-word;
+}
+
+.doc-preface-block {
+    padding: 4px 0px 4px 8px;
+    box-sizing: border-box;
 }

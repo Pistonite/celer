@@ -9,6 +9,7 @@ import {
     getLineLocationFromElement,
     getScrollContainerOffsetY,
     findLineByIndex,
+    DocContentContainerId,
 } from "./utils";
 
 /// The id of the note panel
@@ -38,7 +39,7 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
     }
     // Cancel the previous async updates
     updateNotesSerial += 1;
-    const containerOffsetY = getScrollContainerOffsetY();
+    const containerOffsetY = getScrollContainerOffsetY(DocContentContainerId);
 
     // Layout the base note
     const baseNoteBlock = noteContainer.children[baseIndex] as HTMLElement;
