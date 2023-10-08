@@ -71,9 +71,9 @@ pub async fn pack_project(
         .map_err(|_| PackerError::InvalidMetadataPropertyType(prop::CONFIG.to_string()))?;
 
     let mut builder = ConfigBuilder::default();
-    async_for!((i, config) in config.into_iter().enumerate(), {
+    let _ = async_for!((i, config) in config.into_iter().enumerate(), {
         pack_config(&mut builder, project_resource, config, i, setting).await?;
-    })?;
+    });
 
     let route_metadata = RouteMetadata {
         name: project_resource.name().to_string(),

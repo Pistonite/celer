@@ -9,6 +9,8 @@ use crate::comp::prop;
 use super::operation;
 
 pub async fn run_link_plugin(comp_doc: &mut CompDoc) {
+    // add the link tag if not defined already
+    comp_doc.project.tags.entry(prop::LINK.to_string()).or_default();
     operation::for_all_lines(comp_doc, |mut line| async {
         operation::for_all_rich_text(&mut line, transform_link_tag).await;
         line

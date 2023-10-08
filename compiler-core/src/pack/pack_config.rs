@@ -69,7 +69,7 @@ async fn process_config(
     let config = config.try_into_object().map_err(|_| PackerError::InvalidConfigType(index))?;
 
     // add values to builder
-    async_for!((key, value) in config.into_iter(), {
+    let _ = async_for!((key, value) in config.into_iter(), {
         match key.as_ref() {
             prop::MAP => {
                 if builder.map.is_some() {
@@ -82,16 +82,16 @@ async fn process_config(
             }
             prop::TAGS => {
                 let tags = value.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::TAGS.to_string()))?;
-                async_for!((key, value) in tags.into_iter(), {
+                let _ = async_for!((key, value) in tags.into_iter(), {
                     let tag = serde_json::from_value::<DocTag>(value).map_err(|_| PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::TAGS, key)))?;
                     builder.tags.insert(key, tag);
-                })?;
+                });
             }
             prop::PRESETS => {
                 let presets = pack_presets(value, index, setting.max_preset_namespace_depth).await?;
-                async_for!((key, value) in presets.into_iter(), {
+                let _ = async_for!((key, value) in presets.into_iter(), {
                     builder.presets.insert(key, value);
-                })?;
+                });
             }
             prop::DEFAULT_ICON_PRIORITY => {
                 let priority = value.try_coerce_to_i64().ok_or_else(|| PackerError::InvalidConfigProperty(index, prop::DEFAULT_ICON_PRIORITY.to_string()))?;
@@ -102,7 +102,7 @@ async fn process_config(
     }
             _ => return Err(PackerError::UnusedConfigProperty(index, key)),
         }
-    })?;
+    });
 
     Ok(())
 
@@ -119,7 +119,7 @@ async fn process_icons_config(
 ) -> PackerResult<()> {
     let icons = icons.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::ICONS.to_string()))?;
 
-    async_for!((key, v) in icons.into_iter(), {
+    let _ = async_for!((key, v) in icons.into_iter(), {
         match Use::try_from(v) {
             Err(v) => {
                 // not a use, just a icon url
@@ -135,7 +135,7 @@ async fn process_icons_config(
                 builder.icons.insert(key, image_url);
             }
         }
-    })?;
+    });
 
     Ok(())
 }
@@ -151,17 +151,18 @@ async fn process_plugins_config(
 ) -> PackerResult<()> {
     let plugins = plugins.try_into_array().map_err(|_| PackerError::InvalidConfigProperty(index, prop::PLUGINS.to_string()))?;
 
-    async_for!((i, v) in plugins.into_iter().enumerate(), {
+    let _ = async_for!((i, v) in plugins.into_iter().enumerate(), {
         let v = v.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, format!("{}[{}]", prop::PLUGINS, i)))?;
         let mut plugin = None;
         let mut props = json!(null);
-        async_for!((key, value) in v.into_iter(), {
+        let _ = async_for!((key, value) in v.into_iter(), {
             match key.as_ref() {
                 prop::USE => {
                     let use_path_string = value.coerce_to_string();
                     plugin = match serde_json::from_value::<BuiltInPlugin>(value) {
                         Ok(built_in) => Some(Plugin::BuiltIn(built_in)),
-                        Err(_) => {
+                        Err(e) => {
+                            log::info!("e: {e}");
                             // it's a script path, parse as use
                             match Use::from(use_path_string) {
                                 Use::Invalid(path) => return Err(PackerError::InvalidPlugin(path)),
@@ -180,7 +181,7 @@ async fn process_plugins_config(
                 }
                 _ => return Err(PackerError::UnusedConfigProperty(index, format!("{}[{}].{}", prop::PLUGINS, i, key))),
             }
-        })?;
+        });
         let plugin = match plugin {
             Some(v) => v,
             None => return Err(PackerError::MissingConfigProperty(index, format!("{}[{}].{}", prop::PLUGINS, i, prop::USE))),
@@ -189,7 +190,7 @@ async fn process_plugins_config(
             plugin,
             props,
         });
-    })?;
+    });
 
     Ok(())
 }

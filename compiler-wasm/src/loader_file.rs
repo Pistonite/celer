@@ -33,7 +33,7 @@ impl FileLoader {
 #[async_trait::async_trait(?Send)]
 impl ResourceLoader for FileLoader {
     async fn load_raw(&self, path: &str) -> PackerResult<Vec<u8>> {
-        yield_now!()?;
+        let _ = yield_now!();
         let result: Result<Uint8Array, JsValue> = async {
             let promise = self
                 .load_file

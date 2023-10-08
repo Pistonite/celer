@@ -60,12 +60,16 @@ pub struct RouteMetadata {
 #[ts(export)]
 pub struct DocTag {
     /// Bold style
+    #[serde(default)]
     bold: bool,
     /// Italic style
+    #[serde(default)]
     italic: bool,
     /// Underline style
+    #[serde(default)]
     underline: bool,
     /// Strikethrough style
+    #[serde(default)]
     strikethrough: bool,
     /// Color of the text
     color: Option<String>,

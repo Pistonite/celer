@@ -51,7 +51,7 @@ pub enum Plugin {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged, rename_all = "kebab-case")]
+#[serde(rename_all = "kebab-case")]
 pub enum BuiltInPlugin {
     /// Transform link tags to clickable links. See [`link`]
     Link

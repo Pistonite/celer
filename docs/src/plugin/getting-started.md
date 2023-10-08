@@ -1,4 +1,9 @@
 # Getting Started
+:::tip
+The plugin system is currently unstable.
+:::
+The principle of the plugin system is to separate core Celer functionalities from additional (and mostly optional) functionalities.
+
 A plugin in Celer is a piece of program that runs as part of the compiler. The process goes as the following:
 
 1. The compiler parses the income files and celer-specific syntax like presets
@@ -6,7 +11,6 @@ A plugin in Celer is a piece of program that runs as part of the compiler. The p
 3. The plugin is free to make any changes to the document. Then it hands the document to the next plugin in line.
 4. After the last plugin is done modifying the document, it hands the document back to the compiler.
 
-The principle of the plugin system is to separate core Celer functionalities from additional (and mostly optional) functionalities.
 
 ## Configuration
 To add a plugin to the compiler, use the `plugins` property in your `config`.
