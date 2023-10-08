@@ -11,6 +11,8 @@ tasks:
     - cp -r ../docs/src/.vitepress/dist/* dist/docs
     - cp -r ../web-client/dist/* dist/app
     - cp ../target/x86_64-unknown-linux-musl/release/celerserver dist/bin
+    - chmod +x ./make-version.sh
+    - ./make-version.sh 0.0.0-dev docker
 
   build:
     desc: Build docker container locally (requires building assets first)
@@ -25,7 +27,14 @@ tasks:
   run:
     desc: Run docker container
     cmds:
-      - docker run -p 8000:80 pistonite/celer -e CELERSERVER_SITE_ORIGIN=http://pistonite.local
+      - task: run-image
+        vars:
+          IMAGE: pistonite/celer
+
+  run-image:
+    desc: Run docker container
+    cmds:
+      - docker run -p 8000:80 -e CELERSERVER_SITE_ORIGIN=http://pistonite.local {{.IMAGE}}
 
   stop:
     desc: Stop docker container

@@ -2,6 +2,7 @@ FROM alpine:latest
 EXPOSE 80
 ENV APP_DIR=/opt/app
 COPY ./dist $APP_DIR
+RUN chmod +x $APP_DIR/bin/celerserver
 
 WORKDIR $APP_DIR
 

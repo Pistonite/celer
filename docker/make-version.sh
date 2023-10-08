@@ -1,3 +1,4 @@
+#!/bin/bash
 VERSION=$@
 echo "Version: $VERSION"
 echo $VERSION > dist/VERSION

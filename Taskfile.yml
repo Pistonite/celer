@@ -75,8 +75,8 @@ tasks:
     desc: Build production assets
     deps:
     - docs:build
-    - build:server
     - build:client
+    - build:server
 
   build:server:
     deps:
