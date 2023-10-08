@@ -20,7 +20,7 @@ import {
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
 import { DocController, initDocController } from "./DocController";
-import { DocPreface } from "./DocPreface";
+import { Poor } from "./Poor";
 
 export const DocRoot: React.FC = () => {
     const { isEditingLayout } = useSelector(viewSelector);
@@ -95,7 +95,13 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
             <div id={DocContainerId}>
                 <div id="doc-preface-container">
                     {document.preface.map((text, i) => (
-                        <DocPreface key={i} text={text} />
+                        <div className="doc-preface-block">
+                            <Poor
+                                key={i}
+                                content={text}
+                                textProps={{ size: 400 }}
+                            />
+                        </div>
                     ))}
                 </div>
                 <div id={DocContentContainerId}>
