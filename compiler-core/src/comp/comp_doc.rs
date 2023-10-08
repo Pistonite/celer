@@ -1,5 +1,4 @@
-use celerctypes::DocDiagnostic;
-use celerctypes::{DocPoorText, RouteMetadata};
+use celerctypes::{DocDiagnostic, DocPoorText, RouteMetadata};
 use serde::{Deserialize, Serialize};
 
 use crate::api::CompilerMetadata;
