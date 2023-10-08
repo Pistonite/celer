@@ -44,17 +44,12 @@ export type ReducerDeclWithPayload<S, P> = (
 /// Use this to define a reducer without payload. No need to wrap the function with `withPayload`
 export type ReducerDecl<S> = (state: Draft<S>) => void;
 
-/// Helper type for inner function of `withPayload`
-type ReducerEffect<S, P = undefined> = P extends undefined
-    ? ReducerDecl<S>
-    : (state: Draft<S>, payload: P) => void;
-
 /// Convenience function for defining a reducer with payload
 export const withPayload = <S, P>(
-    effect: ReducerEffect<S, P>,
+    effect: (state: Draft<S>, payload: P) => void
 ): ReducerDeclWithPayload<S, P> => {
-    return (state, action) => {
-        effect(state, action.payload);
+    return (state: Draft<S>, action) => {
+        return effect(state, action.payload);
     };
 };
 

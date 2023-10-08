@@ -4,6 +4,7 @@ import {
     AppStore,
     SettingsState,
     initStore,
+    saveSettings,
     settingsSelector,
     viewActions,
 } from "core/store";
@@ -105,13 +106,8 @@ export class Kernel {
         // persist settings to local storage TODO
         const unwatchSettings = store.subscribe(
             watchSettings((newVal: SettingsState, oldVal: SettingsState) => {
-                // TODO #46: persist settings to local storage
-                // eslint-disable-next-line no-console
-                console.log({
-                    message: "settings changed",
-                    new: newVal,
-                    old: oldVal,
-                });
+                // save settings to local storage
+                saveSettings(newVal);
 
                 // switch theme
                 if (newVal.theme !== oldVal.theme) {

@@ -57,6 +57,7 @@ export const useDocDiagnostics = (): DiagnosticSection[] => {
         });
         return output;
     }, [serial]);
+    /* eslint-enable react-hooks/exhaustive-deps*/
 
     return diagnostics;
 };

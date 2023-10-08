@@ -20,7 +20,7 @@
 }
 
 #settings-separator.horizontal-tabs {
-    padding: 8px 0;
+    padding: 16px 0;
 }
 
 #settings-panel {
@@ -57,3 +57,22 @@ div.settings-value-slider label {
 #settings-dialog-root > .fui-DialogBody {
     height: calc(min(100vh, 800px) - 48px);
 }
+
+.settings-info-field {
+    display: flex;
+    flex-direction: row;
+}
+
+.settings-info-field > label {
+    min-width: 160px;
+}
+
+.settings-info-field > div {
+    flex: 1;
+    overflow: hidden;
+}
+
+.settings-info-field > div > span {
+    word-wrap: break-word;
+}
+

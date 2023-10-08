@@ -99,6 +99,7 @@ const TreeDirNode: React.FC<TreeDirNodeProps> = ({
         };
         loadEntries();
     }, [path.join("/"), isExpanded, listDir]);
+    /* eslint-enable react-hooks/exhaustive-deps*/
 
     const isLoading = isExpanded && entries === undefined;
 

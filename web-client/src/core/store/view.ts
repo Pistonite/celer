@@ -21,6 +21,7 @@ import {
     editorViewReducers,
 } from "core/editor";
 import { configureSlice } from "low/store";
+// import { SliceCaseReducers } from "@reduxjs/toolkit";
 
 export type ViewState = LayoutViewState &
     MapViewState &
@@ -44,5 +45,5 @@ export const { viewReducer, viewActions, viewSelector } = configureSlice({
         ...docViewReducers,
         ...stageViewReducers,
         ...editorViewReducers,
-    },
+    }
 });

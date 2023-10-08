@@ -47,9 +47,7 @@ export const ViewDiagnostics: ToolbarControl = {
                                 <DocumentCheckmark20Regular />
                             )
                         }
-                    >
-                        {diagnostics.length && diagnostics.length}
-                    </ToolbarButton>
+                    />
                 </Tooltip>
             </ViewDiagnosticInternal>
         );

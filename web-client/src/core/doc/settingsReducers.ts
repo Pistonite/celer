@@ -1,6 +1,6 @@
 //! Reducers for the document settings
 
-import { ReducerDeclWithPayload, withPayload } from "low/store";
+import { withPayload } from "low/store";
 
 import {
     DocSettingsState,
@@ -10,37 +10,27 @@ import {
 } from "./state";
 
 /// Set the document viewer theme
-export const setDocTheme: ReducerDeclWithPayload<DocSettingsState, string> =
-    withPayload((state, theme) => {
+export const setDocTheme = withPayload<DocSettingsState, string>((state, theme) => {
         state.theme = theme;
     });
 
 /// Set whether to sync map view to doc
-export const setSyncMapToDoc: ReducerDeclWithPayload<
-    DocSettingsState,
-    boolean
-> = withPayload((state: DocSettingsState, syncMapToDoc: boolean) => {
+export const setSyncMapToDoc = withPayload<DocSettingsState, boolean>((state, syncMapToDoc) => {
     state.syncMapToDoc = syncMapToDoc;
 });
 
 /// Set whether position should be remembered on close
-export const setRememberDocPosition: ReducerDeclWithPayload<
-    DocSettingsState,
-    boolean
-> = withPayload((state: DocSettingsState, value: boolean) => {
+export const setRememberDocPosition = withPayload<DocSettingsState, boolean>((state, value) => {
     state.rememberDocPosition = value;
 });
 
 /// Set whether to force notes to be popups
-export const setForcePopupNotes: ReducerDeclWithPayload<
-    DocSettingsState,
-    boolean
-> = withPayload((state: DocSettingsState, value: boolean) => {
+export const setForcePopupNotes= withPayload<DocSettingsState, boolean>((state, value) => {
     state.forcePopupNotes = value;
 });
 
 /// Set key bindings
-export const setDocKeyBinding: ReducerDeclWithPayload<
+export const setDocKeyBinding= withPayload<
     DocSettingsState,
     {
         /// name of the key binding to set
@@ -48,7 +38,7 @@ export const setDocKeyBinding: ReducerDeclWithPayload<
         /// new value of the key binding
         value: KeyBinding;
     }
-> = withPayload((state: DocSettingsState, { name, value }) => {
+>((state, { name, value }) => {
     state[name] = value;
 });
 
@@ -57,13 +47,13 @@ export const setDocKeyBinding: ReducerDeclWithPayload<
 type PerDocPayload<T> = { docId: string } & T;
 
 /// Set doc initial location
-export const setInitialDocLocation: ReducerDeclWithPayload<
+export const setInitialDocLocation= withPayload<
     DocSettingsState,
     PerDocPayload<{
         section: number;
         line: number;
     }>
-> = withPayload((state: DocSettingsState, { docId, section, line }) => {
+>((state, { docId, section, line }) => {
     if (!state.perDoc[docId]) {
         state.perDoc[docId] = { ...initialPerDocSettings };
     }
@@ -72,12 +62,12 @@ export const setInitialDocLocation: ReducerDeclWithPayload<
 });
 
 /// Set doc excluded diagnostic sources
-export const setExcludedDiagnosticSources: ReducerDeclWithPayload<
+export const setExcludedDiagnosticSources= withPayload<
     DocSettingsState,
     PerDocPayload<{
         value: string[];
     }>
-> = withPayload((state: DocSettingsState, { docId, value }) => {
+> ((state, { docId, value }) => {
     if (!state.perDoc[docId]) {
         state.perDoc[docId] = { ...initialPerDocSettings };
     }
@@ -85,12 +75,12 @@ export const setExcludedDiagnosticSources: ReducerDeclWithPayload<
 });
 
 /// Set tags to not split on
-export const setExcludedSplitTags: ReducerDeclWithPayload<
+export const setExcludedSplitTags= withPayload<
     DocSettingsState,
     PerDocPayload<{
         value: string[];
     }>
-> = withPayload((state: DocSettingsState, { docId, value }) => {
+> ((state, { docId, value }) => {
     if (!state.perDoc[docId]) {
         state.perDoc[docId] = { ...initialPerDocSettings };
     }

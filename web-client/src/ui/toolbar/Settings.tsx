@@ -40,6 +40,7 @@ export const Settings: ToolbarControl = {
             </SettingsInternal>
         );
     },
+    priority: 999,
 };
 
 /// Internal settings dialog component

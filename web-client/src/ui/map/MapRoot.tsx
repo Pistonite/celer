@@ -26,6 +26,7 @@ export const MapRoot: React.FC = () => {
             mapState.current.attach();
         }
     }, [serial, store]);
+    /* eslint-enable react-hooks/exhaustive-deps*/
 
     if (!document) {
         return <LoadScreen color="green" />;

@@ -24,6 +24,7 @@ import {
     initialEditorSettingsState,
 } from "core/editor";
 import { configureSlice } from "low/store";
+// import { SliceCaseReducers } from "@reduxjs/toolkit";
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";
@@ -38,14 +39,21 @@ export type SettingsState = LayoutSettingsState &
 const loadState = (): SettingsState => {
     const state = localStorage.getItem(LOCAL_STORAGE_KEY);
     const loadedState = state ? JSON.parse(state) : {};
+    return Object.assign(getInitialState(), loadedState);
+};
+
+export const saveSettings = (state: SettingsState) => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+};
+
+const getInitialState = (): SettingsState => {
     return {
         ...initialLayoutSettingsState,
         ...initialMapSettingsState,
         ...initialDocSettingsState,
         ...initialEditorSettingsState,
-        ...loadedState,
     };
-};
+}
 
 /// The setting state slice
 export const { settingsReducer, settingsActions, settingsSelector } =
@@ -57,5 +65,6 @@ export const { settingsReducer, settingsActions, settingsSelector } =
             ...mapSettingsReducers,
             ...docSettingsReducers,
             ...editorSettingsReducers,
-        },
+            resetAllSettings: () => getInitialState(),
+        }
     });
