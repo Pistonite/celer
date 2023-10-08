@@ -1,15 +1,15 @@
 import { sleep } from "./utils";
 
-export const fetchAsBytes = async (url: string): Promise<Uint8Array> => {
-    return await doFetch(url, async (response) => {
+export const fetchAsBytes = (url: string): Promise<Uint8Array> => {
+    return doFetch(url, async (response) => {
         const buffer = await response.arrayBuffer();
         return new Uint8Array(buffer);
     });
 };
 
-export const fetchAsString = async (url: string): Promise<string> => {
-    return await doFetch(url, async (response) => {
-        return await response.text();
+export const fetchAsString = (url: string): Promise<string> => {
+    return doFetch(url, (response) => {
+        return response.text();
     });
 };
 

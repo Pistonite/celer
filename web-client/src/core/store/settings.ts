@@ -24,7 +24,6 @@ import {
     initialEditorSettingsState,
 } from "core/editor";
 import { configureSlice } from "low/store";
-// import { SliceCaseReducers } from "@reduxjs/toolkit";
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";
