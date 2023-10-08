@@ -10,6 +10,22 @@
 #doc-container {
     color: white;
 }
+@media (prefers-color-scheme: light) {
+    #doc-container a {
+        color: #8888ff;
+    }
+}
+
+#doc-preface-container {
+    background-color: #a2c4c4;
+    color: black;
+}
+#doc-preface-container a {
+    color: #0000ff !important;
+}
+.doc-preface-block {
+    border-bottom: 3px solid #446666;
+}
 
 /* Section banner */
 .docsection-head {
@@ -75,7 +91,7 @@
     background-color: #ff6666;
 }
 .docline-diagnostic-body.docline-diagnostic-error a {
-    color: #0000ff;
+    color: #0000ff !important;
 }
 /* Warning */
 .docline-diagnostic-head.docline-diagnostic-warn {
@@ -103,9 +119,4 @@
     .docline-head:hover {
         background-color: #bbbbbb !important;
     }
-}
-
-/* Ending block */
-#doc-end {
-    background-color: #001a00;
 }

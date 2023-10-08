@@ -12,6 +12,8 @@ export const DocLog = new Logger("doc");
 export const DocScrollId = "doc-scroll";
 /// The id of the container of doc view
 export const DocContainerId = "doc-container";
+/// The id of the container of main doc content (excluding preface)
+export const DocContentContainerId = "doc-content-container";
 /// Class for the doc line container
 export const DocLineContainerClass = "docline-container";
 
@@ -78,11 +80,14 @@ export const getLineLocationFromElement = (
     return [sectionIndex, lineIndex];
 };
 
-/// Get the offset of the scroll container
+/// Get the offset of the scroll container relative to baseElementId
+///
+/// use DocContainerId for relative to the entire document
+/// use DocContentContainerId for relative to the main content
 ///
 /// line.getBoundingClientRect().y - containerOffsetY = line position relative to container
-export const getScrollContainerOffsetY = (): number => {
-    const containerElement = document.getElementById(DocContainerId);
+export const getScrollContainerOffsetY = (baseElementId: string): number => {
+    const containerElement = document.getElementById(baseElementId);
     if (!containerElement) {
         return 0;
     }

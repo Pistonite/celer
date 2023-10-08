@@ -5,6 +5,16 @@
 #doc-container {
     color: black;
 }
+#doc-container a {
+    color: #0000ff !important;
+}
+
+#doc-preface-container {
+    background-color: #a2c4c4;
+}
+.doc-preface-block {
+    border-top: 3px solid #446666;
+}
 
 .docsection-head {
     background-color: #3388ff;
@@ -63,9 +73,6 @@
 }
 .docline-diagnostic-body.docline-diagnostic-error {
     background-color: #ff6666;
-}
-.docline-diagnostic-body.docline-diagnostic-error a {
-    color: #0000ff;
 }
 /* Warning */
 .docline-diagnostic-head.docline-diagnostic-warn {

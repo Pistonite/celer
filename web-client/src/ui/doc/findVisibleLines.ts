@@ -24,7 +24,7 @@ export const findVisibleLines = (): HTMLElement[] => {
     if (!containerElement) {
         return [];
     }
-    const containerOffsetY = getScrollContainerOffsetY();
+    const containerOffsetY = getScrollContainerOffsetY(DocContainerId);
     // get all lines
     // This is always in the right order because querySelectorAll uses pre-order traversal
     // Therefore we can optimize the search

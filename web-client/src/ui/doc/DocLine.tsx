@@ -9,8 +9,9 @@ import { DocDiagnostic } from "low/compiler.g";
 import { useActions } from "low/store";
 
 import { Rich } from "./Rich";
-import { DocLineContainerClass } from "./utils";
+import { DocLineContainerClass, findLineByIndex } from "./utils";
 import { Poor } from "./Poor";
+import { updateNotePositions } from "./updateNotePositions";
 
 /// One line in the document
 type DocLineProps = {
@@ -63,6 +64,10 @@ export const DocLine: React.FC<DocLineProps> = ({
                             section: sectionIndex,
                             line: lineIndex,
                         });
+                        const line = findLineByIndex(sectionIndex, lineIndex);
+                        if (line) {
+                            updateNotePositions(line);
+                        }
                     }}
                 >
                     {counterText && (
