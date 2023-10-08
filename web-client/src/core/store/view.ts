@@ -45,5 +45,5 @@ export const { viewReducer, viewActions, viewSelector } = configureSlice({
         ...docViewReducers,
         ...stageViewReducers,
         ...editorViewReducers,
-    }
+    },
 });

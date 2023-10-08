@@ -5,7 +5,14 @@ import "./SettingsDialog.css";
 import clsx from "clsx";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { TabList, Tab, Divider, Dropdown, Option, Field } from "@fluentui/react-components";
+import {
+    TabList,
+    Tab,
+    Divider,
+    Dropdown,
+    Option,
+    Field,
+} from "@fluentui/react-components";
 import {
     Document20Regular,
     Map20Regular,
@@ -65,7 +72,7 @@ export const SettingsDialog: React.FC = () => {
                 text: "Meta",
                 Icon: Info20Regular,
                 Page: MetaSettings,
-            }
+            },
         ] satisfies TabData[];
     }, [stageMode]);
 
@@ -92,43 +99,39 @@ export const SettingsDialog: React.FC = () => {
             id="settings-dialog"
             className={clsx(verticalTabs ? "vertical-tabs" : "horizontal-tabs")}
         >
-            {
-                verticalTabs ?
-
-            <TabList
-                vertical
-                selectedValue={settingsTab}
-                onTabSelect={(_, data) => {
-                    switchTab(data.value as SettingsTab);
-                }}
-            >
-                {tabs.map(({ id, text, Icon }) => (
-                    <Tab key={id} id={id} value={id} icon={<Icon />}>
-                        {text}
-                    </Tab>
-                ))}
-            </TabList>
-            :
-                    <Field label="Category">
-                        <Dropdown
-                            value={selectedText}
-                            selectedOptions={[settingsTab]}
-                            onOptionSelect={(_, data) => {
-                                switchTab(data.selectedOptions[0] as SettingsTab);
-                                setSelectedText(data.optionText ?? "");
-                            }}
-                        >
-                            {
-                                tabs.map(({ id, text, Icon }) => (
-                                    <Option key={id} text={text} value={id}>
-                                        <Icon />
-                                        {text}
-                                    </Option>
-                                ))
-                            }
-                        </Dropdown>
-                    </Field>
-            }
+            {verticalTabs ? (
+                <TabList
+                    vertical
+                    selectedValue={settingsTab}
+                    onTabSelect={(_, data) => {
+                        switchTab(data.value as SettingsTab);
+                    }}
+                >
+                    {tabs.map(({ id, text, Icon }) => (
+                        <Tab key={id} id={id} value={id} icon={<Icon />}>
+                            {text}
+                        </Tab>
+                    ))}
+                </TabList>
+            ) : (
+                <Field label="Category">
+                    <Dropdown
+                        value={selectedText}
+                        selectedOptions={[settingsTab]}
+                        onOptionSelect={(_, data) => {
+                            switchTab(data.selectedOptions[0] as SettingsTab);
+                            setSelectedText(data.optionText ?? "");
+                        }}
+                    >
+                        {tabs.map(({ id, text, Icon }) => (
+                            <Option key={id} text={text} value={id}>
+                                <Icon />
+                                {text}
+                            </Option>
+                        ))}
+                    </Dropdown>
+                </Field>
+            )}
             <Divider
                 id="settings-separator"
                 className={clsx(

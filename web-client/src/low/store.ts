@@ -46,7 +46,7 @@ export type ReducerDecl<S> = (state: Draft<S>) => void;
 
 /// Convenience function for defining a reducer with payload
 export const withPayload = <S, P>(
-    effect: (state: Draft<S>, payload: P) => void
+    effect: (state: Draft<S>, payload: P) => void,
 ): ReducerDeclWithPayload<S, P> => {
     return (state: Draft<S>, action) => {
         return effect(state, action.payload);

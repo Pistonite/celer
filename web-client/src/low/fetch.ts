@@ -11,14 +11,17 @@ export const fetchAsString = async (url: string): Promise<string> => {
     return await doFetch(url, async (response) => {
         return await response.text();
     });
-}
+};
 
 const API_PREFIX = "/api/v1";
 export const getApiUrl = (path: string) => {
     return API_PREFIX + path;
-}
+};
 
-const doFetch = async <T>(url: string, handler: (response: Response) => Promise<T>): Promise<T> => {
+const doFetch = async <T>(
+    url: string,
+    handler: (response: Response) => Promise<T>,
+): Promise<T> => {
     const RETRY_COUNT = 3;
     let error: unknown;
     for (let i = 0; i < RETRY_COUNT; i++) {
@@ -37,4 +40,4 @@ const doFetch = async <T>(url: string, handler: (response: Response) => Promise<
         throw error;
     }
     throw new Error("unknown error");
-}
+};

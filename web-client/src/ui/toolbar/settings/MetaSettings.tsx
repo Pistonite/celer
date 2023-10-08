@@ -6,9 +6,9 @@ import { useSelector } from "react-redux";
 import { documentSelector, settingsActions, viewSelector } from "core/store";
 import { fetchAsString, getApiUrl } from "low/fetch";
 
+import { useActions } from "low/store";
 import { SettingsSection } from "./SettingsSection";
 import { InfoField } from "./InfoField";
-import { useActions } from "low/store";
 
 declare global {
     interface Window {
@@ -27,8 +27,7 @@ export const MetaSettings: React.FC = () => {
         const fetchVersion = async () => {
             try {
                 const version = await fetchAsString(getApiUrl("/version"));
-                if (version.split(" ", 3).length === 3)
-            {
+                if (version.split(" ", 3).length === 3) {
                     setServerVersion("Cannot read version");
                 } else {
                     setServerVersion(version);
@@ -36,7 +35,7 @@ export const MetaSettings: React.FC = () => {
             } catch {
                 setServerVersion("Cannot read version");
             }
-        }
+        };
         fetchVersion();
     }, [stageMode]);
     return (
@@ -47,7 +46,10 @@ export const MetaSettings: React.FC = () => {
                 <InfoField label="Source" value={project?.name || ""} />
             </SettingsSection>
             <SettingsSection title="Build">
-                <InfoField label="Client Version" value={window.__CELER_VERSION || "Cannot read version"} />
+                <InfoField
+                    label="Client Version"
+                    value={window.__CELER_VERSION || "Cannot read version"}
+                />
                 <InfoField label="Server Version" value={serverVersion} />
                 <InfoField label="Stage Mode" value={stageMode.toUpperCase()} />
             </SettingsSection>
@@ -56,7 +58,12 @@ export const MetaSettings: React.FC = () => {
                     label="Reset all settings to default"
                     hint="Click the button to reset all settings. This will also delete any setting specific to a route like split settings. This action is NOT REVERSIBLE"
                 >
-                    <Button appearance="primary" onClick={() => resetAllSettings()}>Reset</Button>
+                    <Button
+                        appearance="primary"
+                        onClick={() => resetAllSettings()}
+                    >
+                        Reset
+                    </Button>
                 </Field>
             </SettingsSection>
         </>

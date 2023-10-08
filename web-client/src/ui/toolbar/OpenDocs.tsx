@@ -20,18 +20,24 @@ export const OpenDocs: ToolbarControl = {
     }),
     MenuItem: () => {
         return (
-            <Tooltip content="Open documentation in a new tab" relationship="label">
-                <MenuItem icon={<BookQuestionMark20Regular />} onClick={openDocs}>
-                    Help    
+            <Tooltip
+                content="Open documentation in a new tab"
+                relationship="label"
+            >
+                <MenuItem
+                    icon={<BookQuestionMark20Regular />}
+                    onClick={openDocs}
+                >
+                    Help
                 </MenuItem>
             </Tooltip>
         );
     },
-}
+};
 
 const openDocs = () => {
     const a = document.createElement("a");
     a.target = "_blank";
     a.href = "/docs";
     a.click();
-}
+};

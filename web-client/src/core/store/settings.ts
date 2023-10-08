@@ -53,7 +53,7 @@ const getInitialState = (): SettingsState => {
         ...initialDocSettingsState,
         ...initialEditorSettingsState,
     };
-}
+};
 
 /// The setting state slice
 export const { settingsReducer, settingsActions, settingsSelector } =
@@ -66,5 +66,5 @@ export const { settingsReducer, settingsActions, settingsSelector } =
             ...docSettingsReducers,
             ...editorSettingsReducers,
             resetAllSettings: () => getInitialState(),
-        }
+        },
     });

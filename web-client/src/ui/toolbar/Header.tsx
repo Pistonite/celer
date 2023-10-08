@@ -71,7 +71,9 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
                         <React.Fragment key={i}>
                             {group.controls.map((Control, j) => (
                                 <OverflowItem
-                                    priority={(Control.priority || 0) + group.priority}
+                                    priority={
+                                        (Control.priority || 0) + group.priority
+                                    }
                                     id={toItemId(i, j)}
                                     groupId={i.toString()}
                                     key={j}

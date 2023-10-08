@@ -9,21 +9,26 @@ import {
 } from "./utils";
 
 /// Modify the current layout
-export const setCurrentLayout= withPayload< LayoutSettingsState, Layout >((state, layout) => {
-    if (!isCurrentLayoutDefault(state)) {
-        state.savedLayouts[state.currentLayout] = fitLayoutToGrid(layout);
-    }
-});
+export const setCurrentLayout = withPayload<LayoutSettingsState, Layout>(
+    (state, layout) => {
+        if (!isCurrentLayoutDefault(state)) {
+            state.savedLayouts[state.currentLayout] = fitLayoutToGrid(layout);
+        }
+    },
+);
 
 /// Set the toolbar location of the current layout
-export const setCurrentLayoutToolbarLocation= withPayload< LayoutSettingsState, WidgetType >((state, location) => {
+export const setCurrentLayoutToolbarLocation = withPayload<
+    LayoutSettingsState,
+    WidgetType
+>((state, location) => {
     if (!isCurrentLayoutDefault(state)) {
         state.savedLayouts[state.currentLayout].toolbar = location;
     }
 });
 
 /// Set the toolbar anchor location of the current layout
-export const setCurrentLayoutToolbarAnchor= withPayload<
+export const setCurrentLayoutToolbarAnchor = withPayload<
     LayoutSettingsState,
     "top" | "bottom"
 >((state, location) => {
@@ -33,16 +38,17 @@ export const setCurrentLayoutToolbarAnchor= withPayload<
 });
 
 /// Switch to a layout
-export const switchLayout= withPayload<LayoutSettingsState, number> 
-    ((state, index) => {
+export const switchLayout = withPayload<LayoutSettingsState, number>(
+    (state, index) => {
         state.currentLayout = index;
-    });
+    },
+);
 
 /// Duplicate the current layout and switch to it
 ///
 /// If the current layout is the default layout, the actual
 /// current layout will be duplicated and switched to.
-export const duplicateLayout= withPayload<
+export const duplicateLayout = withPayload<
     LayoutSettingsState,
     "view" | "edit"
 >((state, mode) => {

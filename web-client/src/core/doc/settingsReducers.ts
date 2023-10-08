@@ -10,27 +10,35 @@ import {
 } from "./state";
 
 /// Set the document viewer theme
-export const setDocTheme = withPayload<DocSettingsState, string>((state, theme) => {
+export const setDocTheme = withPayload<DocSettingsState, string>(
+    (state, theme) => {
         state.theme = theme;
-    });
+    },
+);
 
 /// Set whether to sync map view to doc
-export const setSyncMapToDoc = withPayload<DocSettingsState, boolean>((state, syncMapToDoc) => {
-    state.syncMapToDoc = syncMapToDoc;
-});
+export const setSyncMapToDoc = withPayload<DocSettingsState, boolean>(
+    (state, syncMapToDoc) => {
+        state.syncMapToDoc = syncMapToDoc;
+    },
+);
 
 /// Set whether position should be remembered on close
-export const setRememberDocPosition = withPayload<DocSettingsState, boolean>((state, value) => {
-    state.rememberDocPosition = value;
-});
+export const setRememberDocPosition = withPayload<DocSettingsState, boolean>(
+    (state, value) => {
+        state.rememberDocPosition = value;
+    },
+);
 
 /// Set whether to force notes to be popups
-export const setForcePopupNotes= withPayload<DocSettingsState, boolean>((state, value) => {
-    state.forcePopupNotes = value;
-});
+export const setForcePopupNotes = withPayload<DocSettingsState, boolean>(
+    (state, value) => {
+        state.forcePopupNotes = value;
+    },
+);
 
 /// Set key bindings
-export const setDocKeyBinding= withPayload<
+export const setDocKeyBinding = withPayload<
     DocSettingsState,
     {
         /// name of the key binding to set
@@ -47,7 +55,7 @@ export const setDocKeyBinding= withPayload<
 type PerDocPayload<T> = { docId: string } & T;
 
 /// Set doc initial location
-export const setInitialDocLocation= withPayload<
+export const setInitialDocLocation = withPayload<
     DocSettingsState,
     PerDocPayload<{
         section: number;
@@ -62,12 +70,12 @@ export const setInitialDocLocation= withPayload<
 });
 
 /// Set doc excluded diagnostic sources
-export const setExcludedDiagnosticSources= withPayload<
+export const setExcludedDiagnosticSources = withPayload<
     DocSettingsState,
     PerDocPayload<{
         value: string[];
     }>
-> ((state, { docId, value }) => {
+>((state, { docId, value }) => {
     if (!state.perDoc[docId]) {
         state.perDoc[docId] = { ...initialPerDocSettings };
     }
@@ -75,12 +83,12 @@ export const setExcludedDiagnosticSources= withPayload<
 });
 
 /// Set tags to not split on
-export const setExcludedSplitTags= withPayload<
+export const setExcludedSplitTags = withPayload<
     DocSettingsState,
     PerDocPayload<{
         value: string[];
     }>
-> ((state, { docId, value }) => {
+>((state, { docId, value }) => {
     if (!state.perDoc[docId]) {
         state.perDoc[docId] = { ...initialPerDocSettings };
     }
