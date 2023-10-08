@@ -27,8 +27,8 @@ impl CompDoc {
 #[cfg(test)]
 mod test {
     use celerctypes::{
-        DocPoorText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine, MapMetadata,
-        RouteMetadata, DocDiagnostic,
+        DocDiagnostic, DocPoorText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine,
+        MapMetadata, RouteMetadata,
     };
 
     use crate::comp::{CompLine, CompMovement, CompSection};
@@ -46,13 +46,11 @@ mod test {
 
         let test_preface = vec![vec![DocPoorText::Text("test".to_string())]];
 
-        let test_diagnostics = vec![
-            DocDiagnostic {
-                msg: parse_poor("test msg"),
-                msg_type: "test".to_string(),
-                source: "test".to_string(),
-            }
-        ];
+        let test_diagnostics = vec![DocDiagnostic {
+            msg: parse_poor("test msg"),
+            msg_type: "test".to_string(),
+            source: "test".to_string(),
+        }];
 
         let test_doc = CompDoc {
             project: test_metadata.clone(),

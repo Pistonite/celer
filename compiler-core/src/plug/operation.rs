@@ -1,7 +1,10 @@
 use celerctypes::DocRichText;
 use futures::Future;
 
-use crate::{comp::{CompLine, CompDoc}, util::async_for};
+use crate::{
+    comp::{CompDoc, CompLine},
+    util::async_for,
+};
 
 /// Transform all [`CompLine`] in a document with function F
 pub async fn for_all_lines<Func, Fut>(comp_doc: &mut CompDoc, fun: Func)

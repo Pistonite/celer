@@ -121,7 +121,7 @@ impl Compiler {
                 route: vec![self.create_empty_section_for_error(errors).await],
                 project: self.project,
                 preface: vec![],
-                    diagnostics: vec![],
+                diagnostics: vec![],
             },
             self.meta,
         )

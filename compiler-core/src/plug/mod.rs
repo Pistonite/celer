@@ -2,7 +2,7 @@ use celerctypes::DocDiagnostic;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::comp::{CompDoc, CompSection};
+use crate::comp::CompDoc;
 use crate::lang::parse_poor;
 
 mod link;
@@ -24,7 +24,6 @@ impl PlugError {
     }
 }
 
-
 pub type PlugResult<T> = Result<T, PlugError>;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -38,7 +37,9 @@ impl PluginRuntime {
     pub async fn run(&self, comp_doc: &mut CompDoc) -> PlugResult<()> {
         match &self.plugin {
             Plugin::BuiltIn(built_in) => built_in.run(comp_doc).await,
-            Plugin::Script(_) => Err(PlugError::NotImpl("Script plugins are not implemented yet".to_string())),
+            Plugin::Script(_) => Err(PlugError::NotImpl(
+                "Script plugins are not implemented yet".to_string(),
+            )),
         }
     }
 }
@@ -54,7 +55,7 @@ pub enum Plugin {
 #[serde(rename_all = "kebab-case")]
 pub enum BuiltInPlugin {
     /// Transform link tags to clickable links. See [`link`]
-    Link
+    Link,
 }
 
 impl BuiltInPlugin {
@@ -81,6 +82,4 @@ pub async fn run_plugins(mut comp_doc: CompDoc, plugins: &[PluginRuntime]) -> Co
         }
     }
     comp_doc
-
 }
-

@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 
 use celerctypes::{DocTag, MapMetadata};
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 
 use crate::api::Setting;
 use crate::comp::prop;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
-use crate::plug::{Plugin, PluginRuntime, BuiltInPlugin};
+use crate::plug::{BuiltInPlugin, Plugin, PluginRuntime};
 use crate::util::async_for;
 
 use super::{pack_map, pack_presets, PackerError, PackerResult, Resource, Use, ValidUse};
@@ -31,7 +31,7 @@ pub async fn pack_config(
     setting: &Setting,
 ) -> PackerResult<()> {
     match Use::try_from(config) {
-        Ok(Use::Invalid(path)) => return Err(PackerError::InvalidUse(path)),
+        Ok(Use::Invalid(path)) => Err(PackerError::InvalidUse(path)),
         Ok(Use::Valid(valid_use)) => {
             // load a config from top-level use object
             process_config_from_use(builder, project_resource, valid_use, index, setting).await
@@ -66,7 +66,9 @@ async fn process_config(
     index: usize,
     setting: &Setting,
 ) -> PackerResult<()> {
-    let config = config.try_into_object().map_err(|_| PackerError::InvalidConfigType(index))?;
+    let config = config
+        .try_into_object()
+        .map_err(|_| PackerError::InvalidConfigType(index))?;
 
     // add values to builder
     let _ = async_for!((key, value) in config.into_iter(), {
@@ -78,7 +80,7 @@ async fn process_config(
                 builder.map = Some(pack_map(value, index).await?);
             }
             prop::ICONS => {
-    process_icons_config(builder, resource, value, index).await?;
+                process_icons_config(builder, resource, value, index).await?;
             }
             prop::TAGS => {
                 let tags = value.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::TAGS.to_string()))?;
@@ -99,13 +101,12 @@ async fn process_config(
             }
             prop::PLUGINS => {
                 process_plugins_config(builder, resource, value, index).await?;
-    }
+            }
             _ => return Err(PackerError::UnusedConfigProperty(index, key)),
         }
     });
 
     Ok(())
-
 }
 
 /// Process the `icons` property
@@ -117,7 +118,9 @@ async fn process_icons_config(
     icons: Value,
     index: usize,
 ) -> PackerResult<()> {
-    let icons = icons.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::ICONS.to_string()))?;
+    let icons = icons
+        .try_into_object()
+        .map_err(|_| PackerError::InvalidConfigProperty(index, prop::ICONS.to_string()))?;
 
     let _ = async_for!((key, v) in icons.into_iter(), {
         match Use::try_from(v) {
@@ -149,7 +152,9 @@ async fn process_plugins_config(
     plugins: Value,
     index: usize,
 ) -> PackerResult<()> {
-    let plugins = plugins.try_into_array().map_err(|_| PackerError::InvalidConfigProperty(index, prop::PLUGINS.to_string()))?;
+    let plugins = plugins
+        .try_into_array()
+        .map_err(|_| PackerError::InvalidConfigProperty(index, prop::PLUGINS.to_string()))?;
 
     let _ = async_for!((i, v) in plugins.into_iter().enumerate(), {
         let v = v.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, format!("{}[{}]", prop::PLUGINS, i)))?;
@@ -194,4 +199,3 @@ async fn process_plugins_config(
 
     Ok(())
 }
-

@@ -34,11 +34,9 @@ pub use resource::*;
 
 use crate::json::Cast;
 use crate::lang::parse_poor;
-#[cfg(feature = "wasm")]
-use crate::util::WasmError;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "type", content="data")]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum PackerError {
     #[error("The project file (project.yaml) is missing or invalid.")]
     InvalidProject,

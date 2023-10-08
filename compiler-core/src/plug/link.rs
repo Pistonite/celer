@@ -4,22 +4,32 @@
 
 use celerctypes::DocRichText;
 
-use crate::comp::{prop, CompDoc};
 use super::operation;
+use crate::comp::{prop, CompDoc};
 
 pub async fn run_link_plugin(comp_doc: &mut CompDoc) {
     // add the link tag if not defined already
-    comp_doc.project.tags.entry(prop::LINK.to_string()).or_default();
+    comp_doc
+        .project
+        .tags
+        .entry(prop::LINK.to_string())
+        .or_default();
     operation::for_all_lines(comp_doc, |mut line| async {
         operation::for_all_rich_text(&mut line, transform_link_tag).await;
         line
-    }).await
+    })
+    .await
 }
 
 fn transform_link_tag(rich_text: &mut DocRichText) {
-    if !rich_text.tag.as_ref().filter(|tag| tag == &prop::LINK).is_some() {
+    if rich_text
+        .tag
+        .as_ref()
+        .filter(|tag| tag == &prop::LINK)
+        .is_none()
+    {
         return;
-    } 
+    }
     if rich_text.link.is_some() {
         return;
     }
@@ -27,7 +37,7 @@ fn transform_link_tag(rich_text: &mut DocRichText) {
     if rich_text.text.starts_with('[') {
         match rich_text.text.find(']') {
             Some(i) => {
-                rich_text.link = Some(rich_text.text[i+1..].trim().to_string());
+                rich_text.link = Some(rich_text.text[i + 1..].trim().to_string());
                 rich_text.text = rich_text.text[1..i].to_string();
             }
             None => {
@@ -83,11 +93,14 @@ mod test {
             link: None,
         };
         transform_link_tag(&mut text);
-        assert_eq!(text, DocRichText {
-            tag: Some(prop::LINK.to_string()),
-            text: "hello world".to_string(),
-            link: Some("hello world".to_string()),
-        });
+        assert_eq!(
+            text,
+            DocRichText {
+                tag: Some(prop::LINK.to_string()),
+                text: "hello world".to_string(),
+                link: Some("hello world".to_string()),
+            }
+        );
     }
 
     #[test]
@@ -98,12 +111,15 @@ mod test {
             link: None,
         };
         transform_link_tag(&mut text);
-        assert_eq!(text, DocRichText {
-            tag: Some(prop::LINK.to_string()),
-            text: "hello world".to_string(),
-            // link should be trimmed
-            link: Some("i am link".to_string()),
-        });
+        assert_eq!(
+            text,
+            DocRichText {
+                tag: Some(prop::LINK.to_string()),
+                text: "hello world".to_string(),
+                // link should be trimmed
+                link: Some("i am link".to_string()),
+            }
+        );
     }
 
     #[test]
@@ -114,11 +130,14 @@ mod test {
             link: None,
         };
         transform_link_tag(&mut text);
-        assert_eq!(text, DocRichText {
-            tag: Some(prop::LINK.to_string()),
-            text: "[hello world i am link".to_string(),
-            link: Some("[hello world i am link".to_string()),
-        });
+        assert_eq!(
+            text,
+            DocRichText {
+                tag: Some(prop::LINK.to_string()),
+                text: "[hello world i am link".to_string(),
+                link: Some("[hello world i am link".to_string()),
+            }
+        );
 
         let mut text = DocRichText {
             tag: Some(prop::LINK.to_string()),
@@ -126,11 +145,14 @@ mod test {
             link: None,
         };
         transform_link_tag(&mut text);
-        assert_eq!(text, DocRichText {
-            tag: Some(prop::LINK.to_string()),
-            text: "abc[hello world] i am link".to_string(),
-            link: Some("abc[hello world] i am link".to_string()),
-        });
+        assert_eq!(
+            text,
+            DocRichText {
+                tag: Some(prop::LINK.to_string()),
+                text: "abc[hello world] i am link".to_string(),
+                link: Some("abc[hello world] i am link".to_string()),
+            }
+        );
 
         let mut text = DocRichText {
             tag: Some(prop::LINK.to_string()),
@@ -138,10 +160,13 @@ mod test {
             link: None,
         };
         transform_link_tag(&mut text);
-        assert_eq!(text, DocRichText {
-            tag: Some(prop::LINK.to_string()),
-            text: "abchello world] i am link".to_string(),
-            link: Some("abchello world] i am link".to_string()),
-        });
+        assert_eq!(
+            text,
+            DocRichText {
+                tag: Some(prop::LINK.to_string()),
+                text: "abchello world] i am link".to_string(),
+                link: Some("abchello world] i am link".to_string()),
+            }
+        );
     }
 }

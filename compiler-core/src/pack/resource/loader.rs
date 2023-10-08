@@ -13,7 +13,7 @@ pub trait ResourceLoader {
         let bytes = self.load_raw(path).await?;
         match String::from_utf8(bytes) {
             Ok(v) => Ok(v),
-            Err(e) => Err(PackerError::InvalidUtf8(path.to_string())),
+            Err(_) => Err(PackerError::InvalidUtf8(path.to_string())),
         }
     }
 

@@ -270,7 +270,10 @@ mod test {
         ];
 
         for test in tests {
-            assert_eq!(Use::try_from(make_use(test)), Ok(Use::Invalid(test.to_string())));
+            assert_eq!(
+                Use::try_from(make_use(test)),
+                Ok(Use::Invalid(test.to_string()))
+            );
         }
     }
 }
