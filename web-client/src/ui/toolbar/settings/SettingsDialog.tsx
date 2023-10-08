@@ -3,13 +3,21 @@
 import "./SettingsDialog.css";
 
 import clsx from "clsx";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { TabList, Tab, Divider } from "@fluentui/react-components";
+import {
+    TabList,
+    Tab,
+    Divider,
+    Dropdown,
+    Option,
+    Field,
+} from "@fluentui/react-components";
 import {
     Document20Regular,
     Map20Regular,
     Code20Regular,
+    Info20Regular,
 } from "@fluentui/react-icons";
 
 import { useWindowSize } from "ui/shared";
@@ -20,6 +28,7 @@ import { useActions } from "low/store";
 import { MapSettings } from "./MapSettings";
 import { DocSettings } from "./DocSettings";
 import { EditorSettings } from "./EditorSettings";
+import { MetaSettings } from "./MetaSettings";
 
 type TabData = {
     id: SettingsTab;
@@ -32,7 +41,7 @@ export const SettingsDialog: React.FC = () => {
     const { windowWidth } = useWindowSize();
     const { setEditingKeyBinding, setSettingsTab } = useActions(viewActions);
     const { stageMode, settingsTab } = useSelector(viewSelector);
-    const verticalTabs = windowWidth > 400;
+    const verticalTabs = windowWidth > 480;
 
     const tabs: TabData[] = useMemo(() => {
         return [
@@ -58,29 +67,71 @@ export const SettingsDialog: React.FC = () => {
                       } as const,
                   ]
                 : []),
+            {
+                id: "meta",
+                text: "Meta",
+                Icon: Info20Regular,
+                Page: MetaSettings,
+            },
         ] satisfies TabData[];
     }, [stageMode]);
+
+    const [selectedText, setSelectedText] = useState("");
+
+    // Refresh tab selection when switching to small screen display
+    /* eslint-disable react-hooks/exhaustive-deps*/
+    useEffect(() => {
+        if (!verticalTabs) {
+            const text = tabs.find(({ id }) => id === settingsTab)?.text ?? "";
+            setSelectedText(text);
+        }
+    }, [verticalTabs]);
+    /* eslint-enable react-hooks/exhaustive-deps*/
+
+    const switchTab = (tab: SettingsTab) => {
+        // cancel editing key binding when switching tabs
+        setEditingKeyBinding(undefined);
+        setSettingsTab(tab);
+    };
 
     return (
         <div
             id="settings-dialog"
             className={clsx(verticalTabs ? "vertical-tabs" : "horizontal-tabs")}
         >
-            <TabList
-                vertical={verticalTabs}
-                selectedValue={settingsTab}
-                onTabSelect={(_, data) => {
-                    // cancel editing key binding when switching tabs
-                    setEditingKeyBinding(undefined);
-                    setSettingsTab(data.value as SettingsTab);
-                }}
-            >
-                {tabs.map(({ id, text, Icon }) => (
-                    <Tab key={id} id={id} value={id} icon={<Icon />}>
-                        {text}
-                    </Tab>
-                ))}
-            </TabList>
+            {verticalTabs ? (
+                <TabList
+                    vertical
+                    selectedValue={settingsTab}
+                    onTabSelect={(_, data) => {
+                        switchTab(data.value as SettingsTab);
+                    }}
+                >
+                    {tabs.map(({ id, text, Icon }) => (
+                        <Tab key={id} id={id} value={id} icon={<Icon />}>
+                            {text}
+                        </Tab>
+                    ))}
+                </TabList>
+            ) : (
+                <Field label="Category">
+                    <Dropdown
+                        value={selectedText}
+                        selectedOptions={[settingsTab]}
+                        onOptionSelect={(_, data) => {
+                            switchTab(data.selectedOptions[0] as SettingsTab);
+                            setSelectedText(data.optionText ?? "");
+                        }}
+                    >
+                        {tabs.map(({ id, text, Icon }) => (
+                            <Option key={id} text={text} value={id}>
+                                <Icon />
+                                {text}
+                            </Option>
+                        ))}
+                    </Dropdown>
+                </Field>
+            )}
             <Divider
                 id="settings-separator"
                 className={clsx(

@@ -29,6 +29,7 @@ export const EditorRoot: React.FC = () => {
         },
         [serial],
     );
+    /* eslint-enable react-hooks/exhaustive-deps*/
     return (
         <ErrorBoundary>
             <div id="editor-root">

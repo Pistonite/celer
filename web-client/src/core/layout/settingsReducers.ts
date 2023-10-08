@@ -1,6 +1,6 @@
 //! Layout store reducers
-
-import { ReducerDecl, ReducerDeclWithPayload, withPayload } from "low/store";
+import { StageMode } from "core/stage";
+import { ReducerDecl, withPayload } from "low/store";
 
 import { LayoutSettingsState, Layout, WidgetType } from "./state";
 import {
@@ -10,61 +10,60 @@ import {
 } from "./utils";
 
 /// Modify the current layout
-export const setCurrentLayout: ReducerDeclWithPayload<
-    LayoutSettingsState,
-    Layout
-> = withPayload((state, layout) => {
-    if (!isCurrentLayoutDefault(state)) {
-        state.savedLayouts[state.currentLayout] = fitLayoutToGrid(layout);
-    }
-});
+export const setCurrentLayout = withPayload<LayoutSettingsState, Layout>(
+    (state, layout) => {
+        if (!isCurrentLayoutDefault(state)) {
+            state.savedLayouts[state.currentLayout] = fitLayoutToGrid(layout);
+        }
+    },
+);
 
 /// Set the toolbar location of the current layout
-export const setCurrentLayoutToolbarLocation: ReducerDeclWithPayload<
+export const setCurrentLayoutToolbarLocation = withPayload<
     LayoutSettingsState,
     WidgetType
-> = withPayload((state: LayoutSettingsState, location: WidgetType) => {
+>((state, location) => {
     if (!isCurrentLayoutDefault(state)) {
         state.savedLayouts[state.currentLayout].toolbar = location;
     }
 });
 
 /// Set the toolbar anchor location of the current layout
-export const setCurrentLayoutToolbarAnchor: ReducerDeclWithPayload<
+export const setCurrentLayoutToolbarAnchor = withPayload<
     LayoutSettingsState,
     "top" | "bottom"
-> = withPayload((state: LayoutSettingsState, location: "top" | "bottom") => {
+>((state, location) => {
     if (!isCurrentLayoutDefault(state)) {
         state.savedLayouts[state.currentLayout].toolbarAnchor = location;
     }
 });
 
 /// Switch to a layout
-export const switchLayout: ReducerDeclWithPayload<LayoutSettingsState, number> =
-    withPayload((state, index) => {
+export const switchLayout = withPayload<LayoutSettingsState, number>(
+    (state, index) => {
         state.currentLayout = index;
-    });
+    },
+);
 
 /// Duplicate the current layout and switch to it
 ///
 /// If the current layout is the default layout, the actual
 /// current layout will be duplicated and switched to.
-export const duplicateLayout: ReducerDeclWithPayload<
-    LayoutSettingsState,
-    "view" | "edit"
-> = withPayload((state: LayoutSettingsState, mode: "view" | "edit") => {
-    if (isCurrentLayoutDefault(state)) {
-        const layout = getDefaultLayout(
-            window.innerWidth,
-            window.innerHeight,
-            mode,
-        );
-        state.savedLayouts.push(layout);
-    } else {
-        state.savedLayouts.push(state.savedLayouts[state.currentLayout]);
-    }
-    state.currentLayout = state.savedLayouts.length - 1;
-});
+export const duplicateLayout = withPayload<LayoutSettingsState, StageMode>(
+    (state, mode) => {
+        if (isCurrentLayoutDefault(state)) {
+            const layout = getDefaultLayout(
+                window.innerWidth,
+                window.innerHeight,
+                mode,
+            );
+            state.savedLayouts.push(layout);
+        } else {
+            state.savedLayouts.push(state.savedLayouts[state.currentLayout]);
+        }
+        state.currentLayout = state.savedLayouts.length - 1;
+    },
+);
 
 /// Delete current layout and switch to default layout
 export const deleteCurrentLayout: ReducerDecl<LayoutSettingsState> = (

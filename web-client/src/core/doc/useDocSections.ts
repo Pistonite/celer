@@ -20,4 +20,5 @@ export const useDocSections = (): string[] => {
         }
         return document.route.map((section) => section.name);
     }, [serial]);
+    /* eslint-enable react-hooks/exhaustive-deps*/
 };

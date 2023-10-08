@@ -12,6 +12,7 @@ import { CloseProject } from "./CloseProject";
 import { SyncProject } from "./SyncProject";
 import { SaveProject } from "./SaveProject";
 import { CompileProject } from "./CompileProject";
+import { OpenDocs } from "./OpenDocs";
 
 /// Header controls.
 ///
@@ -45,10 +46,10 @@ export const getHeaderControls = (mode: StageMode): HeaderControlList => {
                     : []),
             ],
         },
-        // Setting
+        // Misc
         {
-            priority: 99,
-            controls: [Settings],
+            priority: 10,
+            controls: [Settings, OpenDocs],
         },
     ];
 };

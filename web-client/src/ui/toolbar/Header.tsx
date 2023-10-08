@@ -65,13 +65,15 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
                 <Subtitle1 as="h1">{title}</Subtitle1>
             </Card>
 
-            <Overflow padding={90} minimumVisible={1}>
+            <Overflow padding={130} minimumVisible={1}>
                 <Toolbar className="celer-toolbar">
                     {headerControls.map((group, i) => (
                         <React.Fragment key={i}>
                             {group.controls.map((Control, j) => (
                                 <OverflowItem
-                                    priority={group.priority}
+                                    priority={
+                                        (Control.priority || 0) + group.priority
+                                    }
                                     id={toItemId(i, j)}
                                     groupId={i.toString()}
                                     key={j}
@@ -155,7 +157,7 @@ const ShowIfGroupOverflown: React.FC<
     PropsWithChildren<{ groupId: string }>
 > = ({ children, groupId }) => {
     const groupVisibleState = useIsOverflowGroupVisible(groupId);
-    if (groupVisibleState !== "hidden") {
+    if (groupVisibleState !== "visible") {
         return <>{children}</>;
     }
     return null;

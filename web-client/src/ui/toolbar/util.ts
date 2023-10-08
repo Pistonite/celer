@@ -20,6 +20,10 @@ export type ToolbarControl = {
     ///
     /// Rendered when the toolbar overflows
     MenuItem: React.ComponentType;
+    /// Priority of this control.
+    ///
+    /// This is added on top of the group priority
+    priority?: number;
 };
 
 /// Common toolbar control props

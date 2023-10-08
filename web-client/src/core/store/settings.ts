@@ -38,12 +38,19 @@ export type SettingsState = LayoutSettingsState &
 const loadState = (): SettingsState => {
     const state = localStorage.getItem(LOCAL_STORAGE_KEY);
     const loadedState = state ? JSON.parse(state) : {};
+    return Object.assign(getInitialState(), loadedState);
+};
+
+export const saveSettings = (state: SettingsState) => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(state));
+};
+
+const getInitialState = (): SettingsState => {
     return {
         ...initialLayoutSettingsState,
         ...initialMapSettingsState,
         ...initialDocSettingsState,
         ...initialEditorSettingsState,
-        ...loadedState,
     };
 };
 
@@ -57,5 +64,6 @@ export const { settingsReducer, settingsActions, settingsSelector } =
             ...mapSettingsReducers,
             ...docSettingsReducers,
             ...editorSettingsReducers,
+            resetAllSettings: () => getInitialState(),
         },
     });
