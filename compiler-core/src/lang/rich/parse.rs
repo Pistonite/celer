@@ -91,12 +91,25 @@ fn parse_tagexp(pt: &pt::TagExp) -> DocRichText {
         arg.push_str(str);
     }
     for pt_unit in pt.m_arg.iter() {
-        append_unit_to_string(pt_unit, &mut arg);
+        append_unit_inside_tag_to_string(pt_unit, &mut arg);
     }
     DocRichText {
         tag: Some(tag),
         text: arg,
         link: None,
+    }
+}
+fn append_unit_inside_tag_to_string(pt: &pt::UnitInsideTag, out: &mut String) {
+    match pt {
+        pt::UnitInsideTag::Unit(pt) => {
+            append_unit_to_string(pt, out);
+        }
+        pt::UnitInsideTag::UnitDotSymbol(_) => {
+            out.push('.');
+        }
+        pt::UnitInsideTag::UnitOpenParenSymbol(_) => {
+            out.push('(');
+        }
     }
 }
 
@@ -249,6 +262,30 @@ mod test {
             vec![DocRichText {
                 tag: None,
                 text: ".\\tag(hellocontinue)".to_string(),
+                link: None
+            }]
+        );
+    }
+
+    #[test]
+    fn test_dot_in_text() {
+        assert_eq!(
+            parse_rich(".tag([hello]continue.me)"),
+            vec![DocRichText {
+                tag: Some("tag".to_string()),
+                text: "[hello]continue.me".to_string(),
+                link: None
+            }]
+        );
+    }
+
+    #[test]
+    fn test_open_paren_in_text() {
+        assert_eq!(
+            parse_rich(".tag([hello]co(ntinue.me)"),
+            vec![DocRichText {
+                tag: Some("tag".to_string()),
+                text: "[hello]co(ntinue.me".to_string(),
                 link: None
             }]
         );

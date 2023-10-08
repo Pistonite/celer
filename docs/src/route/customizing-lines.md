@@ -155,9 +155,8 @@ The `presets` property allow you to define additional presets for the line.
 See [Using Presets](./using-presets.md) for details.
 
 ## Other Properties
-Built-in and third-party plugins may let you set additional properties. Check the
-documentation for [Built-in plugins](./built-in-plugins) or the third-party plugin
-you are using.
+If you are using [Plugins](../plugin/index.md). You may be able to specify additional properties. Please refer to the
+documentation for the plugin you are using.
 
 If you specify a property that is not recognized by Celer or any plugin, you will see a warning message
 saying that property is unused.

@@ -73,6 +73,7 @@ impl Resource {
     }
 
     loader_delegate!(load_structured, Value);
+    loader_delegate!(load_utf8, String);
     loader_delegate!(load_image_url, String);
 
     pub async fn resolve(&self, target: &ValidUse) -> PackerResult<Resource> {

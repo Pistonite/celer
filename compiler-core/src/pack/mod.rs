@@ -7,6 +7,7 @@
 //! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
 //! and a json blob of the route.
 
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::collections::BTreeMap;
 use std::convert::Infallible;
@@ -33,10 +34,9 @@ pub use resource::*;
 
 use crate::json::Cast;
 use crate::lang::parse_poor;
-#[cfg(feature = "wasm")]
-use crate::util::WasmError;
 
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, thiserror::Error, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum PackerError {
     #[error("The project file (project.yaml) is missing or invalid.")]
     InvalidProject,
@@ -70,6 +70,9 @@ pub enum PackerError {
 
     #[error("Error when parsing structured data in file {0}: {1}")]
     InvalidFormat(String, String),
+
+    #[error("Error when parsing file {0}: file is not UTF-8")]
+    InvalidUtf8(String),
 
     #[error("")]
     InvalidIcon,
@@ -106,6 +109,9 @@ pub enum PackerError {
     )]
     DuplicateMap(usize),
 
+    #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
+    InvalidPlugin(String),
+
     #[error("No map defined in project config")]
     MissingMap,
 
@@ -114,10 +120,6 @@ pub enum PackerError {
 
     #[error("{0}")]
     NotImpl(String),
-
-    #[cfg(feature = "wasm")]
-    #[error("Wasm execution error: {0}")]
-    Wasm(#[from] WasmError),
 }
 
 impl PackerError {
@@ -130,11 +132,7 @@ impl PackerError {
     }
 
     pub fn is_cancel(&self) -> bool {
-        #[cfg(feature = "wasm")]
-        let x = matches!(self, Self::Wasm(WasmError::Cancel));
-        #[cfg(not(feature = "wasm"))]
-        let x = false;
-        x
+        false
     }
 }
 
@@ -150,7 +148,8 @@ pub type PackerResult<T> = Result<T, PackerError>;
 ///
 /// This is used to expose errors to the compiler, so it can be displayed
 /// using the diagnostics API
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase")]
 pub enum PackerValue {
     Ok(Value),
     Err(PackerError),

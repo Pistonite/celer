@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 
 use celerctypes::{DocTag, MapMetadata};
-use serde_json::{Map, Value};
+use serde_json::{json, Value};
 
 use crate::api::Setting;
 use crate::comp::prop;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
+use crate::plug::{BuiltInPlugin, Plugin, PluginRuntime};
 use crate::util::async_for;
 
 use super::{pack_map, pack_presets, PackerError, PackerResult, Resource, Use, ValidUse};
@@ -17,6 +18,7 @@ pub struct ConfigBuilder {
     pub icons: HashMap<String, String>,
     pub tags: HashMap<String, DocTag>,
     pub presets: HashMap<String, Preset>,
+    pub plugins: Vec<PluginRuntime>,
     pub default_icon_priority: Option<i64>,
 }
 
@@ -28,18 +30,48 @@ pub async fn pack_config(
     index: usize,
     setting: &Setting,
 ) -> PackerResult<()> {
-    // Load and resolve top-level `use` properties
-    let config_value = match Use::from(config) {
-        Use::Invalid(path) => return Err(PackerError::InvalidUse(path)),
-        Use::NotUse(v) => v,
-        Use::Valid(valid_use) => load_config_from_use(project_resource, valid_use, index).await?,
-    };
+    match Use::try_from(config) {
+        Ok(Use::Invalid(path)) => Err(PackerError::InvalidUse(path)),
+        Ok(Use::Valid(valid_use)) => {
+            // load a config from top-level use object
+            process_config_from_use(builder, project_resource, valid_use, index, setting).await
+        }
+        Err(v) => {
+            // load a config directly from the object
+            process_config(builder, project_resource, v, index, setting).await
+        }
+    }
+}
 
-    // Resolve `use`s inside the properties
-    let config_value = process_config(project_resource, config_value, index).await?;
+/// Load a top-level `use`
+async fn process_config_from_use(
+    builder: &mut ConfigBuilder,
+    project_resource: &Resource,
+    use_prop: ValidUse,
+    index: usize,
+    setting: &Setting,
+) -> PackerResult<()> {
+    let config_resource = project_resource.resolve(&use_prop).await?;
+    let config = config_resource.load_structured().await?;
+    // process this config with the config resource context instead of the project context
+    // so `use`'s inside are resolved correctly
+    process_config(builder, &config_resource, config, index, setting).await
+}
+
+/// Process a config, adding values to Builder and use the resource to resolve `use`'s
+async fn process_config(
+    builder: &mut ConfigBuilder,
+    resource: &Resource,
+    config: Value,
+    index: usize,
+    setting: &Setting,
+) -> PackerResult<()> {
+    let config = config
+        .try_into_object()
+        .map_err(|_| PackerError::InvalidConfigType(index))?;
 
     // add values to builder
-    async_for!((key, value) in config_value.into_iter(), {
+    let _ = async_for!((key, value) in config.into_iter(), {
         match key.as_ref() {
             prop::MAP => {
                 if builder.map.is_some() {
@@ -48,90 +80,122 @@ pub async fn pack_config(
                 builder.map = Some(pack_map(value, index).await?);
             }
             prop::ICONS => {
-                let icons = value.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::ICONS.to_string()))?;
-                async_for!((key, value) in icons.into_iter(), {
-                    if value.is_array() || value.is_object() {
-                        return Err(PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::ICONS, key)));
-                    }
-                    builder.icons.insert(key, value.coerce_to_string());
-                })?;
+                process_icons_config(builder, resource, value, index).await?;
             }
             prop::TAGS => {
                 let tags = value.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, prop::TAGS.to_string()))?;
-                async_for!((key, value) in tags.into_iter(), {
+                let _ = async_for!((key, value) in tags.into_iter(), {
                     let tag = serde_json::from_value::<DocTag>(value).map_err(|_| PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::TAGS, key)))?;
                     builder.tags.insert(key, tag);
-                })?;
+                });
             }
             prop::PRESETS => {
                 let presets = pack_presets(value, index, setting.max_preset_namespace_depth).await?;
-                async_for!((key, value) in presets.into_iter(), {
+                let _ = async_for!((key, value) in presets.into_iter(), {
                     builder.presets.insert(key, value);
-                })?;
+                });
             }
             prop::DEFAULT_ICON_PRIORITY => {
                 let priority = value.try_coerce_to_i64().ok_or_else(|| PackerError::InvalidConfigProperty(index, prop::DEFAULT_ICON_PRIORITY.to_string()))?;
                 builder.default_icon_priority = Some(priority);
             }
+            prop::PLUGINS => {
+                process_plugins_config(builder, resource, value, index).await?;
+            }
             _ => return Err(PackerError::UnusedConfigProperty(index, key)),
         }
-    })?;
+    });
 
     Ok(())
 }
 
-/// Load a top-level `use`
-async fn load_config_from_use(
-    project_resource: &Resource,
-    use_prop: ValidUse,
-    index: usize,
-) -> PackerResult<Value> {
-    let config_resource = project_resource.resolve(&use_prop).await?;
-    let config = config_resource.load_structured().await?;
-    // Calling process_config here
-    // because any `use` inside the config needs to be resolved by the config resource
-    // not the project resource
-    let config = process_config(&config_resource, config, index).await?;
-    Ok(Value::Object(config))
-}
-
-/// Process a config and resolve all `use`s inside
-async fn process_config(
+/// Process the `icons` property
+///
+/// Resolves `use`'s using the resource context and add the icon URLs to the builder
+async fn process_icons_config(
+    builder: &mut ConfigBuilder,
     resource: &Resource,
-    config: Value,
+    icons: Value,
     index: usize,
-) -> PackerResult<Map<String, Value>> {
-    let mut config_obj = match config {
-        Value::Object(obj) => obj,
-        _ => return Err(PackerError::InvalidConfigType(index)),
-    };
+) -> PackerResult<()> {
+    let icons = icons
+        .try_into_object()
+        .map_err(|_| PackerError::InvalidConfigProperty(index, prop::ICONS.to_string()))?;
 
-    let icons = match config_obj.get_mut(prop::ICONS) {
-        Some(v) => v,
-        None => return Ok(config_obj),
-    };
-
-    let icons = match icons.as_object_mut() {
-        Some(obj) => obj,
-        // just returning ok here
-        // the error will be caught later
-        _ => return Ok(config_obj),
-    };
-
-    async_for!(value in icons.values_mut(), {
-        let v = value.take();
-        match Use::from(v) {
-            Use::Invalid(path) => return Err(PackerError::InvalidUse(path)),
-            Use::NotUse(v) => {
-                *value = v;
+    let _ = async_for!((key, v) in icons.into_iter(), {
+        match Use::try_from(v) {
+            Err(v) => {
+                // not a use, just a icon url
+                if v.is_array() || v.is_object() {
+                    return Err(PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::ICONS, key)));
+                }
+                builder.icons.insert(key, v.coerce_to_string());
             }
-            Use::Valid(valid_use) => {
+            Ok(Use::Invalid(path)) => return Err(PackerError::InvalidUse(path)),
+            Ok(Use::Valid(valid_use)) => {
                 let icon_resource = resource.resolve(&valid_use).await?;
                 let image_url = icon_resource.load_image_url().await?;
-                *value = Value::String(image_url);
+                builder.icons.insert(key, image_url);
             }
         }
-    })?;
+    });
 
-    Ok(config_obj)
+    Ok(())
+}
+
+/// Process the `plugins` property
+///
+/// Resolves `use`'s using the resource context and add the plugins to the builder
+async fn process_plugins_config(
+    builder: &mut ConfigBuilder,
+    resource: &Resource,
+    plugins: Value,
+    index: usize,
+) -> PackerResult<()> {
+    let plugins = plugins
+        .try_into_array()
+        .map_err(|_| PackerError::InvalidConfigProperty(index, prop::PLUGINS.to_string()))?;
+
+    let _ = async_for!((i, v) in plugins.into_iter().enumerate(), {
+        let v = v.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(index, format!("{}[{}]", prop::PLUGINS, i)))?;
+        let mut plugin = None;
+        let mut props = json!(null);
+        let _ = async_for!((key, value) in v.into_iter(), {
+            match key.as_ref() {
+                prop::USE => {
+                    let use_path_string = value.coerce_to_string();
+                    plugin = match serde_json::from_value::<BuiltInPlugin>(value) {
+                        Ok(built_in) => Some(Plugin::BuiltIn(built_in)),
+                        Err(e) => {
+                            log::info!("e: {e}");
+                            // it's a script path, parse as use
+                            match Use::from(use_path_string) {
+                                Use::Invalid(path) => return Err(PackerError::InvalidPlugin(path)),
+                                Use::Valid(valid_use) => {
+                                    // load the script
+                                    let script_resource = resource.resolve(&valid_use).await?;
+                                    let script = script_resource.load_utf8().await?;
+                                    Some(Plugin::Script(script))
+                                }
+                            }
+                        }
+                    };
+                }
+                prop::WITH => {
+                    props = value;
+                }
+                _ => return Err(PackerError::UnusedConfigProperty(index, format!("{}[{}].{}", prop::PLUGINS, i, key))),
+            }
+        });
+        let plugin = match plugin {
+            Some(v) => v,
+            None => return Err(PackerError::MissingConfigProperty(index, format!("{}[{}].{}", prop::PLUGINS, i, prop::USE))),
+        };
+        builder.plugins.push(PluginRuntime {
+            plugin,
+            props,
+        });
+    });
+
+    Ok(())
 }

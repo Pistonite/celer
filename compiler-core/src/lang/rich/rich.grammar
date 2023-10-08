@@ -21,12 +21,15 @@ rule TagExp(
     (Tag) tag: token Identifier,
     _: token Symbol"(",
     space: optional token Space,
-    (Arg) arg: optional Unit+,
+    (Arg) arg: optional UnitInsideTag+,
     _: token Symbol")"
 );
 
 rule Unit = UnitId | UnitEscape;
+rule UnitInsideTag = Unit | UnitDotSymbol | UnitOpenParenSymbol;
 rule UnitId(t: token Identifier, s: optional token Space);
 rule UnitEscape(t: token Escape, s: optional token Space);
+rule UnitDotSymbol((Text)_: token Symbol".", s: optional token Space);
+rule UnitOpenParenSymbol((Text)_: token Symbol"(", s: optional token Space);
 rule Symbol((Text)t: token Symbol);
 rule Space(t: token Space);

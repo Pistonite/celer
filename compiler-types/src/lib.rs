@@ -27,6 +27,8 @@ pub struct ExecDoc {
     pub preface: Vec<Vec<DocPoorText>>,
     /// The route
     pub route: Vec<ExecSection>,
+    /// Overall diagnostics (that don't apply to any line)
+    pub diagnostics: Vec<DocDiagnostic>,
 }
 
 /// Metadata of the route project
@@ -58,12 +60,16 @@ pub struct RouteMetadata {
 #[ts(export)]
 pub struct DocTag {
     /// Bold style
+    #[serde(default)]
     bold: bool,
     /// Italic style
+    #[serde(default)]
     italic: bool,
     /// Underline style
+    #[serde(default)]
     underline: bool,
     /// Strikethrough style
+    #[serde(default)]
     strikethrough: bool,
     /// Color of the text
     color: Option<String>,

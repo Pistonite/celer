@@ -1,5 +1,6 @@
 import { TransformContext, defineConfig } from "vitepress";
 import { writingRoutesNav, writingRoutesSidebar } from "./nav";
+import { pluginsNav, pluginsSideBar } from "./nav";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -63,24 +64,13 @@ export default defineConfig({
         nav: [
             { text: "Home", link: "/" },
             writingRoutesNav,
-            { text: "Writing Plugins", link: "/plugin/" },
+            pluginsNav,
             { text: "Developer", link: "/developer/" },
         ],
 
         sidebar: {
             ...writingRoutesSidebar,
-            "/usage/": [
-                {
-                    text: "Examples",
-                    items: [
-                        {
-                            text: "Markdown Examples",
-                            link: "/markdown-examples",
-                        },
-                        { text: "Runtime API Examples", link: "/api-examples" },
-                    ],
-                },
-            ],
+            ...pluginsSideBar,
             "/developer/": [
                 {
                     text: "Web Client",

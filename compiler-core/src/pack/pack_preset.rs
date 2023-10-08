@@ -42,7 +42,7 @@ async fn pack_presets_internal(
         }
     })?;
 
-    async_for!((key, value) in obj.into_iter(), {
+    let _ = async_for!((key, value) in obj.into_iter(), {
         if let Some(namespace) = key.strip_prefix('_') {
             // sub namespace
             let full_key = if preset_name.is_empty() {
@@ -63,7 +63,7 @@ async fn pack_presets_internal(
             })?;
             output.push((full_key, preset));
         }
-    })?;
+    });
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-use celerctypes::{DocPoorText, RouteMetadata};
+use celerctypes::{DocDiagnostic, DocPoorText, RouteMetadata};
 use serde::{Deserialize, Serialize};
 
 use crate::api::CompilerMetadata;
@@ -21,6 +21,8 @@ pub struct CompDoc {
     pub preface: Vec<Vec<DocPoorText>>,
     /// The route
     pub route: Vec<CompSection>,
+    /// Overall diagnostics (that don't apply to any line)
+    pub diagnostics: Vec<DocDiagnostic>,
 }
 
 impl Compiler {
@@ -50,6 +52,7 @@ impl Compiler {
                     project: self.project,
                     preface,
                     route: route_vec,
+                    diagnostics: vec![],
                 },
                 self.meta,
             ))
@@ -118,6 +121,7 @@ impl Compiler {
                 route: vec![self.create_empty_section_for_error(errors).await],
                 project: self.project,
                 preface: vec![],
+                diagnostics: vec![],
             },
             self.meta,
         )
