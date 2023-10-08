@@ -25,7 +25,9 @@ jobs:
         workflow: build.yml
         commit: ${{ github.sha }}
         path: docker/dist
-    - run: ./make-version.sh ${{ github.event.inputs.version }} ${{ github.sha }}
+    - run: |
+        chmod +x ./make-version.sh
+        ./make-version.sh ${{ github.event.inputs.version }} ${{ github.sha }}
       working-directory: docker
     - uses: docker/login-action@v3
       with:

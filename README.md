@@ -11,3 +11,12 @@ to create a certificate `.pfx` file. Then use `openssl` to extract the cert and 
 in `/cert/cert-key.pem` and `/cert/cert.pem` (relative to repo root).
 
 Once done, vite dev server for web-client should run in https.
+
+## Local build
+If there are issues running `task build`, try:
+```
+cargo clean
+task build:server
+task build
+```
+(Typically need to do this after rustup update)
