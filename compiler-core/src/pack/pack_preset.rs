@@ -3,9 +3,9 @@
 
 use serde_json::Value;
 
-use crate::comp::prop;
 use crate::json::Cast;
 use crate::lang::Preset;
+use crate::prop;
 use crate::util::async_for;
 
 use super::{PackerError, PackerResult};

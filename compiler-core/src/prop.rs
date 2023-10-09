@@ -1,4 +1,6 @@
 //! Property constants
+//!
+//! These are property constants used in the configuration and route files.
 
 pub const AT: &str = "at";
 pub const ATTRIBUTION: &str = "attribution";

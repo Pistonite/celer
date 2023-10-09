@@ -2,8 +2,8 @@ use celerctypes::RouteMetadata;
 use serde_json::Value;
 
 use crate::api::{CompilerMetadata, Setting};
-use crate::comp::prop;
 use crate::json::{Cast, Coerce};
+use crate::prop;
 use crate::util::async_for;
 
 use super::{

@@ -4,8 +4,10 @@
 
 use celerctypes::DocRichText;
 
+use crate::comp::CompDoc;
+use crate::prop;
+
 use super::operation;
-use crate::comp::{prop, CompDoc};
 
 pub async fn run_link_plugin(comp_doc: &mut CompDoc) {
     // add the link tag if not defined already

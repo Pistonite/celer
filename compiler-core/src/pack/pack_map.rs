@@ -5,8 +5,8 @@ use serde_json::Value;
 
 use super::{pack_coord_map, pack_map_layer, PackerError, PackerResult};
 
-use crate::comp::prop;
 use crate::json::{Cast, Coerce};
+use crate::prop;
 use crate::util::async_for;
 
 macro_rules! check_map_required_property {

@@ -2,8 +2,8 @@
 
 use serde_json::Value;
 
-use crate::comp::prop;
 use crate::json::Coerce;
+use crate::prop;
 
 /// Result of parsing an object which could be loading a resource with
 /// the `use` property

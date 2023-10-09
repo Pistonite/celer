@@ -4,8 +4,8 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
 use crate::lang::PresetInst;
+use crate::prop;
 
-use super::prop;
 use super::{validate_not_array_or_object, Compiler, CompilerError};
 
 impl Compiler {
