@@ -7,5 +7,5 @@ pub mod pack;
 pub mod plug;
 
 pub mod metrics;
-pub mod util;
 pub mod prop;
+pub mod util;
