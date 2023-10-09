@@ -8,8 +8,8 @@ use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
 use crate::util::async_for;
+use crate::prop;
 
-use super::prop;
 use super::{
     validate_not_array_or_object, CompMarker, CompMovement, Compiler, CompilerError, CompilerResult,
 };

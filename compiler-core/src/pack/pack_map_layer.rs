@@ -3,8 +3,8 @@
 use celerctypes::{MapAttribution, MapLayerAttr, MapTilesetTransform};
 use serde_json::Value;
 
-use crate::comp::prop;
 use crate::json::{Cast, Coerce};
+use crate::prop;
 
 use super::{PackerError, PackerResult};
 

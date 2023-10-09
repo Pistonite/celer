@@ -4,8 +4,9 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
 use crate::util::async_for;
+use crate::prop;
 
-use super::{prop, Compiler, CompilerError};
+use super::{Compiler, CompilerError};
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

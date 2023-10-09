@@ -4,10 +4,10 @@ use celerctypes::{DocTag, MapMetadata};
 use serde_json::{json, Value};
 
 use crate::api::Setting;
-use crate::comp::prop;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
 use crate::plug::{BuiltInPlugin, Plugin, PluginRuntime};
+use crate::prop;
 use crate::util::async_for;
 
 use super::{pack_map, pack_presets, PackerError, PackerResult, Resource, Use, ValidUse};

@@ -31,7 +31,6 @@ mod compiler_builder;
 pub use compiler_builder::*;
 mod desugar;
 use desugar::*;
-pub mod prop;
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
 
