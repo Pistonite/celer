@@ -45,5 +45,5 @@ pub fn maybe_send(
         #[cfg_attr(feature="no-async-send", #attr(?Send))]
         #input
     };
-    return tokens.into();
+    tokens.into()
 }
