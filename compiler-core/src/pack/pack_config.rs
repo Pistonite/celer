@@ -6,7 +6,7 @@ use serde_json::{json, Value};
 use crate::api::Setting;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
-use crate::plug::{BuiltInPlugin, Plugin, PluginRuntime};
+use crate::plug::{BuiltInPlugin, Plugin, PluginRuntime, PluginInstance};
 use crate::prop;
 use crate::util::async_for;
 
@@ -18,7 +18,7 @@ pub struct ConfigBuilder {
     pub icons: HashMap<String, String>,
     pub tags: HashMap<String, DocTag>,
     pub presets: HashMap<String, Preset>,
-    pub plugins: Vec<PluginRuntime>,
+    pub plugins: Vec<PluginInstance>,
     pub default_icon_priority: Option<i64>,
 }
 
@@ -191,7 +191,7 @@ async fn process_plugins_config(
             Some(v) => v,
             None => return Err(PackerError::MissingConfigProperty(index, format!("{}[{}].{}", prop::PLUGINS, i, prop::USE))),
         };
-        builder.plugins.push(PluginRuntime {
+        builder.plugins.push(PluginInstance {
             plugin,
             props,
         });

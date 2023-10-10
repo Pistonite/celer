@@ -16,6 +16,11 @@ pub trait Coerce {
     /// Same as `coerce_to_string`, but `null` is `"null"` instead of empty string.
     fn coerce_to_repl(&self) -> String;
 
+    /// Interpret a json value as a boolean based on if it's truthy
+    ///
+    /// Returns true for `true`, non-zero numbers, non-empty strings, arrays, and objects.
+    fn coerce_truthy(&self) -> bool;
+
     /// Interpret a number or string as f64
     fn try_coerce_to_f64(&self) -> Option<f64>;
 
@@ -52,6 +57,17 @@ impl Coerce for Value {
             "null".to_string()
         } else {
             self.coerce_to_string()
+        }
+    }
+
+    fn coerce_truthy(&self) -> bool {
+        match self {
+            Value::Null => false,
+            Value::Bool(b) => *b,
+            Value::Number(n) => n.as_f64().map(|x| x != 0.0).unwrap_or(false),
+            Value::String(s) => !s.is_empty(),
+            Value::Array(_) => true,
+            Value::Object(_) => true,
         }
     }
 
@@ -138,5 +154,21 @@ mod test {
         assert_eq!(Some(true), json!(1.0).try_coerce_to_bool());
         assert_eq!(None, json!([]).try_coerce_to_bool());
         assert_eq!(None, json!({}).try_coerce_to_bool());
+    }
+
+    #[test]
+    fn test_truthy() {
+        assert_eq!(true, json!("1.0").coerce_truthy());
+        assert_eq!(true, json!(1.0).coerce_truthy());
+        assert_eq!(true, json!(1).coerce_truthy());
+        assert_eq!(false, json!(0).coerce_truthy());
+        assert_eq!(false, json!(0.0).coerce_truthy());
+        assert_eq!(false, json!(false).coerce_truthy());
+        assert_eq!(true, json!(true).coerce_truthy());
+        assert_eq!(false, json!("hello").coerce_truthy());
+        assert_eq!(true, json!("").coerce_truthy());
+        assert_eq!(true, json!([]).coerce_truthy());
+        assert_eq!(false, json!(null).coerce_truthy());
+        assert_eq!(true, json!({}).coerce_truthy());
     }
 }

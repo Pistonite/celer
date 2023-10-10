@@ -80,6 +80,7 @@ pub async fn pack_phase0(
         source: source.to_string(),
         title,
         version,
+        stats: Default::default(),
         map: builder.map.ok_or(PackerError::MissingMap)?,
         icons: builder.icons,
         tags: builder.tags,

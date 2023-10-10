@@ -1,13 +1,8 @@
+use instant::Instant;
+
 use crate::pack::{self, Resource, PackerResult, Phase0};
 
-use super::Setting;
-
-/// Result of packing a project
-pub struct CompilerContext {
-    project_resource: Resource,
-    setting: Setting,
-    phase0: Phase0,
-}
+use super::{Setting, CompilerContext};
 
 //TODO #25: Entry point for just getting the metadata and not route
 
@@ -18,13 +13,16 @@ pub struct CompilerContext {
 /// the pack phase 0 output, so the output can be cached to speed up
 /// future iterations
 pub async fn prepare(source: &str, project_resource: Resource, setting: Setting) -> PackerResult<CompilerContext> {
-    let mut phase0 = pack::pack_phase0(source, &project_resource, &setting).await?;
-    for plugin in &phase0.meta.plugins {
-        plugin.on_pre_compile(&mut phase0.project).await?;
-    }
-    Ok(CompilerContext {
+    let start_time = Instant::now();
+    let phase0 = pack::pack_phase0(source, &project_resource, &setting).await?;
+    let mut context = CompilerContext {
+        start_time,
         project_resource,
         setting,
         phase0,
-    })
+    };
+    for plugin in &context.phase0.meta.plugins {
+        plugin.create_runtime(&context).on_pre_compile(&mut context.phase0.project).await?;
+    }
+    Ok(context)
 }
