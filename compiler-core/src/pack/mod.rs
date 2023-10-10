@@ -34,6 +34,7 @@ pub use resource::*;
 
 use crate::json::Cast;
 use crate::lang::parse_poor;
+use crate::macros::{async_recursion, maybe_send};
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type", content = "data")]
@@ -230,8 +231,7 @@ impl PackerValue {
         }
     }
 
-    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
-    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
+    #[maybe_send(async_recursion)]
     async fn flatten_internal(self, output_errors: &mut Vec<PackerError>) -> Option<Value> {
         match self {
             Self::Ok(x) => Some(x),

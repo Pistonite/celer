@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "compiler-core/",
+    "compiler-macros/",
     "compiler-types/",
     "compiler-wasm/",
     "web-server/",

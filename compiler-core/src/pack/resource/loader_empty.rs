@@ -1,3 +1,4 @@
+use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerError, PackerResult};
 
 use super::ResourceLoader;
@@ -13,8 +14,7 @@ impl EmptyLoader {
     }
 }
 
-#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
-#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
+#[maybe_send(async_trait)]
 impl ResourceLoader for EmptyLoader {
     async fn load_raw(&self, _: &str) -> PackerResult<Vec<u8>> {
         Err(Self::throw())

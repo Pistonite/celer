@@ -8,6 +8,7 @@ edition = "2021"
 async-recursion = "1.0.4"
 async-trait = "0.1.73"
 cached = { version = "0.45.1", features = ["async"]}
+compiler-macros = { path = "../compiler-macros" }
 compiler-types = { path = "../compiler-types" }
 derivative = "2.2.0"
 futures = "0.3.28"
@@ -41,7 +42,9 @@ wasm = [
     "js-sys",
     "web-sys/Window",
     "instant/wasm-bindgen",
+    "no-async-send",
 ]
+no-async-send=[]
 
 [lib]
 name = "celerc"

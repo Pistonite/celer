@@ -3,6 +3,7 @@ use base64::engine::general_purpose;
 use base64::Engine;
 use std::cell::RefCell;
 
+use celerc::macros::async_trait;
 use celerc::pack::{ImageFormat, PackerError, PackerResult, ResourceLoader};
 use celerc::yield_now;
 use js_sys::{Function, Uint8Array};
@@ -30,7 +31,7 @@ impl FileLoader {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait(?Send)]
 impl ResourceLoader for FileLoader {
     async fn load_raw(&self, path: &str) -> PackerResult<Vec<u8>> {
         let _ = yield_now!();

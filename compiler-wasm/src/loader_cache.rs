@@ -3,8 +3,8 @@
 use cached::proc_macro::cached;
 use serde_json::Value;
 
+use celerc::macros::async_trait;
 use celerc::pack::{ ResourceLoader, PackerResult};
-
 
 /// A loader that caches loaded JSON object in memory to skip parsing. The cache is global.
 pub struct CachedLoader<L> {
@@ -21,7 +21,7 @@ impl<L> CachedLoader<L> {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait(?Send)]
 impl<L> ResourceLoader for CachedLoader<L> where L: ResourceLoader {
     async fn load_raw(&self, r: &str) -> PackerResult<Vec<u8>> {
         self.delegate.load_raw(r).await

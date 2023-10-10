@@ -3,6 +3,7 @@ use std::collections::BTreeMap;
 use serde_json::Value;
 
 use crate::lang::TempStr;
+use crate::macros::{async_recursion, maybe_send};
 
 use super::{Preset, PresetBlob};
 
@@ -37,8 +38,7 @@ impl PresetBlob {
     /// If the blob has any template strings in it, returns a Some variant with
     /// the template strings compiled and the input value taken out.
     /// Otherwise returns a None variant.
-    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
-    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
+    #[maybe_send(async_recursion)]
     async fn compile_internal(value: &mut Value) -> Option<Self> {
         match value {
             Value::String(s) => {

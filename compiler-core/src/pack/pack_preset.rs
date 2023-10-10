@@ -5,6 +5,7 @@ use serde_json::Value;
 
 use crate::json::Cast;
 use crate::lang::Preset;
+use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
 use crate::util::async_for;
 
@@ -20,8 +21,7 @@ pub async fn pack_presets(
     Ok(output)
 }
 
-#[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
-#[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
+#[maybe_send(async_recursion)]
 async fn pack_presets_internal(
     preset_name: &str,
     value: Value,

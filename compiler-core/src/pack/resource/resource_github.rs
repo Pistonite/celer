@@ -1,10 +1,11 @@
 //! GitHub resource resolver and loader impl
 use std::sync::Arc;
 
+use crate::macros::{async_trait, maybe_send};
+use crate::pack::{PackerError, PackerResult, ValidUse};
 use crate::util::Path;
 
 use super::{ArcLoader, EmptyLoader, Resource, ResourcePath, ResourceResolver};
-use crate::pack::{PackerError, PackerResult, ValidUse};
 
 pub struct GitHubResourceResolver {
     owner: String,
@@ -24,8 +25,7 @@ impl GitHubResourceResolver {
     }
 }
 
-#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
-#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
+#[maybe_send(async_trait)]
 impl ResourceResolver for GitHubResourceResolver {
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
         match target {

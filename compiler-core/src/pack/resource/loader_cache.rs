@@ -1,6 +1,8 @@
+/// currently unused. implementation kept for reference
 use cached::proc_macro::cached;
 use serde_json::Value;
 
+use crate::macros::{async_recursion, maybe_send};
 use crate::pack::PackerResult;
 
 use super::{ArcLoader, ResourceLoader};
@@ -16,8 +18,7 @@ impl<L> GlobalCacheLoader<L> {
     }
 }
 
-#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
-#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
+#[maybe_send(async_trait)]
 impl<L> ResourceLoader for GlobalCacheLoader<L> where L: ResourceLoader {
     async fn load_raw(&self, r: &str) -> PackerResult<Vec<u8>> {
         load_raw_internal(&self.delegate, r).await
