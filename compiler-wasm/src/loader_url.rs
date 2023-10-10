@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 
 use celerc::pack::{PackerError, PackerResult, ResourceLoader};
+use celerc::macros::async_trait;
 use celerc::yield_now;
 use js_sys::{Function, Uint8Array};
 use wasm_bindgen::{JsCast, JsValue};
@@ -27,7 +28,7 @@ impl UrlLoader {
     }
 }
 
-#[async_trait::async_trait(?Send)]
+#[async_trait(?Send)]
 impl ResourceLoader for UrlLoader {
     async fn load_raw(&self, url: &str) -> PackerResult<Vec<u8>> {
         let _ = yield_now!();

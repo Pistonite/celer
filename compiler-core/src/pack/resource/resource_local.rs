@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use crate::macros::{maybe_send, async_trait};
 use crate::pack::{PackerError, PackerResult, ValidUse};
 use crate::util::Path;
 
@@ -7,8 +8,7 @@ use super::{create_github_resource_from, Resource, ResourcePath, ResourceResolve
 
 pub struct LocalResourceResolver(pub Path);
 
-#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
-#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
+#[maybe_send(async_trait)]
 impl ResourceResolver for LocalResourceResolver {
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
         match target {

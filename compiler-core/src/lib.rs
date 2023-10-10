@@ -9,3 +9,10 @@ pub mod plug;
 pub mod metrics;
 pub mod prop;
 pub mod util;
+
+/// Re-exports of macros
+pub mod macros {
+    pub use celercmacros::maybe_send;
+    pub use async_recursion::async_recursion;
+    pub use async_trait::async_trait;
+}

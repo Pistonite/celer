@@ -3,17 +3,18 @@ use std::sync::Arc;
 use serde_json::Value;
 
 use crate::pack::{PackerResult, ValidUse};
+use crate::macros::{maybe_send, async_trait};
 use crate::util::Path;
 
 use super::ResourceLoader;
 
-#[cfg(not(feature = "wasm"))]
+#[cfg(not(feature = "no-async-send"))]
 pub type ArcLoader = Arc<dyn ResourceLoader + Send + Sync>;
-#[cfg(not(feature = "wasm"))]
+#[cfg(not(feature = "no-async-send"))]
 pub type ArcResolver = Arc<dyn ResourceResolver + Send + Sync>;
-#[cfg(feature = "wasm")]
+#[cfg(feature = "no-async-send")]
 pub type ArcLoader = Arc<dyn ResourceLoader>;
-#[cfg(feature = "wasm")]
+#[cfg(feature = "no-async-send")]
 pub type ArcResolver = Arc<dyn ResourceResolver>;
 
 macro_rules! loader_delegate {
@@ -81,8 +82,7 @@ impl Resource {
     }
 }
 
-#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
-#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
+#[maybe_send(async_trait)]
 pub trait ResourceResolver {
     /// Resolve a resource from the given `Use` and loader
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource>;

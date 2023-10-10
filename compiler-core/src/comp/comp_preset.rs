@@ -4,6 +4,7 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
 use crate::lang::PresetInst;
+use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
 
 use super::{validate_not_array_or_object, Compiler, CompilerError};
@@ -12,8 +13,7 @@ impl Compiler {
     /// Apply the preset to the output.
     ///
     /// Presets are applied recursively, including presets in the movements
-    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
-    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
+    #[maybe_send(async_recursion)]
     pub async fn apply_preset(
         &self,
         depth: usize,

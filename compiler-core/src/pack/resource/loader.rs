@@ -1,10 +1,10 @@
 use serde_json::Value;
 
+use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerError, PackerResult};
 
 /// Loader that loads resources from external place
-#[cfg_attr(not(feature = "wasm"), async_trait::async_trait)]
-#[cfg_attr(feature = "wasm", async_trait::async_trait(?Send))]
+#[maybe_send(async_trait)]
 pub trait ResourceLoader {
     /// Load a resource as raw bytes
     async fn load_raw(&self, path: &str) -> PackerResult<Vec<u8>>;

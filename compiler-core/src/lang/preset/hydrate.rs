@@ -2,6 +2,8 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 
+use crate::macros::{maybe_send, async_recursion};
+
 use super::{Preset, PresetBlob};
 
 impl Preset {
@@ -22,8 +24,7 @@ impl Preset {
 
 impl PresetBlob {
     /// Hydrate a preset blob with the given arguments
-    #[cfg_attr(not(feature = "wasm"), async_recursion::async_recursion)]
-    #[cfg_attr(feature = "wasm", async_recursion::async_recursion(?Send))]
+    #[maybe_send(async_recursion)]
     pub async fn hydrate<S>(&self, args: &[S]) -> Value
     where
         S: AsRef<str> + Sync,
