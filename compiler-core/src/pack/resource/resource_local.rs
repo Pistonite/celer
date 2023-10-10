@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::macros::{maybe_send, async_trait};
+use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerError, PackerResult, ValidUse};
 use crate::util::Path;
 

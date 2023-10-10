@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use serde_json::Value;
 
+use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerResult, ValidUse};
-use crate::macros::{maybe_send, async_trait};
 use crate::util::Path;
 
 use super::ResourceLoader;

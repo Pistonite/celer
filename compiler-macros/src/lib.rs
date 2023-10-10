@@ -1,11 +1,11 @@
-use quote::quote;
 use proc_macro2::TokenStream;
+use quote::quote;
 
 /// A wrapper to add Send trait to `async_trait` and `async_recursion` based on the `no-async-send`
 /// feature gate
 ///
 /// # Examples
-/// Instead of 
+/// Instead of
 /// ```ignore
 /// #[async_trait]
 /// pub trait XXX {
@@ -19,7 +19,7 @@ use proc_macro2::TokenStream;
 ///     ...
 /// }
 /// ```
-/// Instead of 
+/// Instead of
 /// ```ignore
 /// #[async_recursion]
 /// pub async fn foo() {
@@ -34,7 +34,10 @@ use proc_macro2::TokenStream;
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn maybe_send(attr: proc_macro::TokenStream, input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn maybe_send(
+    attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let attr = TokenStream::from(attr);
     let input = TokenStream::from(input);
     let tokens = quote! {
