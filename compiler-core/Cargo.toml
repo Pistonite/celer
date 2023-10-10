@@ -44,7 +44,7 @@ wasm = [
     "instant/wasm-bindgen",
     "no-async-send",
 ]
-no-async-send=[]
+no-async-send = []
 
 [lib]
 name = "celerc"

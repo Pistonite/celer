@@ -32,19 +32,20 @@ macro_rules! check_metadata_required_property {
 }
 
 /// Result of packing a project
-pub struct PackedProject {
-    pub route_metadata: RouteMetadata,
-    pub compiler_metadata: CompilerMetadata,
-    pub route: PackerValue,
+pub struct Phase0 {
+    pub project: RouteMetadata,
+    pub meta: CompilerMetadata,
+    pub route: Value,
 }
 
 /// Entry point for parsing project.yaml
 ///
 /// Returns the metadata and the route blob with all uses resolved
-pub async fn pack_project(
+pub async fn pack_phase0(
+    source: &str,
     project_resource: &Resource,
     setting: &Setting,
-) -> PackerResult<PackedProject> {
+) -> PackerResult<Phase0> {
     let mut project_obj = match project_resource.load_structured().await? {
         Value::Object(o) => o,
         _ => {
@@ -75,8 +76,8 @@ pub async fn pack_project(
         pack_config(&mut builder, project_resource, config, i, setting).await?;
     });
 
-    let route_metadata = RouteMetadata {
-        name: project_resource.name().to_string(),
+    let project = RouteMetadata {
+        source: source.to_string(),
         title,
         version,
         map: builder.map.ok_or(PackerError::MissingMap)?,
@@ -84,23 +85,23 @@ pub async fn pack_project(
         tags: builder.tags,
     };
 
-    let compiler_metadata = CompilerMetadata {
+    let meta = CompilerMetadata {
         presets: builder.presets,
         plugins: builder.plugins,
         default_icon_priority: builder.default_icon_priority.unwrap_or(2),
     };
 
-    let route = pack_route(
-        project_resource,
-        route,
-        setting.max_use_depth,
-        setting.max_ref_depth,
-    )
-    .await;
+    // let route = pack_route(
+    //     project_resource,
+    //     route,
+    //     setting.max_use_depth,
+    //     setting.max_ref_depth,
+    // )
+    // .await;
 
-    Ok(PackedProject {
-        route_metadata,
-        compiler_metadata,
+    Ok(Phase0 {
+        project,
+        meta,
         route,
     })
 }

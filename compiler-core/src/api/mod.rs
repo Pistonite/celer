@@ -1,5 +1,11 @@
+//! Celer Compiler API
 use log::{error, info};
 use std::collections::HashMap;
+
+mod prepare;
+pub use prepare::*;
+mod compile;
+pub use compile::*;
 
 use celerctypes::ExecDoc;
 use derivative::Derivative;
@@ -7,8 +13,26 @@ use derivative::Derivative;
 use crate::comp::{CompDoc, Compiler, CompilerError};
 use crate::lang::Preset;
 use crate::metrics::CompilerMetrics;
-use crate::pack::{self, PackedProject, PackerError, PackerResult, Resource, ValidUse};
+use crate::pack::{self, PackerError, PackerResult, Resource, ValidUse, Phase0};
 use crate::plug::{run_plugins, PluginRuntime};
+
+/// Resolve project.yaml resource under the root resource
+pub async fn resolve_project(root_resource: &Resource) -> PackerResult<Resource> {
+    let project_ref = ValidUse::Relative("./project.yaml".to_string());
+    match root_resource.resolve(&project_ref).await {
+        Err(_) => {
+            error!("fail to resolve project.yaml");
+            Err(PackerError::InvalidProject)
+        }
+        x => x,
+    }
+}
+
+pub struct CompilerContext {
+    project_resource: Resource,
+    setting: Setting,
+    phase0: Phase0,
+}
 
 /// Output of the compiler API
 #[derive(Debug, Clone)]

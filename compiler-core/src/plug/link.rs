@@ -1,26 +1,33 @@
 //! Link plugin
 //!
 //! This plugin looks for the `link` tag and transforms it into a link.
-
 use celerctypes::DocRichText;
 
 use crate::comp::CompDoc;
 use crate::prop;
+use crate::macros::{async_trait, maybe_send};
 
-use super::operation;
+use super::{operation, PluginRuntime, PlugResult};
 
-pub async fn run_link_plugin(comp_doc: &mut CompDoc) {
-    // add the link tag if not defined already
-    comp_doc
-        .project
-        .tags
-        .entry(prop::LINK.to_string())
-        .or_default();
-    operation::for_all_lines(comp_doc, |mut line| async {
-        operation::for_all_rich_text(&mut line, transform_link_tag).await;
-        line
-    })
-    .await
+pub struct LinkPlugin;
+#[maybe_send(async_trait)]
+impl PluginRuntime for LinkPlugin {
+    async fn on_compile(&mut self, comp_doc: &mut CompDoc) -> PlugResult<()> {
+        // add the link tag if not defined already
+        comp_doc
+            .project
+            .tags
+            .entry(prop::LINK.to_string())
+            .or_default();
+        operation::for_all_lines(comp_doc, |mut line| async {
+            operation::for_all_rich_text(&mut line, transform_link_tag).await;
+            line
+        })
+        .await;
+
+        Ok(())
+    }
+
 }
 
 fn transform_link_tag(rich_text: &mut DocRichText) {
