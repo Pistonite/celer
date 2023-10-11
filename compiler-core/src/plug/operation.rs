@@ -6,6 +6,16 @@ use crate::{
     util::async_for,
 };
 
+pub async fn for_all_preface_lines<F>(comp_doc: &mut CompDoc, fun: F)
+where
+    F: Fn(&mut Vec<DocRichText>),
+{
+    // TODO #78: async_for no longer needed in the future
+    let _ = async_for!(t in comp_doc.preface.iter_mut(), {
+        fun(t);
+    });
+}
+
 /// Transform all [`CompLine`] in a document with function F
 pub async fn for_all_lines<Func, Fut>(comp_doc: &mut CompDoc, fun: Func)
 where
