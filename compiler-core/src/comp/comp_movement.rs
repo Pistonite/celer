@@ -48,7 +48,7 @@ impl CompMovement {
     }
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     /// Try compiling a json blob to a movement object
     ///
     /// The following are valid:

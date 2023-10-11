@@ -1,4 +1,6 @@
-use celerctypes::ExecDoc;
+use std::borrow::Cow;
+
+use celerctypes::{ExecDoc, RouteMetadata};
 
 use crate::comp::CompDoc;
 use crate::util::async_for;
@@ -7,16 +9,16 @@ use super::{ExecResult, MapSectionBuilder};
 
 impl CompDoc {
     /// Execute the document
-    pub async fn exec(self) -> ExecResult<ExecDoc> {
+    pub async fn exec<'a>(self, project: &'a RouteMetadata) -> ExecResult<ExecDoc<'a>> {
         let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("", &self.project.map.initial_coord);
+        map_builder.add_coord("", &project.map.initial_coord);
         let mut sections = vec![];
         async_for!((index, section) in self.route.into_iter().enumerate(), {
-            let exec_section = section.exec(&self.project, index, &mut map_builder).await?;
+            let exec_section = section.exec(&project, index, &mut map_builder).await?;
             sections.push(exec_section);
         })?;
         Ok(ExecDoc {
-            project: self.project,
+            project: Cow::Borrowed(project),
             preface: self.preface,
             route: sections,
             diagnostics: self.diagnostics,
@@ -39,7 +41,7 @@ mod test {
     #[tokio::test]
     async fn test_copy() {
         let test_metadata = RouteMetadata {
-            name: "test".to_string(),
+            source: "test".to_string(),
             version: "test version".to_string(),
             ..Default::default()
         };
@@ -53,14 +55,13 @@ mod test {
         }];
 
         let test_doc = CompDoc {
-            project: test_metadata.clone(),
             preface: test_preface.clone(),
             diagnostics: test_diagnostics.clone(),
             ..Default::default()
         };
 
-        let exec_doc = test_doc.exec().await.unwrap();
-        assert_eq!(exec_doc.project, test_metadata);
+        let exec_doc = test_doc.exec(&test_metadata).await.unwrap();
+        assert_eq!(exec_doc.project, Cow::Borrowed(&test_metadata));
         assert_eq!(exec_doc.preface, test_preface);
         assert_eq!(exec_doc.diagnostics, test_diagnostics);
     }
@@ -86,19 +87,20 @@ mod test {
             },
         ];
 
-        let test_doc = CompDoc {
-            project: RouteMetadata {
+        let project = RouteMetadata {
                 map: MapMetadata {
                     initial_coord: GameCoord(1.1, 2.2, 3.3),
                     ..Default::default()
                 },
                 ..Default::default()
-            },
+            };
+
+        let test_doc = CompDoc {
             route: test_sections.clone(),
             ..Default::default()
         };
 
-        let exec_doc = test_doc.exec().await.unwrap();
+        let exec_doc = test_doc.exec(&project).await.unwrap();
         assert_eq!(
             exec_doc.route,
             vec![

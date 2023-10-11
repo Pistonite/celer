@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, borrow::Cow};
 
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
@@ -20,9 +20,9 @@ pub use doc::*;
 #[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
-pub struct ExecDoc {
+pub struct ExecDoc<'a> {
     /// Project metadata
-    pub project: RouteMetadata,
+    pub project: Cow<'a, RouteMetadata>,
     /// The preface
     pub preface: Vec<Vec<DocPoorText>>,
     /// The route

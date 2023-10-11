@@ -1,8 +1,8 @@
-use celerctypes::{DocDiagnostic, RouteMetadata};
+use celerctypes::{DocDiagnostic, RouteMetadata, ExecDoc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::api::CompilerContext;
+use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::lang::parse_poor;
@@ -38,13 +38,13 @@ pub type PlugResult<T> = Result<T, PlugError>;
 /// Each compilation will spawn a new runtime with [`PluginInstance::create_runtime`]
 #[maybe_send(async_trait)]
 pub trait PluginRuntime {
-    async fn on_pre_compile(&mut self, _: &mut RouteMetadata) -> PackerResult<()> {
+    async fn on_pre_compile(&mut self, _ctx: &mut CompilerContext) -> PackerResult<()> {
         Ok(())
     }
-    async fn on_compile(&mut self, _: &mut CompDoc) -> PlugResult<()> {
+    async fn on_compile(&mut self, _meta: &CompilerMetadata, _doc: &mut CompDoc) -> PlugResult<()> {
         Ok(())
     }
-    async fn on_post_compile(&mut self, _: &mut RouteMetadata) -> PlugResult<()> {
+    async fn on_post_compile<'a>(&mut self, _meta: &'a CompilerMetadata, _doc: &mut ExecDoc<'a>) -> PlugResult<()> {
         Ok(())
     }
 }
@@ -72,7 +72,7 @@ impl PluginInstance {
 struct ScriptPluginRuntime;
 #[maybe_send(async_trait)]
 impl PluginRuntime for ScriptPluginRuntime {
-    async fn on_compile(&mut self, _: &mut CompDoc) -> PlugResult<()> {
+    async fn on_compile(&mut self, _: &CompilerMetadata, _: &mut CompDoc) -> PlugResult<()> {
         // TODO #24 implement JS plugin engine
         Err(PlugError::NotImpl(
             "Script plugins are not implemented yet".to_string(),

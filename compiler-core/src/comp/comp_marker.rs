@@ -24,7 +24,7 @@ impl CompMarker {
     }
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     /// Try compiling a json blob to a marker object
     ///
     /// The following are valid:

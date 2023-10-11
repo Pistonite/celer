@@ -52,21 +52,21 @@ impl CompilerContext {
 }
 
 /// Output of the compiler API
-#[derive(Debug, Clone)]
-pub enum CompilerOutput {
-    Ok(Box<OkOutput>),
-    Cancelled,
-}
-
-#[derive(Debug, Clone)]
-pub struct OkOutput {
-    /// The final document to be rendered
-    pub exec_doc: ExecDoc,
-    /// The metadata of the compiler
-    pub metadata: CompilerMetadata,
-    // Metrics collected during compilation
-    // pub metrics: CompilerMetrics,
-}
+// #[derive(Debug, Clone)]
+// pub enum CompilerOutput {
+//     Ok(Box<OkOutput>),
+//     Cancelled,
+// }
+//
+// #[derive(Debug, Clone)]
+// pub struct OkOutput {
+//     /// The final document to be rendered
+//     pub exec_doc: ExecDoc,
+//     /// The metadata of the compiler
+//     pub metadata: CompilerMetadata,
+//     // Metrics collected during compilation
+//     // pub metrics: CompilerMetrics,
+// }
 
 /// Metadata of the compiler
 ///

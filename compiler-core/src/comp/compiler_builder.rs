@@ -1,4 +1,5 @@
 //! Builder for making a compiler in tests
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use celerctypes::{GameCoord, RouteMetadata};
@@ -37,14 +38,14 @@ impl CompilerBuilder {
         self
     }
 
-    pub fn build(self) -> Compiler {
+    pub fn build(self) -> Compiler<'static> {
         Compiler {
-            project: self.project,
-            meta: CompilerMetadata {
+            project: Cow::Owned(self.project),
+            meta: Cow::Owned(CompilerMetadata {
                 presets: self.presets,
                 default_icon_priority: self.default_icon_priority,
                 ..Default::default()
-            },
+            }),
             color: self.color,
             coord: self.coord,
             ..Default::default()

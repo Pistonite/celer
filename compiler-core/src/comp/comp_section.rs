@@ -17,7 +17,7 @@ pub struct CompSection {
     pub lines: Vec<CompLine>,
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     pub async fn comp_section(&mut self, value: PackerValue) -> Result<CompSection, CompilerError> {
         if let PackerValue::Err(e) = value {
             return Err(CompilerError::PackerErrors(vec![e]));

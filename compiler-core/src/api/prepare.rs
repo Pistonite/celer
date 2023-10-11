@@ -14,15 +14,19 @@ use super::{Setting, CompilerContext};
 /// future iterations
 pub async fn prepare(source: &str, project_resource: Resource, setting: Setting) -> PackerResult<CompilerContext> {
     let start_time = Instant::now();
-    let phase0 = pack::pack_phase0(source, &project_resource, &setting).await?;
+    let mut phase0 = pack::pack_phase0(source, &project_resource, &setting).await?;
+    // take the plugins out to run the pre compile phase of the plugins
+    let mut plugins = std::mem::take(&mut phase0.meta.plugins);
     let mut context = CompilerContext {
         start_time,
         project_resource,
         setting,
         phase0,
     };
-    for plugin in &context.phase0.meta.plugins {
-        plugin.create_runtime(&context).on_pre_compile(&mut context.phase0.project).await?;
+    for plugin in &plugins {
+        plugin.create_runtime(&context).on_pre_compile(&mut context).await?;
     }
+    // put the plugins back, discard changes made to the plugins
+    std::mem::swap(&mut context.phase0.meta.plugins, &mut plugins);
     Ok(context)
 }

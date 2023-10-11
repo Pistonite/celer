@@ -15,8 +15,6 @@ use super::{CompLine, CompSection, Compiler, CompilerError};
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CompDoc {
-    /// Project metadata
-    pub project: RouteMetadata,
     /// The preface
     pub preface: Vec<Vec<DocPoorText>>,
     /// The route
@@ -25,11 +23,11 @@ pub struct CompDoc {
     pub diagnostics: Vec<DocDiagnostic>,
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     pub async fn comp_doc(
         mut self,
         route: PackerValue,
-    ) -> Result<(CompDoc, CompilerMetadata), CompilerError> {
+    ) -> Result<CompDoc, CompilerError> {
         let mut route_vec = vec![];
         let mut preface = vec![];
 
@@ -47,15 +45,13 @@ impl Compiler {
         }
 
         if errors.is_empty() {
-            Ok((
+            Ok(
                 CompDoc {
-                    project: self.project,
                     preface,
                     route: route_vec,
                     diagnostics: vec![],
-                },
-                self.meta,
-            ))
+                }
+            )
         } else {
             Ok(self.create_empty_doc_for_error(&errors).await)
         }
@@ -105,25 +101,21 @@ impl Compiler {
     }
 
     pub async fn create_empty_doc_for_packer_error(
-        self,
+        &self,
         error: PackerError,
-    ) -> (CompDoc, CompilerMetadata) {
+    ) -> CompDoc {
         self.create_empty_doc_for_error(&[CompilerError::PackerErrors(vec![error])])
             .await
     }
 
     pub async fn create_empty_doc_for_error(
-        self,
+        &self,
         errors: &[CompilerError],
-    ) -> (CompDoc, CompilerMetadata) {
-        (
+    ) -> CompDoc {
             CompDoc {
                 route: vec![self.create_empty_section_for_error(errors).await],
-                project: self.project,
                 preface: vec![],
                 diagnostics: vec![],
-            },
-            self.meta,
-        )
+            }
     }
 }

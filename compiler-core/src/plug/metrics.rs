@@ -1,8 +1,8 @@
-use celerctypes::RouteMetadata;
+use celerctypes::{RouteMetadata, ExecDoc};
 use instant::Instant;
 use serde_json::Value;
 
-use crate::{macros::{async_trait, maybe_send}, comp::CompDoc, prop, json::Coerce};
+use crate::{macros::{async_trait, maybe_send}, comp::CompDoc, prop, json::Coerce, api::CompilerMetadata};
 
 use super::{PluginRuntime, PlugResult};
 
@@ -45,24 +45,23 @@ impl MetricsPlugin {
 
 #[maybe_send(async_trait)]
 impl PluginRuntime for MetricsPlugin {
-    async fn on_compile(&mut self, doc: &mut CompDoc) -> PlugResult<()> {
+    async fn on_compile(&mut self, _: &CompilerMetadata, doc: &mut CompDoc) -> PlugResult<()> {
         if self.detailed {
-            let comp_time_ms = self.last_start_time.elapsed().as_millis() as u64;
+            self.comp_time_ms = self.last_start_time.elapsed().as_millis() as u64;
             self.last_start_time = Instant::now();
-            doc.project.stats.insert("Pack0 Time".to_string(), format!("{}ms", self.prep_time_ms));
-            doc.project.stats.insert("Pack1+Comp Time".to_string(), format!("{comp_time_ms}ms"));
-            self.comp_time_ms = comp_time_ms;
         }
         Ok(())
     }
-    async fn on_post_compile(&mut self, project: &mut RouteMetadata) -> PlugResult<()> {
+    async fn on_post_compile<'a>(&mut self, _: &'a CompilerMetadata, doc: &mut ExecDoc<'a>) -> PlugResult<()> {
         let exec_time_ms = self.last_start_time.elapsed().as_millis() as u64;
         if self.detailed {
-            project.stats.insert("Exec Time".to_string(), format!("{exec_time_ms}ms"));
+            doc.project.stats.insert("Pack0 Time".to_string(), format!("{}ms", self.prep_time_ms));
+            doc.project.stats.insert("Pack1+Comp Time".to_string(), format!("{}ms", self.comp_time_ms));
+            doc.project.stats.insert("Exec Time".to_string(), format!("{exec_time_ms}ms"));
             let total_ms = self.prep_time_ms + self.comp_time_ms + exec_time_ms;
-            project.stats.insert("Compiled In".to_string(), format!("{total_ms}ms"));
+            doc.project.stats.insert("Compiled In".to_string(), format!("{total_ms}ms"));
         } else {
-            project.stats.insert("Compiled In".to_string(), format!("{exec_time_ms}ms"));
+            doc.project.stats.insert("Compiled In".to_string(), format!("{exec_time_ms}ms"));
         }
         Ok(())
     }

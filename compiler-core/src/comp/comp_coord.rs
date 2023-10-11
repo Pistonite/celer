@@ -27,7 +27,7 @@ macro_rules! map_coord {
     }};
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     pub fn transform_coord(&self, prop: Value) -> Result<GameCoord, CompilerError> {
         let array = prop
             .try_into_array()

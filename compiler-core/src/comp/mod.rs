@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::convert::Infallible;
 
 use celerctypes::{DocDiagnostic, GameCoord, RouteMetadata};
@@ -36,9 +37,9 @@ pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
 
 #[derive(Derivative, Debug, Clone)]
 #[derivative(Default)]
-pub struct Compiler {
-    pub project: RouteMetadata,
-    pub meta: CompilerMetadata,
+pub struct Compiler<'a> {
+    pub project: Cow<'a, RouteMetadata>,
+    pub meta: Cow<'a, CompilerMetadata>,
     /// Current color of the map line
     pub color: String,
     /// Current position on the map
@@ -260,7 +261,7 @@ mod test_utils {
 
     use super::*;
 
-    pub fn create_test_compiler_with_coord_transform() -> Compiler {
+    pub fn create_test_compiler_with_coord_transform() -> Compiler<'static> {
         let project = RouteMetadata {
             map: MapMetadata {
                 coord_map: MapCoordMap {

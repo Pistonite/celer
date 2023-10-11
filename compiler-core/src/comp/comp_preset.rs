@@ -9,7 +9,7 @@ use crate::prop;
 
 use super::{validate_not_array_or_object, Compiler, CompilerError};
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     /// Apply the preset to the output.
     ///
     /// Presets are applied recursively, including presets in the movements

@@ -50,7 +50,7 @@ pub struct CompLine {
     pub properties: HashMap<String, Value>,
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     /// Compile a line
     ///
     /// 1. Text line is turned into {line: {}}
@@ -331,13 +331,13 @@ mod test {
 
     use super::*;
 
-    async fn test_comp_ok(compiler: &mut Compiler, input: Value, expected: CompLine) {
+    async fn test_comp_ok(compiler: &mut Compiler<'static>, input: Value, expected: CompLine) {
         let result = compiler.comp_line(input).await;
         assert_eq!(result, Ok(expected));
     }
 
     async fn test_comp_err(
-        compiler: &mut Compiler,
+        compiler: &mut Compiler<'static>,
         input: Value,
         expected: CompLine,
         errors: Vec<CompilerError>,
