@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::json::{Cast, Coerce};
 use crate::lang::parse_rich;
-use crate::pack::{PackerValue, PackerError};
+use crate::pack::{PackerError, PackerValue};
 use crate::util::async_for;
 
 use super::{CompError, CompLine, CompSection, Compiler};

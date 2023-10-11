@@ -29,8 +29,8 @@ impl CompDoc {
 #[cfg(test)]
 mod test {
     use celerctypes::{
-        DocDiagnostic, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine,
-        MapMetadata, RouteMetadata, DocRichText,
+        DocDiagnostic, DocRichText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine,
+        MapMetadata, RouteMetadata,
     };
 
     use crate::comp::{CompLine, CompMovement, CompSection};
