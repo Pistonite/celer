@@ -92,14 +92,6 @@ pub async fn pack_phase0(
         default_icon_priority: builder.default_icon_priority.unwrap_or(2),
     };
 
-    // let route = pack_route(
-    //     project_resource,
-    //     route,
-    //     setting.max_use_depth,
-    //     setting.max_ref_depth,
-    // )
-    // .await;
-
     Ok(Phase0 {
         project,
         meta,

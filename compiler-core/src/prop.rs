@@ -36,7 +36,6 @@ pub const ROUTE: &str = "route";
 pub const SCALE: &str = "scale";
 pub const SIZE: &str = "size";
 pub const SPLIT_NAME: &str = "split-name";
-pub const START_TIME: &str = "start-time";
 pub const START_Z: &str = "start-z";
 pub const TAGS: &str = "tags";
 pub const TEMPLATE_URL: &str = "template-url";

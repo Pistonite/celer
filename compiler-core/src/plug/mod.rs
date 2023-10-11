@@ -94,18 +94,3 @@ pub enum BuiltInPlugin {
     /// Transform link tags to clickable links. See [`link`]
     Link,
 }
-
-// pub async fn run_plugins(mut comp_doc: CompDoc, plugins: &[PluginRuntime]) -> CompDoc {
-//     let mut errors = Vec::new();
-//     for plugin in plugins {
-//         if let Err(e) = plugin.run(&mut comp_doc).await {
-//             errors.push(e);
-//         }
-//     }
-//     if !errors.is_empty() {
-//         for error in errors {
-//             error.add_to_diagnostics(&mut comp_doc.diagnostics);
-//         }
-//     }
-//     comp_doc
-// }
