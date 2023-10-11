@@ -5,7 +5,7 @@ use serde_json::Value;
 use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::CompDoc;
 use crate::lang::parse_poor;
-use crate::macros::{async_trait, maybe_send};
+use crate::macros::async_trait;
 use crate::pack::PackerResult;
 
 mod link;
@@ -34,7 +34,7 @@ pub type PlugResult<T> = Result<T, PlugError>;
 ///
 /// A runtime of a plugin can store states that the plugin needs during the compilation.
 /// Each compilation will spawn a new runtime with [`PluginInstance::create_runtime`]
-#[maybe_send(async_trait)]
+#[async_trait(?Send)]
 pub trait PluginRuntime {
     async fn on_pre_compile(&mut self, _ctx: &mut CompilerContext) -> PackerResult<()> {
         Ok(())
@@ -74,7 +74,7 @@ impl PluginInstance {
 }
 
 struct ScriptPluginRuntime;
-#[maybe_send(async_trait)]
+#[async_trait(?Send)]
 impl PluginRuntime for ScriptPluginRuntime {
     async fn on_compile(&mut self, _: &CompilerMetadata, _: &mut CompDoc) -> PlugResult<()> {
         // TODO #24 implement JS plugin engine

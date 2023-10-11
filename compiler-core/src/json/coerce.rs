@@ -166,8 +166,8 @@ mod test {
         assert_eq!(false, json!(0.0).coerce_truthy());
         assert_eq!(false, json!(false).coerce_truthy());
         assert_eq!(true, json!(true).coerce_truthy());
-        assert_eq!(false, json!("hello").coerce_truthy());
-        assert_eq!(true, json!("").coerce_truthy());
+        assert_eq!(true, json!("hello").coerce_truthy());
+        assert_eq!(false, json!("").coerce_truthy());
         assert_eq!(true, json!([]).coerce_truthy());
         assert_eq!(false, json!(null).coerce_truthy());
         assert_eq!(true, json!({}).coerce_truthy());

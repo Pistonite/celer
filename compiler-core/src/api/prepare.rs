@@ -1,5 +1,9 @@
 use instant::Instant;
+#[cfg(not(feature = "no-async-send"))]
+use tokio::task::LocalSet;
 
+#[cfg(not(feature = "no-async-send"))]
+use crate::pack::PackerError;
 use crate::pack::{self, PackerResult, Resource};
 
 use super::{CompilerContext, Setting};
@@ -27,12 +31,33 @@ pub async fn prepare(
         setting,
         phase0,
     };
+
+    // TODO #78: I don't know why it is fine in compile but not here
+    // however it is fine in WASM so we can keep it this way until Alpha 2
+
+    #[cfg(feature = "no-async-send")]
     for plugin in &plugins {
         plugin
             .create_runtime(&context)
             .on_pre_compile(&mut context)
             .await?;
     }
+    #[cfg(not(feature = "no-async-send"))]
+    let mut context = {
+        let local = LocalSet::new();
+        let runtimes = plugins
+            .iter()
+            .map(|plugin| plugin.create_runtime(&context))
+            .collect::<Vec<_>>();
+        local
+            .run_until(async move {
+                for mut rt in runtimes {
+                    rt.on_pre_compile(&mut context).await?;
+                }
+                Ok::<CompilerContext, PackerError>(context)
+            })
+            .await?
+    };
     // put the plugins back, discard changes made to the plugins
     std::mem::swap(&mut context.phase0.meta.plugins, &mut plugins);
     Ok(context)

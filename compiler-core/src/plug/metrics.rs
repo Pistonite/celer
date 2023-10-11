@@ -2,13 +2,11 @@ use celerctypes::ExecDoc;
 use instant::Instant;
 use serde_json::Value;
 
-use crate::{
-    api::CompilerMetadata,
-    comp::CompDoc,
-    json::Coerce,
-    macros::{async_trait, maybe_send},
-    prop,
-};
+use crate::api::CompilerMetadata;
+use crate::comp::CompDoc;
+use crate::json::Coerce;
+use crate::macros::async_trait;
+use crate::prop;
 
 use super::{PlugResult, PluginRuntime};
 
@@ -52,7 +50,7 @@ impl MetricsPlugin {
     }
 }
 
-#[maybe_send(async_trait)]
+#[async_trait(?Send)]
 impl PluginRuntime for MetricsPlugin {
     async fn on_compile(&mut self, _: &CompilerMetadata, _: &mut CompDoc) -> PlugResult<()> {
         if self.detailed {

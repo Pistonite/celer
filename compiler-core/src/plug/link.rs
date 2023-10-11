@@ -5,14 +5,14 @@ use celerctypes::DocRichText;
 
 use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::CompDoc;
-use crate::macros::{async_trait, maybe_send};
+use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
 
 use super::{operation, PlugResult, PluginRuntime};
 
 pub struct LinkPlugin;
-#[maybe_send(async_trait)]
+#[async_trait(?Send)]
 impl PluginRuntime for LinkPlugin {
     async fn on_pre_compile(&mut self, ctx: &mut CompilerContext) -> PackerResult<()> {
         // add the link tag if not defined already
