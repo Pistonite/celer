@@ -1,6 +1,8 @@
 //! Celer Compiler API
+use celerctypes::{RouteMetadata, ExecDoc};
 use instant::Instant;
 use log::{error, info};
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 mod prepare;
@@ -8,12 +10,10 @@ pub use prepare::*;
 mod compile;
 pub use compile::*;
 
-use celerctypes::ExecDoc;
 use derivative::Derivative;
 
-use crate::comp::{CompDoc, Compiler, CompilerError};
+use crate::comp::Compiler;
 use crate::lang::Preset;
-// use crate::metrics::CompilerMetrics;
 use crate::pack::{self, PackerError, PackerResult, Resource, ValidUse, Phase0};
 use crate::plug::{PluginInstance, PluginRuntime};
 
@@ -29,11 +29,35 @@ pub async fn resolve_project(root_resource: &Resource) -> PackerResult<Resource>
     }
 }
 
+pub fn make_project_for_error(source: &str) -> RouteMetadata {
+    RouteMetadata {
+        title: "[compile error]".to_string(),
+        version: "[compile error]".to_string(),
+        source: source.to_string(),
+        ..Default::default()
+    }
+}
+
+// TODO #78: Option no longer needed
+pub async fn make_doc_for_packer_error(source: &str, error: PackerError) -> Option<ExecDoc<'static>> {
+    let comp_doc = Compiler::default()
+                .create_empty_doc_for_packer_error(error)
+                .await;
+    let project = make_project_for_error(source);
+    let exec_doc = comp_doc.exec(&project).await.ok()?;
+    Some(ExecDoc {
+        preface: exec_doc.preface,
+        route: exec_doc.route,
+        diagnostics: exec_doc.diagnostics,
+        project: Cow::Owned(project),
+    })
+}
+
 pub struct CompilerContext {
-    start_time: Instant,
-    project_resource: Resource,
-    setting: Setting,
-    phase0: Phase0,
+    pub start_time: Instant,
+    pub project_resource: Resource,
+    pub setting: Setting,
+    pub phase0: Phase0,
 }
 
 impl CompilerContext {
@@ -101,11 +125,10 @@ pub struct Setting {
     pub max_preset_ref_depth: usize,
 }
 
-/// Entry point for the compiler
-///
-/// The root resource should contain the project.yaml file when resolving "./project.yaml"
-pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOutput {
-    todo!()
+// /Entry point for the compiler
+// ///
+// /The root resource should contain the project.yaml file when resolving "./project.yaml"
+// pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOutput {
     // #[cfg(feature = "wasm")]
     // crate::util::set_cancelled(false);
     //
@@ -160,7 +183,7 @@ pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOut
     //     metadata: comp_meta,
     //     // metrics,
     // }))
-}
+// }
 
 // async fn pack_phase(root_resource: &Resource, setting: &Setting) -> PackerResult<PackedProject> {
 //     let project_ref = ValidUse::Relative("./project.yaml".to_string());
@@ -196,9 +219,9 @@ pub async fn compile(root_resource: &Resource, setting: &Setting) -> CompilerOut
 //     compiler.comp_doc(route).await
 // }
 //
-// #[cfg(feature = "wasm")]
-// #[inline]
-// pub fn cancel_current_compilation() {
-//     crate::util::set_cancelled(true);
-//     info!("cancel requested");
-// }
+#[cfg(feature = "wasm")]
+#[inline]
+pub fn cancel_current_compilation() {
+    crate::util::set_cancelled(true);
+    info!("cancel requested");
+}

@@ -104,8 +104,15 @@ pub trait WasmInto {
     fn into_wasm(self) -> Result<JsValue, JsValue>;
 }
 impl WasmInto for JsValue {
+    #[inline]
     fn into_wasm(self) -> Result<JsValue, JsValue> {
         Ok(self)
+    }
+}
+impl WasmInto for Result<JsValue, JsValue> {
+    #[inline]
+    fn into_wasm(self) -> Result<JsValue, JsValue> {
+        self
     }
 }
 impl<T> WasmInto for Option<T>
@@ -137,6 +144,16 @@ from! {String}
 macro_rules! into {
     ($ty:ty) => {
         impl WasmInto for $ty {
+            fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
+                let serializer =
+                    serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+                let result = <Self as serde::Serialize>::serialize(&self, &serializer)?;
+                Ok(result)
+            }
+        }
+    };
+    ($ty:ty, $( $life:tt),* ) => {
+        impl<$($life)*> WasmInto for $ty {
             fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
                 let serializer =
                     serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);

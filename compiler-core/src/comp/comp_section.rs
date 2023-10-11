@@ -5,7 +5,7 @@ use crate::lang::parse_rich;
 use crate::pack::PackerValue;
 use crate::util::async_for;
 
-use super::{CompLine, Compiler, CompilerError};
+use super::{CompLine, Compiler, CompError};
 
 /// Compiled Section
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -18,12 +18,12 @@ pub struct CompSection {
 }
 
 impl<'a> Compiler<'a> {
-    pub async fn comp_section(&mut self, value: PackerValue) -> Result<CompSection, CompilerError> {
+    pub async fn comp_section(&mut self, value: PackerValue) -> Result<CompSection, CompError> {
         if let PackerValue::Err(e) = value {
-            return Err(CompilerError::PackerErrors(vec![e]));
+            return Err(CompError::PackerErrors(vec![e]));
         }
         if value.is_array() {
-            return Err(CompilerError::InvalidSectionType);
+            return Err(CompError::InvalidSectionType);
         }
 
         let section_obj = match value.try_into_object() {
@@ -31,7 +31,7 @@ impl<'a> Compiler<'a> {
             Err(v) => {
                 // If not an array or object and is valid, treat as a preface value
                 if let PackerValue::Ok(v) = v {
-                    return Err(CompilerError::IsPreface(v));
+                    return Err(CompError::IsPreface(v));
                 } else {
                     unreachable!();
                 }
@@ -39,9 +39,9 @@ impl<'a> Compiler<'a> {
         };
 
         let mut iter = section_obj.into_iter();
-        let (section_name, section_value) = iter.next().ok_or(CompilerError::InvalidSectionType)?;
+        let (section_name, section_value) = iter.next().ok_or(CompError::InvalidSectionType)?;
         if iter.next().is_some() {
-            return Err(CompilerError::InvalidSectionType);
+            return Err(CompError::InvalidSectionType);
         }
         let mut section = CompSection {
             name: section_name,
@@ -49,7 +49,7 @@ impl<'a> Compiler<'a> {
         };
         if let PackerValue::Err(e) = section_value {
             section.lines.push(
-                self.create_empty_line_for_error(&[CompilerError::PackerErrors(vec![e])])
+                self.create_empty_line_for_error(&[CompError::PackerErrors(vec![e])])
                     .await,
             );
             return Ok(section);
@@ -58,7 +58,7 @@ impl<'a> Compiler<'a> {
             Ok(v) => v,
             Err(_) => {
                 section.lines.push(
-                    self.create_empty_line_for_error(&[CompilerError::InvalidSectionType])
+                    self.create_empty_line_for_error(&[CompError::InvalidSectionType])
                         .await,
                 );
                 return Ok(section);
@@ -79,7 +79,7 @@ impl<'a> Compiler<'a> {
                     section.lines.push(line);
                 }
                 Err(errors) => {
-                    section.lines.push(self.create_empty_line_for_error(&[CompilerError::PackerErrors(errors)]).await);
+                    section.lines.push(self.create_empty_line_for_error(&[CompError::PackerErrors(errors)]).await);
                 }
             }
         })?;
@@ -87,7 +87,7 @@ impl<'a> Compiler<'a> {
         Ok(section)
     }
 
-    async fn create_empty_line_for_error(&self, errors: &[CompilerError]) -> CompLine {
+    async fn create_empty_line_for_error(&self, errors: &[CompError]) -> CompLine {
         let mut diagnostics = vec![];
         // ignore if async loop fails
         let _ = async_for!(error in errors, {

@@ -12,8 +12,9 @@ use crate::util::async_for;
 use super::CompilerContext;
 
 impl CompilerContext {
-    pub async fn compile(&self) -> PackerResult<ExecDoc<'_>> {
-        let plugin_runtimes = self.create_plugin_runtimes().await;
+    // TODO #78: will no longer need Option after compiler become not cancelable
+    pub async fn compile(&self) -> Option<ExecDoc<'_>> {
+        let mut plugin_runtimes = self.create_plugin_runtimes().await;
 
         // pack phase 1
         // resolve uses in the route
@@ -25,9 +26,37 @@ impl CompilerContext {
         ).await;
 
         // comp phase
-        let mut compiler = self.create_compiler();
-        compiler.comp_doc();
-        todo!()
+        let compiler = self.create_compiler();
+        let mut comp_doc = match compiler.comp_doc(route).await {
+            Ok(doc) => doc,
+            // TODO #78: will no longer need Option after compiler become not cancelable
+            Err(_) => {
+                return None;
+            }
+        };
+        
+        for plugin in plugin_runtimes.iter_mut() {
+            if let Err(e) = plugin.on_compile(&self.phase0.meta, &mut comp_doc).await {
+                e.add_to_diagnostics(&mut comp_doc.diagnostics);
+            }
+        }
+
+        // exec phase
+        let mut exec_doc = match comp_doc.exec(&self.phase0.project).await {
+            Ok(doc) => doc,
+            // TODO #78: will no longer need Option after compiler become not cancelable
+            Err(_) => {
+                return None;
+            }
+        };
+
+        for plugin in plugin_runtimes.iter_mut() {
+            if let Err(e) = plugin.on_post_compile(&self.phase0.meta, &mut exec_doc).await {
+                e.add_to_diagnostics(&mut exec_doc.diagnostics);
+            }
+        }
+        Some(exec_doc)
+
     }
     async fn create_plugin_runtimes(&self) -> Vec<Box<dyn PluginRuntime>> {
         let mut runtimes = Vec::with_capacity(self.phase0.meta.plugins.len());

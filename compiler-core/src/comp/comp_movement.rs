@@ -6,7 +6,7 @@ use crate::json::Coerce;
 use crate::prop;
 use crate::util::async_for;
 
-use super::{Compiler, CompilerError};
+use super::{Compiler, CompError};
 
 /// Compiled map movement
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -60,7 +60,7 @@ impl<'a> Compiler<'a> {
         &self,
         prop_name: &str,
         prop: Value,
-        errors: &mut Vec<CompilerError>,
+        errors: &mut Vec<CompError>,
     ) -> Option<CompMovement> {
         if prop.is_array() {
             return match self.transform_coord(prop) {
@@ -78,7 +78,7 @@ impl<'a> Compiler<'a> {
                 } else if s == "pop" {
                     Some(CompMovement::Pop)
                 } else {
-                    errors.push(CompilerError::InvalidMovementType);
+                    errors.push(CompError::InvalidMovementType);
                     None
                 }
             }
@@ -105,7 +105,7 @@ impl<'a> Compiler<'a> {
                             Some(b) => warp = b,
                             None => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                errors.push(CompError::InvalidLinePropertyType(format!(
                                     "{prop_name}.{}", prop::WARP
                                 )));
                             }
@@ -114,7 +114,7 @@ impl<'a> Compiler<'a> {
                             Some(b) => exclude = b,
                             None => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                errors.push(CompError::InvalidLinePropertyType(format!(
                                     "{prop_name}.{}", prop::EXCLUDE
                                 )));
                             }
@@ -124,14 +124,14 @@ impl<'a> Compiler<'a> {
                             Value::String(s) => color = Some(s),
                             _ => {
                                 should_fail = true;
-                                errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                errors.push(CompError::InvalidLinePropertyType(format!(
                                     "{prop_name}.{}", prop::COLOR
                                 )));
                             }
                         },
                         prop::ICON => match value {
                             Value::Array(_) | Value::Object(_) => {
-                                errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                errors.push(CompError::InvalidLinePropertyType(format!(
                                     "{prop_name}.{}", prop::ICON
                                 )));
                     }
@@ -139,14 +139,14 @@ impl<'a> Compiler<'a> {
                         }
                         _ => {
                             errors
-                                .push(CompilerError::UnusedProperty(format!("{prop_name}.{key}")));
+                                .push(CompError::UnusedProperty(format!("{prop_name}.{key}")));
                         }
                     }
                 });
 
                 match to {
                     None => {
-                        errors.push(CompilerError::InvalidMovementType);
+                        errors.push(CompError::InvalidMovementType);
                         None
                     }
                     Some(to) => {
@@ -165,7 +165,7 @@ impl<'a> Compiler<'a> {
                 }
             }
             _ => {
-                errors.push(CompilerError::InvalidMovementType);
+                errors.push(CompError::InvalidMovementType);
                 None
             }
         }
@@ -197,7 +197,7 @@ mod test {
         for v in vals.into_iter() {
             let mut errors = vec![];
             assert_eq!(compiler.comp_movement("", v, &mut errors).await, None,);
-            assert_eq!(errors, vec![CompilerError::InvalidMovementType]);
+            assert_eq!(errors, vec![CompError::InvalidMovementType]);
         }
     }
 
@@ -211,7 +211,7 @@ mod test {
                 .await,
             None
         );
-        assert_eq!(errors, vec![CompilerError::InvalidCoordinateArray]);
+        assert_eq!(errors, vec![CompError::InvalidCoordinateArray]);
     }
 
     #[tokio::test]
@@ -378,7 +378,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompilerError::InvalidLinePropertyType(
+            vec![CompError::InvalidLinePropertyType(
                 "te.icon".to_string()
             )]
         );
@@ -399,7 +399,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompilerError::InvalidLinePropertyType(
+            vec![CompError::InvalidLinePropertyType(
                 "te.exclude".to_string()
             )]
         );
@@ -420,7 +420,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompilerError::InvalidLinePropertyType(
+            vec![CompError::InvalidLinePropertyType(
                 "te.warp".to_string()
             )]
         );
@@ -441,7 +441,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompilerError::InvalidLinePropertyType(
+            vec![CompError::InvalidLinePropertyType(
                 "test.color".to_string()
             )]
         );
@@ -482,7 +482,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompilerError::UnusedProperty("test.unused".to_string())]
+            vec![CompError::UnusedProperty("test.unused".to_string())]
         );
     }
 }

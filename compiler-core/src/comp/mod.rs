@@ -33,7 +33,7 @@ pub use compiler_builder::*;
 mod desugar;
 use desugar::*;
 
-pub type CompilerResult<T> = Result<T, (T, Vec<CompilerError>)>;
+pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
 
 #[derive(Derivative, Debug, Clone)]
 #[derivative(Default)]
@@ -49,7 +49,7 @@ pub struct Compiler<'a> {
 }
 
 #[derive(PartialEq, Debug, Clone, thiserror::Error)]
-pub enum CompilerError {
+pub enum CompError {
     /// When an array is specified as a line
     #[error("A line cannot be an array. Check the formatting of your route.")]
     ArrayCannotBeLine,
@@ -144,68 +144,68 @@ pub enum CompilerError {
     Wasm(#[from] WasmError),
 }
 
-impl From<Infallible> for CompilerError {
+impl From<Infallible> for CompError {
     fn from(_: Infallible) -> Self {
         unreachable!()
     }
 }
 
-impl CompilerError {
+impl CompError {
     /// Get the more info url path for a compiler error
     ///
     /// The returned path is relative to the site origin (i.e. /docs/...)
     pub fn get_info_url_path(&self) -> &'static str {
         match self {
-            CompilerError::ArrayCannotBeLine
-            | CompilerError::EmptyObjectCannotBeLine
-            | CompilerError::TooManyKeysInObjectLine
-            | CompilerError::LinePropertiesMustBeObject
-            | CompilerError::InvalidLinePropertyType(_)
-            | CompilerError::UnusedProperty(_) => "/docs/route/customizing-lines",
-            CompilerError::InvalidPresetString(_)
-            | CompilerError::PresetNotFound(_)
-            | CompilerError::MaxPresetDepthExceeded(_) => "/docs/route/using-presets",
-            CompilerError::TooManyTagsInCounter => "/docs/route/customizing-lines#counter",
-            CompilerError::InvalidCoordinateType(_)
-            | CompilerError::InvalidCoordinateArray
-            | CompilerError::InvalidCoordinateValue(_)
-            | CompilerError::InvalidMovementType => "/docs/route/customizing-movements",
-            CompilerError::InvalidMovementPreset(_) => "/docs/route/customizing-movements#presets",
-            CompilerError::InvalidMarkerType => "/docs/route/customizing-lines#markers",
-            CompilerError::IsPreface(_) => "/docs/route/route-structure#preface",
-            CompilerError::PackerErrors(_) | CompilerError::InvalidSectionType => {
+            CompError::ArrayCannotBeLine
+            | CompError::EmptyObjectCannotBeLine
+            | CompError::TooManyKeysInObjectLine
+            | CompError::LinePropertiesMustBeObject
+            | CompError::InvalidLinePropertyType(_)
+            | CompError::UnusedProperty(_) => "/docs/route/customizing-lines",
+            CompError::InvalidPresetString(_)
+            | CompError::PresetNotFound(_)
+            | CompError::MaxPresetDepthExceeded(_) => "/docs/route/using-presets",
+            CompError::TooManyTagsInCounter => "/docs/route/customizing-lines#counter",
+            CompError::InvalidCoordinateType(_)
+            | CompError::InvalidCoordinateArray
+            | CompError::InvalidCoordinateValue(_)
+            | CompError::InvalidMovementType => "/docs/route/customizing-movements",
+            CompError::InvalidMovementPreset(_) => "/docs/route/customizing-movements#presets",
+            CompError::InvalidMarkerType => "/docs/route/customizing-lines#markers",
+            CompError::IsPreface(_) => "/docs/route/route-structure#preface",
+            CompError::PackerErrors(_) | CompError::InvalidSectionType => {
                 "/docs/route/route-structure"
             }
-            CompilerError::InvalidRouteType => "/docs/route/route-structure#entry-point",
+            CompError::InvalidRouteType => "/docs/route/route-structure#entry-point",
             #[cfg(feature = "wasm")]
-            CompilerError::Wasm(_) => "",
+            CompError::Wasm(_) => "",
         }
     }
 
     pub fn get_type(&self) -> String {
         let s = match self {
-            CompilerError::ArrayCannotBeLine
-            | CompilerError::EmptyObjectCannotBeLine
-            | CompilerError::TooManyKeysInObjectLine
-            | CompilerError::LinePropertiesMustBeObject
-            | CompilerError::InvalidLinePropertyType(_)
-            | CompilerError::InvalidPresetString(_)
-            | CompilerError::PresetNotFound(_)
-            | CompilerError::MaxPresetDepthExceeded(_)
-            | CompilerError::InvalidMovementType
-            | CompilerError::InvalidCoordinateType(_)
-            | CompilerError::InvalidCoordinateArray
-            | CompilerError::InvalidCoordinateValue(_)
-            | CompilerError::InvalidMovementPreset(_)
-            | CompilerError::InvalidMarkerType
-            | CompilerError::IsPreface(_)
-            | CompilerError::InvalidSectionType
-            | CompilerError::PackerErrors(_)
-            | CompilerError::InvalidRouteType => "error",
+            CompError::ArrayCannotBeLine
+            | CompError::EmptyObjectCannotBeLine
+            | CompError::TooManyKeysInObjectLine
+            | CompError::LinePropertiesMustBeObject
+            | CompError::InvalidLinePropertyType(_)
+            | CompError::InvalidPresetString(_)
+            | CompError::PresetNotFound(_)
+            | CompError::MaxPresetDepthExceeded(_)
+            | CompError::InvalidMovementType
+            | CompError::InvalidCoordinateType(_)
+            | CompError::InvalidCoordinateArray
+            | CompError::InvalidCoordinateValue(_)
+            | CompError::InvalidMovementPreset(_)
+            | CompError::InvalidMarkerType
+            | CompError::IsPreface(_)
+            | CompError::InvalidSectionType
+            | CompError::PackerErrors(_)
+            | CompError::InvalidRouteType => "error",
 
-            CompilerError::UnusedProperty(_) | CompilerError::TooManyTagsInCounter => "warn",
+            CompError::UnusedProperty(_) | CompError::TooManyTagsInCounter => "warn",
             #[cfg(feature = "wasm")]
-            CompilerError::Wasm(_) => "error",
+            CompError::Wasm(_) => "error",
         };
 
         s.to_string()
@@ -213,7 +213,7 @@ impl CompilerError {
 
     pub fn add_to_diagnostics(&self, output: &mut Vec<DocDiagnostic>) {
         match self {
-            CompilerError::PackerErrors(errors) => {
+            CompError::PackerErrors(errors) => {
                 for error in errors {
                     error.add_to_diagnostics(output);
                 }
@@ -246,7 +246,7 @@ macro_rules! validate_not_array_or_object {
     ($value:expr, $errors:ident, $property:expr) => {{
         let v = $value;
         if v.is_array() || v.is_object() {
-            $errors.push(CompilerError::InvalidLinePropertyType($property));
+            $errors.push(CompError::InvalidLinePropertyType($property));
             false
         } else {
             true

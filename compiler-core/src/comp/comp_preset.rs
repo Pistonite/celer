@@ -7,7 +7,7 @@ use crate::lang::PresetInst;
 use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
 
-use super::{validate_not_array_or_object, Compiler, CompilerError};
+use super::{validate_not_array_or_object, Compiler, CompError};
 
 impl<'a> Compiler<'a> {
     /// Apply the preset to the output.
@@ -19,15 +19,15 @@ impl<'a> Compiler<'a> {
         depth: usize,
         inst: &PresetInst,
         output: &mut BTreeMap<String, Value>,
-        errors: &mut Vec<CompilerError>,
+        errors: &mut Vec<CompError>,
     ) {
         if depth > self.max_preset_depth {
-            errors.push(CompilerError::MaxPresetDepthExceeded(inst.name.to_string()));
+            errors.push(CompError::MaxPresetDepthExceeded(inst.name.to_string()));
             return;
         }
         let preset = match self.meta.presets.get(&inst.name) {
             None => {
-                errors.push(CompilerError::PresetNotFound(inst.name.to_string()));
+                errors.push(CompError::PresetNotFound(inst.name.to_string()));
                 return;
             }
             Some(preset) => preset,
@@ -58,7 +58,7 @@ impl<'a> Compiler<'a> {
         depth: usize,
         presets: Value,
         output: &mut BTreeMap<String, Value>,
-        errors: &mut Vec<CompilerError>,
+        errors: &mut Vec<CompError>,
     ) {
         let preset_arr = match presets {
             Value::Array(arr) => arr,
@@ -75,14 +75,14 @@ impl<'a> Compiler<'a> {
 
             let preset_string = preset_value.coerce_to_string();
             if !preset_string.starts_with('_') {
-                errors.push(CompilerError::InvalidPresetString(preset_string));
+                errors.push(CompError::InvalidPresetString(preset_string));
                 continue;
             }
 
             let preset_inst = PresetInst::try_parse(&preset_string);
             match preset_inst {
                 None => {
-                    errors.push(CompilerError::InvalidPresetString(preset_string));
+                    errors.push(CompError::InvalidPresetString(preset_string));
                 }
                 Some(inst) => {
                     self.apply_preset(depth + 1, &inst, output, errors).await;
@@ -96,7 +96,7 @@ impl<'a> Compiler<'a> {
         &self,
         depth: usize,
         movements: Value,
-        errors: &mut Vec<CompilerError>,
+        errors: &mut Vec<CompError>,
     ) -> Value {
         let array = match movements {
             Value::Array(array) => array,
@@ -114,7 +114,7 @@ impl<'a> Compiler<'a> {
             };
             let preset_inst = match PresetInst::try_parse(preset_str) {
                 None => {
-                    errors.push(CompilerError::InvalidPresetString(preset_str.to_string()));
+                    errors.push(CompError::InvalidPresetString(preset_str.to_string()));
                     continue;
                 }
                 Some(inst) => inst,
@@ -131,7 +131,7 @@ impl<'a> Compiler<'a> {
                     new_array.extend(movements);
                 }
                 _ => {
-                    errors.push(CompilerError::InvalidMovementPreset(preset_str.to_string()));
+                    errors.push(CompError::InvalidMovementPreset(preset_str.to_string()));
                 }
             }
         }
@@ -253,7 +253,7 @@ mod test {
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
-            vec![CompilerError::PresetNotFound("_preset2".to_string())]
+            vec![CompError::PresetNotFound("_preset2".to_string())]
         );
     }
 
@@ -418,7 +418,7 @@ mod test {
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
-            vec![CompilerError::InvalidPresetString("preset one".to_string())]
+            vec![CompError::InvalidPresetString("preset one".to_string())]
         );
 
         errors.clear();
@@ -438,11 +438,11 @@ mod test {
         assert_eq!(
             errors,
             vec![
-                CompilerError::InvalidLinePropertyType("presets[0]".to_string()),
-                CompilerError::InvalidPresetString("foo".to_string()),
-                CompilerError::PresetNotFound("_foo".to_string()),
-                CompilerError::InvalidPresetString("_hello::".to_string()),
-                CompilerError::InvalidPresetString("123".to_string()),
+                CompError::InvalidLinePropertyType("presets[0]".to_string()),
+                CompError::InvalidPresetString("foo".to_string()),
+                CompError::PresetNotFound("_foo".to_string()),
+                CompError::InvalidPresetString("_hello::".to_string()),
+                CompError::InvalidPresetString("123".to_string()),
             ]
         );
 
@@ -462,7 +462,7 @@ mod test {
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
-            vec![CompilerError::MaxPresetDepthExceeded(
+            vec![CompError::MaxPresetDepthExceeded(
                 "_preset::three".to_string()
             ),]
         );
@@ -640,11 +640,11 @@ mod test {
         assert_eq!(
             errors,
             vec![
-                CompilerError::PresetNotFound("_invalid".to_string()),
-                CompilerError::InvalidMovementPreset("_invalid".to_string()),
-                CompilerError::InvalidPresetString("_invalid::".to_string()),
-                CompilerError::InvalidMovementPreset("_invalid::nomovements".to_string()),
-                CompilerError::InvalidMovementPreset("_invalid::one".to_string()),
+                CompError::PresetNotFound("_invalid".to_string()),
+                CompError::InvalidMovementPreset("_invalid".to_string()),
+                CompError::InvalidPresetString("_invalid::".to_string()),
+                CompError::InvalidMovementPreset("_invalid::nomovements".to_string()),
+                CompError::InvalidMovementPreset("_invalid::one".to_string()),
             ]
         );
 
@@ -668,8 +668,8 @@ mod test {
         assert_eq!(
             errors,
             vec![
-                CompilerError::MaxPresetDepthExceeded("_invalid::overflow".to_string()),
-                CompilerError::InvalidMovementPreset("_invalid::overflow".to_string()),
+                CompError::MaxPresetDepthExceeded("_invalid::overflow".to_string()),
+                CompError::InvalidMovementPreset("_invalid::overflow".to_string()),
             ]
         );
     }

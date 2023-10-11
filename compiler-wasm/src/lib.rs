@@ -18,7 +18,7 @@ import! {
 }
 
 // WASM output type implementation
-into! {ExecDoc}
+into! {ExecDoc<'a>, 'a}
 
 ffi!(
     /// Initialize

@@ -3,8 +3,9 @@
 //! This plugin looks for the `link` tag and transforms it into a link.
 use celerctypes::{DocRichText, ExecDoc};
 
-use crate::api::CompilerMetadata;
+use crate::api::{CompilerMetadata, CompilerContext};
 use crate::comp::CompDoc;
+use crate::pack::PackerResult;
 use crate::prop;
 use crate::macros::{async_trait, maybe_send};
 
@@ -13,6 +14,15 @@ use super::{operation, PluginRuntime, PlugResult};
 pub struct LinkPlugin;
 #[maybe_send(async_trait)]
 impl PluginRuntime for LinkPlugin {
+    async fn on_pre_compile(&mut self, ctx: &mut CompilerContext) -> PackerResult<()> {
+        // add the link tag if not defined already
+        ctx.phase0
+            .project
+            .tags
+            .entry(prop::LINK.to_string())
+            .or_default();
+        Ok(())
+    }
     async fn on_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
         operation::for_all_lines(comp_doc, |mut line| async {
             operation::for_all_rich_text(&mut line, transform_link_tag).await;
@@ -20,16 +30,6 @@ impl PluginRuntime for LinkPlugin {
         })
         .await;
 
-        Ok(())
-    }
-
-    async fn on_post_compile<'a>(&mut self, _: &'a CompilerMetadata, doc: &mut ExecDoc<'a>) -> PlugResult<()> {
-        // add the link tag if not defined already
-        doc
-            .project
-            .tags
-            .entry(prop::LINK.to_string())
-            .or_default();
         Ok(())
     }
 

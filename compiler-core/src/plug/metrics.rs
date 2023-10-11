@@ -54,14 +54,15 @@ impl PluginRuntime for MetricsPlugin {
     }
     async fn on_post_compile<'a>(&mut self, _: &'a CompilerMetadata, doc: &mut ExecDoc<'a>) -> PlugResult<()> {
         let exec_time_ms = self.last_start_time.elapsed().as_millis() as u64;
+        let project = doc.project.to_mut();
         if self.detailed {
-            doc.project.stats.insert("Pack0 Time".to_string(), format!("{}ms", self.prep_time_ms));
-            doc.project.stats.insert("Pack1+Comp Time".to_string(), format!("{}ms", self.comp_time_ms));
-            doc.project.stats.insert("Exec Time".to_string(), format!("{exec_time_ms}ms"));
+            project.stats.insert("Pack0 Time".to_string(), format!("{}ms", self.prep_time_ms));
+            project.stats.insert("Pack1+Comp Time".to_string(), format!("{}ms", self.comp_time_ms));
+            project.stats.insert("Exec Time".to_string(), format!("{exec_time_ms}ms"));
             let total_ms = self.prep_time_ms + self.comp_time_ms + exec_time_ms;
-            doc.project.stats.insert("Compiled In".to_string(), format!("{total_ms}ms"));
+            project.stats.insert("Compiled In".to_string(), format!("{total_ms}ms"));
         } else {
-            doc.project.stats.insert("Compiled In".to_string(), format!("{exec_time_ms}ms"));
+            project.stats.insert("Compiled In".to_string(), format!("{exec_time_ms}ms"));
         }
         Ok(())
     }
