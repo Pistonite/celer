@@ -29,7 +29,7 @@ impl CompDoc {
 #[cfg(test)]
 mod test {
     use celerctypes::{
-        DocDiagnostic, DocPoorText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine,
+        DocDiagnostic, DocRichText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine,
         MapMetadata, RouteMetadata,
     };
 
@@ -46,7 +46,7 @@ mod test {
             ..Default::default()
         };
 
-        let test_preface = vec![vec![DocPoorText::Text("test".to_string())]];
+        let test_preface = vec![vec![DocRichText::text("test")]];
 
         let test_diagnostics = vec![DocDiagnostic {
             msg: parse_poor("test msg"),

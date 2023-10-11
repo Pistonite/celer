@@ -1,11 +1,9 @@
-use celerctypes::{DocDiagnostic, DocPoorText};
+use celerctypes::{DocDiagnostic, DocRichText};
 use serde::{Deserialize, Serialize};
 
-use crate::json::Cast;
-use crate::json::Coerce;
-use crate::lang::parse_poor;
-use crate::pack::PackerError;
-use crate::pack::PackerValue;
+use crate::json::{Cast, Coerce};
+use crate::lang::parse_rich;
+use crate::pack::{PackerError, PackerValue};
 use crate::util::async_for;
 
 use super::{CompError, CompLine, CompSection, Compiler};
@@ -15,7 +13,7 @@ use super::{CompError, CompLine, CompSection, Compiler};
 #[serde(rename_all = "camelCase")]
 pub struct CompDoc {
     /// The preface
-    pub preface: Vec<Vec<DocPoorText>>,
+    pub preface: Vec<Vec<DocRichText>>,
     /// The route
     pub route: Vec<CompSection>,
     /// Overall diagnostics (that don't apply to any line)
@@ -53,7 +51,7 @@ impl<'a> Compiler<'a> {
 
     async fn add_section_or_preface(
         &mut self,
-        preface: &mut Vec<Vec<DocPoorText>>,
+        preface: &mut Vec<Vec<DocRichText>>,
         route: &mut Vec<CompSection>,
         value: PackerValue,
     ) -> Result<(), CompError> {
@@ -66,7 +64,7 @@ impl<'a> Compiler<'a> {
                 if let CompError::IsPreface(v) = &e {
                     if route.is_empty() {
                         let text = v.coerce_to_string();
-                        preface.push(parse_poor(&text));
+                        preface.push(parse_rich(&text));
                         return Ok(());
                     }
                 }

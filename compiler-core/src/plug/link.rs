@@ -24,6 +24,12 @@ impl PluginRuntime for LinkPlugin {
         Ok(())
     }
     async fn on_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
+        operation::for_all_preface_lines(comp_doc, |preface| {
+            for block in preface.iter_mut() {
+                transform_link_tag(block);
+            }
+        })
+        .await;
         operation::for_all_lines(comp_doc, |mut line| async {
             operation::for_all_rich_text(&mut line, transform_link_tag).await;
             line
