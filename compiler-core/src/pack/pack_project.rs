@@ -6,9 +6,7 @@ use crate::json::{Cast, Coerce};
 use crate::prop;
 use crate::util::async_for;
 
-use super::{
-    pack_config, pack_route, ConfigBuilder, PackerError, PackerResult, PackerValue, Resource,
-};
+use super::{pack_config, ConfigBuilder, PackerError, PackerResult, Resource};
 
 macro_rules! check_metadata_not_array_or_object {
     ($property:expr, $value:ident) => {{

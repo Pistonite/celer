@@ -11,7 +11,7 @@ use crate::prop;
 use crate::util::async_for;
 
 use super::{
-    validate_not_array_or_object, CompMarker, CompMovement, Compiler, CompError, CompilerResult,
+    validate_not_array_or_object, CompError, CompMarker, CompMovement, Compiler, CompilerResult,
 };
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
@@ -156,9 +156,7 @@ impl<'a> Compiler<'a> {
                 let iter = match value {
                     Value::Array(arr) => arr.into_iter(),
                     Value::Object(_) => {
-                        errors.push(CompError::InvalidLinePropertyType(
-                            prop::NOTES.to_string(),
-                        ));
+                        errors.push(CompError::InvalidLinePropertyType(prop::NOTES.to_string()));
                         vec![].into_iter()
                     }
                     _ => vec![value].into_iter(),
@@ -185,9 +183,7 @@ impl<'a> Compiler<'a> {
             }
             prop::ICON => match value {
                 Value::Array(_) => {
-                    errors.push(CompError::InvalidLinePropertyType(
-                        prop::ICON.to_string(),
-                    ));
+                    errors.push(CompError::InvalidLinePropertyType(prop::ICON.to_string()));
                 }
                 Value::Object(obj) => {
                     // ignore error from async loop
@@ -539,9 +535,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("[object array]")],
                 ..Default::default()
             },
-            vec![CompError::InvalidLinePropertyType(
-                "comment".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("comment".to_string())],
         )
         .await;
 
@@ -656,9 +650,7 @@ mod test {
                 text: vec![DocRichText::text("foo")],
                 ..Default::default()
             },
-            vec![CompError::InvalidLinePropertyType(
-                "split-name".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("split-name".to_string())],
         )
         .await;
 
@@ -1139,9 +1131,7 @@ mod test {
                 text: vec![DocRichText::text("counter is invalid")],
                 ..Default::default()
             },
-            vec![CompError::InvalidLinePropertyType(
-                "counter".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("counter".to_string())],
         )
         .await;
 
@@ -1300,9 +1290,7 @@ mod test {
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
-            vec![CompError::InvalidLinePropertyType(
-                "movements".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("movements".to_string())],
         )
         .await;
     }
@@ -1399,9 +1387,7 @@ mod test {
                 text: vec![DocRichText::text("test markers invalid type")],
                 ..Default::default()
             },
-            vec![CompError::InvalidLinePropertyType(
-                "markers".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("markers".to_string())],
         )
         .await;
 

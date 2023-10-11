@@ -85,10 +85,7 @@ mod test {
     async fn test_line_array() {
         assert_eq!(
             desugar_line(json!([])).await,
-            Err((
-                "[object array]".to_string(),
-                CompError::ArrayCannotBeLine
-            ))
+            Err(("[object array]".to_string(), CompError::ArrayCannotBeLine))
         );
     }
 

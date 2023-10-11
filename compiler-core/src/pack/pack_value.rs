@@ -1,8 +1,11 @@
-use std::{borrow::Cow, collections::BTreeMap};
+use std::collections::BTreeMap;
 
-use serde_json::{Value, Map};
+use serde_json::{Map, Value};
 
-use crate::{macros::{async_recursion, maybe_send}, json::Cast};
+use crate::{
+    json::Cast,
+    macros::{async_recursion, maybe_send},
+};
 
 use super::PackerError;
 

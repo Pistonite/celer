@@ -11,7 +11,7 @@ pub mod util;
 
 /// Re-exports of macros
 pub mod macros {
-    pub use celercmacros::*;
-    pub use async_trait::async_trait;
     pub use async_recursion::async_recursion;
+    pub use async_trait::async_trait;
+    pub use celercmacros::*;
 }

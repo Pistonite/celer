@@ -1,14 +1,12 @@
-use celerctypes::{DocDiagnostic, RouteMetadata, ExecDoc};
+use celerctypes::{DocDiagnostic, ExecDoc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::CompDoc;
-use crate::json::Coerce;
 use crate::lang::parse_poor;
-use crate::macros::{maybe_send, async_trait};
+use crate::macros::{async_trait, maybe_send};
 use crate::pack::PackerResult;
-use crate::prop;
 
 mod link;
 mod metrics;
@@ -44,7 +42,11 @@ pub trait PluginRuntime {
     async fn on_compile(&mut self, _meta: &CompilerMetadata, _doc: &mut CompDoc) -> PlugResult<()> {
         Ok(())
     }
-    async fn on_post_compile<'a>(&mut self, _meta: &'a CompilerMetadata, _doc: &mut ExecDoc<'a>) -> PlugResult<()> {
+    async fn on_post_compile<'a>(
+        &mut self,
+        _meta: &'a CompilerMetadata,
+        _doc: &mut ExecDoc<'a>,
+    ) -> PlugResult<()> {
         Ok(())
     }
 }
@@ -60,8 +62,10 @@ impl PluginInstance {
         match &self.plugin {
             Plugin::BuiltIn(built_in) => match built_in {
                 BuiltInPlugin::Link => Box::new(link::LinkPlugin),
-                BuiltInPlugin::Metrics => 
-                    Box::new(metrics::MetricsPlugin::from_props(&self.props, context.get_start_time())),
+                BuiltInPlugin::Metrics => Box::new(metrics::MetricsPlugin::from_props(
+                    &self.props,
+                    context.get_start_time(),
+                )),
             },
             // TODO #24 implement JS plugin engine
             Plugin::Script(_) => Box::new(ScriptPluginRuntime),

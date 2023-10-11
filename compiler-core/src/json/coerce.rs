@@ -156,6 +156,7 @@ mod test {
         assert_eq!(None, json!({}).try_coerce_to_bool());
     }
 
+    #[allow(clippy::bool_assert_comparison)]
     #[test]
     fn test_truthy() {
         assert_eq!(true, json!("1.0").coerce_truthy());

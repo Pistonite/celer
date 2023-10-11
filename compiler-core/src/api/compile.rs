@@ -1,12 +1,10 @@
 use std::borrow::Cow;
 
 use celerctypes::ExecDoc;
-use serde_json::{json, Value};
 
 use crate::comp::Compiler;
-use crate::pack::{PackerResult, pack_route};
-use crate::plug::{BuiltInPlugin, Plugin, PluginRuntime};
-use crate::prop;
+use crate::pack::pack_route;
+use crate::plug::PluginRuntime;
 use crate::util::async_for;
 
 use super::CompilerContext;
@@ -23,7 +21,8 @@ impl CompilerContext {
             self.phase0.route.clone(),
             self.setting.max_use_depth,
             self.setting.max_ref_depth,
-        ).await;
+        )
+        .await;
 
         // comp phase
         let compiler = self.create_compiler();
@@ -34,7 +33,7 @@ impl CompilerContext {
                 return None;
             }
         };
-        
+
         for plugin in plugin_runtimes.iter_mut() {
             if let Err(e) = plugin.on_compile(&self.phase0.meta, &mut comp_doc).await {
                 e.add_to_diagnostics(&mut comp_doc.diagnostics);
@@ -51,12 +50,14 @@ impl CompilerContext {
         };
 
         for plugin in plugin_runtimes.iter_mut() {
-            if let Err(e) = plugin.on_post_compile(&self.phase0.meta, &mut exec_doc).await {
+            if let Err(e) = plugin
+                .on_post_compile(&self.phase0.meta, &mut exec_doc)
+                .await
+            {
                 e.add_to_diagnostics(&mut exec_doc.diagnostics);
             }
         }
         Some(exec_doc)
-
     }
     async fn create_plugin_runtimes(&self) -> Vec<Box<dyn PluginRuntime>> {
         let mut runtimes = Vec::with_capacity(self.phase0.meta.plugins.len());

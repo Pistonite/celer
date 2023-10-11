@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use serde_json::Value;
 
 use crate::lang::TempStr;
-use crate::macros::{maybe_send, async_recursion};
+use crate::macros::{async_recursion, maybe_send};
 
 use super::{Preset, PresetBlob};
 

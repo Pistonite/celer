@@ -7,7 +7,7 @@ use crate::lang::PresetInst;
 use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
 
-use super::{validate_not_array_or_object, Compiler, CompError};
+use super::{validate_not_array_or_object, CompError, Compiler};
 
 impl<'a> Compiler<'a> {
     /// Apply the preset to the output.

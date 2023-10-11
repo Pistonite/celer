@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
 
-use super::{Compiler, CompError};
+use super::{CompError, Compiler};
 
 macro_rules! map_coord {
     ($mapping:ident, $array:ident, $output:ident, $i:tt) => {{
@@ -79,10 +79,7 @@ mod test {
 
         for (prop, text) in vals {
             let res = compiler.transform_coord(prop);
-            assert_eq!(
-                res,
-                Err(CompError::InvalidCoordinateType(text.to_string()))
-            );
+            assert_eq!(res, Err(CompError::InvalidCoordinateType(text.to_string())));
         }
     }
 

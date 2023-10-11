@@ -1,15 +1,15 @@
 //! Link plugin
 //!
 //! This plugin looks for the `link` tag and transforms it into a link.
-use celerctypes::{DocRichText, ExecDoc};
+use celerctypes::DocRichText;
 
-use crate::api::{CompilerMetadata, CompilerContext};
+use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::CompDoc;
+use crate::macros::{async_trait, maybe_send};
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::macros::{async_trait, maybe_send};
 
-use super::{operation, PluginRuntime, PlugResult};
+use super::{operation, PlugResult, PluginRuntime};
 
 pub struct LinkPlugin;
 #[maybe_send(async_trait)]
@@ -32,7 +32,6 @@ impl PluginRuntime for LinkPlugin {
 
         Ok(())
     }
-
 }
 
 fn transform_link_tag(rich_text: &mut DocRichText) {

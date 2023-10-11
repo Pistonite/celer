@@ -1,10 +1,8 @@
-use std::cell::RefCell;
 use std::sync::Arc;
 
-use celerc::api::{CompilerMetadata, Setting};
+use celerc::api::Setting;
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
 use celerc::util::{self, Path};
-use celerctypes::ExecDoc;
 use js_sys::Function;
 use log::{info, LevelFilter};
 use wasm_bindgen::JsValue;
@@ -62,7 +60,7 @@ pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
 
 /// Compile a document from web editor
 ///
-/// Return None if the compilation was interrupted 
+/// Return None if the compilation was interrupted
 /// TODO #78: Option no longer needed
 ///
 /// This returns an Option<ExecDoc>, but must be converted to WASM immediately because of lifetime
@@ -84,14 +82,18 @@ pub async fn compile_document() -> Result<JsValue, JsValue> {
     let project_resource = match celerc::api::resolve_project(&resource).await {
         Ok(x) => x,
         Err(e) => {
-            return celerc::api::make_doc_for_packer_error(SOURCE_NAME, e).await.into_wasm();
+            return celerc::api::make_doc_for_packer_error(SOURCE_NAME, e)
+                .await
+                .into_wasm();
         }
     };
     // TODO #86 cache this
     let context = match celerc::api::prepare(SOURCE_NAME, project_resource, setting).await {
         Ok(x) => x,
         Err(e) => {
-            return celerc::api::make_doc_for_packer_error(SOURCE_NAME, e).await.into_wasm();
+            return celerc::api::make_doc_for_packer_error(SOURCE_NAME, e)
+                .await
+                .into_wasm();
         }
     };
 

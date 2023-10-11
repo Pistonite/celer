@@ -9,12 +9,12 @@ use super::{ExecResult, MapSectionBuilder};
 
 impl CompDoc {
     /// Execute the document
-    pub async fn exec<'a>(self, project: &'a RouteMetadata) -> ExecResult<ExecDoc<'a>> {
+    pub async fn exec(self, project: &RouteMetadata) -> ExecResult<ExecDoc<'_>> {
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("", &project.map.initial_coord);
         let mut sections = vec![];
         async_for!((index, section) in self.route.into_iter().enumerate(), {
-            let exec_section = section.exec(&project, index, &mut map_builder).await?;
+            let exec_section = section.exec(project, index, &mut map_builder).await?;
             sections.push(exec_section);
         })?;
         Ok(ExecDoc {
@@ -88,12 +88,12 @@ mod test {
         ];
 
         let project = RouteMetadata {
-                map: MapMetadata {
-                    initial_coord: GameCoord(1.1, 2.2, 3.3),
-                    ..Default::default()
-                },
+            map: MapMetadata {
+                initial_coord: GameCoord(1.1, 2.2, 3.3),
                 ..Default::default()
-            };
+            },
+            ..Default::default()
+        };
 
         let test_doc = CompDoc {
             route: test_sections.clone(),

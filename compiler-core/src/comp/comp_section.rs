@@ -5,7 +5,7 @@ use crate::lang::parse_rich;
 use crate::pack::PackerValue;
 use crate::util::async_for;
 
-use super::{CompLine, Compiler, CompError};
+use super::{CompError, CompLine, Compiler};
 
 /// Compiled Section
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]

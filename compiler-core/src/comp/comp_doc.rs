@@ -1,7 +1,6 @@
-use celerctypes::{DocDiagnostic, DocPoorText, RouteMetadata};
+use celerctypes::{DocDiagnostic, DocPoorText};
 use serde::{Deserialize, Serialize};
 
-use crate::api::CompilerMetadata;
 use crate::json::Cast;
 use crate::json::Coerce;
 use crate::lang::parse_poor;
@@ -9,7 +8,7 @@ use crate::pack::PackerError;
 use crate::pack::PackerValue;
 use crate::util::async_for;
 
-use super::{CompLine, CompSection, Compiler, CompError};
+use super::{CompError, CompLine, CompSection, Compiler};
 
 /// Compiled Document
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -24,10 +23,7 @@ pub struct CompDoc {
 }
 
 impl<'a> Compiler<'a> {
-    pub async fn comp_doc(
-        mut self,
-        route: PackerValue,
-    ) -> Result<CompDoc, CompError> {
+    pub async fn comp_doc(mut self, route: PackerValue) -> Result<CompDoc, CompError> {
         let mut route_vec = vec![];
         let mut preface = vec![];
 
@@ -45,13 +41,11 @@ impl<'a> Compiler<'a> {
         }
 
         if errors.is_empty() {
-            Ok(
-                CompDoc {
-                    preface,
-                    route: route_vec,
-                    diagnostics: vec![],
-                }
-            )
+            Ok(CompDoc {
+                preface,
+                route: route_vec,
+                diagnostics: vec![],
+            })
         } else {
             Ok(self.create_empty_doc_for_error(&errors).await)
         }
@@ -100,22 +94,16 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    pub async fn create_empty_doc_for_packer_error(
-        &self,
-        error: PackerError,
-    ) -> CompDoc {
+    pub async fn create_empty_doc_for_packer_error(&self, error: PackerError) -> CompDoc {
         self.create_empty_doc_for_error(&[CompError::PackerErrors(vec![error])])
             .await
     }
 
-    pub async fn create_empty_doc_for_error(
-        &self,
-        errors: &[CompError],
-    ) -> CompDoc {
-            CompDoc {
-                route: vec![self.create_empty_section_for_error(errors).await],
-                preface: vec![],
-                diagnostics: vec![],
-            }
+    pub async fn create_empty_doc_for_error(&self, errors: &[CompError]) -> CompDoc {
+        CompDoc {
+            route: vec![self.create_empty_section_for_error(errors).await],
+            preface: vec![],
+            diagnostics: vec![],
+        }
     }
 }

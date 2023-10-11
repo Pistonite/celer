@@ -6,7 +6,7 @@ use crate::json::Coerce;
 use crate::prop;
 use crate::util::async_for;
 
-use super::{Compiler, CompError};
+use super::{CompError, Compiler};
 
 /// Compiled map movement
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -378,9 +378,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompError::InvalidLinePropertyType(
-                "te.icon".to_string()
-            )]
+            vec![CompError::InvalidLinePropertyType("te.icon".to_string())]
         );
 
         errors.clear();
@@ -399,9 +397,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompError::InvalidLinePropertyType(
-                "te.exclude".to_string()
-            )]
+            vec![CompError::InvalidLinePropertyType("te.exclude".to_string())]
         );
 
         errors.clear();
@@ -420,9 +416,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompError::InvalidLinePropertyType(
-                "te.warp".to_string()
-            )]
+            vec![CompError::InvalidLinePropertyType("te.warp".to_string())]
         );
 
         errors.clear();
@@ -441,9 +435,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompError::InvalidLinePropertyType(
-                "test.color".to_string()
-            )]
+            vec![CompError::InvalidLinePropertyType("test.color".to_string())]
         );
     }
 

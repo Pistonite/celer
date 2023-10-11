@@ -1,5 +1,5 @@
 //! Celer Compiler API
-use celerctypes::{RouteMetadata, ExecDoc};
+use celerctypes::{ExecDoc, RouteMetadata};
 use instant::Instant;
 use log::{error, info};
 use std::borrow::Cow;
@@ -14,7 +14,7 @@ use derivative::Derivative;
 
 use crate::comp::Compiler;
 use crate::lang::Preset;
-use crate::pack::{PackerError, PackerResult, Resource, ValidUse, Phase0};
+use crate::pack::{PackerError, PackerResult, Phase0, Resource, ValidUse};
 use crate::plug::PluginInstance;
 
 /// Resolve project.yaml resource under the root resource
@@ -39,10 +39,13 @@ pub fn make_project_for_error(source: &str) -> RouteMetadata {
 }
 
 // TODO #78: Option no longer needed
-pub async fn make_doc_for_packer_error(source: &str, error: PackerError) -> Option<ExecDoc<'static>> {
+pub async fn make_doc_for_packer_error(
+    source: &str,
+    error: PackerError,
+) -> Option<ExecDoc<'static>> {
     let comp_doc = Compiler::default()
-                .create_empty_doc_for_packer_error(error)
-                .await;
+        .create_empty_doc_for_packer_error(error)
+        .await;
     let project = make_project_for_error(source);
     let exec_doc = comp_doc.exec(&project).await.ok()?;
     Some(ExecDoc {

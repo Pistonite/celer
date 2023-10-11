@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use crate::json::Cast;
 use crate::lang::Preset;
-use crate::macros::{maybe_send, async_recursion};
+use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
 use crate::util::async_for;
 

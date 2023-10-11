@@ -6,7 +6,7 @@ use crate::json::{Cast, Coerce};
 use crate::prop;
 use crate::util::async_for;
 
-use super::{Compiler, CompError};
+use super::{CompError, Compiler};
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
