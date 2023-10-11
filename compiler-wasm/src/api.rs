@@ -1,10 +1,8 @@
-use std::cell::RefCell;
 use std::sync::Arc;
 
-use celerc::api::{CompilerMetadata, CompilerOutput, Setting};
+use celerc::api::Setting;
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
 use celerc::util::{self, Path};
-use celerctypes::ExecDoc;
 use js_sys::Function;
 use log::{info, LevelFilter};
 use wasm_bindgen::JsValue;
@@ -13,8 +11,10 @@ use web_sys::console;
 use crate::loader_file::FileLoader;
 use crate::loader_url::UrlLoader;
 use crate::logger::{self, Logger};
+use crate::wasm::WasmInto;
 
 const LOGGER: Logger = Logger;
+const SOURCE_NAME: &str = "(local)";
 
 thread_local! {
     #[allow(clippy::arc_with_non_send_sync)]
@@ -24,10 +24,6 @@ thread_local! {
 thread_local! {
     #[allow(clippy::arc_with_non_send_sync)]
     static URL_LOADER: Arc<UrlLoader> = Arc::new(UrlLoader::new());
-}
-
-thread_local! {
-    static COMPILER_META: RefCell<Option<CompilerMetadata>> = RefCell::new(None);
 }
 
 /// Initialize
@@ -65,7 +61,11 @@ pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
 /// Compile a document from web editor
 ///
 /// Return None if the compilation was interrupted
-pub async fn compile_document() -> Option<ExecDoc> {
+/// TODO #78: Option no longer needed
+///
+/// This returns an Option<ExecDoc>, but must be converted to WASM immediately because of lifetime
+/// As part of TODO #86 this should be improved as well
+pub async fn compile_document() -> Result<JsValue, JsValue> {
     // create root resource
     let fs_loader = FILE_LOADER.with(|x| x.clone());
     let url_loader = URL_LOADER.with(|x| x.clone());
@@ -79,15 +79,23 @@ pub async fn compile_document() -> Option<ExecDoc> {
     );
 
     let setting = Setting::default();
-
-    match celerc::api::compile(&resource, &setting).await {
-        CompilerOutput::Cancelled => None,
-        CompilerOutput::Ok(output) => {
-            let metadata = output.metadata;
-            COMPILER_META.with(|x| {
-                x.borrow_mut().replace(metadata);
-            });
-            Some(output.exec_doc)
+    let project_resource = match celerc::api::resolve_project(&resource).await {
+        Ok(x) => x,
+        Err(e) => {
+            return celerc::api::make_doc_for_packer_error(SOURCE_NAME, e)
+                .await
+                .into_wasm();
         }
-    }
+    };
+    // TODO #86 cache this
+    let context = match celerc::api::prepare(SOURCE_NAME, project_resource, setting).await {
+        Ok(x) => x,
+        Err(e) => {
+            return celerc::api::make_doc_for_packer_error(SOURCE_NAME, e)
+                .await
+                .into_wasm();
+        }
+    };
+
+    context.compile().await.into_wasm()
 }

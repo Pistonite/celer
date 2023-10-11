@@ -11,7 +11,7 @@ use crate::prop;
 use crate::util::async_for;
 
 use super::{
-    validate_not_array_or_object, CompMarker, CompMovement, Compiler, CompilerError, CompilerResult,
+    validate_not_array_or_object, CompError, CompMarker, CompMovement, Compiler, CompilerResult,
 };
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
@@ -50,7 +50,7 @@ pub struct CompLine {
     pub properties: HashMap<String, Value>,
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     /// Compile a line
     ///
     /// 1. Text line is turned into {line: {}}
@@ -141,7 +141,7 @@ impl Compiler {
         key: &str,
         value: Value,
         output: &mut CompLine,
-        errors: &mut Vec<CompilerError>,
+        errors: &mut Vec<CompError>,
     ) {
         match key {
             prop::TEXT => {
@@ -156,9 +156,7 @@ impl Compiler {
                 let iter = match value {
                     Value::Array(arr) => arr.into_iter(),
                     Value::Object(_) => {
-                        errors.push(CompilerError::InvalidLinePropertyType(
-                            prop::NOTES.to_string(),
-                        ));
+                        errors.push(CompError::InvalidLinePropertyType(prop::NOTES.to_string()));
                         vec![].into_iter()
                     }
                     _ => vec![value].into_iter(),
@@ -185,9 +183,7 @@ impl Compiler {
             }
             prop::ICON => match value {
                 Value::Array(_) => {
-                    errors.push(CompilerError::InvalidLinePropertyType(
-                        prop::ICON.to_string(),
-                    ));
+                    errors.push(CompError::InvalidLinePropertyType(prop::ICON.to_string()));
                 }
                 Value::Object(obj) => {
                     // ignore error from async loop
@@ -215,14 +211,14 @@ impl Compiler {
                                 if let Some(i) = value.try_coerce_to_i64() {
                                     output.map_icon_priority = i;
                                 } else {
-                                    errors.push(CompilerError::InvalidLinePropertyType(format!(
+                                    errors.push(CompError::InvalidLinePropertyType(format!(
                                         "{}.{}",
                                         prop::ICON, prop::PRIORITY
                                     )));
                                 }
                             }
                             key => {
-                                errors.push(CompilerError::UnusedProperty(format!(
+                                errors.push(CompError::UnusedProperty(format!(
                                     "{}.{key}",
                                     prop::ICON
                                 )));
@@ -245,7 +241,7 @@ impl Compiler {
                             output.counter_text = Some(first);
                         }
                         if blocks.next().is_some() {
-                            errors.push(CompilerError::TooManyTagsInCounter);
+                            errors.push(CompError::TooManyTagsInCounter);
                         }
                     }
                 }
@@ -293,7 +289,7 @@ impl Compiler {
                             }
                         }
                     }
-                    _ => errors.push(CompilerError::InvalidLinePropertyType(
+                    _ => errors.push(CompError::InvalidLinePropertyType(
                         prop::MOVEMENTS.to_string(),
                     )),
                 }
@@ -309,7 +305,7 @@ impl Compiler {
                         }
                     });
                 }
-                _ => errors.push(CompilerError::InvalidLinePropertyType(
+                _ => errors.push(CompError::InvalidLinePropertyType(
                     prop::MARKERS.to_string(),
                 )),
             },
@@ -331,16 +327,16 @@ mod test {
 
     use super::*;
 
-    async fn test_comp_ok(compiler: &mut Compiler, input: Value, expected: CompLine) {
+    async fn test_comp_ok(compiler: &mut Compiler<'static>, input: Value, expected: CompLine) {
         let result = compiler.comp_line(input).await;
         assert_eq!(result, Ok(expected));
     }
 
     async fn test_comp_err(
-        compiler: &mut Compiler,
+        compiler: &mut Compiler<'static>,
         input: Value,
         expected: CompLine,
-        errors: Vec<CompilerError>,
+        errors: Vec<CompError>,
     ) {
         let result = compiler.comp_line(input).await;
         assert_eq!(result, Err((expected, errors)));
@@ -436,7 +432,7 @@ mod test {
                 text: vec![DocRichText::text("[object array]")],
                 ..Default::default()
             },
-            vec![CompilerError::ArrayCannotBeLine],
+            vec![CompError::ArrayCannotBeLine],
         )
         .await;
 
@@ -447,7 +443,7 @@ mod test {
                 text: vec![DocRichText::text("[object object]")],
                 ..Default::default()
             },
-            vec![CompilerError::EmptyObjectCannotBeLine],
+            vec![CompError::EmptyObjectCannotBeLine],
         )
         .await;
 
@@ -461,7 +457,7 @@ mod test {
                 text: vec![DocRichText::text("[object object]")],
                 ..Default::default()
             },
-            vec![CompilerError::TooManyKeysInObjectLine],
+            vec![CompError::TooManyKeysInObjectLine],
         )
         .await;
 
@@ -474,7 +470,7 @@ mod test {
                 text: vec![DocRichText::text("[object object]")],
                 ..Default::default()
             },
-            vec![CompilerError::LinePropertiesMustBeObject],
+            vec![CompError::LinePropertiesMustBeObject],
         )
         .await;
     }
@@ -508,7 +504,7 @@ mod test {
                 text: vec![DocRichText::text("[object array]")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType("text".to_string())],
+            vec![CompError::InvalidLinePropertyType("text".to_string())],
         )
         .await;
 
@@ -539,9 +535,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("[object array]")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType(
-                "comment".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("comment".to_string())],
         )
         .await;
 
@@ -595,7 +589,7 @@ mod test {
                 text: vec![DocRichText::text("foo")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType("notes".to_string())],
+            vec![CompError::InvalidLinePropertyType("notes".to_string())],
         )
         .await;
 
@@ -621,8 +615,8 @@ mod test {
                 ..Default::default()
             },
             vec![
-                CompilerError::InvalidLinePropertyType("comment".to_string()),
-                CompilerError::InvalidLinePropertyType("notes[1]".to_string()),
+                CompError::InvalidLinePropertyType("comment".to_string()),
+                CompError::InvalidLinePropertyType("notes[1]".to_string()),
             ],
         )
         .await;
@@ -656,9 +650,7 @@ mod test {
                 text: vec![DocRichText::text("foo")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType(
-                "split-name".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("split-name".to_string())],
         )
         .await;
 
@@ -862,7 +854,7 @@ mod test {
                 text: vec![DocRichText::text("test")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidPresetString("foo".to_string())],
+            vec![CompError::InvalidPresetString("foo".to_string())],
         )
         .await;
 
@@ -878,11 +870,11 @@ mod test {
                 ..Default::default()
             },
             vec![
-                CompilerError::InvalidLinePropertyType("presets[0]".to_string()),
-                CompilerError::InvalidPresetString("foo".to_string()),
-                CompilerError::PresetNotFound("_foo".to_string()),
-                CompilerError::InvalidPresetString("_hello::".to_string()),
-                CompilerError::InvalidPresetString("123".to_string()),
+                CompError::InvalidLinePropertyType("presets[0]".to_string()),
+                CompError::InvalidPresetString("foo".to_string()),
+                CompError::PresetNotFound("_foo".to_string()),
+                CompError::InvalidPresetString("_hello::".to_string()),
+                CompError::InvalidPresetString("123".to_string()),
             ],
         )
         .await;
@@ -920,7 +912,7 @@ mod test {
                 text: vec![DocRichText::text("_preset::overflow")],
                 ..Default::default()
             },
-            vec![CompilerError::MaxPresetDepthExceeded(
+            vec![CompError::MaxPresetDepthExceeded(
                 "_preset::overflow".to_string(),
             )],
         )
@@ -958,7 +950,7 @@ mod test {
                 text: vec![DocRichText::text("icon is string")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType("icon".to_string())],
+            vec![CompError::InvalidLinePropertyType("icon".to_string())],
         )
         .await;
 
@@ -973,7 +965,7 @@ mod test {
                 text: vec![DocRichText::text("icon is array")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType("icon".to_string())],
+            vec![CompError::InvalidLinePropertyType("icon".to_string())],
         )
         .await;
 
@@ -1029,10 +1021,10 @@ mod test {
                 ..Default::default()
             },
             vec![
-                CompilerError::UnusedProperty("icon.boo".to_string()),
-                CompilerError::InvalidLinePropertyType("icon.doc".to_string()),
-                CompilerError::InvalidLinePropertyType("icon.map".to_string()),
-                CompilerError::InvalidLinePropertyType("icon.priority".to_string()),
+                CompError::UnusedProperty("icon.boo".to_string()),
+                CompError::InvalidLinePropertyType("icon.doc".to_string()),
+                CompError::InvalidLinePropertyType("icon.map".to_string()),
+                CompError::InvalidLinePropertyType("icon.priority".to_string()),
             ],
         )
         .await;
@@ -1139,9 +1131,7 @@ mod test {
                 text: vec![DocRichText::text("counter is invalid")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType(
-                "counter".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("counter".to_string())],
         )
         .await;
 
@@ -1157,7 +1147,7 @@ mod test {
                 counter_text: Some(DocRichText::with_tag("v", "hello")),
                 ..Default::default()
             },
-            vec![CompilerError::TooManyTagsInCounter],
+            vec![CompError::TooManyTagsInCounter],
         )
         .await;
     }
@@ -1222,7 +1212,7 @@ mod test {
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType("color".to_string())],
+            vec![CompError::InvalidLinePropertyType("color".to_string())],
         )
         .await;
     }
@@ -1300,9 +1290,7 @@ mod test {
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType(
-                "movements".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("movements".to_string())],
         )
         .await;
     }
@@ -1399,9 +1387,7 @@ mod test {
                 text: vec![DocRichText::text("test markers invalid type")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidLinePropertyType(
-                "markers".to_string(),
-            )],
+            vec![CompError::InvalidLinePropertyType("markers".to_string())],
         )
         .await;
 
@@ -1418,7 +1404,7 @@ mod test {
                 text: vec![DocRichText::text("test markers invalid marker type")],
                 ..Default::default()
             },
-            vec![CompilerError::InvalidMarkerType],
+            vec![CompError::InvalidMarkerType],
         )
         .await;
     }

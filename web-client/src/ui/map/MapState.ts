@@ -190,10 +190,13 @@ export class MapState {
     ///
     /// This will update the map layers if needed, and will always redraw the map visuals
     private onDocumentUpdate(newDoc: ExecDoc, oldDoc?: ExecDoc) {
+        // TODO #82: this needs to be changed. Otherwise changing the map in web editor will not take effect
+        // until version is changed, which is weird
+        //
         // If the project name and version is the same, assume the map layers are the same
         if (
             !oldDoc ||
-            newDoc.project.name !== oldDoc.project.name ||
+            newDoc.project.source !== oldDoc.project.source ||
             newDoc.project.version !== oldDoc.project.version
         ) {
             const { initialCoord, initialZoom, layers } = newDoc.project.map;

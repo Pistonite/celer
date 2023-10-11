@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
@@ -20,9 +21,9 @@ pub use doc::*;
 #[derive(Default, Serialize, Deserialize, Debug, Clone, TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
-pub struct ExecDoc {
+pub struct ExecDoc<'a> {
     /// Project metadata
-    pub project: RouteMetadata,
+    pub project: Cow<'a, RouteMetadata>,
     /// The preface
     pub preface: Vec<Vec<DocPoorText>>,
     /// The route
@@ -38,14 +39,16 @@ pub struct ExecDoc {
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
 pub struct RouteMetadata {
-    /// Reference id of the project. Something like username/project
-    pub name: String,
+    /// Source of the route, could be a URL or any string
+    pub source: String,
     /// Version of the project
     pub version: String,
     /// Display title of the project
     pub title: String,
     /// Map metadata
     pub map: MapMetadata,
+    /// Arbitrary key-value pairs that can be used for statistics or any other value
+    pub stats: HashMap<String, String>,
     /// Icon id to url map
     pub icons: HashMap<String, String>,
     /// Tag id to tag

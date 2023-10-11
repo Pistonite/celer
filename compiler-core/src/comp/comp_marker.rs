@@ -6,7 +6,7 @@ use crate::json::{Cast, Coerce};
 use crate::prop;
 use crate::util::async_for;
 
-use super::{Compiler, CompilerError};
+use super::{CompError, Compiler};
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -24,7 +24,7 @@ impl CompMarker {
     }
 }
 
-impl Compiler {
+impl<'a> Compiler<'a> {
     /// Try compiling a json blob to a marker object
     ///
     /// The following are valid:
@@ -34,7 +34,7 @@ impl Compiler {
         &self,
         prop_name: &str,
         prop: Value,
-        errors: &mut Vec<CompilerError>,
+        errors: &mut Vec<CompError>,
     ) -> Option<CompMarker> {
         if prop.is_array() {
             return match self.transform_coord(prop) {
@@ -46,7 +46,7 @@ impl Compiler {
             };
         }
         let mapping = prop.try_into_object().ok().or_else(|| {
-            errors.push(CompilerError::InvalidMarkerType);
+            errors.push(CompError::InvalidMarkerType);
             None
         })?;
 
@@ -66,20 +66,20 @@ impl Compiler {
                 },
                 prop::COLOR => {
                     if value.is_array() || value.is_object() {
-                        errors.push(CompilerError::InvalidLinePropertyType(format!(
+                        errors.push(CompError::InvalidLinePropertyType(format!(
                             "{prop_name}.{}", prop::COLOR
                         )))
                     } else {
                         color = Some(value.coerce_to_string())
                     }
                 }
-                _ => errors.push(CompilerError::UnusedProperty(format!("{prop_name}.{key}"))),
+                _ => errors.push(CompError::UnusedProperty(format!("{prop_name}.{key}"))),
             }
         });
 
         match at {
             None => {
-                errors.push(CompilerError::InvalidMarkerType);
+                errors.push(CompError::InvalidMarkerType);
                 None
             }
             Some(at) => {
@@ -118,7 +118,7 @@ mod test {
         for v in vals.into_iter() {
             let mut errors = vec![];
             assert_eq!(compiler.comp_marker("", v, &mut errors).await, None,);
-            assert_eq!(errors, vec![CompilerError::InvalidMarkerType]);
+            assert_eq!(errors, vec![CompError::InvalidMarkerType]);
         }
     }
 
@@ -132,7 +132,7 @@ mod test {
                 .await,
             None
         );
-        assert_eq!(errors, vec![CompilerError::InvalidCoordinateArray]);
+        assert_eq!(errors, vec![CompError::InvalidCoordinateArray]);
     }
 
     #[tokio::test]
@@ -180,9 +180,9 @@ mod test {
         assert_eq!(
             errors,
             vec![
-                CompilerError::InvalidCoordinateType("[object object]".to_string()),
-                CompilerError::InvalidLinePropertyType("test.color".to_string()),
-                CompilerError::InvalidMarkerType
+                CompError::InvalidCoordinateType("[object object]".to_string()),
+                CompError::InvalidLinePropertyType("test.color".to_string()),
+                CompError::InvalidMarkerType
             ]
         );
     }
@@ -206,7 +206,7 @@ mod test {
         );
         assert_eq!(
             errors,
-            vec![CompilerError::UnusedProperty("test.unused".to_string())]
+            vec![CompError::UnusedProperty("test.unused".to_string())]
         );
     }
 }

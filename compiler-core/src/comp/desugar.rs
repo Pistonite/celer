@@ -4,10 +4,10 @@ use serde_json::{json, Map, Value};
 
 use crate::json::Coerce;
 
-use super::CompilerError;
+use super::CompError;
 
 type DesugarLine = (String, Map<String, Value>);
-type DesugarLineError = (String, CompilerError);
+type DesugarLineError = (String, CompError);
 
 /// Desugar a line as a json blob
 ///
@@ -19,22 +19,22 @@ type DesugarLineError = (String, CompilerError);
 pub async fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError> {
     let text = value.coerce_to_string();
     match value {
-        Value::Array(_) => Err((text, CompilerError::ArrayCannotBeLine)),
+        Value::Array(_) => Err((text, CompError::ArrayCannotBeLine)),
         Value::Object(obj) => {
             let mut iter = obj.into_iter();
             let (key, obj) = match iter.next() {
                 None => {
-                    return Err((text, CompilerError::EmptyObjectCannotBeLine));
+                    return Err((text, CompError::EmptyObjectCannotBeLine));
                 }
                 Some(first) => first,
             };
             if iter.next().is_some() {
-                return Err((text, CompilerError::TooManyKeysInObjectLine));
+                return Err((text, CompError::TooManyKeysInObjectLine));
             }
             let properties = match obj {
                 Value::Object(map) => map,
                 _ => {
-                    return Err((text, CompilerError::LinePropertiesMustBeObject));
+                    return Err((text, CompError::LinePropertiesMustBeObject));
                 }
             };
             Ok((key, properties))
@@ -85,10 +85,7 @@ mod test {
     async fn test_line_array() {
         assert_eq!(
             desugar_line(json!([])).await,
-            Err((
-                "[object array]".to_string(),
-                CompilerError::ArrayCannotBeLine
-            ))
+            Err(("[object array]".to_string(), CompError::ArrayCannotBeLine))
         );
     }
 
@@ -97,15 +94,15 @@ mod test {
         let str = "[object object]";
         assert_eq!(
             desugar_line(json!({})).await,
-            Err((str.to_string(), CompilerError::EmptyObjectCannotBeLine))
+            Err((str.to_string(), CompError::EmptyObjectCannotBeLine))
         );
         assert_eq!(
             desugar_line(json!({"one":"two", "three":"four" })).await,
-            Err((str.to_string(), CompilerError::TooManyKeysInObjectLine))
+            Err((str.to_string(), CompError::TooManyKeysInObjectLine))
         );
         assert_eq!(
             desugar_line(json!({"one": []})).await,
-            Err((str.to_string(), CompilerError::LinePropertiesMustBeObject))
+            Err((str.to_string(), CompError::LinePropertiesMustBeObject))
         );
     }
 

@@ -3,7 +3,7 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
 
-use super::{Compiler, CompilerError};
+use super::{CompError, Compiler};
 
 macro_rules! map_coord {
     ($mapping:ident, $array:ident, $output:ident, $i:tt) => {{
@@ -20,18 +20,18 @@ macro_rules! map_coord {
                 }
                 Ok(())
             }
-            None => Err(CompilerError::InvalidCoordinateValue(
+            None => Err(CompError::InvalidCoordinateValue(
                 $array[i].coerce_to_repl(),
             )),
         }
     }};
 }
 
-impl Compiler {
-    pub fn transform_coord(&self, prop: Value) -> Result<GameCoord, CompilerError> {
+impl<'a> Compiler<'a> {
+    pub fn transform_coord(&self, prop: Value) -> Result<GameCoord, CompError> {
         let array = prop
             .try_into_array()
-            .map_err(|prop| CompilerError::InvalidCoordinateType(prop.coerce_to_repl()))?;
+            .map_err(|prop| CompError::InvalidCoordinateType(prop.coerce_to_repl()))?;
         let mut output = GameCoord::default();
         match array.len() {
             2 => {
@@ -45,7 +45,7 @@ impl Compiler {
                 map_coord!(mapping, array, output, 1)?;
                 map_coord!(mapping, array, output, 2)?;
             }
-            _ => return Err(CompilerError::InvalidCoordinateArray),
+            _ => return Err(CompError::InvalidCoordinateArray),
         }
 
         Ok(output)
@@ -79,10 +79,7 @@ mod test {
 
         for (prop, text) in vals {
             let res = compiler.transform_coord(prop);
-            assert_eq!(
-                res,
-                Err(CompilerError::InvalidCoordinateType(text.to_string()))
-            );
+            assert_eq!(res, Err(CompError::InvalidCoordinateType(text.to_string())));
         }
     }
 
@@ -90,13 +87,13 @@ mod test {
     fn test_array_invalid_length() {
         let compiler = Compiler::default();
         let res0 = compiler.transform_coord(json!([]));
-        assert_eq!(res0, Err(CompilerError::InvalidCoordinateArray));
+        assert_eq!(res0, Err(CompError::InvalidCoordinateArray));
         let res1 = compiler.transform_coord(json!([1]));
-        assert_eq!(res1, Err(CompilerError::InvalidCoordinateArray));
+        assert_eq!(res1, Err(CompError::InvalidCoordinateArray));
         let res4 = compiler.transform_coord(json!([1, 2, 3, 4]));
-        assert_eq!(res4, Err(CompilerError::InvalidCoordinateArray));
+        assert_eq!(res4, Err(CompError::InvalidCoordinateArray));
         let res5 = compiler.transform_coord(json!([1, 2, 3, 4, 5]));
-        assert_eq!(res5, Err(CompilerError::InvalidCoordinateArray));
+        assert_eq!(res5, Err(CompError::InvalidCoordinateArray));
     }
 
     #[test]
@@ -105,19 +102,19 @@ mod test {
         let res2 = compiler.transform_coord(json!([1, true]));
         assert_eq!(
             res2,
-            Err(CompilerError::InvalidCoordinateValue("true".to_string()))
+            Err(CompError::InvalidCoordinateValue("true".to_string()))
         );
         let res3 = compiler.transform_coord(json!(["1", [], "hello"]));
         assert_eq!(
             res3,
-            Err(CompilerError::InvalidCoordinateValue(
+            Err(CompError::InvalidCoordinateValue(
                 "[object array]".to_string()
             ))
         );
         let res2 = compiler.transform_coord(json!([null, 0]));
         assert_eq!(
             res2,
-            Err(CompilerError::InvalidCoordinateValue("null".to_string()))
+            Err(CompError::InvalidCoordinateValue("null".to_string()))
         );
     }
 

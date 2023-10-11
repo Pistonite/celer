@@ -6,7 +6,6 @@ pub mod lang;
 pub mod pack;
 pub mod plug;
 
-pub mod metrics;
 pub mod prop;
 pub mod util;
 
@@ -14,5 +13,5 @@ pub mod util;
 pub mod macros {
     pub use async_recursion::async_recursion;
     pub use async_trait::async_trait;
-    pub use celercmacros::maybe_send;
+    pub use celercmacros::*;
 }
