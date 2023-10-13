@@ -1,4 +1,5 @@
 # File Structure
+
 All your files in a Celer project should be put in one folder (or subfolders).
 Files in the project can reference other files, or an external file on GitHub,
 by using the `use` property in many places, examples include:
@@ -10,9 +11,11 @@ by using the `use` property in many places, examples include:
 Check the corresponding documentation page for more details.
 
 ## The `use` property
-The `use` property takes a file path as a string. You can specify the path as a relative, absolute, or github reference.
+
+The `use` property takes a file path as a string. You can specify the path as a relative, absolute, or GitHub reference.
 
 ### Relative Path
+
 Relative path should start with `.` or `..`, and is resolved relative to the (directory of the) current file.
 
 Examples:
@@ -22,23 +25,40 @@ Examples:
 - use: ../c.yaml # resolves to foo/c.yaml
 ```
 :::tip
-Do not use Windows style (`\`) separator
+Windows style (`\`) separator works, but it's recommended to not use it because you need to escape it.
+:::
+:::warning
+Trying to access the parent of the "root" of the project will result in an error. See [Absolute Path](#absolute-path)
+below for what "root" is.
 :::
 
 ### Absolute Path
-Absolute path can only be used in a route context (i.e. where `project.yaml` exists).
-It is resolved relative to the directory of `project.yaml`.
 
-For example, if `a.yaml` includes a `b.yaml` from GitHub, if `b.yaml` references an absolute path, it will be an error, because `b.yaml` is not in a route context.
-However, if `a.yaml` includes a `c.yaml` from the same project, `c.yaml` can reference an absolute path in the same project.
+Absolute paths are resolved relative to the "root" of the project:
 
+- If you are using the web editor, the root is the folder that's loaded in the editor
+- In a GitHub context, the root is the repository root.
+
+For example, consider the following directory structure:
+``` 
+.
+├── parts/
+│   ├── a.yaml
+│   └── subfolder/
+│       └── b.yaml
+└── project.yaml
+```
+
+Suppose `b.yaml` want to include `a.yaml`, it could use either of the two options:
 ```yaml
-# project.yaml is foo/project.yaml
-# File is foo/bar/a.yaml
-use: /biz/d.yaml # resolves to foo/biz/d.yaml
+# relative
+use: ../a.yaml
+# absolute
+use: /parts/a.yaml
 ```
 
 ### GitHub Reference
+
 If the path does not start with `.`, `..`, or `/`, it will be considered a GitHub reference, in which case it should be formatted as:
 ```
 {owner}/{repo}/{path/to/file}:{ref}
@@ -58,3 +78,90 @@ Examples:
 When a file loaded from a GitHub reference uses a relative or absolute reference,
 it will resolve to the same branch/reference as that file.
 :::
+
+## Multiple projects in the same repo
+Celer also supports putting multiple projects in the same repository/directory (commonly referred to as a monorepo).
+You may want to do this if you want to have shared configurations across projects.
+
+### Example
+Here is one way to organize files in the monorepo:
+```
+.
+├── common/
+│   └── config.yaml
+├── example1/
+│   ├── project.yaml
+│   └── main.yaml
+├── example2/
+│   ├── project.yaml
+│   └── main.yaml
+└── project.yaml
+```
+```yaml
+# /example1/project.yaml
+title: example 1
+version: 1.0
+route:
+  use: ./main.yaml
+config:
+- use: /common/config.yaml
+
+# /example2/project.yaml
+title: example 2
+version: 1.0
+route:
+  use: ./main.yaml
+config:
+- use: /common/config.yaml
+
+#/project.yaml
+entry-points:
+  example1: /example1/project.yaml
+  example2: /example2/project.yaml
+```
+
+### `entry-points`
+To configure a monorepo, the root `project.yaml` needs to define a `entry-points` property that maps entry points
+to the `project.yaml` of the project. The path must be an absolute path
+```yaml
+# /project.yaml
+entry-points:
+  example1: /example1/project.yaml
+  example2: /example2/project.yaml
+```
+:::tip
+The root `project.yaml` doesn't have to contain other properties like `title` and `version` that usually sit inside
+`project.yaml`. These properties are ignored if they do exist.
+:::
+The entry point for each project doesn't have to be named `project.yaml`. For example, you can also set up the directory like this:
+```
+.
+├── common/
+│   └── config.yaml
+├── example1.yaml
+├── example2.yaml
+└── project.yaml
+```
+```yaml
+#/project.yaml
+entry-points:
+  example1: /example1.yaml
+  example2: /example2.yaml
+
+#/example1.yaml
+title: Example 1
+... # detail not shown
+
+#/example2.yaml
+title: Example 2
+... # detail not shown
+```
+
+### Choose entry point in web editor
+To switch between entry points in the web editor:
+
+1. Load the monorepo directory (not subdirectories) in the web editor
+2. Click on `Settings` in the toolbar, then go to the `Editor` category.
+3. Under the `Compiler` section, find `Entry point` settings and change the entry point.
+4. Close the settings dialog, and the document should reload to use the new entry point.
+
