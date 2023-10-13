@@ -1,9 +1,8 @@
 use std::cell::RefCell;
 
 use js_sys::{Function, Reflect};
-use log::{Level, Log, Metadata, Record};
-use wasm_bindgen::{JsCast, JsValue};
-use web_sys::console;
+use log::{Level, Log, Metadata, Record, LevelFilter};
+use wasm_bindgen::prelude::*;
 
 use crate::wasm::stub_function;
 thread_local! {
@@ -19,23 +18,32 @@ thread_local! {
 thread_local! {
     static ERROR_FN: RefCell<Function> = RefCell::new(stub_function());
 }
+thread_local! {
+    static DEBUG_FN: RefCell<Function> = RefCell::new(stub_function());
+}
+
+const LOGGER: Logger = Logger;
 
 pub fn bind_logger(value: JsValue) -> Result<(), JsValue> {
     let info = Reflect::get(&value, &"info".into())?.dyn_into::<Function>()?;
-    INFO_FN.with(|logger| {
-        *logger.borrow_mut() = info;
-    });
+    INFO_FN.replace(info);
     let warn = Reflect::get(&value, &"warn".into())?.dyn_into::<Function>()?;
-    WARN_FN.with(|logger| {
-        *logger.borrow_mut() = warn;
-    });
+    WARN_FN.replace(warn);
     let error = Reflect::get(&value, &"error".into())?.dyn_into::<Function>()?;
-    ERROR_FN.with(|logger| {
-        *logger.borrow_mut() = error;
-    });
-    LOGGER_OBJ.with(|logger| {
-        logger.replace(value.clone());
-    });
+    ERROR_FN.replace(error);
+    #[cfg(debug_assertions)]
+    {
+        let debug = Reflect::get(&value, &"debug".into())?.dyn_into::<Function>()?;
+        DEBUG_FN.replace(debug);
+    }
+    LOGGER_OBJ.replace(value);
+
+    if log::set_logger(&LOGGER).is_ok() {
+        #[cfg(debug_assertions)]
+        log::set_max_level(LevelFilter::Debug);
+        #[cfg(not(debug_assertions))]
+        log::set_max_level(LevelFilter::Info);
+    }
     Ok(())
 }
 

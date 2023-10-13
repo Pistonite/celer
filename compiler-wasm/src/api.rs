@@ -13,7 +13,6 @@ use crate::loader_url::UrlLoader;
 use crate::logger::{self, Logger};
 use crate::wasm::WasmInto;
 
-const LOGGER: Logger = Logger;
 const SOURCE_NAME: &str = "(local)";
 
 thread_local! {
@@ -30,17 +29,6 @@ thread_local! {
 pub fn init(logger: JsValue, load_file: Function, fetch: Function) {
     if let Err(e) = logger::bind_logger(logger) {
         console::error_1(&e);
-    }
-    match log::set_logger(&LOGGER) {
-        Ok(_) => {
-            log::set_max_level(LevelFilter::Info);
-        }
-        Err(_) => {
-            console::warn_1(
-                &"failed to initialize compiler logger. It might have already been initialized"
-                    .into(),
-            );
-        }
     }
     info!("initializing compiler...");
     FILE_LOADER.with(|loader| {

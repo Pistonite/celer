@@ -1,4 +1,3 @@
-use celerctypes::ExecDoc;
 use instant::Instant;
 use serde_json::Value;
 
@@ -7,6 +6,7 @@ use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::macros::async_trait;
 use crate::prop;
+use crate::types::ExecDoc;
 
 use super::{PlugResult, PluginRuntime};
 

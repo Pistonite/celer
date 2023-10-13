@@ -1,10 +1,8 @@
-use celerctypes::DocRichText;
 use futures::Future;
 
-use crate::{
-    comp::{CompDoc, CompLine},
-    util::async_for,
-};
+use crate::types::DocRichText;
+use crate::comp::{CompDoc, CompLine};
+use crate::util::async_for;
 
 pub async fn for_all_preface_lines<F>(comp_doc: &mut CompDoc, fun: F)
 where

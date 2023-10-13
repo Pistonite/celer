@@ -1,5 +1,5 @@
-use celerctypes::GameCoord;
-use celerctypes::ExecDoc;
+use celerc::types::GameCoord;
+use celerc::types::ExecDoc;
 use js_sys::Function;
 use log::info;
 use wasm_bindgen::__rt::IntoJsResult;
@@ -9,6 +9,7 @@ mod api;
 
 mod wasm;
 use wasm::*;
+use web_sys::console;
 
 mod loader_file;
 mod loader_url;
@@ -17,13 +18,18 @@ mod logger;
 mod runtime;
 
 // WASM output types
-import! {
-    import { ExecDoc } from "low/compiler.g";
-    import { Option } from "low/utils";
-}
+// import! {
+//     import { ExecDoc } from "low/compiler.g";
+//     import { Option } from "low/utils";
+// }
 
 // WASM output type implementation
-into! {ExecDoc<'a>, 'a}
+// into! {ExecDoc<'a>, 'a}
+//
+#[wasm_bindgen(start)]
+pub fn main() {
+    console::log_1(&"      loading compiler wasm module".into());
+}
 
 ffi!(
     /// Initialize
@@ -39,12 +45,14 @@ ffi!(
         api::compile_document().await
     }
 
-    /// Request current compilation be cancelled
-    pub async fn requestCancel() -> void {
-        celerc::api::cancel_current_compilation();
-        JsValue::UNDEFINED
-    }
 );
+
+
+/// Request current compilation be cancelled
+#[wasm_bindgen]
+pub fn requestCancel() {
+    celerc::api::cancel_current_compilation();
+}
 
 
 

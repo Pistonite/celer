@@ -1,5 +1,7 @@
 //! Utils for gluing WASM and JS
 
+use std::{future::{Future, IntoFuture}, task::{Poll, Context}, pin::Pin};
+
 use js_sys::{Boolean, Function, Promise};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
@@ -86,96 +88,140 @@ macro_rules! ffi {
 
 pub(crate) use ffi;
 
-pub trait WasmFrom: Sized {
-    fn from_wasm(value: JsValue) -> Result<Self, JsValue>;
-}
-impl WasmFrom for JsValue {
-    fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
-        Ok(value)
-    }
-}
-impl WasmFrom for Function {
-    fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
-        value.dyn_into()
-    }
-}
+// pub trait WasmFrom: Sized {
+//     fn from_wasm(value: JsValue) -> Result<Self, JsValue>;
+// }
+// impl WasmFrom for JsValue {
+//     fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
+//         Ok(value)
+//     }
+// }
+// impl WasmFrom for Function {
+//     fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
+//         value.dyn_into()
+//     }
+// }
 
-pub trait WasmInto {
-    fn into_wasm(self) -> Result<JsValue, JsValue>;
-}
-impl WasmInto for JsValue {
-    #[inline]
-    fn into_wasm(self) -> Result<JsValue, JsValue> {
-        Ok(self)
-    }
-}
-impl WasmInto for Result<JsValue, JsValue> {
-    #[inline]
-    fn into_wasm(self) -> Result<JsValue, JsValue> {
-        self
-    }
-}
-impl<T> WasmInto for Option<T>
-where
-    T: WasmInto,
-{
-    fn into_wasm(self) -> Result<JsValue, JsValue> {
-        match self {
-            Some(v) => v.into_wasm(),
-            None => Ok(JsValue::UNDEFINED),
-        }
-    }
-}
+// pub trait WasmInto {
+//     fn into_wasm(self) -> Result<JsValue, JsValue>;
+// }
+// impl WasmInto for JsValue {
+//     #[inline]
+//     fn into_wasm(self) -> Result<JsValue, JsValue> {
+//         Ok(self)
+//     }
+// }
+// impl WasmInto for Result<JsValue, JsValue> {
+//     #[inline]
+//     fn into_wasm(self) -> Result<JsValue, JsValue> {
+//         self
+//     }
+// }
+// impl<T> WasmInto for Option<T>
+// where
+//     T: WasmInto,
+// {
+//     fn into_wasm(self) -> Result<JsValue, JsValue> {
+//         match self {
+//             Some(v) => v.into_wasm(),
+//             None => Ok(JsValue::UNDEFINED),
+//         }
+//     }
+// }
 
-macro_rules! from {
-    ($ty:ty) => {
-        impl WasmFrom for $ty {
-            fn from_wasm(value: wasm_bindgen::JsValue) -> Result<Self, wasm_bindgen::JsValue> {
-                let x = serde_wasm_bindgen::from_value::<Self>(value)?;
-                Ok(x)
-            }
-        }
-    };
-}
-pub(crate) use from;
+// macro_rules! from {
+//     ($ty:ty) => {
+//         impl WasmFrom for $ty {
+//             fn from_wasm(value: wasm_bindgen::JsValue) -> Result<Self, wasm_bindgen::JsValue> {
+//                 let x = serde_wasm_bindgen::from_value::<Self>(value)?;
+//                 Ok(x)
+//             }
+//         }
+//     };
+// }
+// pub(crate) use from;
+//
+// from! {String}
+//
+// macro_rules! into {
+//     ($ty:ty) => {
+//         impl WasmInto for $ty {
+//             fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
+//                 let serializer =
+//                     serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+//                 let result = <Self as serde::Serialize>::serialize(&self, &serializer)?;
+//                 Ok(result)
+//             }
+//         }
+//     };
+//     ($ty:ty, $( $life:tt),* ) => {
+//         impl<$($life)*> WasmInto for $ty {
+//             fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
+//                 let serializer =
+//                     serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
+//                 let result = <Self as serde::Serialize>::serialize(&self, &serializer)?;
+//                 Ok(result)
+//             }
+//         }
+//     };
+// }
+// pub(crate) use into;
 
-from! {String}
-
-macro_rules! into {
-    ($ty:ty) => {
-        impl WasmInto for $ty {
-            fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
-                let serializer =
-                    serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-                let result = <Self as serde::Serialize>::serialize(&self, &serializer)?;
-                Ok(result)
-            }
-        }
-    };
-    ($ty:ty, $( $life:tt),* ) => {
-        impl<$($life)*> WasmInto for $ty {
-            fn into_wasm(self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
-                let serializer =
-                    serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-                let result = <Self as serde::Serialize>::serialize(&self, &serializer)?;
-                Ok(result)
-            }
-        }
-    };
-}
-pub(crate) use into;
-
-impl WasmFrom for bool {
-    fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
-        let b: Boolean = value.dyn_into()?;
-        Ok(b.into())
-    }
-}
+// impl WasmFrom for bool {
+//     fn from_wasm(value: JsValue) -> Result<Self, JsValue> {
+//         let b: Boolean = value.dyn_into()?;
+//         Ok(b.into())
+//     }
+// }
 
 /// Take a promise and return a future
-pub async fn into_future(promise: JsValue) -> Result<JsValue, JsValue> {
-    let promise: Promise = promise.dyn_into()?;
-    JsFuture::from(promise).await
+// pub async fn into_future(promise: JsValue) -> Result<JsValue, JsValue> {
+//     let promise: Promise = promise.dyn_into()?;
+//     JsFuture::from(promise).await
+// }
+
+pub enum JsAwait {
+    Promise(JsFuture),
+    Value(JsValue),
+}
+
+pub trait JsIntoFuture {
+    fn into_future(self) -> JsAwait;
+}
+
+impl From<JsValue> for JsAwait {
+    fn from(value: JsValue) -> Self {
+        let promise: Result<Promise, JsValue> = value.dyn_into();
+        match promise {
+            Ok(promise) => Self::Promise(JsFuture::from(promise)),
+            Err(value) => Self::Value(value),
+        }
+    }
+}
+
+impl JsIntoFuture for JsValue {
+    fn into_future(self) -> JsAwait {
+        self.into()
+    }
+}
+
+
+impl Future for JsAwait {
+    type Output = Result<JsValue, JsValue>;
+
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        match self.get_mut() {
+            Self::Value(value) => {
+                let mut taken = JsValue::UNDEFINED.clone();
+                std::mem::swap(value, &mut taken);
+                Poll::Ready(Ok(taken))
+            }
+            Self::Promise(future) => {
+                Pin::new(future).poll(cx)
+            }
+        }
+    }
+
 }
 
 /// Create a stub JS function to fill in for a function slot that is not yet initialized

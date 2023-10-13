@@ -1,11 +1,10 @@
 //! GitHub resource resolver and loader impl
-use std::sync::Arc;
 
 use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerError, PackerResult, ValidUse};
-use crate::util::Path;
+use crate::util::{Path, Marc};
 
-use super::{ArcLoader, EmptyLoader, Resource, ResourcePath, ResourceResolver};
+use super::{EmptyLoader, Resource, ResourcePath, ResourceResolver, MarcLoader};
 
 pub struct GitHubResourceResolver {
     owner: String,
@@ -46,7 +45,7 @@ impl ResourceResolver for GitHubResourceResolver {
                 .await?;
                 Ok(source.create(
                     ResourcePath::Url(url),
-                    Arc::new(Self::new(
+                    Marc::new(Self::new(
                         &self.owner,
                         &self.repo,
                         new_path,
@@ -69,7 +68,7 @@ impl ResourceResolver for GitHubResourceResolver {
                 .await?;
                 Ok(source.create(
                     ResourcePath::Url(url),
-                    Arc::new(Self::new(
+                    Marc::new(Self::new(
                         &self.owner,
                         &self.repo,
                         new_path,
@@ -92,15 +91,15 @@ pub async fn create_github_resource(
     repo: &str,
     path: &str,
     reference: Option<&str>,
-    url_loader: ArcLoader,
+    url_loader: MarcLoader,
 ) -> PackerResult<Resource> {
     let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
     let url = get_github_url(owner, repo, &path, reference).await?;
     Ok(Resource::new(
         ResourcePath::Url(url),
-        Arc::new(EmptyLoader),
+        Marc::new(EmptyLoader),
         url_loader,
-        Arc::new(GitHubResourceResolver::new(owner, repo, path, reference)),
+        Marc::new(GitHubResourceResolver::new(owner, repo, path, reference)),
     ))
 }
 
@@ -115,7 +114,7 @@ pub async fn create_github_resource_from(
     let url = get_github_url(owner, repo, &path, reference).await?;
     Ok(source.create(
         ResourcePath::Url(url),
-        Arc::new(GitHubResourceResolver::new(owner, repo, path, reference)),
+        Marc::new(GitHubResourceResolver::new(owner, repo, path, reference)),
     ))
 }
 
