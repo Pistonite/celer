@@ -10,7 +10,9 @@
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 
-use celerctypes::DocDiagnostic;
+use crate::lang;
+use crate::types::DocDiagnostic;
+
 mod pack_config;
 pub use pack_config::*;
 mod pack_coord_map;
@@ -32,7 +34,6 @@ pub use pack_value::*;
 mod resource;
 pub use resource::*;
 
-use crate::lang::parse_poor;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type", content = "data")]
@@ -124,7 +125,7 @@ pub enum PackerError {
 impl PackerError {
     pub fn add_to_diagnostics(&self, output: &mut Vec<DocDiagnostic>) {
         output.push(DocDiagnostic {
-            msg: parse_poor(&self.to_string()),
+            msg: lang::parse_poor(&self.to_string()),
             msg_type: "error".to_string(),
             source: "celerc/packer".to_string(),
         });

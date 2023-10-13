@@ -3,15 +3,16 @@ name = "compiler-types"
 version = "0.0.0"
 description = "Interface types between compiler and clients"
 edition = "2021"
-default-run = "buildtypes"
 
 [dependencies]
+compiler-macros = { path = "../compiler-macros" }
 serde = { version = "1.0.174", features = ["derive"] }
-ts-rs = "7.0.0"
+serde-wasm-bindgen = "0.6.0"
+tsify = { version = "0.4.5", default-features = false, features = ["js"] }
+wasm-bindgen = "0.2.87"
 
-[[bin]]
-name = "buildtypes"
-path = "src/build.rs"
+[features]
+wasm = []
 
 [lib]
 name = "celerctypes"

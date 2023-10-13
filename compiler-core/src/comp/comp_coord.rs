@@ -1,7 +1,7 @@
-use celerctypes::{Axis, GameCoord};
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
+use crate::types::{Axis, GameCoord};
 
 use super::{CompError, Compiler};
 
@@ -54,10 +54,10 @@ impl<'a> Compiler<'a> {
 
 #[cfg(test)]
 mod test {
-    use celerctypes::{MapCoordMap, MapMetadata, RouteMetadata};
     use serde_json::json;
 
     use crate::comp::CompilerBuilder;
+    use crate::types::{MapCoordMap, MapMetadata, RouteMetadata};
 
     use super::*;
 

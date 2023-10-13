@@ -1,5 +1,8 @@
+use celerctypes::GameCoord;
 use celerctypes::ExecDoc;
 use js_sys::Function;
+use log::info;
+use wasm_bindgen::__rt::IntoJsResult;
 use wasm_bindgen::prelude::*;
 
 mod api;
@@ -10,6 +13,8 @@ use wasm::*;
 mod loader_file;
 mod loader_url;
 mod logger;
+
+mod runtime;
 
 // WASM output types
 import! {
@@ -40,3 +45,23 @@ ffi!(
         JsValue::UNDEFINED
     }
 );
+
+
+
+#[wasm_bindgen]
+pub fn sync_text(input: GameCoord) -> GameCoord {
+    let x = format!("sync {}, {}, {}", input.0, input.1, input.2);
+    web_sys::console::info_1(
+        &x.into()
+    );
+    GameCoord(3.0,4.0,5.0)
+}
+
+#[wasm_bindgen]
+pub async fn async_text(input: GameCoord) -> Result<GameCoord, JsValue> {
+    let x = format!("async {}, {}, {}", input.0, input.1, input.2);
+    web_sys::console::info_1(
+        &x.into()
+    );
+    Ok(GameCoord(3.0,4.0,5.0))
+}

@@ -1,6 +1,7 @@
 import { AppDispatcher, documentActions, viewActions } from "core/store";
+import { async_text, sync_text } from "low/celerc";
 import { Debouncer, Logger, wrapAsync } from "low/utils";
-import { compileDocument, initCompiler, requestCancel } from "low/celerc";
+// import { compileDocument, initCompiler, requestCancel } from "low/celerc";
 
 const CompilerLog = new Logger("com");
 
@@ -29,10 +30,13 @@ export class CompMgr {
         loadFile: RequestFileFunction,
         loadUrl: RequestFileFunction,
     ) {
-        initCompiler(CompilerLog, loadFile, (url: string) => {
-            CompilerLog.info(`loading ${url}`);
-            return loadUrl(url);
-        });
+        console.log(sync_text([1,2,3]));
+        const a = await async_text([1,2,3]);
+        console.log(a);
+        // initCompiler(CompilerLog, loadFile, (url: string) => {
+        //     CompilerLog.info(`loading ${url}`);
+        //     return loadUrl(url);
+        // });
     }
 
     /// Trigger compilation of the document

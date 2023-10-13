@@ -1,8 +1,7 @@
 use std::borrow::Cow;
 
-use celerctypes::{ExecDoc, RouteMetadata};
-
 use crate::comp::CompDoc;
+use crate::types::{ExecDoc, RouteMetadata};
 use crate::util::async_for;
 
 use super::{ExecResult, MapSectionBuilder};
@@ -28,7 +27,7 @@ impl CompDoc {
 
 #[cfg(test)]
 mod test {
-    use celerctypes::{
+    use crate::types::{
         DocDiagnostic, DocRichText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine,
         MapMetadata, RouteMetadata,
     };

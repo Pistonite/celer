@@ -1,10 +1,10 @@
 //! Packs map.coord-map into [`MapCoordMap`]
 
-use celerctypes::{Axis, MapCoordMap};
 use serde_json::Value;
 
 use crate::json::Cast;
 use crate::prop;
+use crate::types::{Axis, MapCoordMap};
 
 use super::{PackerError, PackerResult};
 

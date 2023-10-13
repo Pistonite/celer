@@ -1,6 +1,6 @@
 //! Poor string parsing
 
-use celerctypes::DocPoorText;
+use crate::types::DocPoorText;
 
 pub fn parse_poor(s: &str) -> Vec<DocPoorText> {
     let mut output = vec![];

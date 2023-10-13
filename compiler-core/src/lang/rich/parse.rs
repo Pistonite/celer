@@ -1,6 +1,8 @@
-use super::grammar::{self, pt};
-use celerctypes::DocRichText;
 use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
+
+use crate::types::DocRichText;
+
+use super::grammar::{self, pt};
 
 pub fn parse_rich(s: &str) -> Vec<DocRichText> {
     let lex_output = grammar::tokenize(s);

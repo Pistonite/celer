@@ -8,6 +8,7 @@ pub mod plug;
 
 pub mod prop;
 pub mod util;
+pub mod types;
 
 /// Re-exports of macros
 pub mod macros {

@@ -1,11 +1,6 @@
 version: '3'
 
 includes:
-  compiler-types:
-    taskfile: ./compiler-types
-    aliases: [types]
-    dir: ./compiler-types
-
   compiler-core:
     taskfile: ./compiler-core
     aliases: [core]
@@ -89,7 +84,6 @@ tasks:
     deps:
     - themes:build
     - build:wasm
-    - build:types
     cmds:
     - task: client:build
 
@@ -99,9 +93,4 @@ tasks:
     - core:grammar
     cmds:
     - cargo run --bin buildwasm --release
-
-  build:types:
-    dir: ./compiler-types
-    cmds:
-    - cargo run --bin buildtypes --release
 

@@ -1,13 +1,13 @@
 //! Packs [`MapMetadata`]
 
-use celerctypes::{GameCoord, MapMetadata};
 use serde_json::Value;
-
-use super::{pack_coord_map, pack_map_layer, PackerError, PackerResult};
 
 use crate::json::{Cast, Coerce};
 use crate::prop;
+use crate::types::{GameCoord, MapMetadata};
 use crate::util::async_for;
+
+use super::{PackerError, PackerResult};
 
 macro_rules! check_map_required_property {
     ($property:expr, $index:ident, $value:expr) => {
@@ -57,7 +57,7 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
         PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::MAP, prop::LAYERS))
     })?;
 
-    let coord_map = pack_coord_map(coord_map, index).await?;
+    let coord_map = super::pack_coord_map(coord_map, index).await?;
     let initial_coord = match serde_json::from_value::<GameCoord>(initial_coord) {
         Ok(c) => c,
         Err(_) => {
@@ -90,7 +90,7 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
     let layers = {
         let mut packed_layers = Vec::with_capacity(layers.len());
         let _ = async_for!((i, layer) in layers.into_iter().enumerate(), {
-            packed_layers.push(pack_map_layer(layer, index, i)?);
+            packed_layers.push(super::pack_map_layer(layer, index, i)?);
         });
         packed_layers
     };

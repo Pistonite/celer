@@ -1,6 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
 
-use celerctypes::{DocDiagnostic, DocNote, DocRichText, GameCoord};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -8,6 +7,7 @@ use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
 use crate::prop;
+use crate::types::{DocDiagnostic, DocNote, DocRichText, GameCoord};
 use crate::util::async_for;
 
 use super::{
@@ -26,8 +26,10 @@ pub struct CompLine {
     /// Diagnostic messages
     pub diagnostics: Vec<DocDiagnostic>,
     /// Icon id to show on the document
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub doc_icon: Option<String>,
     /// Icon id to show on the map
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub map_icon: Option<String>,
     /// Coordinate of the map icon
     pub map_coord: GameCoord,
@@ -38,10 +40,12 @@ pub struct CompLine {
     /// Secondary text to show below the primary text
     pub secondary_text: Vec<DocRichText>,
     /// Counter text to display
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub counter_text: Option<DocRichText>,
     /// The notes
     pub notes: Vec<DocNote>,
     /// The split name, if different from text
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub split_name: Option<Vec<DocRichText>>,
     /// The rest of the properties as json blobs
     ///
@@ -318,12 +322,12 @@ impl<'a> Compiler<'a> {
 
 #[cfg(test)]
 mod test {
-    use celerctypes::{Axis, DocRichText, GameCoord, MapCoordMap, MapMetadata, RouteMetadata};
     use serde_json::json;
 
     use crate::comp::test_utils;
     use crate::comp::{CompMarker, CompMovement, CompilerBuilder};
     use crate::lang::Preset;
+    use crate::types::{Axis, DocRichText, GameCoord, MapCoordMap, MapMetadata, RouteMetadata};
 
     use super::*;
 

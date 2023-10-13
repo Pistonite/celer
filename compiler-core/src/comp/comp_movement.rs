@@ -1,9 +1,9 @@
-use celerctypes::GameCoord;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::Coerce;
 use crate::prop;
+use crate::types::GameCoord;
 use crate::util::async_for;
 
 use super::{CompError, Compiler};
