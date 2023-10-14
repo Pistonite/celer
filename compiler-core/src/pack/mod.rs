@@ -103,6 +103,12 @@ pub enum PackerError {
     #[error("Project config at index {0}: the `{1}` property is unused")]
     UnusedConfigProperty(usize, String),
 
+    #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
+    InvalidEntryPoint(String, String),
+
+    #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
+    MaxEntryPointDepthExceeded(String),
+
     #[error("Project config at index {0}: The preset {1} is invalid")]
     InvalidPreset(usize, String),
 

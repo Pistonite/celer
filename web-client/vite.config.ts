@@ -42,6 +42,12 @@ export default defineConfig({
     ],
     server: {
         https: createHttpsConfig(),
+        proxy: {
+            "^/docs/.*": {
+                target: "http://localhost:3173",
+                changeOrigin: false,
+            }
+        }
     },
     build: {
         rollupOptions: {

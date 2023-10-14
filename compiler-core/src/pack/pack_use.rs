@@ -1,5 +1,7 @@
 //! Implementation of the `use` property
 
+use std::fmt::Display;
+
 use serde_json::Value;
 
 use crate::json::Coerce;
@@ -29,6 +31,36 @@ pub enum ValidUse {
         path: String,
         reference: Option<String>,
     },
+}
+
+impl Display for Use {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Use::Valid(v) => write!(f, "{}", v),
+            Use::Invalid(v) => write!(f, "{}", v),
+        }
+    }
+}
+
+impl Display for ValidUse {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ValidUse::Relative(v) => write!(f, "{}", v),
+            ValidUse::Absolute(v) => write!(f, "{}", v),
+            ValidUse::Remote {
+                owner,
+                repo,
+                path,
+                reference,
+            } => {
+                write!(f, "{}/{}/{}", owner, repo, path)?;
+                if let Some(reference) = reference {
+                    write!(f, ":{}", reference)?;
+                }
+                Ok(())
+            }
+        }
+    }
 }
 
 impl From<String> for Use {

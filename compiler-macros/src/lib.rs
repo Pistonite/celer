@@ -1,6 +1,5 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
 
 /// A wrapper to add Send trait to `async_trait` and `async_recursion` based on the `no-async-send`
 /// feature gate
@@ -49,6 +48,7 @@ pub fn maybe_send(
     tokens.into()
 }
 
+mod derive_wasm_impl;
 /// A wrapper to add WASM support to a type so it can be send across the WASM ABI boundary.
 /// All derived code/attributes are behind the `wasm` feature gate.
 ///
@@ -69,65 +69,11 @@ pub fn maybe_send(
 ///    pub a_thing: i32,
 /// }
 /// ```
+/// If the derive resides in compiler-core, `#[derive_wasm(feature="wasm")]` should be used.
 #[proc_macro_attribute]
 pub fn derive_wasm(
     feature_attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
-    let feature_attr = TokenStream::from(feature_attr);
-    let parsed = {
-        let input = input.clone();
-        parse_macro_input!(input as DeriveInput)
-    };
-    let input = TokenStream::from(input);
-    let name = parsed.ident;
-    let generics = parsed.generics;
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
-
-    let derive_tsify = if feature_attr.is_empty() {
-        quote! {
-            #[derive(tsify::Tsify)]
-            #[tsify(into_wasm_abi, from_wasm_abi)]
-        }
-    } else {
-        quote! {
-            #[cfg_attr(#feature_attr, derive(tsify::Tsify))]
-            #[cfg_attr(#feature_attr, tsify(into_wasm_abi, from_wasm_abi))]
-        }
-    };
-
-    let cfg_attribute = if feature_attr.is_empty() {
-        TokenStream::new()
-    } else {
-        quote! {
-            #[cfg(#feature_attr)]
-        }
-    };
-
-    let expanded = quote! {
-        #derive_tsify
-        #input
-
-        #cfg_attribute
-        #[automatically_derived]
-        impl #impl_generics #name #ty_generics #where_clause {
-            /// Serialize this struct to a JsValue using serde_wasm_bindgen
-            #[inline]
-            pub fn try_to_js_value(&self) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
-                let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-                Ok(self.serialize(&serializer)?)
-            }
-        }
-
-        #cfg_attribute
-        #[automatically_derived]
-        impl #impl_generics Into<wasm_bindgen::JsValue> for #name #ty_generics #where_clause {
-            #[inline]
-            fn into(self) -> wasm_bindgen::JsValue {
-                self.try_to_js_value().unwrap()
-            }
-        }
-    };
-
-    expanded.into()
+    derive_wasm_impl::expand(feature_attr, input)
 }

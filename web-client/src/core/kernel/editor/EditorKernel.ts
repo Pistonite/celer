@@ -1,6 +1,8 @@
 //! Editor logic that wraps monaco editor
 
+import { EntryPointsSorted } from "low/celerc";
 import { FileSys, FsResult } from "low/fs";
+import { Result } from "low/utils";
 
 /// Interface used to access editor API
 ///
@@ -43,4 +45,7 @@ export interface EditorKernel {
 
     /// Trigger a compiler run. If one is running, there will be another run after it
     compile(): void;
+
+    /// Get compiler entry points
+    getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>>;
 }

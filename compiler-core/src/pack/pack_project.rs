@@ -1,9 +1,9 @@
-use serde_json::Value;
+use serde_json::{Value, Map};
 
 use crate::api::{CompilerMetadata, Setting};
 use crate::json::{Cast, Coerce};
 use crate::prop;
-use crate::types::RouteMetadata;
+use crate::types::{RouteMetadata, EntryPoints};
 use crate::util::async_for;
 
 use super::{ConfigBuilder, PackerError, PackerResult, Resource};
@@ -44,15 +44,11 @@ pub async fn pack_phase0(
     project_resource: &Resource,
     setting: &Setting,
 ) -> PackerResult<Phase0> {
-    let mut project_obj = match project_resource.load_structured().await? {
-        Value::Object(o) => o,
-        _ => {
-            return Err(PackerError::InvalidResourceType(
-                project_resource.name().to_string(),
-                "object".to_string(),
-            ))
-        }
-    };
+    let mut project_obj = load_project_object(project_resource).await?;
+    // if entry points is found, also emit error if it is wrong
+    if let Some(entry_points) = project_obj.remove(prop::ENTRY_POINTS) {
+        super::pack_entry_points(entry_points).await?;
+    }
 
     let title = check_metadata_required_property!(prop::TITLE, project_obj)?;
     let version = check_metadata_required_property!(prop::VERSION, project_obj)?;
@@ -95,4 +91,28 @@ pub async fn pack_phase0(
         meta,
         route,
     })
+}
+
+/// Load the project object and only read the `entry-points` property
+pub async fn pack_project_entry_points(project_resource: &Resource) -> PackerResult<EntryPoints> {
+    let mut project_obj = load_project_object(project_resource).await?;
+
+    let entry_points_value = match project_obj.remove(prop::ENTRY_POINTS) {
+        Some(v) => v,
+        None => return Ok(Default::default()),
+    };
+
+    super::pack_entry_points(entry_points_value).await
+}
+
+async fn load_project_object(project_resource: &Resource) -> PackerResult<Map<String, Value>> {
+    match project_resource.load_structured().await? {
+        Value::Object(o) => Ok(o),
+        _ => {
+            Err(PackerError::InvalidResourceType(
+                project_resource.name().to_string(),
+                "object".to_string(),
+            ))
+        }
+    }
 }

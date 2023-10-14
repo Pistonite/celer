@@ -8,10 +8,11 @@ import {
     viewActions,
     ViewState,
 } from "core/store";
-import { FileSys, FsResult } from "low/fs";
-import { isInDarkMode } from "low/utils";
-
+import { get_entry_points } from "low/celerc";
 import { fetchAsBytes } from "low/fetch";
+import { FileSys, FsResult } from "low/fs";
+import { allocOk, isInDarkMode, wrapAsync } from "low/utils";
+
 import { EditorKernel } from "./EditorKernel";
 import { EditorLog, toFsPath } from "./utils";
 import { IdleMgr } from "./IdleMgr";
@@ -174,6 +175,13 @@ export class EditorKernelImpl implements EditorKernel {
             return;
         }
         this.compMgr.triggerCompile();
+    }
+
+    public getEntryPoints() {
+        if (!this.fileMgr.isFsLoaded()) {
+            return Promise.resolve(allocOk([]));
+        }
+        return wrapAsync(get_entry_points);
     }
 
     private onSettingsUpdate() {
