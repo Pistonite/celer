@@ -11,8 +11,8 @@ use serde::{Deserialize, Serialize};
 use crate::macros::derive_wasm;
 
 /// Compiler entry points (name, path) pairs
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm(feature = "wasm")]
 pub struct EntryPoints(#[tsify(type = "Record<string, string>")] HashMap<String, String>);
 
 /// The executed document

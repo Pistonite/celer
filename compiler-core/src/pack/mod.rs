@@ -7,8 +7,9 @@
 //! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
 //! and a json blob of the route.
 
-use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
+
+use serde::{Deserialize, Serialize};
 
 use crate::lang;
 use crate::types::DocDiagnostic;
@@ -17,6 +18,8 @@ mod pack_config;
 pub use pack_config::*;
 mod pack_coord_map;
 pub use pack_coord_map::*;
+mod pack_entry_points;
+pub use pack_entry_points::*;
 mod pack_map;
 pub use pack_map::*;
 mod pack_map_layer;
