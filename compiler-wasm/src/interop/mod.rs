@@ -11,4 +11,3 @@ pub use promise::*;
 pub fn stub_function() -> Function {
     Function::new_no_args("throw new Error(\"not initialized\")")
 }
-

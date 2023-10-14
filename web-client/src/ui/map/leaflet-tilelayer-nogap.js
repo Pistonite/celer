@@ -111,7 +111,6 @@ L.TileLayer.include({
                 .subtract(tileRange.min)
                 .scaleBy(this.getTileSize());
 
-
             if (!L.Browser.safari) {
                 // By default, canvases copy things "on top of" existing pixels, but we want
                 // this to *replace* the existing pixels when doing a drawImage() call.
@@ -150,7 +149,6 @@ L.TileLayer.include({
         level.canvasRange = tileRange;
         level.canvasPxRange = pixelRange;
         level.canvasOrigin = pixelRange.min;
-
 
         if (mustRepositionCanvas) {
             this._setCanvasZoomTransform(

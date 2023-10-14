@@ -34,7 +34,6 @@ pub use pack_value::*;
 mod resource;
 pub use resource::*;
 
-
 #[derive(Debug, Clone, PartialEq, thiserror::Error, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type", content = "data")]
 pub enum PackerError {

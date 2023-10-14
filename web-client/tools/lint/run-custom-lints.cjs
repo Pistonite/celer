@@ -11,9 +11,7 @@ const rootDir = path.resolve(__dirname, "../../src");
 const ok = checkPath(rootDir, "src");
 if (!ok) {
     console.log();
-    console.log(
-        "Please fix issues above."
-    );
+    console.log("Please fix issues above.");
     process.exit(1);
 }
 
@@ -38,19 +36,23 @@ function checkPath(filePath, displayPath) {
 }
 
 function checkFile(file, content) {
+    let ok = true;
     lints.forEach(([lint, run]) => {
-        runLint(lint, file, content, run);
+        if (!runLint(lint, file, content, run)) {
+            ok = false;
+        }
     });
+    return ok;
 }
 
 function runLint(lint, file, content, run) {
     const errors = run(file, content);
     if (errors.length > 0) {
-        console.log(`[${lint}] ${file}:`)
+        console.log(`[${lint}] ${file}:`);
         for (const error of errors) {
             console.log(`  ${error}`);
         }
-        console.log()
+        console.log();
     }
     return errors.length === 0;
 }

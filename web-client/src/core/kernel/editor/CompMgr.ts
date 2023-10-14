@@ -1,6 +1,6 @@
 import { AppDispatcher, documentActions, viewActions } from "core/store";
 import { init, compile_document } from "low/celerc";
-import { Debouncer, Logger, wrapAsync } from "low/utils";
+import { Debouncer, Logger, wrapAsync, console } from "low/utils";
 
 const CompilerLog = new Logger("com");
 
@@ -35,7 +35,7 @@ export class CompMgr {
             (x: string) => CompilerLog.warn(x),
             (x: string) => CompilerLog.error(x),
             loadFile,
-            loadUrl
+            loadUrl,
         );
     }
 

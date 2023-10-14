@@ -2,7 +2,7 @@
 use std::cell::RefCell;
 
 use js_sys::Function;
-use log::{Level, Log, Metadata, Record, LevelFilter};
+use log::{Level, LevelFilter, Log, Metadata, Record};
 use wasm_bindgen::prelude::*;
 
 use crate::interop;
@@ -74,20 +74,20 @@ impl Log for Logger {
     }
 
     fn log(&self, record: &Record) {
-            let func = match record.level() {
-                Level::Info => raw_info,
-                Level::Warn => raw_warn,
-                Level::Error => raw_error,
-                _ => {
-                    #[cfg(debug_assertions)]
-                    {
-                        raw_info
-                    }
-                    #[cfg(not(debug_assertions))]
-                    return;
+        let func = match record.level() {
+            Level::Info => raw_info,
+            Level::Warn => raw_warn,
+            Level::Error => raw_error,
+            _ => {
+                #[cfg(debug_assertions)]
+                {
+                    raw_info
                 }
-            };
-            let log_value: JsValue = record.args().to_string().into();
-            func(&log_value);
+                #[cfg(not(debug_assertions))]
+                return;
+            }
+        };
+        let log_value: JsValue = record.args().to_string().into();
+        func(&log_value);
     }
 }

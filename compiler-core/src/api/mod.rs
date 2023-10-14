@@ -15,7 +15,7 @@ use crate::comp::Compiler;
 use crate::lang::Preset;
 use crate::pack::{PackerError, PackerResult, Phase0, Resource, ValidUse};
 use crate::plug::PluginInstance;
-use crate::types::{RouteMetadata, ExecDoc};
+use crate::types::{ExecDoc, RouteMetadata};
 
 /// Resolve project.yaml resource under the root resource
 pub async fn resolve_project(root_resource: &Resource) -> PackerResult<Resource> {

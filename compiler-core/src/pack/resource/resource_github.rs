@@ -2,9 +2,9 @@
 
 use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerError, PackerResult, ValidUse};
-use crate::util::{Path, Marc};
+use crate::util::{Marc, Path};
 
-use super::{EmptyLoader, Resource, ResourcePath, ResourceResolver, MarcLoader};
+use super::{EmptyLoader, MarcLoader, Resource, ResourcePath, ResourceResolver};
 
 pub struct GitHubResourceResolver {
     owner: String,

@@ -7,13 +7,13 @@ use js_sys::{Function, Uint8Array};
 use log::info;
 use wasm_bindgen::prelude::*;
 
-use celerc::util::Marc;
 use celerc::macros::async_trait;
-use celerc::pack::{ImageFormat, PackerError, PackerResult, ResourceLoader, MarcLoader};
+use celerc::pack::{ImageFormat, MarcLoader, PackerError, PackerResult, ResourceLoader};
+use celerc::util::Marc;
 use celerc::yield_now;
 
-use crate::logger;
 use crate::interop::{self, JsIntoFuture};
+use crate::logger;
 
 thread_local! {
     /// Callback function to ask JS to load a file
@@ -42,10 +42,14 @@ impl ResourceLoader for FileLoader {
         let _ = yield_now!();
 
         let bytes = async {
-            LOAD_FILE.with_borrow(|f|{
-                f.call1(&JsValue::UNDEFINED, &JsValue::from(path))
-            })?.into_future().await?.dyn_into::<Uint8Array>()
-        }.await.map_err(|e| {
+            LOAD_FILE
+                .with_borrow(|f| f.call1(&JsValue::UNDEFINED, &JsValue::from(path)))?
+                .into_future()
+                .await?
+                .dyn_into::<Uint8Array>()
+        }
+        .await
+        .map_err(|e| {
             logger::raw_error(&e);
             PackerError::LoadFile(format!("loading {path} from JS failed."))
         })?;

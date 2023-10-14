@@ -2,7 +2,7 @@ use serde_json::Value;
 
 use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerResult, ValidUse};
-use crate::util::{Path, Marc};
+use crate::util::{Marc, Path};
 
 use super::ResourceLoader;
 
@@ -84,7 +84,6 @@ impl Resource {
 pub trait ResourceResolver {
     /// Resolve a resource from the given `Use` and loader
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource>;
-
 }
 
 #[derive(Debug, Clone, PartialEq)]

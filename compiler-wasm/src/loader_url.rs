@@ -1,11 +1,11 @@
 use std::cell::RefCell;
 
+use js_sys::{Function, Uint8Array};
 use log::info;
 use wasm_bindgen::prelude::*;
-use js_sys::{Function, Uint8Array};
 
 use celerc::macros::async_trait;
-use celerc::pack::{PackerError, PackerResult, ResourceLoader, MarcLoader};
+use celerc::pack::{MarcLoader, PackerError, PackerResult, ResourceLoader};
 use celerc::util::Marc;
 use celerc::yield_now;
 
@@ -38,13 +38,16 @@ impl ResourceLoader for UrlLoader {
         info!("loading {url}");
         let _ = yield_now!();
         let bytes = async {
-            LOAD_URL.with_borrow(|f|{
-                f.call1(&JsValue::UNDEFINED, &JsValue::from(url))
-            })?.into_future().await?.dyn_into::<Uint8Array>()
-        }.await.map_err(|e| {
+            LOAD_URL
+                .with_borrow(|f| f.call1(&JsValue::UNDEFINED, &JsValue::from(url)))?
+                .into_future()
+                .await?
+                .dyn_into::<Uint8Array>()
+        }
+        .await
+        .map_err(|e| {
             logger::raw_error(&e);
-            PackerError::LoadUrl(
-                format!("loading URL failed: {url}"))
+            PackerError::LoadUrl(format!("loading URL failed: {url}"))
         })?;
         Ok(bytes.to_vec())
     }

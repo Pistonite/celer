@@ -20,7 +20,6 @@ pub use exec_section::*;
 mod exec_doc;
 pub use exec_doc::*;
 
-
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ExecError {
     #[cfg(feature = "wasm")]

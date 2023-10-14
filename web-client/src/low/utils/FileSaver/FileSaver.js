@@ -25,7 +25,9 @@ function bom(blob, opts) {
     if (typeof opts === "undefined") {
         opts = { autoBom: false };
     } else if (typeof opts !== "object") {
-        window.console.error("Deprecated: Expected third argument to be a object");
+        window.console.error(
+            "Deprecated: Expected third argument to be a object",
+        );
         opts = { autoBom: !opts };
     }
 

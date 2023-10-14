@@ -7,7 +7,7 @@ use celerc::types::ExecDoc;
 
 pub struct OpaqueExecDoc(JsValue);
 impl OpaqueExecDoc {
-    pub fn wrap<'a>(exec_doc: Option<ExecDoc<'a>>) -> Result<Self, JsValue> {
+    pub fn wrap(exec_doc: Option<ExecDoc<'_>>) -> Result<Self, JsValue> {
         match exec_doc {
             Some(exec_doc) => Ok(Self(exec_doc.try_to_js_value()?)),
             None => Ok(Self(JsValue::undefined())),
@@ -27,8 +27,8 @@ impl WasmDescribe for OpaqueExecDoc {
     }
 }
 
-impl Into<JsValue> for OpaqueExecDoc {
-    fn into(self) -> JsValue {
-        self.0
+impl From<OpaqueExecDoc> for JsValue {
+    fn from(x: OpaqueExecDoc) -> Self {
+        x.0
     }
 }

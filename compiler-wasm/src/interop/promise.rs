@@ -53,10 +53,7 @@ impl Future for JsAwait {
                 std::mem::swap(value, &mut taken);
                 Poll::Ready(Ok(taken))
             }
-            Self::Promise(future) => {
-                Pin::new(future).poll(cx)
-            }
+            Self::Promise(future) => Pin::new(future).poll(cx),
         }
     }
-
 }

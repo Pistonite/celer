@@ -19,8 +19,8 @@ function checkFile(_file, content) {
     });
     if (errors.length > 0) {
         errors.push(
-            "Removed the `React.` prefix from the function usage in lines above."
-            );
+            "Removed the `React.` prefix from the function usage in lines above.",
+        );
     }
     return errors;
 }

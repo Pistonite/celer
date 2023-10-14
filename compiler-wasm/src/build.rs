@@ -79,7 +79,10 @@ fn add_console_log() -> io::Result<()> {
         .open(Path::new(OUTPUT_DIR).join("celercwasm.js"))?;
 
     // write to file
-    writeln!(file, "window.console.log(\"      loading compiler module\");")?;
+    writeln!(
+        file,
+        "window.console.log(\"      loading compiler module\");"
+    )?;
 
     Ok(())
 }

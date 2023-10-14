@@ -3,9 +3,9 @@ use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
 
-use celerc::Setting;
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
-use celerc::util::{Path, Marc};
+use celerc::util::{Marc, Path};
+use celerc::Setting;
 
 mod interop;
 mod loader_file;
@@ -16,11 +16,11 @@ mod logger;
 #[wasm_bindgen]
 pub fn init(
     site_origin: String,
-    info_fn: Function, 
+    info_fn: Function,
     warn_fn: Function,
     error_fn: Function,
     load_file: Function,
-    load_url: Function
+    load_url: Function,
 ) {
     let _ = logger::bind(info_fn, warn_fn, error_fn);
     info!("initializing compiler...");
@@ -44,8 +44,7 @@ pub async fn compile_document() -> Result<OpaqueExecDoc, JsValue> {
     let project_resource = match celerc::resolve_project(&resource).await {
         Ok(x) => x,
         Err(e) => {
-            let x = 
-            celerc::make_doc_for_packer_error(SOURCE_NAME, e).await;
+            let x = celerc::make_doc_for_packer_error(SOURCE_NAME, e).await;
             return OpaqueExecDoc::wrap(x);
         }
     };
@@ -53,14 +52,13 @@ pub async fn compile_document() -> Result<OpaqueExecDoc, JsValue> {
     let context = match celerc::prepare(SOURCE_NAME, project_resource, setting).await {
         Ok(x) => x,
         Err(e) => {
-            let x = 
-            celerc::make_doc_for_packer_error(SOURCE_NAME, e).await;
+            let x = celerc::make_doc_for_packer_error(SOURCE_NAME, e).await;
             return OpaqueExecDoc::wrap(x);
         }
     };
 
     let x = context.compile().await;
-            return OpaqueExecDoc::wrap(x);
+    OpaqueExecDoc::wrap(x)
 }
 
 /// Request current compilation be cancelled
@@ -75,7 +73,6 @@ fn create_root_resource() -> Resource {
         ResourcePath::FsPath(Path::new()),
         loader_file::new_loader(),
         loader_url::new_loader(),
-        Marc::new(LocalResourceResolver(Path::new()))
+        Marc::new(LocalResourceResolver(Path::new())),
     )
 }
-

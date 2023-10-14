@@ -1,7 +1,7 @@
 use futures::Future;
 
-use crate::types::DocRichText;
 use crate::comp::{CompDoc, CompLine};
+use crate::types::DocRichText;
 use crate::util::async_for;
 
 pub async fn for_all_preface_lines<F>(comp_doc: &mut CompDoc, fun: F)

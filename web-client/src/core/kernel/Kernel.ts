@@ -8,7 +8,7 @@ import {
     settingsSelector,
     viewActions,
 } from "core/store";
-import { Logger, isInDarkMode } from "low/utils";
+import { console, Logger, isInDarkMode } from "low/utils";
 
 import type { EditorKernel } from "./editor";
 import { KeyMgr } from "./KeyMgr";

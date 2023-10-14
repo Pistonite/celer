@@ -7,27 +7,14 @@ const rules = [
     "console.warn(",
     "console.debug(",
     "console.error(",
-]
-
-function containsConsole(line) {
-    const lineReplaced = line.replace("window.console", "consoleignore");
-    for (const rule of rules) {
-        if (lineReplaced.includes(rule)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function isImportConsoleFromLowUtils(line) {
-    return line.startsWith("import") && line.endsWith("from \"low/utils\";") && line.includes("console");
-}
+];
 
 function checkFile(file, content) {
+    const include = getLowUtilsImportLocationFrom(file);
     const errors = [];
     const lines = content.split("\n");
     lines.forEach((line, index) => {
-        if (containsConsole(line)) {
+        if (containsConsole(include, line)) {
             errors.push(`${index}: ${line}`);
         }
     });
@@ -39,9 +26,32 @@ function checkFile(file, content) {
             return [];
         }
     }
-    errors.push("Please import { console } from \"low/utils\";");
+    errors.push(`Please import { console } from "${include}";`);
     return errors;
 }
 
-module.exports = checkFile;
+function containsConsole(line) {
+    const lineReplaced = line.replace("window.console", "consoleignore");
+    for (const rule of rules) {
+        if (lineReplaced.includes(rule)) {
+            return true;
+        }
+    }
+    return false;
+}
 
+function isImportConsoleFromLowUtils(include, line) {
+    return (
+        line.startsWith("import") &&
+        line.endsWith(`from "${include}";`) &&
+        line.includes("console")
+    );
+}
+
+function getLowUtilsImportLocationFrom(file) {
+    return file.replace(/^src\/low\//, "").includes("/")
+        ? "low/utils"
+        : "./utils";
+}
+
+module.exports = checkFile;
