@@ -40,7 +40,7 @@ module.exports = {
         "no-console": [
             "warn",
             {
-                allow: ["error", "warn", "info"],
+                allow: ["error", "warn"],
             },
         ],
         "no-unreachable-loop": ["error"],

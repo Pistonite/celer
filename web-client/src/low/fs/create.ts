@@ -1,6 +1,7 @@
 //! Utils for creating FileSys
 
-import { allocErr, allocOk } from "low/utils";
+import { console, allocErr, allocOk } from "low/utils";
+
 import {
     FileEntriesAPIFileSys,
     isFileEntriesAPISupported,

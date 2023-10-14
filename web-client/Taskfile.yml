@@ -26,7 +26,7 @@ tasks:
     desc: Check for linting and formatting issues in web client
     aliases: [lint]
     cmds:
-    - node tools/lint/react-hooks.cjs
+    - node tools/lint/run-custom-lints.cjs
     - task: prettier
       vars:
         PRETTIER_ARGS: --check

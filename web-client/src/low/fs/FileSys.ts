@@ -28,17 +28,6 @@ export interface FileSys {
     /// Returns Fail if the underlying file system operation fails.
     readFile: (path: FsPath) => Promise<FsResult<File>>;
 
-    // /// Read if the file has been modified since
-    // ///
-    // /// Returns NotModified if not modified
-    // readIfModified: (
-    //     path: FsPath,
-    //     lastModified?: number,
-    // ) => Promise<FsResult<[string, number]>>;
-
-    /// Read file as raw bytes
-    // readFileAsBytes: (path: FsPath) => Promise<FsResult<Uint8Array>>;
-
     /// Returns if this implementation supports writing to a file
     isWritable: () => boolean;
 

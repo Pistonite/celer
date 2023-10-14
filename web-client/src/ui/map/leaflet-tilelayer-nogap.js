@@ -90,7 +90,6 @@ L.TileLayer.include({
             // top. This could be done with getImageData/putImageData, but that
             // would break for tainted canvases (in non-CORS tilesets)
             var oldSize = { x: level.canvas.width, y: level.canvas.height };
-            // console.info('Resizing canvas from ', oldSize, 'to ', neededSize);
 
             var tmpCanvas = L.DomUtil.create("canvas");
             tmpCanvas.style.width = (tmpCanvas.width = oldSize.x) + "px";
@@ -112,7 +111,6 @@ L.TileLayer.include({
                 .subtract(tileRange.min)
                 .scaleBy(this.getTileSize());
 
-            //      console.info('Offsetting by ', offset);
 
             if (!L.Browser.safari) {
                 // By default, canvases copy things "on top of" existing pixels, but we want
@@ -153,9 +151,6 @@ L.TileLayer.include({
         level.canvasPxRange = pixelRange;
         level.canvasOrigin = pixelRange.min;
 
-        // console.log('Canvas tile range: ', level, tileRange.min, tileRange.max );
-        // console.log('Canvas pixel range: ', pixelRange.min, pixelRange.max );
-        // console.log('Level origin: ', level.origin );
 
         if (mustRepositionCanvas) {
             this._setCanvasZoomTransform(
@@ -178,7 +173,6 @@ L.TileLayer.include({
     // * From _setZoomTransform
     // * When the canvas has shifted due to a new tile being loaded
     _setCanvasZoomTransform: function (level, center, zoom) {
-        // console.log('_setCanvasZoomTransform', level, center, zoom);
         if (!level.canvasOrigin) {
             return;
         }

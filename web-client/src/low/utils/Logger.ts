@@ -63,9 +63,11 @@ export class Logger {
     }
 
     /// Log an error message
-    public error(msg: string) {
+    public error(msg: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
         const msgWithPrefix = `[${this.prefix}] ${msg}`;
         console.error(msgWithPrefix);
+        console.error(msg);
         pushLog(msgWithPrefix);
     }
 }
+export const console = new Logger("low");

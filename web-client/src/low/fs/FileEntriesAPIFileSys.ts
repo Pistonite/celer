@@ -1,4 +1,4 @@
-import { allocErr, allocOk } from "low/utils";
+import { console, allocErr, allocOk } from "low/utils";
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
 import { FsResult, FsResultCodes } from "./FsResult";

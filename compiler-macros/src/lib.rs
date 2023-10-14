@@ -89,6 +89,7 @@ pub fn derive_wasm(
         #input
 
         #[cfg(feature="wasm")]
+        #[automatically_derived]
         impl #impl_generics #name #ty_generics #where_clause {
             /// Serialize this struct to a JsValue using serde_wasm_bindgen
             #[inline]
@@ -99,6 +100,7 @@ pub fn derive_wasm(
         }
 
         #[cfg(feature="wasm")]
+        #[automatically_derived]
         impl #impl_generics Into<wasm_bindgen::JsValue> for #name #ty_generics #where_clause {
             #[inline]
             fn into(self) -> wasm_bindgen::JsValue {
@@ -109,20 +111,3 @@ pub fn derive_wasm(
 
     expanded.into()
 }
-
-
-// #[cfg(feature = "wasm")]
-// pub trait ToJsValue {
-//     fn to_js_value(&self) -> JsValue;
-// }
-// impl ToJsValue for GameCoord {
-//     fn to_js_value(&self) -> JsValue {
-//         let serializer = serde_wasm_bindgen::Serializer::new().serialize_maps_as_objects(true);
-//         self.serialize(&serializer).unwrap()
-//     }
-// }
-// impl Into<JsValue> for GameCoord {
-//     fn into(self) -> JsValue {
-//         self.to_js_value()
-//     }
-// }

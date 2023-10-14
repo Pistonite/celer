@@ -16,6 +16,7 @@ js-sys = "0.3.64"
 log = { version = "0.4.20", features = ["std"] } 
 # web-sys = { version = "0.3.64", features = ["console", "Location", "Window"] }
 base64 = "0.21.4"
+tsify = { version = "0.4.5", default-features = false, features = ["js"] }
 
 [lib]
 name = "celercwasm"

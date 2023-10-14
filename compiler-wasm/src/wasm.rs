@@ -1,92 +1,41 @@
 //! Utils for gluing WASM and JS
 
-use std::{future::{Future, IntoFuture}, task::{Poll, Context}, pin::Pin};
-
-use js_sys::{Boolean, Function, Promise};
-use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::JsFuture;
-
-/// Import types from compiler-types in the generated TS code
-///
-/// This defines a function that the build script uses to generate the import block
-macro_rules! import {
-( $(import { $($import:ty),* } from $module:literal; )*) => {
-    pub fn generate_d_ts_imports() -> String {
-        let mut d_ts = String::new();
-        $(
-            d_ts.push_str("import { ");
-            $(
-                d_ts.push_str(stringify!($import));
-                d_ts.push_str(", ");
-            )*
-            d_ts.push_str(" } from \"");
-            d_ts.push_str($module);
-            d_ts.push_str("\";\n\n");
-        )*
-
-        d_ts
-    }
-}
-}
-pub(crate) use import;
-
-/// Define the API functions of the wasm module
-///
-/// # Example
-/// ```nocompile
-/// /// documentation goes here
-/// pub async fn myFunc(input: MyObj) -> MyOutput {
-/// }
-/// ```
-/// This will generate the following TS definition
-/// ```typescript
-/// /// documentation goes here
-/// export function myFunc(input: MyObj): Promise<MyOutput>;
-/// ```
-/// And the following rust code
-/// ```nocompile
-/// pub async fn myFunc(input: wasm_bindgen::JsValue) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
-///     // inputs are automatically deserialized
-///     let input = MyObj::from_wasm(input)?;
-///     ...
-/// }
-/// ```
-macro_rules! ffi {
-(
-    $(
-        $(#[doc = $doc:literal])*
-        pub async fn $name:ident($($arg:ident: $arg_ty:ty),*) -> $ret_ty:ty $body:block
-    )*
-) => {
-    pub fn generate_d_ts() -> String {
-        let mut d_ts = String::new();
-        $(
-            d_ts.push_str(concat!(
-                $(
-                    "///", $doc, "\n",
-                )*
-                "export function ", stringify!($name), "(", $(stringify!($arg), ": ", stringify!($arg_ty), ",", )*
-                "): Promise<", stringify!($ret_ty), ">;\n\n"
-            ));
-        )*
-        d_ts
-    }
-    $(
-        $(#[doc = $doc])*
-        #[allow(non_snake_case)]
-        #[wasm_bindgen(js_name = $name, skip_typescript)]
-        pub async fn $name($($arg: wasm_bindgen::JsValue),*) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
-            $(
-                let $arg = <$arg_ty>::from_wasm($arg)?;
-            )*
-            let result = $body;
-            result.into_wasm()
-        }
-    )*
-}
-}
-
-pub(crate) use ffi;
+// macro_rules! ffi {
+// (
+//     $(
+//         $(#[doc = $doc:literal])*
+//         pub async fn $name:ident($($arg:ident: $arg_ty:ty),*) -> $ret_ty:ty $body:block
+//     )*
+// ) => {
+//     pub fn generate_d_ts() -> String {
+//         let mut d_ts = String::new();
+//         $(
+//             d_ts.push_str(concat!(
+//                 $(
+//                     "///", $doc, "\n",
+//                 )*
+//                 "export function ", stringify!($name), "(", $(stringify!($arg), ": ", stringify!($arg_ty), ",", )*
+//                 "): Promise<", stringify!($ret_ty), ">;\n\n"
+//             ));
+//         )*
+//         d_ts
+//     }
+//     $(
+//         $(#[doc = $doc])*
+//         #[allow(non_snake_case)]
+//         #[wasm_bindgen(js_name = $name, skip_typescript)]
+//         pub async fn $name($($arg: wasm_bindgen::JsValue),*) -> Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> {
+//             $(
+//                 let $arg = <$arg_ty>::from_wasm($arg)?;
+//             )*
+//             let result = $body;
+//             result.into_wasm()
+//         }
+//     )*
+// }
+// }
+//
+// pub(crate) use ffi;
 
 // pub trait WasmFrom: Sized {
 //     fn from_wasm(value: JsValue) -> Result<Self, JsValue>;
@@ -174,57 +123,10 @@ pub(crate) use ffi;
 //     }
 // }
 
-/// Take a promise and return a future
+// Take a promise and return a future
 // pub async fn into_future(promise: JsValue) -> Result<JsValue, JsValue> {
 //     let promise: Promise = promise.dyn_into()?;
 //     JsFuture::from(promise).await
 // }
 
-pub enum JsAwait {
-    Promise(JsFuture),
-    Value(JsValue),
-}
 
-pub trait JsIntoFuture {
-    fn into_future(self) -> JsAwait;
-}
-
-impl From<JsValue> for JsAwait {
-    fn from(value: JsValue) -> Self {
-        let promise: Result<Promise, JsValue> = value.dyn_into();
-        match promise {
-            Ok(promise) => Self::Promise(JsFuture::from(promise)),
-            Err(value) => Self::Value(value),
-        }
-    }
-}
-
-impl JsIntoFuture for JsValue {
-    fn into_future(self) -> JsAwait {
-        self.into()
-    }
-}
-
-
-impl Future for JsAwait {
-    type Output = Result<JsValue, JsValue>;
-
-    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        match self.get_mut() {
-            Self::Value(value) => {
-                let mut taken = JsValue::UNDEFINED.clone();
-                std::mem::swap(value, &mut taken);
-                Poll::Ready(Ok(taken))
-            }
-            Self::Promise(future) => {
-                Pin::new(future).poll(cx)
-            }
-        }
-    }
-
-}
-
-/// Create a stub JS function to fill in for a function slot that is not yet initialized
-pub fn stub_function() -> Function {
-    Function::new_no_args("throw new Error(\"not initialized\")")
-}
