@@ -1,5 +1,5 @@
 import { AppDispatcher, documentActions, viewActions } from "core/store";
-import { init, compile_document, request_cancel } from "low/celerc";
+import { init, compile_document } from "low/celerc";
 import { Debouncer, Logger, wrapAsync } from "low/utils";
 
 const CompilerLog = new Logger("com");
@@ -48,15 +48,6 @@ export class CompMgr {
     public triggerCompile() {
         this.needCompile = true;
         this.compilerDebouncer.dispatch();
-    }
-
-    /// Cancel the current compilation if it is running (do nothing if not)
-    public async cancel() {
-        try {
-            request_cancel();
-        } catch {
-            CompilerLog.error("failed to cancel compilation");
-        }
     }
 
     private async compile() {

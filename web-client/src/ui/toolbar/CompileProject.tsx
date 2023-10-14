@@ -3,7 +3,7 @@
 import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
-import { Box20Regular, BoxCheckmark20Regular } from "@fluentui/react-icons";
+import { Box20Regular } from "@fluentui/react-icons";
 
 import { useKernel } from "core/kernel";
 
@@ -45,20 +45,15 @@ const useCompileProjectControl = () => {
             return;
         }
 
-        editor.cancelCompile();
         editor.compile();
     }, [kernel]);
 
-    const icon = compileInProgress ? (
-        <Box20Regular className="color-progress" />
-    ) : (
-        <BoxCheckmark20Regular />
-    );
+    const icon = <Box20Regular />;
     const tooltip = getTooltip(!!rootPath, compileInProgress);
 
     return {
         handler,
-        disabled: !rootPath,
+        disabled: !rootPath || compileInProgress,
         icon,
         tooltip,
     };
@@ -67,7 +62,7 @@ const useCompileProjectControl = () => {
 const getTooltip = (isOpened: boolean, compileInProgress: boolean) => {
     if (isOpened) {
         if (compileInProgress) {
-            return "Compiler is running, click to cancel and trigger a fresh run.";
+            return "Compiling...";
         }
         return "Click to compile the project";
     }

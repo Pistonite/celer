@@ -176,10 +176,6 @@ export class EditorKernelImpl implements EditorKernel {
         this.compMgr.triggerCompile();
     }
 
-    public cancelCompile(): void {
-        this.compMgr.cancel();
-    }
-
     private onSettingsUpdate() {
         this.onResize();
     }

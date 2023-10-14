@@ -24,9 +24,6 @@ function isImportConsoleFromLowUtils(line) {
 }
 
 function checkFile(file, content) {
-    if (file === "src/low/utils/Logger.ts") {
-        return [];
-    }
     const errors = [];
     const lines = content.split("\n");
     lines.forEach((line, index) => {

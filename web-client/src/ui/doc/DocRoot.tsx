@@ -95,9 +95,8 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
             <div id={DocContainerId}>
                 <div id="doc-preface-container">
                     {document.preface.map((text, i) => (
-                        <div className="doc-preface-block">
+                        <div key={i} className="doc-preface-block">
                             <Rich
-                                key={i}
                                 content={resolveTags(tagMap, text)}
                                 size={400}
                             />
