@@ -1,7 +1,7 @@
 //! Utilities
 
 import { RichText } from "core/doc";
-import { DocRichText, DocTag } from "low/compiler.g";
+import { DocRichText, DocTag } from "low/celerc";
 import { Logger } from "low/utils";
 
 export const DocLog = new Logger("doc");

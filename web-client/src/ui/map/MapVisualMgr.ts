@@ -8,7 +8,7 @@ import {
     ViewState,
     viewActions,
 } from "core/store";
-import { ExecDoc, GameCoord, MapIcon } from "low/compiler.g";
+import { ExecDoc, GameCoord, MapIcon } from "low/celerc";
 import { LayerMode, SectionMode, VisualSize } from "core/map";
 
 import { MapLog } from "./utils";

@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use base64::engine::general_purpose;
 use base64::Engine;
 use js_sys::{Function, Uint8Array};
+use log::info;
 use wasm_bindgen::prelude::*;
 
 use celerc::util::Marc;
@@ -37,6 +38,7 @@ pub struct FileLoader;
 #[async_trait(?Send)]
 impl ResourceLoader for FileLoader {
     async fn load_raw(&self, path: &str) -> PackerResult<Vec<u8>> {
+        info!("loading {path}");
         let _ = yield_now!();
 
         let bytes = async {
@@ -51,6 +53,7 @@ impl ResourceLoader for FileLoader {
     }
 
     async fn load_image_url(&self, path: &str) -> PackerResult<String> {
+        info!("loading {path}");
         let image_format = ImageFormat::try_from_path(path)
             .ok_or_else(|| {
                 PackerError::LoadFile(format!("Cannot determine image format from path: {path}"))

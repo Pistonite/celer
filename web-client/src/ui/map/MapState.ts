@@ -5,6 +5,8 @@ import "leaflet/dist/leaflet.css";
 import "./leaflet-tilelayer-nogap";
 
 import reduxWatch from "redux-watch";
+
+import { SectionMode } from "core/map";
 import {
     AppStore,
     ViewState,
@@ -13,9 +15,8 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { ExecDoc } from "low/compiler.g";
+import { ExecDoc } from "low/celerc";
 import { Debouncer } from "low/utils";
-import { SectionMode } from "core/map";
 
 import { MapLog, roughlyEquals } from "./utils";
 import { MapContainerMgr } from "./MapContainerMgr";

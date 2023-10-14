@@ -6,8 +6,9 @@
 
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
-import { DocDiagnostic } from "low/compiler.g";
+
 import { documentSelector } from "core/store";
+import { DocDiagnostic } from "low/celerc";
 
 import { removeTags } from "./utils";
 

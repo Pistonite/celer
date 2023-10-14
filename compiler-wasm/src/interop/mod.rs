@@ -1,12 +1,6 @@
 //! Interop with JS world
 
-use std::marker::PhantomData;
-
-use celerc::{macros::derive_wasm, types::ExecDoc};
 use js_sys::Function;
-use serde::{Deserialize, Serialize};
-use tsify::Tsify;
-use wasm_bindgen::{prelude::*, describe::WasmDescribe};
 
 mod opaque;
 pub use opaque::*;

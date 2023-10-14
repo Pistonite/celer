@@ -71,9 +71,10 @@ pub fn maybe_send(
 /// ```
 #[proc_macro_attribute]
 pub fn derive_wasm(
-    _attr: proc_macro::TokenStream,
+    feature_attr: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
+    let feature_attr = TokenStream::from(feature_attr);
     let parsed = {
         let input = input.clone();
         parse_macro_input!(input as DeriveInput)
@@ -83,12 +84,31 @@ pub fn derive_wasm(
     let generics = parsed.generics;
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
+    let derive_tsify = if feature_attr.is_empty() {
+        quote! {
+            #[derive(tsify::Tsify)]
+            #[tsify(into_wasm_abi, from_wasm_abi)]
+        }
+    } else {
+        quote! {
+            #[cfg_attr(#feature_attr, derive(tsify::Tsify))]
+            #[cfg_attr(#feature_attr, tsify(into_wasm_abi, from_wasm_abi))]
+        }
+    };
+
+    let cfg_attribute = if feature_attr.is_empty() {
+        TokenStream::new()
+    } else {
+        quote! {
+            #[cfg(#feature_attr)]
+        }
+    };
+
     let expanded = quote! {
-        #[cfg_attr(feature="wasm", derive(tsify::Tsify))]
-        #[cfg_attr(feature="wasm", tsify(into_wasm_abi, from_wasm_abi))]
+        #derive_tsify
         #input
 
-        #[cfg(feature="wasm")]
+        #cfg_attribute
         #[automatically_derived]
         impl #impl_generics #name #ty_generics #where_clause {
             /// Serialize this struct to a JsValue using serde_wasm_bindgen
@@ -99,7 +119,7 @@ pub fn derive_wasm(
             }
         }
 
-        #[cfg(feature="wasm")]
+        #cfg_attribute
         #[automatically_derived]
         impl #impl_generics Into<wasm_bindgen::JsValue> for #name #ty_generics #where_clause {
             #[inline]

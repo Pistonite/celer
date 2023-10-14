@@ -1,28 +1,16 @@
-use celerc::api::Setting;
-use celerc::pack::LocalResourceResolver;
-use celerc::pack::Resource;
-use celerc::pack::ResourcePath;
-use celerc::types::GameCoord;
-use celerc::types::ExecDoc;
-use celerc::util::Marc;
-use celerc::util::Path;
 use interop::OpaqueExecDoc;
 use js_sys::Function;
 use log::info;
-use tsify::Tsify;
-use tsify::declare;
-use wasm_bindgen::__rt::IntoJsResult;
 use wasm_bindgen::prelude::*;
 
-mod api;
+use celerc::Setting;
+use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
+use celerc::util::{Path, Marc};
+
 mod interop;
-
-
 mod loader_file;
 mod loader_url;
 mod logger;
-
-mod runtime;
 
 /// Initialize
 #[wasm_bindgen]
@@ -43,6 +31,44 @@ pub fn init(
     info!("compiler initialized");
 }
 
+const SOURCE_NAME: &str = "(local)";
+
+/// Compile a document from web editor
+///
+/// Return undefined if the compilation was interrupted
+/// TODO #78: undefined no longer needed
+#[wasm_bindgen]
+pub async fn compile_document() -> Result<OpaqueExecDoc, JsValue> {
+    let resource = create_root_resource();
+    let setting = Setting::default();
+    let project_resource = match celerc::resolve_project(&resource).await {
+        Ok(x) => x,
+        Err(e) => {
+            let x = 
+            celerc::make_doc_for_packer_error(SOURCE_NAME, e).await;
+            return OpaqueExecDoc::wrap(x);
+        }
+    };
+    // TODO #86 cache this
+    let context = match celerc::prepare(SOURCE_NAME, project_resource, setting).await {
+        Ok(x) => x,
+        Err(e) => {
+            let x = 
+            celerc::make_doc_for_packer_error(SOURCE_NAME, e).await;
+            return OpaqueExecDoc::wrap(x);
+        }
+    };
+
+    let x = context.compile().await;
+            return OpaqueExecDoc::wrap(x);
+}
+
+/// Request current compilation be cancelled
+#[wasm_bindgen]
+pub fn request_cancel() {
+    celerc::cancel_current_compilation();
+}
+
 /// Create a resource that corresponds to the project root
 fn create_root_resource() -> Resource {
     Resource::new(
@@ -53,47 +79,3 @@ fn create_root_resource() -> Resource {
     )
 }
 
-const SOURCE_NAME: &str = "(local)";
-
-#[wasm_bindgen]
-pub async fn test_placeholder() -> Result<OpaqueExecDoc, JsValue> {
-    let resource = create_root_resource();
-    let setting = Setting::default();
-    let project_resource = match celerc::api::resolve_project(&resource).await {
-        Ok(x) => x,
-        Err(e) => {
-            let x = 
-            celerc::api::make_doc_for_packer_error(SOURCE_NAME, e).await;
-            return OpaqueExecDoc::wrap(x);
-        }
-    };
-    // TODO #86 cache this
-    let context = match celerc::api::prepare(SOURCE_NAME, project_resource, setting).await {
-        Ok(x) => x,
-        Err(e) => {
-            let x = 
-            celerc::api::make_doc_for_packer_error(SOURCE_NAME, e).await;
-            return OpaqueExecDoc::wrap(x);
-        }
-    };
-
-    let x = context.compile().await;
-            return OpaqueExecDoc::wrap(x);
-}
-
-// ffi!(
-//     /// Compile a document from web editor
-//     ///
-//     /// If use_cache is true, the compiler will use cached results loaded from URLs
-//     pub async fn compileDocument() -> Option<ExecDoc> {
-//         api::compile_document().await
-//     }
-//
-// );
-
-
-/// Request current compilation be cancelled
-#[wasm_bindgen]
-pub fn request_cancel() {
-    celerc::api::cancel_current_compilation();
-}

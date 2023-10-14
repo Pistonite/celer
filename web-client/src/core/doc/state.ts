@@ -1,6 +1,6 @@
 //! Document view, setting, and route document state
 
-import { ExecDoc } from "low/compiler.g";
+import { ExecDoc } from "low/celerc";
 
 /// View state for the document
 export type DocViewState = {

@@ -1,7 +1,7 @@
 //! Reducers for map view state
 
 import { ReducerDeclWithPayload, withPayload } from "low/store";
-import { GameCoord } from "low/compiler.g";
+import { GameCoord } from "low/celerc";
 
 import { MapViewState, MapView } from "./state";
 

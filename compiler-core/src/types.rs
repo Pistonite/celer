@@ -10,12 +10,20 @@ use serde::{Deserialize, Serialize};
 
 use crate::macros::derive_wasm;
 
+/// Compiler entry points (name, path) pairs
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub struct EntryPoints(
+    #[tsify(type="Record<string, string>")]
+    HashMap<String, String>
+);
+
 /// The executed document
 ///
 /// This is the final output of compiler with
 /// map items separated from doc items
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct ExecDoc<'a> {
     /// Project metadata
@@ -32,7 +40,7 @@ pub struct ExecDoc<'a> {
 ///
 /// This is produced by the bundling process and will not change afterwards
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct RouteMetadata {
     /// Source of the route, could be a URL or any string
@@ -58,7 +66,7 @@ pub struct RouteMetadata {
 ///
 /// Used to style text and provide extra function to the engine
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct DocTag {
     /// Bold style
@@ -83,7 +91,7 @@ pub struct DocTag {
 
 /// A section in the executed document
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct ExecSection {
     /// Name of the section
@@ -96,7 +104,7 @@ pub struct ExecSection {
 
 /// A line in the executed document
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct ExecLine {
     /// Section number
@@ -128,7 +136,7 @@ pub struct ExecLine {
 
 /// Diagnostic message
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct DocDiagnostic {
     /// The diagnostic message
@@ -147,7 +155,7 @@ pub struct DocDiagnostic {
 
 /// Document rich text type
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct DocRichText {
     /// The tag name of the text
@@ -184,7 +192,7 @@ impl DocRichText {
 
 /// Document poor text type. Just text or link
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(tag = "type", content = "data", rename_all = "camelCase")]
 pub enum DocPoorText {
     Text(String),
@@ -193,7 +201,7 @@ pub enum DocPoorText {
 
 /// Document note block
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum DocNote {
     Text { content: Vec<DocRichText> },
@@ -205,7 +213,7 @@ pub enum DocNote {
 ///
 /// This includes configuration like map layers, coordinates, etc.
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct MapMetadata {
     /// The map layers. First is the lowest layer.
@@ -227,7 +235,7 @@ pub struct MapMetadata {
 ///
 /// Default value of 0 will be assigned to the unmapped axis.
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 pub struct MapCoordMap {
     /// Mapping for 2d coordinates in the route.
     #[serde(rename = "2d")]
@@ -239,7 +247,7 @@ pub struct MapCoordMap {
 
 /// Attribute (definition) of a map layer in the route
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct MapLayerAttr {
 
@@ -287,7 +295,7 @@ pub struct MapLayerAttr {
 /// (x, y) -> (x * scale[0] + translate[0], y * scale[1] + translate[1])
 /// ```
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct MapTilesetTransform {
     /// The scale of the transformation
@@ -300,7 +308,7 @@ pub struct MapTilesetTransform {
 ///
 /// (displayed as &copy; LINK)
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct MapAttribution {
     /// Url of the attribution
@@ -312,7 +320,7 @@ pub struct MapAttribution {
 
 /// Axis of the map
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub enum Axis {
     /// Horizontal axis
@@ -335,7 +343,7 @@ pub enum Axis {
 
 /// Map features for one section
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct ExecMapSection {
     /// The icons
@@ -348,7 +356,7 @@ pub struct ExecMapSection {
 
 /// Icon on the map
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct MapIcon {
     /// Internal icon name (usually kebab-case)
@@ -365,7 +373,7 @@ pub struct MapIcon {
 
 /// Markers on the map
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct MapMarker {
     pub coord: GameCoord,
@@ -382,7 +390,7 @@ pub struct MapMarker {
 /// The coordinates do not have to be on the same map layer.
 /// The map will automatically split the path if it croses map layers.
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 #[serde(rename_all = "camelCase")]
 pub struct MapLine {
     /// Color of the line
@@ -393,5 +401,5 @@ pub struct MapLine {
 
 /// Coordinates representing a point (x, y, z) in the game
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
+#[derive_wasm(feature="wasm")]
 pub struct GameCoord(pub f64, pub f64, pub f64);

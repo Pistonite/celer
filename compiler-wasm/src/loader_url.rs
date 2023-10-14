@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 
+use log::info;
 use wasm_bindgen::prelude::*;
 use js_sys::{Function, Uint8Array};
 
@@ -34,6 +35,7 @@ pub struct UrlLoader;
 #[async_trait(?Send)]
 impl ResourceLoader for UrlLoader {
     async fn load_raw(&self, url: &str) -> PackerResult<Vec<u8>> {
+        info!("loading {url}");
         let _ = yield_now!();
         let bytes = async {
             LOAD_URL.with_borrow(|f|{
