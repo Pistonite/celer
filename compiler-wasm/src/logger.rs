@@ -1,46 +1,69 @@
+//! Logging functions using a logger object passed in from JS
 use std::cell::RefCell;
 
-use js_sys::{Function, Reflect};
-use log::{Level, Log, Metadata, Record};
-use wasm_bindgen::{JsCast, JsValue};
-use web_sys::console;
+use js_sys::Function;
+use log::{Level, LevelFilter, Log, Metadata, Record};
+use wasm_bindgen::prelude::*;
 
-use crate::wasm::stub_function;
-thread_local! {
-    static LOGGER_OBJ: RefCell<JsValue> = RefCell::new(JsValue::null());
-}
+use crate::interop;
 
 thread_local! {
-    static INFO_FN: RefCell<Function> = RefCell::new(stub_function());
+    static INFO_FN: RefCell<Function> = RefCell::new(interop::stub_function());
 }
 thread_local! {
-    static WARN_FN: RefCell<Function> = RefCell::new(stub_function());
+    static WARN_FN: RefCell<Function> = RefCell::new(interop::stub_function());
 }
 thread_local! {
-    static ERROR_FN: RefCell<Function> = RefCell::new(stub_function());
+    static ERROR_FN: RefCell<Function> = RefCell::new(interop::stub_function());
 }
 
-pub fn bind_logger(value: JsValue) -> Result<(), JsValue> {
-    let info = Reflect::get(&value, &"info".into())?.dyn_into::<Function>()?;
-    INFO_FN.with(|logger| {
-        *logger.borrow_mut() = info;
-    });
-    let warn = Reflect::get(&value, &"warn".into())?.dyn_into::<Function>()?;
-    WARN_FN.with(|logger| {
-        *logger.borrow_mut() = warn;
-    });
-    let error = Reflect::get(&value, &"error".into())?.dyn_into::<Function>()?;
-    ERROR_FN.with(|logger| {
-        *logger.borrow_mut() = error;
-    });
-    LOGGER_OBJ.with(|logger| {
-        logger.replace(value.clone());
-    });
+const LOGGER: Logger = Logger;
+
+/// Bind the logger
+///
+/// The object passed in must have `info`, `warn` and `error` methods
+pub fn bind(info_fn: Function, warn_fn: Function, error_fn: Function) -> Result<(), JsValue> {
+    INFO_FN.replace(info_fn);
+    WARN_FN.replace(warn_fn);
+    ERROR_FN.replace(error_fn);
+
+    if log::set_logger(&LOGGER).is_ok() {
+        #[cfg(debug_assertions)]
+        log::set_max_level(LevelFilter::Debug);
+        #[cfg(not(debug_assertions))]
+        log::set_max_level(LevelFilter::Info);
+    }
     Ok(())
 }
 
-pub struct Logger;
+macro_rules! log_raw {
+    ($fn:ident, $value:ident) => {
+        $fn.with_borrow(|func| {
+            let _ = func.call1(&JsValue::UNDEFINED, $value);
+        });
+    };
+}
 
+/// Log a raw object using logger with level `info`
+#[inline]
+pub fn raw_info(value: &JsValue) {
+    log_raw!(INFO_FN, value);
+}
+
+/// Log a raw object using logger with level `warn`
+#[inline]
+pub fn raw_warn(value: &JsValue) {
+    log_raw!(WARN_FN, value);
+}
+
+/// Log a raw object using logger with level `error`
+#[inline]
+pub fn raw_error(value: &JsValue) {
+    log_raw!(ERROR_FN, value);
+}
+
+/// A placeholder struct to implement the `Log` trait for macros from the `log ` crate
+struct Logger;
 impl Log for Logger {
     fn enabled(&self, _: &Metadata) -> bool {
         true
@@ -51,20 +74,20 @@ impl Log for Logger {
     }
 
     fn log(&self, record: &Record) {
-        LOGGER_OBJ.with(|logger_this| {
-            let log_value: JsValue = record.args().to_string().into();
-            let func = match record.level() {
-                Level::Info => &INFO_FN,
-                Level::Warn => &WARN_FN,
-                Level::Error => &ERROR_FN,
-                _ => {
-                    console::debug_1(&format!("[com] {}", record.args()).into());
-                    return;
+        let func = match record.level() {
+            Level::Info => raw_info,
+            Level::Warn => raw_warn,
+            Level::Error => raw_error,
+            _ => {
+                #[cfg(debug_assertions)]
+                {
+                    raw_info
                 }
-            };
-            func.with(|func| {
-                let _ = func.borrow().call1(&logger_this.borrow(), &log_value);
-            });
-        })
+                #[cfg(not(debug_assertions))]
+                return;
+            }
+        };
+        let log_value: JsValue = record.args().to_string().into();
+        func(&log_value);
     }
 }

@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { DocNote, DocTag } from "low/compiler.g";
+import { DocNote, DocTag } from "low/celerc";
 
 import { Rich } from "./Rich";
 import { DocScrollId, resolveTags } from "./utils";

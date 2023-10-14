@@ -1,12 +1,12 @@
-use celerctypes::RouteMetadata;
 use serde_json::Value;
 
 use crate::api::{CompilerMetadata, Setting};
 use crate::json::{Cast, Coerce};
 use crate::prop;
+use crate::types::RouteMetadata;
 use crate::util::async_for;
 
-use super::{pack_config, ConfigBuilder, PackerError, PackerResult, Resource};
+use super::{ConfigBuilder, PackerError, PackerResult, Resource};
 
 macro_rules! check_metadata_not_array_or_object {
     ($property:expr, $value:ident) => {{
@@ -71,7 +71,7 @@ pub async fn pack_phase0(
 
     let mut builder = ConfigBuilder::default();
     let _ = async_for!((i, config) in config.into_iter().enumerate(), {
-        pack_config(&mut builder, project_resource, config, i, setting).await?;
+        super::pack_config(&mut builder, project_resource, config, i, setting).await?;
     });
 
     let project = RouteMetadata {

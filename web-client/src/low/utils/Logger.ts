@@ -51,21 +51,25 @@ export class Logger {
     /// Log an info message
     public info(msg: string) {
         const msgWithPrefix = `[${this.prefix}] ${msg}`;
-        console.info(msgWithPrefix);
+        window.console.info(msgWithPrefix);
         pushLog(msgWithPrefix);
     }
 
     /// Log a warning message
     public warn(msg: string) {
         const msgWithPrefix = `[${this.prefix}] ${msg}`;
-        console.warn(msgWithPrefix);
+        window.console.warn(msgWithPrefix);
         pushLog(msgWithPrefix);
     }
 
     /// Log an error message
-    public error(msg: string) {
+    public error(
+        msg: any /* eslint-disable-line @typescript-eslint/no-explicit-any */,
+    ) {
         const msgWithPrefix = `[${this.prefix}] ${msg}`;
-        console.error(msgWithPrefix);
+        window.console.error(msgWithPrefix);
+        window.console.error(msg);
         pushLog(msgWithPrefix);
     }
 }
+export const console = new Logger("low");

@@ -1,9 +1,9 @@
-use celerctypes::{DocDiagnostic, DocRichText};
 use serde::{Deserialize, Serialize};
 
 use crate::json::{Cast, Coerce};
 use crate::lang::parse_rich;
 use crate::pack::{PackerError, PackerValue};
+use crate::types::{DocDiagnostic, DocRichText};
 use crate::util::async_for;
 
 use super::{CompError, CompLine, CompSection, Compiler};

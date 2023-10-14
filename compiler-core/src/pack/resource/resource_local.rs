@@ -1,8 +1,6 @@
-use std::sync::Arc;
-
 use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerError, PackerResult, ValidUse};
-use crate::util::Path;
+use crate::util::{Marc, Path};
 
 use super::{create_github_resource_from, Resource, ResourcePath, ResourceResolver};
 
@@ -23,7 +21,7 @@ impl ResourceResolver for LocalResourceResolver {
                 let new_parent = new_path
                     .parent()
                     .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-                Ok(source.create(ResourcePath::FsPath(new_path), Arc::new(Self(new_parent))))
+                Ok(source.create(ResourcePath::FsPath(new_path), Marc::new(Self(new_parent))))
             }
             ValidUse::Absolute(path) => {
                 let new_path =
@@ -34,7 +32,7 @@ impl ResourceResolver for LocalResourceResolver {
                 let new_parent = new_path
                     .parent()
                     .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-                Ok(source.create(ResourcePath::FsPath(new_path), Arc::new(Self(new_parent))))
+                Ok(source.create(ResourcePath::FsPath(new_path), Marc::new(Self(new_parent))))
             }
             ValidUse::Remote {
                 owner,

@@ -1,4 +1,4 @@
-import { allocErr, allocOk, wrapAsync } from "low/utils";
+import { console, allocErr, allocOk, wrapAsync } from "low/utils";
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
 import { FsResult, FsResultCodes } from "./FsResult";

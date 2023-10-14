@@ -1,4 +1,4 @@
-use celerctypes::{ExecMapSection, GameCoord, MapIcon, MapLine, MapMarker};
+use crate::types::{ExecMapSection, GameCoord, MapIcon, MapLine, MapMarker};
 
 #[derive(PartialEq, Default, Debug, Clone)]
 pub struct MapSectionBuilder {

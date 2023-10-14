@@ -1,4 +1,4 @@
-import { ExecDoc } from "low/compiler.g";
+import { ExecDoc } from "low/celerc";
 
 import { getRelativeLocation } from "./utils.ts";
 

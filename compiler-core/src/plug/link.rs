@@ -1,13 +1,12 @@
 //! Link plugin
 //!
 //! This plugin looks for the `link` tag and transforms it into a link.
-use celerctypes::DocRichText;
-
 use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::CompDoc;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
+use crate::types::DocRichText;
 
 use super::{operation, PlugResult, PluginRuntime};
 

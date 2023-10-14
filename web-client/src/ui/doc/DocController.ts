@@ -14,7 +14,7 @@ import {
     viewSelector,
 } from "core/store";
 import { Debouncer } from "low/utils";
-import { GameCoord } from "low/compiler.g";
+import { GameCoord } from "low/celerc";
 
 import {
     DocContainerId,

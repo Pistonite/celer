@@ -3,9 +3,10 @@
 import clsx from "clsx";
 import React from "react";
 import { Text } from "@fluentui/react-components";
+
 import { RichText, removeTags } from "core/doc";
 import { viewActions } from "core/store";
-import { DocDiagnostic } from "low/compiler.g";
+import { DocDiagnostic } from "low/celerc";
 import { useActions } from "low/store";
 
 import { Rich } from "./Rich";

@@ -1,21 +1,19 @@
-use std::sync::Arc;
-
 use serde_json::Value;
 
 use crate::macros::{async_trait, maybe_send};
 use crate::pack::{PackerResult, ValidUse};
-use crate::util::Path;
+use crate::util::{Marc, Path};
 
 use super::ResourceLoader;
 
 #[cfg(not(feature = "no-async-send"))]
-pub type ArcLoader = Arc<dyn ResourceLoader + Send + Sync>;
+pub type MarcLoader = Marc<dyn ResourceLoader + Send + Sync>;
 #[cfg(not(feature = "no-async-send"))]
-pub type ArcResolver = Arc<dyn ResourceResolver + Send + Sync>;
+pub type MarcResolver = Marc<dyn ResourceResolver + Send + Sync>;
 #[cfg(feature = "no-async-send")]
-pub type ArcLoader = Arc<dyn ResourceLoader>;
+pub type MarcLoader = Marc<dyn ResourceLoader>;
 #[cfg(feature = "no-async-send")]
-pub type ArcResolver = Arc<dyn ResourceResolver>;
+pub type MarcResolver = Marc<dyn ResourceResolver>;
 
 macro_rules! loader_delegate {
     ($func:ident, $type:ty) => {
@@ -35,17 +33,17 @@ macro_rules! loader_delegate {
 #[derive(Clone)]
 pub struct Resource {
     path: ResourcePath,
-    fs_loader: ArcLoader,
-    url_loader: ArcLoader,
-    resolver: ArcResolver,
+    fs_loader: MarcLoader,
+    url_loader: MarcLoader,
+    resolver: MarcResolver,
 }
 
 impl Resource {
     pub fn new(
         path: ResourcePath,
-        fs_loader: ArcLoader,
-        url_loader: ArcLoader,
-        resolver: ArcResolver,
+        fs_loader: MarcLoader,
+        url_loader: MarcLoader,
+        resolver: MarcResolver,
     ) -> Self {
         Self {
             path,
@@ -56,7 +54,7 @@ impl Resource {
     }
 
     /// Create a new resource with the same loader
-    pub fn create(&self, path: ResourcePath, resolver: ArcResolver) -> Self {
+    pub fn create(&self, path: ResourcePath, resolver: MarcResolver) -> Self {
         Self {
             path,
             fs_loader: self.fs_loader.clone(),

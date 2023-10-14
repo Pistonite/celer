@@ -1,6 +1,6 @@
 //! Map state slice
 
-import { GameCoord } from "low/compiler.g";
+import { GameCoord } from "low/celerc";
 
 /// State type for map settings
 export type MapSettingsState = {

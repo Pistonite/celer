@@ -1,6 +1,6 @@
 import { AppDispatcher, documentActions, viewActions } from "core/store";
-import { Debouncer, Logger, wrapAsync } from "low/utils";
-import { compileDocument, initCompiler, requestCancel } from "low/celerc";
+import { init, compile_document } from "low/celerc";
+import { Debouncer, Logger, wrapAsync, console } from "low/utils";
 
 const CompilerLog = new Logger("com");
 
@@ -29,10 +29,14 @@ export class CompMgr {
         loadFile: RequestFileFunction,
         loadUrl: RequestFileFunction,
     ) {
-        initCompiler(CompilerLog, loadFile, (url: string) => {
-            CompilerLog.info(`loading ${url}`);
-            return loadUrl(url);
-        });
+        init(
+            window.location.origin,
+            (x: string) => CompilerLog.info(x),
+            (x: string) => CompilerLog.warn(x),
+            (x: string) => CompilerLog.error(x),
+            loadFile,
+            loadUrl,
+        );
     }
 
     /// Trigger compilation of the document
@@ -44,14 +48,6 @@ export class CompMgr {
     public triggerCompile() {
         this.needCompile = true;
         this.compilerDebouncer.dispatch();
-    }
-
-    /// Cancel the current compilation if it is running (do nothing if not)
-    public async cancel() {
-        const result = await wrapAsync(requestCancel);
-        if (result.isErr()) {
-            CompilerLog.error("failed to cancel compilation");
-        }
     }
 
     private async compile() {
@@ -71,7 +67,7 @@ export class CompMgr {
             // to trigger another compile
             this.needCompile = false;
             CompilerLog.info("invoking compiler...");
-            const result = await wrapAsync(compileDocument);
+            const result = await wrapAsync(compile_document);
             if (result.isErr()) {
                 console.error(result.inner());
             } else {

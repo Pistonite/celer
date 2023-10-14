@@ -1,10 +1,9 @@
 use std::borrow::Cow;
 
-use celerctypes::ExecDoc;
-
 use crate::comp::Compiler;
 use crate::pack::pack_route;
 use crate::plug::PluginRuntime;
+use crate::types::ExecDoc;
 use crate::util::async_for;
 
 use super::CompilerContext;

@@ -3,7 +3,7 @@ import L from "leaflet";
 import "leaflet-rastercoords";
 
 import { AppDispatcher, viewActions } from "core/store";
-import { MapLayerAttr, MapTilesetTransform, GameCoord } from "low/compiler.g";
+import { MapLayerAttr, MapTilesetTransform, GameCoord } from "low/celerc";
 
 import { MapLog, getAttributionHtml } from "./utils";
 

@@ -1,10 +1,10 @@
 //! Packs json blob into [`MapLayerAttr`]
 
-use celerctypes::{MapAttribution, MapLayerAttr, MapTilesetTransform};
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
 use crate::prop;
+use crate::types::{MapAttribution, MapLayerAttr, MapTilesetTransform};
 
 use super::{PackerError, PackerResult};
 
@@ -571,7 +571,7 @@ mod test {
                 start_z: -123.45,
                 attribution: MapAttribution {
                     link: "Test Link".to_string(),
-                    copyright: None
+                    copyright: false
                 },
             })
         );

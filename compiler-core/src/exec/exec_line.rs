@@ -1,6 +1,5 @@
-use celerctypes::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
-
 use crate::comp::{CompLine, CompMovement};
+use crate::types::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
 use crate::util::{self, async_for};
 
 use super::{add_engine_diagnostics, ExecResult, MapSectionBuilder};
@@ -105,7 +104,7 @@ impl CompLine {
 #[cfg(test)]
 mod test {
     use crate::comp::{CompMarker, CompMovement};
-    use celerctypes::{DocDiagnostic, DocNote, DocPoorText, DocRichText, GameCoord, MapLine};
+    use crate::types::{DocDiagnostic, DocNote, DocPoorText, DocRichText, GameCoord, MapLine};
 
     use super::*;
 

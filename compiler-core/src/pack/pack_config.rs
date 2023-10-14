@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use celerctypes::{DocTag, MapMetadata};
 use serde_json::{json, Value};
 
 use crate::api::Setting;
@@ -8,9 +7,10 @@ use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
 use crate::plug::{BuiltInPlugin, Plugin, PluginInstance};
 use crate::prop;
+use crate::types::{DocTag, MapMetadata};
 use crate::util::async_for;
 
-use super::{pack_map, pack_presets, PackerError, PackerResult, Resource, Use, ValidUse};
+use super::{PackerError, PackerResult, Resource, Use, ValidUse};
 
 #[derive(Default, Debug)]
 pub struct ConfigBuilder {
@@ -77,7 +77,7 @@ async fn process_config(
                 if builder.map.is_some() {
                     return Err(PackerError::DuplicateMap(index));
                 }
-                builder.map = Some(pack_map(value, index).await?);
+                builder.map = Some(super::pack_map(value, index).await?);
             }
             prop::ICONS => {
                 process_icons_config(builder, resource, value, index).await?;
@@ -90,7 +90,7 @@ async fn process_config(
                 });
             }
             prop::PRESETS => {
-                let presets = pack_presets(value, index, setting.max_preset_namespace_depth).await?;
+                let presets = super::pack_presets(value, index, setting.max_preset_namespace_depth).await?;
                 let _ = async_for!((key, value) in presets.into_iter(), {
                     builder.presets.insert(key, value);
                 });

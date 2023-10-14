@@ -1,4 +1,3 @@
-use celerctypes::{DocDiagnostic, ExecDoc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -7,6 +6,7 @@ use crate::comp::CompDoc;
 use crate::lang::parse_poor;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
+use crate::types::{DocDiagnostic, ExecDoc};
 
 mod link;
 mod metrics;

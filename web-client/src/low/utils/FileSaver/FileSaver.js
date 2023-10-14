@@ -25,7 +25,9 @@ function bom(blob, opts) {
     if (typeof opts === "undefined") {
         opts = { autoBom: false };
     } else if (typeof opts !== "object") {
-        console.error("Deprecated: Expected third argument to be a object");
+        window.console.error(
+            "Deprecated: Expected third argument to be a object",
+        );
         opts = { autoBom: !opts };
     }
 
@@ -52,7 +54,7 @@ function download(url, name, opts) {
         saveAs(xhr.response, name, opts);
     };
     xhr.onerror = function () {
-        console.error("could not download file");
+        window.console.error("could not download file");
     };
     xhr.send();
 }

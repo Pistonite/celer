@@ -1,4 +1,4 @@
-import { sleep } from "./utils";
+import { console, sleep } from "./utils";
 
 export const fetchAsBytes = (url: string): Promise<Uint8Array> => {
     return doFetch(url, async (response) => {

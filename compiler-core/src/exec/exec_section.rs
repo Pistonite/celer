@@ -1,6 +1,5 @@
-use celerctypes::{ExecSection, RouteMetadata};
-
 use crate::comp::CompSection;
+use crate::types::{ExecSection, RouteMetadata};
 use crate::util::async_for;
 
 use super::{ExecResult, MapSectionBuilder};
@@ -30,9 +29,8 @@ impl CompSection {
 
 #[cfg(test)]
 mod test {
-    use celerctypes::{GameCoord, MapIcon, MapLine, MapMarker};
-
     use crate::comp::{CompLine, CompMarker, CompMovement};
+    use crate::types::{GameCoord, MapIcon, MapLine, MapMarker};
 
     use super::*;
 

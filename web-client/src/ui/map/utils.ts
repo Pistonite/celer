@@ -1,6 +1,6 @@
 //! Utility for the map logic
 
-import { MapAttribution } from "low/compiler.g";
+import { MapAttribution } from "low/celerc";
 import { Logger } from "low/utils";
 
 /// Map module logger

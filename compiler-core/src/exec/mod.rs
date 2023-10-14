@@ -6,8 +6,12 @@
 
 use std::convert::Infallible;
 
+use crate::lang::parse_poor;
+use crate::types::DocDiagnostic;
+#[cfg(feature = "wasm")]
+use crate::util::WasmError;
+
 mod exec_line;
-use celerctypes::DocDiagnostic;
 pub use exec_line::*;
 mod exec_map;
 pub use exec_map::*;
@@ -15,10 +19,6 @@ mod exec_section;
 pub use exec_section::*;
 mod exec_doc;
 pub use exec_doc::*;
-
-use crate::lang::parse_poor;
-#[cfg(feature = "wasm")]
-use crate::util::WasmError;
 
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum ExecError {

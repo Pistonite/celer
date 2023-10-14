@@ -61,10 +61,14 @@ fn build_wasm_pack_command() -> Command {
 
 fn override_typescript_definitions() -> io::Result<()> {
     println!("generating typescript definitions");
-    let mut d_ts = celercwasm::generate_d_ts_imports();
-    d_ts.push_str(include_str!("./wasm.ts"));
-    d_ts.push_str(&celercwasm::generate_d_ts());
-    fs::write(Path::new(OUTPUT_DIR).join("celercwasm.d.ts"), d_ts)?;
+    let path = Path::new(OUTPUT_DIR).join("celercwasm.d.ts");
+    let d_ts = fs::read_to_string(&path)?;
+
+    // https://github.com/madonoharu/tsify/issues/37
+    // tsify doesn't quote properties starting with number correctly
+    let d_ts = d_ts.replace("    2d: ", "    \"2d\": ");
+    let d_ts = d_ts.replace("    3d: ", "    \"3d\": ");
+    fs::write(path, d_ts)?;
     Ok(())
 }
 
@@ -75,7 +79,10 @@ fn add_console_log() -> io::Result<()> {
         .open(Path::new(OUTPUT_DIR).join("celercwasm.js"))?;
 
     // write to file
-    writeln!(file, "console.log(\"loading compiler module\");")?;
+    writeln!(
+        file,
+        "window.console.log(\"      loading compiler module\");"
+    )?;
 
     Ok(())
 }

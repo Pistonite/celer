@@ -2,10 +2,9 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use celerctypes::{GameCoord, RouteMetadata};
-
 use crate::api::CompilerMetadata;
 use crate::lang::Preset;
+use crate::types::{GameCoord, RouteMetadata};
 
 use super::Compiler;
 

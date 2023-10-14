@@ -43,7 +43,4 @@ export interface EditorKernel {
 
     /// Trigger a compiler run. If one is running, there will be another run after it
     compile(): void;
-
-    /// Cancel the current compiler run
-    cancelCompile(): void;
 }

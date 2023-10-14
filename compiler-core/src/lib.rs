@@ -1,4 +1,5 @@
-pub mod api;
+mod api;
+pub use api::*;
 pub mod comp;
 pub mod exec;
 pub mod json;
@@ -7,6 +8,7 @@ pub mod pack;
 pub mod plug;
 
 pub mod prop;
+pub mod types;
 pub mod util;
 
 /// Re-exports of macros
