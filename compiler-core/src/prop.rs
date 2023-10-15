@@ -18,6 +18,7 @@ pub const ENTRY_POINTS: &str = "entry-points";
 pub const EXCLUDE: &str = "exclude";
 pub const ICON: &str = "icon";
 pub const ICONS: &str = "icons";
+pub const INCLUDES: &str = "includes";
 pub const INITIAL_COLOR: &str = "initial-color";
 pub const INITIAL_COORD: &str = "initial-coord";
 pub const INITIAL_ZOOM: &str = "initial-zoom";
