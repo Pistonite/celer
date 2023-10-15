@@ -7,11 +7,13 @@ import {
     settingsSelector,
     viewActions,
     ViewState,
+    SettingsState,
+    settingsActions,
 } from "core/store";
-import { get_entry_points } from "low/celerc";
+import { EntryPointsSorted, get_entry_points } from "low/celerc";
 import { fetchAsBytes } from "low/fetch";
 import { FileSys, FsResult } from "low/fs";
-import { allocOk, isInDarkMode, wrapAsync } from "low/utils";
+import { Result, allocOk, isInDarkMode, sleep, wrapAsync } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
 import { EditorLog, toFsPath } from "./utils";
@@ -60,8 +62,8 @@ export class EditorKernelImpl implements EditorKernel {
             settingsSelector(store.getState()),
         );
         const unwatchSettings = store.subscribe(
-            watchSettings((_newVal, _oldVal) => {
-                this.onSettingsUpdate();
+            watchSettings((newVal, oldVal) => {
+                this.onSettingsUpdate(newVal, oldVal);
             }),
         );
         const watchView = reduxWatch(() => viewSelector(store.getState()));
@@ -169,23 +171,78 @@ export class EditorKernelImpl implements EditorKernel {
         return result.makeOk(undefined);
     }
 
-    public compile(): void {
+    public async compile(): Promise<void> {
         this.shouldRecompile = false;
         if (!this.fileMgr.isFsLoaded()) {
             return;
         }
-        this.compMgr.triggerCompile();
+        const entryPath = settingsSelector(this.store.getState()).compilerEntryPath;
+        // check if entry path is a valid file
+        if (entryPath && !await this.fileMgr.exists(toFsPath(entryPath.split("/")))) {
+            EditorLog.warn("entry path is invalid, attempting correction...");
+            const newEntryPath = await this.correctEntryPath(entryPath);
+            if (newEntryPath !== entryPath) {
+                // update asynchronously to avoid infinite blocking loop
+                await sleep(0);
+                this.store.dispatch(settingsActions.setCompilerEntryPath(newEntryPath));
+                return;
+            }
+        }
+        this.compMgr.triggerCompile(entryPath);
     }
 
-    public getEntryPoints() {
+    public getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>> {
         if (!this.fileMgr.isFsLoaded()) {
             return Promise.resolve(allocOk([]));
         }
         return wrapAsync(get_entry_points);
     }
 
-    private onSettingsUpdate() {
+    /// Try to correct an invalid entry path
+    ///
+    /// The invalid entry path may be saved from a previous project.
+    /// The function will try to find a valid entry path from the current project.
+    /// However, if the same entry path is found in the current project, that will be returned
+    private async correctEntryPath(entryPath: string): Promise<string> {
+        const entryPointsResult = await this.getEntryPoints();
+        if (entryPointsResult.isErr()) {
+            return "";
+        }
+        const newEntryPoints = entryPointsResult.inner();
+        if (newEntryPoints.length === 0) {
+            return "";
+        }
+        // if entry point with the same path exists, don't correct it
+        for (const [_, path] of newEntryPoints) {
+            if (path === entryPath) {
+                return path;
+            }
+        }
+        // if entry point with "default" name exists, try that first
+        for (const [name, path] of newEntryPoints) {
+            if (name === "default") {
+                if (path && await this.fileMgr.exists(toFsPath(path.split("/")))) {
+                    return path;
+                } 
+                break;
+            }
+        }
+        // otherwise find the first valid entry point
+        for (const [_, path] of newEntryPoints) {
+            if (path && await this.fileMgr.exists(toFsPath(path.split("/")))) {
+                return path;
+            } 
+        }
+        return "";
+    }
+
+    private onSettingsUpdate(oldVal: SettingsState, newVal: SettingsState) {
         this.onResize();
+        if (this.fileMgr.isFsLoaded()) {
+            if (oldVal.compilerEntryPath !== newVal.compilerEntryPath) {
+                this.compile();
+            }
+        }
     }
 
     private onViewUpdate(oldVal: ViewState, newVal: ViewState) {

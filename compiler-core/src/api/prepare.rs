@@ -4,7 +4,8 @@ use tokio::task::LocalSet;
 
 #[cfg(not(feature = "no-async-send"))]
 use crate::pack::PackerError;
-use crate::{pack::{self, PackerResult, Resource}, types::EntryPoints};
+use crate::pack::{self, PackerResult, Resource};
+use crate::types::EntryPoints;
 
 use super::{CompilerContext, Setting};
 
@@ -20,9 +21,10 @@ pub async fn prepare_compiler(
     source: &str,
     project_resource: Resource,
     setting: Setting,
+    redirect_to_default_entry_point: bool,
 ) -> PackerResult<CompilerContext> {
     let start_time = Instant::now();
-    let mut phase0 = pack::pack_phase0(source, &project_resource, &setting).await?;
+    let mut phase0 = pack::pack_phase0(source, &project_resource, &setting, redirect_to_default_entry_point).await?;
     // take the plugins out to run the pre compile phase of the plugins
     let mut plugins = std::mem::take(&mut phase0.meta.plugins);
     let mut context = CompilerContext {
@@ -72,3 +74,4 @@ pub async fn prepare_compiler(
 pub async fn prepare_entry_points(project_resource: &Resource) -> PackerResult<EntryPoints> {
     pack::pack_project_entry_points(project_resource).await
 }
+

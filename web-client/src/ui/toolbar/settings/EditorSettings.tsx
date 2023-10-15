@@ -1,6 +1,6 @@
 //! Editor tab of the settings dialog
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dropdown, Field, Switch, Option } from "@fluentui/react-components";
 import { useSelector } from "react-redux";
 
@@ -16,6 +16,9 @@ import { useActions } from "low/store";
 
 import { SettingsSection } from "./SettingsSection";
 
+const DEFAULT_ENTRY_POINT = "default";
+const DEFAULT_ENTRY_PATH = "/project.yaml";
+
 export const EditorSettings: React.FC = () => {
     const { supportsSave } = useSelector(viewSelector);
     const {
@@ -23,19 +26,20 @@ export const EditorSettings: React.FC = () => {
         autoSaveEnabled,
         autoLoadEnabled,
         deactivateAutoLoadAfterMinutes,
+        compilerEntryPath,
     } = useSelector(settingsSelector);
     const {
         setShowFileTree,
         setAutoSaveEnabled,
         setAutoLoadEnabled,
         setDeactivateAutoLoadAfterMinutes,
+        setCompilerEntryPath,
     } = useActions(settingsActions);
     const { setAutoLoadActive } = useActions(viewActions);
     const deactivateAutoLoadMinutesOptions = [5, 10, 15, 30, 60];
 
     const kernel = useKernel();
     const [entryPoints, setEntryPoints] = useState<EntryPointsSorted>([]);
-    console.log(entryPoints);
     useEffect(() => {
         (async () => {
             const editor = kernel.getEditor();
@@ -51,6 +55,28 @@ export const EditorSettings: React.FC = () => {
             setEntryPoints(result.inner());
         })();
     }, [kernel]);
+
+    const selectedEntryPoint = useMemo(() => {
+        if (!compilerEntryPath) {
+            return DEFAULT_ENTRY_POINT;
+        }
+        const selected = entryPoints.find(([_, path]) => path === compilerEntryPath);
+        return selected ? selected[0] : DEFAULT_ENTRY_POINT;
+    }, [entryPoints, compilerEntryPath]);
+
+    // [name, path] pairs
+    const entryPointOptions = useMemo(() => {
+        const options = [[DEFAULT_ENTRY_POINT, DEFAULT_ENTRY_PATH]];
+        entryPoints.forEach(([name, path]) => {
+            if (name === DEFAULT_ENTRY_POINT) {
+                options[0][1] = path;
+            } else {
+                options.push([name, path]);
+            }
+        });
+        return options;
+    }, [entryPoints]);
+
     return (
         <>
             <SettingsSection title="Appearance">
@@ -137,14 +163,33 @@ export const EditorSettings: React.FC = () => {
                     validationMessage={entryPoints.length === 0 ? "No custom entry points found. If you updated the config externally, close and reopen the dialog to refresh" : undefined}
                     >
                     <Dropdown
-                        disabled={entryPoints.length === 0}
-                        value={
-                            entryPoints.length === 0 ? "(default)" : undefined
-                        }
+                        value={formatCompilerEntryText(selectedEntryPoint, compilerEntryPath || DEFAULT_ENTRY_PATH)}
+                        selectedOptions={[compilerEntryPath || DEFAULT_ENTRY_PATH]}
+                        onOptionSelect={(_, data) => {
+                            setCompilerEntryPath(data.selectedOptions[0])
+                        }}
                     >
+                        {
+                            entryPointOptions.map(([name, path]) => {
+                                const text = formatCompilerEntryText(name, path);
+                                return (
+                                <Option
+                                    key={path}
+                                    text={text}
+                                    value={path}
+                                >
+                                        {text}
+                                </Option>
+                            );
+                            })
+                        }
                     </Dropdown>
                     </Field>
             </SettingsSection>
         </>
     );
 };
+
+const formatCompilerEntryText = (name: string, path: string) => {
+    return `${name} (${path})`;
+}

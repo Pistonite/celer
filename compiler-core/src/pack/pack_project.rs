@@ -38,17 +38,44 @@ pub struct Phase0 {
 
 /// Entry point for parsing project.yaml
 ///
-/// Returns the metadata and the route blob with all uses resolved
+/// Returns the metadata and the raw route blob
+///
+/// If `redirect_default_entry_point` is true, the function will redirect to the default entry point
+/// if it is defined. The redirect will only happen once, and the redirected project will have its
+/// `entry-points` property removed and ignored.
 pub async fn pack_phase0(
     source: &str,
     project_resource: &Resource,
     setting: &Setting,
+    redirect_default_entry_point: bool,
 ) -> PackerResult<Phase0> {
     let mut project_obj = load_project_object(project_resource).await?;
-    // if entry points is found, also emit error if it is wrong
+
+    // if entry points is found, redirect to the default entry point if it exists,
+    // if entry points are invalid, also emit the error
     if let Some(entry_points) = project_obj.remove(prop::ENTRY_POINTS) {
-        super::pack_entry_points(entry_points).await?;
+        let mut entry_points = super::pack_entry_points(entry_points).await?;
+        if redirect_default_entry_point {
+            if let Some(entry_path) = entry_points.0.remove(prop::DEFAULT) {
+                let redirect_resource = crate::resolve_absolute(project_resource, entry_path).await?;
+                let mut project_obj = load_project_object(&redirect_resource).await?;
+                // remove and ignore the entry points in the redirected project
+                project_obj.remove(prop::ENTRY_POINTS);
+                return pack_project(source, &redirect_resource, project_obj, setting).await;
+            }
+        }
     }
+
+    pack_project(source, project_resource, project_obj, setting).await
+}
+
+/// Pack the project after loading the project object
+async fn pack_project(
+    source: &str,
+    project_resource: &Resource,
+    mut project_obj: Map<String, Value>,
+    setting: &Setting,
+) -> PackerResult<Phase0> {
 
     let title = check_metadata_required_property!(prop::TITLE, project_obj)?;
     let version = check_metadata_required_property!(prop::VERSION, project_obj)?;

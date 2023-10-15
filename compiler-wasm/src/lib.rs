@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use celerc::types::EntryPointsSorted;
 use interop::OpaqueExecDoc;
 use js_sys::Function;
@@ -63,20 +65,38 @@ const SOURCE_NAME: &str = "(local)";
 /// TODO #78: undefined no longer needed
 #[wasm_bindgen]
 pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDoc, JsValue> {
-    let resource = create_root_resource();
-    let project_resource = match find_project(&resource, entry_path).await {
+    let root_resource = create_root_resource();
+    let (allow_redirect, project_resource_result) = match entry_path.as_ref() {
+        None => (
+            // allow redirect to default entry point in root project.yaml
+            true,
+            celerc::resolve_project(&root_resource).await
+        ),
+        Some(path) => {
+            (
+                false,
+                celerc::resolve_absolute(&root_resource, path.to_string()).await
+            )
+        }
+    };
+    let source_name = match entry_path {
+        Some(path) => Cow::Owned(path),
+        None => Cow::Borrowed("(default)"),
+    };
+    let project_resource = match project_resource_result {
         Ok(x) => x,
         Err(e) => {
-            let x = celerc::make_doc_for_packer_error(SOURCE_NAME, e).await;
+            let x = celerc::make_doc_for_packer_error(&source_name, e).await;
             return OpaqueExecDoc::wrap(x);
         }
+
     };
     let setting = Setting::default();
     // TODO #86 cache this
-    let context = match celerc::prepare_compiler(SOURCE_NAME, project_resource, setting).await {
+    let context = match celerc::prepare_compiler(&source_name, project_resource, setting, allow_redirect).await {
         Ok(x) => x,
         Err(e) => {
-            let x = celerc::make_doc_for_packer_error(SOURCE_NAME, e).await;
+            let x = celerc::make_doc_for_packer_error(&source_name, e).await;
             return OpaqueExecDoc::wrap(x);
         }
     };

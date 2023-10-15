@@ -7,3 +7,12 @@
     width: 100%;
     overflow: hidden;
 }
+
+#map-error {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    justify-content: center;
+    color: #888888;
+    height: 100%;
+}

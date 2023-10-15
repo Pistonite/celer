@@ -133,6 +133,16 @@ export class FileMgr {
         });
     }
 
+    /// Check if a file exists and can be opened as text
+    public async exists(path: FsPath): Promise<boolean> {
+        if (!this.fs) {
+            return false;
+        }
+        const fsFile = new FsFile(this.fs, path);
+        const result = await fsFile.getText();
+        return result.isOk();
+    }
+
     public async loadChangesFromFs(): Promise<FsResult<void>> {
         EditorLog.info("loading changes from file system...");
         this.dispatcher.dispatch(viewActions.setAutoLoadActive(true));
