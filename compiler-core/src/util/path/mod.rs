@@ -1,8 +1,8 @@
 //! A platform-independent path implementation
 
-mod path_from;
 use std::fmt::Display;
 
+mod path_from;
 pub use path_from::*;
 mod path_join;
 pub use path_join::*;
