@@ -33,11 +33,7 @@ export const MapRoot: React.FC = () => {
     }
 
     if (document.project.map.layers.length <= 0) {
-        return (
-            <div id="map-error">
-                This map has no layers
-            </div>
-        );
+        return <div id="map-error">This map has no layers</div>;
     }
 
     return (

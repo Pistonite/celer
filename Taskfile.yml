@@ -64,7 +64,7 @@ tasks:
 
   fix:rs:
     cmds:
-    - cargo fmt
+    - cargo fmt --all
 
   build:
     desc: Build production assets

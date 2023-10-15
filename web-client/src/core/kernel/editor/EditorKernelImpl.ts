@@ -176,15 +176,22 @@ export class EditorKernelImpl implements EditorKernel {
         if (!this.fileMgr.isFsLoaded()) {
             return;
         }
-        const entryPath = settingsSelector(this.store.getState()).compilerEntryPath;
+        const entryPath = settingsSelector(
+            this.store.getState(),
+        ).compilerEntryPath;
         // check if entry path is a valid file
-        if (entryPath && !await this.fileMgr.exists(toFsPath(entryPath.split("/")))) {
+        if (
+            entryPath &&
+            !(await this.fileMgr.exists(toFsPath(entryPath.split("/"))))
+        ) {
             EditorLog.warn("entry path is invalid, attempting correction...");
             const newEntryPath = await this.correctEntryPath(entryPath);
             if (newEntryPath !== entryPath) {
                 // update asynchronously to avoid infinite blocking loop
                 await sleep(0);
-                this.store.dispatch(settingsActions.setCompilerEntryPath(newEntryPath));
+                this.store.dispatch(
+                    settingsActions.setCompilerEntryPath(newEntryPath),
+                );
                 return;
             }
         }
@@ -221,17 +228,23 @@ export class EditorKernelImpl implements EditorKernel {
         // if entry point with "default" name exists, try that first
         for (const [name, path] of newEntryPoints) {
             if (name === "default") {
-                if (path && await this.fileMgr.exists(toFsPath(path.split("/")))) {
+                if (
+                    path &&
+                    (await this.fileMgr.exists(toFsPath(path.split("/"))))
+                ) {
                     return path;
-                } 
+                }
                 break;
             }
         }
         // otherwise find the first valid entry point
         for (const [_, path] of newEntryPoints) {
-            if (path && await this.fileMgr.exists(toFsPath(path.split("/")))) {
+            if (
+                path &&
+                (await this.fileMgr.exists(toFsPath(path.split("/"))))
+            ) {
                 return path;
-            } 
+            }
         }
         return "";
     }

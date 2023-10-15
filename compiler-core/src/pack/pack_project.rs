@@ -1,9 +1,9 @@
-use serde_json::{Value, Map};
+use serde_json::{Map, Value};
 
 use crate::api::{CompilerMetadata, Setting};
 use crate::json::{Cast, Coerce};
 use crate::prop;
-use crate::types::{RouteMetadata, EntryPoints};
+use crate::types::{EntryPoints, RouteMetadata};
 use crate::util::async_for;
 
 use super::{ConfigBuilder, PackerError, PackerResult, Resource};
@@ -57,7 +57,8 @@ pub async fn pack_phase0(
         let mut entry_points = super::pack_entry_points(entry_points).await?;
         if redirect_default_entry_point {
             if let Some(entry_path) = entry_points.0.remove(prop::DEFAULT) {
-                let redirect_resource = crate::resolve_absolute(project_resource, entry_path).await?;
+                let redirect_resource =
+                    crate::resolve_absolute(project_resource, entry_path).await?;
                 let mut project_obj = load_project_object(&redirect_resource).await?;
                 // remove and ignore the entry points in the redirected project
                 project_obj.remove(prop::ENTRY_POINTS);
@@ -76,7 +77,6 @@ async fn pack_project(
     mut project_obj: Map<String, Value>,
     setting: &Setting,
 ) -> PackerResult<Phase0> {
-
     let title = check_metadata_required_property!(prop::TITLE, project_obj)?;
     let version = check_metadata_required_property!(prop::VERSION, project_obj)?;
     let route = check_metadata_required_property!(prop::ROUTE, project_obj)?;
@@ -135,11 +135,9 @@ pub async fn pack_project_entry_points(project_resource: &Resource) -> PackerRes
 async fn load_project_object(project_resource: &Resource) -> PackerResult<Map<String, Value>> {
     match project_resource.load_structured().await? {
         Value::Object(o) => Ok(o),
-        _ => {
-            Err(PackerError::InvalidResourceType(
-                project_resource.name().to_string(),
-                "object".to_string(),
-            ))
-        }
+        _ => Err(PackerError::InvalidResourceType(
+            project_resource.name().to_string(),
+            "object".to_string(),
+        )),
     }
 }

@@ -24,7 +24,13 @@ pub async fn prepare_compiler(
     redirect_to_default_entry_point: bool,
 ) -> PackerResult<CompilerContext> {
     let start_time = Instant::now();
-    let mut phase0 = pack::pack_phase0(source, &project_resource, &setting, redirect_to_default_entry_point).await?;
+    let mut phase0 = pack::pack_phase0(
+        source,
+        &project_resource,
+        &setting,
+        redirect_to_default_entry_point,
+    )
+    .await?;
     // take the plugins out to run the pre compile phase of the plugins
     let mut plugins = std::mem::take(&mut phase0.meta.plugins);
     let mut context = CompilerContext {
@@ -74,4 +80,3 @@ pub async fn prepare_compiler(
 pub async fn prepare_entry_points(project_resource: &Resource) -> PackerResult<EntryPoints> {
     pack::pack_project_entry_points(project_resource).await
 }
-

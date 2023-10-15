@@ -6,7 +6,7 @@ use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
 
-use celerc::pack::{LocalResourceResolver, Resource, ResourcePath, PackerResult, Use, PackerError, ValidUse};
+use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
 use celerc::util::{Marc, Path};
 use celerc::Setting;
 
@@ -49,15 +49,11 @@ pub async fn get_entry_points() -> Result<EntryPointsSorted, JsValue> {
 
     let entry_points = match celerc::prepare_entry_points(&project_resource).await {
         Ok(x) => x.path_only().into(),
-        Err(_) => {
-            Default::default()
-        }
+        Err(_) => Default::default(),
     };
 
     Ok(entry_points)
 }
-
-const SOURCE_NAME: &str = "(local)";
 
 /// Compile a document from web editor
 ///
@@ -70,14 +66,12 @@ pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDo
         None => (
             // allow redirect to default entry point in root project.yaml
             true,
-            celerc::resolve_project(&root_resource).await
+            celerc::resolve_project(&root_resource).await,
         ),
-        Some(path) => {
-            (
-                false,
-                celerc::resolve_absolute(&root_resource, path.to_string()).await
-            )
-        }
+        Some(path) => (
+            false,
+            celerc::resolve_absolute(&root_resource, path.to_string()).await,
+        ),
     };
     let source_name = match entry_path {
         Some(path) => Cow::Owned(path),
@@ -89,17 +83,19 @@ pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDo
             let x = celerc::make_doc_for_packer_error(&source_name, e).await;
             return OpaqueExecDoc::wrap(x);
         }
-
     };
     let setting = Setting::default();
     // TODO #86 cache this
-    let context = match celerc::prepare_compiler(&source_name, project_resource, setting, allow_redirect).await {
-        Ok(x) => x,
-        Err(e) => {
-            let x = celerc::make_doc_for_packer_error(&source_name, e).await;
-            return OpaqueExecDoc::wrap(x);
-        }
-    };
+    let context =
+        match celerc::prepare_compiler(&source_name, project_resource, setting, allow_redirect)
+            .await
+        {
+            Ok(x) => x,
+            Err(e) => {
+                let x = celerc::make_doc_for_packer_error(&source_name, e).await;
+                return OpaqueExecDoc::wrap(x);
+            }
+        };
 
     let x = context.compile().await;
     OpaqueExecDoc::wrap(x)
@@ -119,20 +115,4 @@ fn create_root_resource() -> Resource {
         loader_url::new_loader(),
         Marc::new(LocalResourceResolver(Path::new())),
     )
-}
-
-async fn find_project(root_resource: &Resource, entry_path: Option<String>) -> PackerResult<Resource> {
-    match entry_path {
-        None => celerc::resolve_project(&root_resource).await,
-        Some(path) => {
-            match Use::from(path) {
-                Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
-                    root_resource.resolve(&valid).await
-                },
-                other => {
-                    return Err(PackerError::InvalidPath(other.to_string()))
-                }
-            }
-        }
-    }
 }

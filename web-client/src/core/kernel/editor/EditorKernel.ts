@@ -44,7 +44,7 @@ export interface EditorKernel {
     saveChangesToFs(isUserAction: boolean): Promise<FsResult<void>>;
 
     /// Trigger a compiler run asynchrounously
-    /// 
+    ///
     /// The entry point will be fetched from the state and validated.
     /// If a compilation is running, there will be another run after it
     compile(): Promise<void>;

@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, DataStruct, Fields, Attribute, Meta, Field, DataEnum, Data};
+use syn::{
+    parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Field, Fields, Meta,
+};
 
 /// Implementation of [`derive_wasm`](crate::derive_wasm) macro
 pub fn expand(
@@ -110,18 +112,15 @@ fn transform_tsify_for_field(field: &mut Field, feature: &TokenStream) {
 }
 
 fn transform_tsify_attr(attr: &mut Attribute, feature: &TokenStream) {
-    match &mut attr.meta {
-        Meta::List(list) => {
-            if !list.path.is_ident("tsify") {
-                return;
-            }
-            list.path = syn::parse_str("cfg_attr").expect("syn::parse_str failed to parse cfg_attr");
-            let tokens = &list.tokens;
-            let tokens = quote! {
-                #feature, tsify(#tokens)
-            };
-            list.tokens = tokens;
+    if let Meta::List(list) = &mut attr.meta {
+        if !list.path.is_ident("tsify") {
+            return;
         }
-        _ =>  {} 
+        list.path = syn::parse_str("cfg_attr").expect("syn::parse_str failed to parse cfg_attr");
+        let tokens = &list.tokens;
+        let tokens = quote! {
+            #feature, tsify(#tokens)
+        };
+        list.tokens = tokens;
     }
 }

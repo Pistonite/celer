@@ -28,9 +28,8 @@ export const setDeactivateAutoLoadAfterMinutes = withPayload<
     state.deactivateAutoLoadAfterMinutes = deactivateAutoLoadAfterMinutes;
 });
 
-export const setCompilerEntryPath = withPayload<
-    EditorSettingsState,
-    string
->((state, compilerEntryPath) => {
-    state.compilerEntryPath = compilerEntryPath;
-});
+export const setCompilerEntryPath = withPayload<EditorSettingsState, string>(
+    (state, compilerEntryPath) => {
+        state.compilerEntryPath = compilerEntryPath;
+    },
+);

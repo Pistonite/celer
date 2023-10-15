@@ -2,13 +2,13 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use instant::Instant;
 use derivative::Derivative;
+use instant::Instant;
 use log::{error, info};
 
 use crate::comp::Compiler;
 use crate::lang::Preset;
-use crate::pack::{PackerError, PackerResult, Phase0, Resource, ValidUse, Use};
+use crate::pack::{PackerError, PackerResult, Phase0, Resource, Use, ValidUse};
 use crate::plug::PluginInstance;
 use crate::types::{ExecDoc, RouteMetadata};
 
@@ -36,10 +36,8 @@ pub async fn resolve_absolute(resource: &Resource, path: String) -> PackerResult
     match Use::from(path) {
         Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
             resource.resolve(&valid).await
-        },
-        other => {
-            return Err(PackerError::InvalidPath(other.to_string()))
         }
+        other => Err(PackerError::InvalidPath(other.to_string())),
     }
 }
 

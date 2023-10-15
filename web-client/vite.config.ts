@@ -46,8 +46,8 @@ export default defineConfig({
             "^/docs/.*": {
                 target: "http://localhost:3173",
                 changeOrigin: false,
-            }
-        }
+            },
+        },
     },
     build: {
         rollupOptions: {

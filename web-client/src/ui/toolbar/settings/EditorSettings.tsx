@@ -60,7 +60,9 @@ export const EditorSettings: React.FC = () => {
         if (!compilerEntryPath) {
             return DEFAULT_ENTRY_POINT;
         }
-        const selected = entryPoints.find(([_, path]) => path === compilerEntryPath);
+        const selected = entryPoints.find(
+            ([_, path]) => path === compilerEntryPath,
+        );
         return selected ? selected[0] : DEFAULT_ENTRY_POINT;
     }, [entryPoints, compilerEntryPath]);
 
@@ -157,34 +159,50 @@ export const EditorSettings: React.FC = () => {
             <SettingsSection title="Compiler">
                 <Field
                     label="Entry point"
-                    hint={<>Choose which entry point to compile from. Entry points are defined with the <code>entry-points</code> property. <a target="_blank" href="/docs/route/file-structure#multiple-projects-in-the-same-repo">
-                        Learn more</a></>}
-                    validationState={entryPoints.length === 0 ? "warning" : undefined}
-                    validationMessage={entryPoints.length === 0 ? "No custom entry points found. If you updated the config externally, close and reopen the dialog to refresh" : undefined}
-                    >
+                    hint={
+                        <>
+                            Choose which entry point to compile from. Entry
+                            points are defined with the{" "}
+                            <code>entry-points</code> property.{" "}
+                            <a
+                                target="_blank"
+                                href="/docs/route/file-structure#multiple-projects-in-the-same-repo"
+                            >
+                                Learn more
+                            </a>
+                        </>
+                    }
+                    validationState={
+                        entryPoints.length === 0 ? "warning" : undefined
+                    }
+                    validationMessage={
+                        entryPoints.length === 0
+                            ? "No custom entry points found. If you updated the config externally, close and reopen the dialog to refresh"
+                            : undefined
+                    }
+                >
                     <Dropdown
-                        value={formatCompilerEntryText(selectedEntryPoint, compilerEntryPath || DEFAULT_ENTRY_PATH)}
-                        selectedOptions={[compilerEntryPath || DEFAULT_ENTRY_PATH]}
+                        value={formatCompilerEntryText(
+                            selectedEntryPoint,
+                            compilerEntryPath || DEFAULT_ENTRY_PATH,
+                        )}
+                        selectedOptions={[
+                            compilerEntryPath || DEFAULT_ENTRY_PATH,
+                        ]}
                         onOptionSelect={(_, data) => {
-                            setCompilerEntryPath(data.selectedOptions[0])
+                            setCompilerEntryPath(data.selectedOptions[0]);
                         }}
                     >
-                        {
-                            entryPointOptions.map(([name, path]) => {
-                                const text = formatCompilerEntryText(name, path);
-                                return (
-                                <Option
-                                    key={path}
-                                    text={text}
-                                    value={path}
-                                >
-                                        {text}
+                        {entryPointOptions.map(([name, path]) => {
+                            const text = formatCompilerEntryText(name, path);
+                            return (
+                                <Option key={path} text={text} value={path}>
+                                    {text}
                                 </Option>
                             );
-                            })
-                        }
+                        })}
                     </Dropdown>
-                    </Field>
+                </Field>
             </SettingsSection>
         </>
     );
@@ -192,4 +210,4 @@ export const EditorSettings: React.FC = () => {
 
 const formatCompilerEntryText = (name: string, path: string) => {
     return `${name} (${path})`;
-}
+};
