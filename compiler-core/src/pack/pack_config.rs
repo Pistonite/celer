@@ -181,8 +181,7 @@ async fn process_plugins_config(
                     let use_path_string = value.coerce_to_string();
                     plugin = match serde_json::from_value::<BuiltInPlugin>(value) {
                         Ok(built_in) => Some(Plugin::BuiltIn(built_in)),
-                        Err(e) => {
-                            log::info!("e: {e}");
+                        Err(_) => {
                             // it's a script path, parse as use
                             match Use::from(use_path_string) {
                                 Use::Invalid(path) => return Err(PackerError::InvalidPlugin(path)),

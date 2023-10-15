@@ -10,10 +10,11 @@ In case you want to make your own, here are the available properties:
 |Property|Description|
 |-|-|
 |`icons`|Add icon definition. See [Icons](./config/icons.md) for detail|
-|`tags`|Add tag definition for use in Rich Text. See [Tags](./config/tags.md) for detail|
-|`presets`|Add preset definition. See [Presets](./config/presets.md) for detail|
-|`plugins`|Add plugin definition. See [Plugins](../plugin/getting-started.md) for detail|
-|`map`|Define map properties. See [Map](./config/map.md) for detail|
+|`tags`|Add tag definition for use in Rich Text. See [Tags](./config/tags.md) for details|
+|`presets`|Add preset definition. See [Presets](./config/presets.md) for details|
+|`plugins`|Add plugin definition. See [Plugins](../plugin/getting-started.md) for details|
+|`map`|Define map properties. See [Map](./config/map.md) for details|
+|`includes`|Include other config objects. See [Include](#include) below for details|
 
 Configurations are meant to be composed and reused with other configurations.
 So most properties in all configurations are combined. An exception to this is `map`.
@@ -62,6 +63,7 @@ is invalid for others to include with `use`:
 # something.yaml
 use: another/file/something.yaml
 ```
+If you need a config to include other configs, check out the [include](#include) property below.
 :::warning
 CAUTION: The example above is for what is NOT supported
 :::
@@ -70,29 +72,36 @@ You can still use `use` in the config properties themselves, like
 the example above in the `icons` property
 :::
 
-## Grouping
-Celer does NOT support complex grouping structures for dependency. For example, 
-you CANNOT make a config file A which includes 3 other config files, and include
-the 3 files by including config file A.
+## Include
+If you are distributing config files, it may be helpful to split up the "source files"
+of the presets into smaller, more maintainable chunks. However, it could lead to
+situations where users need to `use` a lot of files in their config to get started.
 ```yaml
-# This maybe desired in some cases, but Celer does not support this
-
 # project.yaml
 config:
-- use: ./A.yaml
+- use: foo/bar/core.yaml
+- use: foo/bar/basic.yaml
+- use: foo/bar/items.yaml
+- use: foo/bar/enenmies.yaml 
 
-# A.yaml
-- use: ./1.yaml
-- use: ./2.yaml
-- use: ./3.yaml
+# ^ that's a lot of `use`s!
 ```
-:::warning
-CAUTION: The example above is for what is NOT supported
-:::
 
-The reason for not supporting this is that Celer discourages complex dependency structure.
-Complex dependencies make it tricker to debug when a configuration is not functioning and
-make it hard to display meaningful error messages.
+This is when the `includes` property can be helpful. It defines an array of config objects
+that can nest inside the parent config:
+```yaml
+# project.yaml
+config:
+- use: foo/bar/all.yaml
 
-There are workarounds to this if you really want this behavior, particularly when distributing the config files.
-For example, you can generate `A.yaml` from the 3 other files ahead of time. Or you could use CI like GitHub Actions to do that automatically.
+# foo/bar/all.yaml
+includes:
+- use: ./core.yaml
+- use: ./basic.yaml
+- use: ./items.yaml
+- use: ./enenmies.yaml 
+```
+In the example above, `all.yaml` is a config file that includes the content
+of all the individual config chunks.
+When distributing these configs, users can simply include `all.yaml` and not
+worry about the internals.
