@@ -8,8 +8,7 @@
 //! and a json blob of the route.
 
 use std::convert::Infallible;
-
-use serde::{Deserialize, Serialize};
+use std::fmt::{Display, Formatter};
 
 use crate::lang;
 use crate::types::DocDiagnostic;
@@ -37,8 +36,37 @@ pub use pack_value::*;
 mod resource;
 pub use resource::*;
 
-#[derive(Debug, Clone, PartialEq, thiserror::Error, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "type", content = "data")]
+#[derive(Default, Debug, Clone, PartialEq)]
+pub struct ConfigTrace(Vec<usize>);
+
+impl ConfigTrace {
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+    #[inline]
+    pub fn push(&mut self, v: usize) {
+        self.0.push(v)
+    }
+    #[inline]
+    pub fn pop(&mut self) -> Option<usize> {
+        self.0.pop()
+    }
+}
+
+impl Display for ConfigTrace {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "trace=[{}]", self.0.iter().map(|x|x.to_string()).collect::<Vec<_>>().join(","))
+    }
+}
+
+impl From<&[usize]> for ConfigTrace {
+    fn from(v: &[usize]) -> Self {
+        Self(v.to_vec())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum PackerError {
     #[error("The project file (project.yaml) is missing or invalid.")]
     InvalidProject,
@@ -91,17 +119,28 @@ pub enum PackerError {
     #[error("Project metadata has extra unused property: {0}")]
     UnusedMetadataProperty(String),
 
-    #[error("Project config at index {0} has an invalid type")]
-    InvalidConfigType(usize),
+    #[error("Project config ({0}) has an invalid type")]
+    InvalidConfigType(ConfigTrace),
 
-    #[error("Project config at index {0}: the `{1}` property is invalid")]
-    InvalidConfigProperty(usize, String),
+    #[error("Project config ({0}): the `{1}` property is invalid")]
+    InvalidConfigProperty(ConfigTrace, String),
 
-    #[error("Project config at index {0}: the required `{1}` property is missing")]
-    MissingConfigProperty(usize, String),
+    #[error("Project config ({0}): the required `{1}` property is missing")]
+    MissingConfigProperty(ConfigTrace, String),
 
-    #[error("Project config at index {0}: the `{1}` property is unused")]
-    UnusedConfigProperty(usize, String),
+    #[error("Project config ({0}): the `{1}` property is unused")]
+    UnusedConfigProperty(ConfigTrace, String),
+
+    #[error("Project config ({0}): The preset {1} is invalid")]
+    InvalidPreset(ConfigTrace, String),
+
+    #[error(
+        "Project config ({0}): defining map when a previous config already defines one"
+    )]
+    DuplicateMap(ConfigTrace),
+
+    #[error("Project config ({0}): config is nesting too deep!")]
+    MaxConfigDepthExceeded(ConfigTrace),
 
     #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
     InvalidEntryPoint(String, String),
@@ -109,13 +148,6 @@ pub enum PackerError {
     #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
     MaxEntryPointDepthExceeded(String),
 
-    #[error("Project config at index {0}: The preset {1} is invalid")]
-    InvalidPreset(usize, String),
-
-    #[error(
-        "Project config at index {0}: defining map when a previous config already defines one"
-    )]
-    DuplicateMap(usize),
 
     #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
     InvalidPlugin(String),

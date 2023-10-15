@@ -9,15 +9,15 @@ use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
 use crate::util::async_for;
 
-use super::{PackerError, PackerResult};
+use super::{PackerError, PackerResult, ConfigTrace};
 
 pub async fn pack_presets(
     value: Value,
-    index: usize,
+    trace: &ConfigTrace,
     max_depth: usize,
 ) -> PackerResult<Vec<(String, Preset)>> {
     let mut output = Vec::new();
-    pack_presets_internal("", value, index, 0, max_depth, &mut output).await?;
+    pack_presets_internal("", value, trace, 0, max_depth, &mut output).await?;
     Ok(output)
 }
 
@@ -25,7 +25,7 @@ pub async fn pack_presets(
 async fn pack_presets_internal(
     preset_name: &str,
     value: Value,
-    index: usize,
+    trace: &ConfigTrace,
     depth: usize,
     max_depth: usize,
     output: &mut Vec<(String, Preset)>,
@@ -36,9 +36,9 @@ async fn pack_presets_internal(
 
     let obj = value.try_into_object().map_err(|_| {
         if preset_name.is_empty() {
-            PackerError::InvalidConfigProperty(index, prop::PRESETS.to_string())
+            PackerError::InvalidConfigProperty(trace.clone(), prop::PRESETS.to_string())
         } else {
-            PackerError::InvalidPreset(index, preset_name.to_string())
+            PackerError::InvalidPreset(trace.clone(), preset_name.to_string())
         }
     })?;
 
@@ -50,7 +50,7 @@ async fn pack_presets_internal(
             } else {
                 format!("{preset_name}::{namespace}")
             };
-            pack_presets_internal(&full_key, value, index, depth+1, max_depth, output).await?;
+            pack_presets_internal(&full_key, value, trace, depth+1, max_depth, output).await?;
         } else {
             // preset
             let full_key = if preset_name.is_empty() {
@@ -59,7 +59,7 @@ async fn pack_presets_internal(
                 format!("{preset_name}::{key}")
             };
             let preset = Preset::compile(value).await.ok_or_else(|| {
-                PackerError::InvalidPreset(index, full_key.clone())
+                PackerError::InvalidPreset(trace.clone(), full_key.clone())
             })?;
             output.push((full_key, preset));
         }

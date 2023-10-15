@@ -6,7 +6,7 @@ use crate::prop;
 use crate::types::{EntryPoints, RouteMetadata};
 use crate::util::async_for;
 
-use super::{ConfigBuilder, PackerError, PackerResult, Resource};
+use super::{ConfigBuilder, PackerError, PackerResult, Resource, ConfigTrace};
 
 macro_rules! check_metadata_not_array_or_object {
     ($property:expr, $value:ident) => {{
@@ -93,8 +93,11 @@ async fn pack_project(
         .map_err(|_| PackerError::InvalidMetadataPropertyType(prop::CONFIG.to_string()))?;
 
     let mut builder = ConfigBuilder::default();
+    let mut config_trace = ConfigTrace::default();
     let _ = async_for!((i, config) in config.into_iter().enumerate(), {
-        super::pack_config(&mut builder, project_resource, config, i, setting).await?;
+        config_trace.0.push(i);
+        super::pack_config(&mut builder, project_resource, config, &mut config_trace, setting).await?;
+        config_trace.0.pop();
     });
 
     let project = RouteMetadata {

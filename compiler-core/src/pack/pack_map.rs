@@ -7,14 +7,14 @@ use crate::prop;
 use crate::types::{GameCoord, MapMetadata};
 use crate::util::async_for;
 
-use super::{PackerError, PackerResult};
+use super::{PackerError, PackerResult, ConfigTrace};
 
 macro_rules! check_map_required_property {
-    ($property:expr, $index:ident, $value:expr) => {
+    ($property:expr, $trace:ident, $value:expr) => {
         match $value {
             Some(v) => Ok(v),
             None => Err(PackerError::MissingConfigProperty(
-                $index,
+                $trace.clone(),
                 format!("{}.{}", prop::MAP, $property),
             )),
         }
@@ -22,47 +22,47 @@ macro_rules! check_map_required_property {
 }
 
 /// Parses the `map` property in a config json blob
-pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
+pub async fn pack_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapMetadata> {
     let mut map_obj = value
         .try_into_object()
-        .map_err(|_| PackerError::InvalidConfigProperty(index, prop::MAP.to_string()))?;
+        .map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), prop::MAP.to_string()))?;
 
-    let layers = check_map_required_property!(prop::LAYERS, index, map_obj.remove(prop::LAYERS))?;
+    let layers = check_map_required_property!(prop::LAYERS, trace, map_obj.remove(prop::LAYERS))?;
     let coord_map =
-        check_map_required_property!(prop::COORD_MAP, index, map_obj.remove(prop::COORD_MAP))?;
+        check_map_required_property!(prop::COORD_MAP, trace, map_obj.remove(prop::COORD_MAP))?;
     let initial_coord = check_map_required_property!(
         prop::INITIAL_COORD,
-        index,
+        trace,
         map_obj.remove(prop::INITIAL_COORD)
     )?;
     let initial_zoom = check_map_required_property!(
         prop::INITIAL_ZOOM,
-        index,
+        trace,
         map_obj.remove(prop::INITIAL_ZOOM)
     )?;
     let initial_color = check_map_required_property!(
         prop::INITIAL_COLOR,
-        index,
+        trace,
         map_obj.remove(prop::INITIAL_COLOR)
     )?;
 
     if let Some(k) = map_obj.keys().next() {
         return Err(PackerError::UnusedConfigProperty(
-            index,
+            trace.clone(),
             format!("{}.{}", prop::MAP, k),
         ));
     }
 
     let layers = layers.try_into_array().map_err(|_| {
-        PackerError::InvalidConfigProperty(index, format!("{}.{}", prop::MAP, prop::LAYERS))
+        PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::MAP, prop::LAYERS))
     })?;
 
-    let coord_map = super::pack_coord_map(coord_map, index).await?;
+    let coord_map = super::pack_coord_map(coord_map, trace).await?;
     let initial_coord = match serde_json::from_value::<GameCoord>(initial_coord) {
         Ok(c) => c,
         Err(_) => {
             return Err(PackerError::InvalidConfigProperty(
-                index,
+                trace.clone(),
                 format!("{}.{}", prop::MAP, prop::INITIAL_COORD),
             ))
         }
@@ -72,7 +72,7 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
         Some(z) => z,
         None => {
             return Err(PackerError::InvalidConfigProperty(
-                index,
+                trace.clone(),
                 format!("{}.{}", prop::MAP, prop::INITIAL_ZOOM),
             ))
         }
@@ -80,7 +80,7 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
 
     let initial_color = if initial_color.is_array() || initial_color.is_object() {
         return Err(PackerError::InvalidConfigProperty(
-            index,
+            trace.clone(),
             format!("{}.{}", prop::MAP, prop::INITIAL_COLOR),
         ));
     } else {
@@ -90,7 +90,7 @@ pub async fn pack_map(value: Value, index: usize) -> PackerResult<MapMetadata> {
     let layers = {
         let mut packed_layers = Vec::with_capacity(layers.len());
         let _ = async_for!((i, layer) in layers.into_iter().enumerate(), {
-            packed_layers.push(super::pack_map_layer(layer, index, i)?);
+            packed_layers.push(super::pack_map_layer(layer, trace, i)?);
         });
         packed_layers
     };
@@ -122,22 +122,26 @@ mod test {
             json!("hello"),
         ];
 
+        let mut trace = ConfigTrace::default();
+
         for (i, v) in values.into_iter().enumerate() {
-            let result = pack_map(v, i).await;
+            trace.push(i);
+            let result = pack_map(v, &trace).await;
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(i, prop::MAP.to_string()))
+                Err(PackerError::InvalidConfigProperty(trace.clone(), prop::MAP.to_string()))
             );
+            trace.pop();
         }
     }
 
     #[tokio::test]
     async fn test_missing_properties() {
-        let result = pack_map(json!({}), 0).await;
+        let result = pack_map(json!({}), &Default::default()).await;
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
-                0,
+                Default::default(),
                 "map.layers".to_string()
             ))
         );
@@ -146,13 +150,13 @@ mod test {
             json!({
                 "layers": {}
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
-                0,
+                Default::default(),
                 "map.coord-map".to_string()
             ))
         );
@@ -162,13 +166,13 @@ mod test {
                 "layers": {},
                 "coord-map": {}
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
-                0,
+                Default::default(),
                 "map.initial-coord".to_string()
             ))
         );
@@ -179,13 +183,13 @@ mod test {
                 "coord-map": {},
                 "initial-coord": {}
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
-                0,
+                Default::default(),
                 "map.initial-zoom".to_string()
             ))
         );
@@ -197,13 +201,13 @@ mod test {
                 "initial-coord": {},
                 "initial-zoom": {},
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
-                0,
+                Default::default(),
                 "map.initial-color".to_string()
             ))
         );
@@ -220,13 +224,13 @@ mod test {
                 "initial-color": {},
                 "extra": {},
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::UnusedConfigProperty(
-                0,
+                Default::default(),
                 "map.extra".to_string()
             ))
         );
@@ -242,13 +246,13 @@ mod test {
                 "initial-zoom": {},
                 "initial-color": {},
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
-                0,
+                Default::default(),
                 "map.layers".to_string()
             ))
         );
@@ -261,13 +265,13 @@ mod test {
                 "initial-zoom": {},
                 "initial-color": {},
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
-                0,
+                Default::default(),
                 "map.coord-map".to_string()
             ))
         );
@@ -283,13 +287,13 @@ mod test {
                 "initial-zoom": {},
                 "initial-color": {},
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
-                0,
+                Default::default(),
                 "map.initial-coord".to_string()
             ))
         );
@@ -305,13 +309,13 @@ mod test {
                 "initial-zoom": {},
                 "initial-color": {},
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
-                0,
+                Default::default(),
                 "map.initial-zoom".to_string()
             ))
         );
@@ -327,13 +331,13 @@ mod test {
                 "initial-zoom": 0,
                 "initial-color": {},
             }),
-            0,
+            &Default::default(),
         )
         .await;
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
-                0,
+                Default::default(),
                 "map.initial-color".to_string()
             ))
         );

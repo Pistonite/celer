@@ -6,14 +6,14 @@ use crate::json::{Cast, Coerce};
 use crate::prop;
 use crate::types::{MapAttribution, MapLayerAttr, MapTilesetTransform};
 
-use super::{PackerError, PackerResult};
+use super::{PackerError, PackerResult, ConfigTrace};
 
 macro_rules! check_layer_required_property {
-    ($property:expr, $config_index:ident, $layer_index:ident, $obj:ident) => {
+    ($property:expr, $trace:ident, $layer_index:ident, $obj:ident) => {
         match $obj.remove($property) {
             Some(v) => Ok(v),
             None => Err(PackerError::MissingConfigProperty(
-                $config_index,
+                $trace.clone(),
                 format!(
                     "{}.{}[{}].{}",
                     prop::MAP,
@@ -28,37 +28,37 @@ macro_rules! check_layer_required_property {
 
 pub fn pack_map_layer(
     value: Value,
-    config_index: usize,
+    trace: &ConfigTrace,
     layer_index: usize,
 ) -> PackerResult<MapLayerAttr> {
     let mut obj = value.try_into_object().map_err(|_| {
-        PackerError::InvalidConfigProperty(config_index, format!("map.layers[{layer_index}]"))
+        PackerError::InvalidConfigProperty(trace.clone(), format!("map.layers[{layer_index}]"))
     })?;
 
-    let name = check_layer_required_property!(prop::NAME, config_index, layer_index, obj)?;
+    let name = check_layer_required_property!(prop::NAME, trace, layer_index, obj)?;
     let template_url =
-        check_layer_required_property!(prop::TEMPLATE_URL, config_index, layer_index, obj)?;
-    let size = check_layer_required_property!(prop::SIZE, config_index, layer_index, obj)?;
+        check_layer_required_property!(prop::TEMPLATE_URL, trace, layer_index, obj)?;
+    let size = check_layer_required_property!(prop::SIZE, trace, layer_index, obj)?;
     let zoom_bounds =
-        check_layer_required_property!(prop::ZOOM_BOUNDS, config_index, layer_index, obj)?;
+        check_layer_required_property!(prop::ZOOM_BOUNDS, trace, layer_index, obj)?;
     let max_native_zoom =
-        check_layer_required_property!(prop::MAX_NATIVE_ZOOM, config_index, layer_index, obj)?;
+        check_layer_required_property!(prop::MAX_NATIVE_ZOOM, trace, layer_index, obj)?;
     let transform =
-        check_layer_required_property!(prop::TRANSFORM, config_index, layer_index, obj)?;
-    let start_z = check_layer_required_property!(prop::START_Z, config_index, layer_index, obj)?;
+        check_layer_required_property!(prop::TRANSFORM, trace, layer_index, obj)?;
+    let start_z = check_layer_required_property!(prop::START_Z, trace, layer_index, obj)?;
     let attribution =
-        check_layer_required_property!(prop::ATTRIBUTION, config_index, layer_index, obj)?;
+        check_layer_required_property!(prop::ATTRIBUTION, trace, layer_index, obj)?;
 
     if let Some(k) = obj.keys().next() {
         return Err(PackerError::UnusedConfigProperty(
-            config_index,
+            trace.clone(),
             format!("{}.{}[{}].{}", prop::MAP, prop::LAYERS, layer_index, k),
         ));
     }
 
     let name = if name.is_array() || name.is_object() {
         return Err(PackerError::InvalidConfigProperty(
-            config_index,
+            trace.clone(),
             format!(
                 "{}.{}[{}].{}",
                 prop::MAP,
@@ -73,7 +73,7 @@ pub fn pack_map_layer(
 
     let template_url = if template_url.is_array() || template_url.is_object() {
         return Err(PackerError::InvalidConfigProperty(
-            config_index,
+            trace.clone(),
             format!(
                 "{}.{}[{}].{}",
                 prop::MAP,
@@ -88,7 +88,7 @@ pub fn pack_map_layer(
 
     let size = parse_array_with_2_elements(size).ok_or_else(|| {
         PackerError::InvalidConfigProperty(
-            config_index,
+            trace.clone(),
             format!(
                 "{}.{}[{}].{}",
                 prop::MAP,
@@ -101,7 +101,7 @@ pub fn pack_map_layer(
 
     let zoom_bounds = parse_array_with_2_elements(zoom_bounds).ok_or_else(|| {
         PackerError::InvalidConfigProperty(
-            config_index,
+            trace.clone(),
             format!(
                 "{}.{}[{}].{}",
                 prop::MAP,
@@ -114,7 +114,7 @@ pub fn pack_map_layer(
 
     let max_native_zoom = max_native_zoom.try_coerce_to_u64().ok_or_else(|| {
         PackerError::InvalidConfigProperty(
-            config_index,
+            trace.clone(),
             format!(
                 "{}.{}[{}].{}",
                 prop::MAP,
@@ -127,7 +127,7 @@ pub fn pack_map_layer(
 
     let transform = serde_json::from_value::<MapTilesetTransform>(transform).map_err(|_| {
         PackerError::InvalidConfigProperty(
-            config_index,
+            trace.clone(),
             format!(
                 "{}.{}[{}].{}",
                 prop::MAP,
@@ -140,7 +140,7 @@ pub fn pack_map_layer(
 
     let start_z = start_z.try_coerce_to_f64().ok_or_else(|| {
         PackerError::InvalidConfigProperty(
-            config_index,
+            trace.clone(),
             format!(
                 "{}.{}[{}].{}",
                 prop::MAP,
@@ -153,7 +153,7 @@ pub fn pack_map_layer(
 
     let attribution = serde_json::from_value::<MapAttribution>(attribution).map_err(|_| {
         PackerError::InvalidConfigProperty(
-            config_index,
+            trace.clone(),
             format!(
                 "{}.{}[{}].{}",
                 prop::MAP,
@@ -205,15 +205,19 @@ mod test {
             json!("hello"),
         ];
 
+        let mut trace = ConfigTrace::default();
+
         for (i, v) in values.into_iter().enumerate() {
-            let result = pack_map_layer(v, i, i);
+            trace.push(i);
+            let result = pack_map_layer(v, &trace, i);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    i,
+                    trace.clone(),
                     format!("map.layers[{i}]")
                 ))
             );
+            trace.pop();
         }
     }
 
@@ -232,11 +236,11 @@ mod test {
 
         let mut value = json!({});
         for p in props {
-            let result = pack_map_layer(value.clone(), 0, 0);
+            let result = pack_map_layer(value.clone(), &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::MissingConfigProperty(
-                    0,
+                    Default::default(),
                     format!("map.layers[0].{p}")
                 ))
             );
@@ -259,11 +263,11 @@ mod test {
             "extra": "",
         });
 
-        let result = pack_map_layer(value, 0, 0);
+        let result = pack_map_layer(value, &Default::default(), 0);
         assert_eq!(
             result,
             Err(PackerError::UnusedConfigProperty(
-                0,
+                Default::default(),
                 "map.layers[0].extra".to_string()
             ))
         );
@@ -283,11 +287,11 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, 0, 0);
+            let result = pack_map_layer(value, &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    0,
+                    Default::default(),
                     "map.layers[0].name".to_string()
                 ))
             );
@@ -308,11 +312,11 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, 0, 0);
+            let result = pack_map_layer(value, &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    0,
+                    Default::default(),
                     "map.layers[0].template-url".to_string()
                 ))
             );
@@ -342,11 +346,11 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, 0, 0);
+            let result = pack_map_layer(value, &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    0,
+                    Default::default(),
                     "map.layers[0].size".to_string()
                 ))
             );
@@ -376,11 +380,11 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, 0, 0);
+            let result = pack_map_layer(value, &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    0,
+                    Default::default(),
                     "map.layers[0].zoom-bounds".to_string()
                 ))
             );
@@ -412,11 +416,11 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, 0, 0);
+            let result = pack_map_layer(value, &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    0,
+                    Default::default(),
                     "map.layers[0].max-native-zoom".to_string()
                 ))
             );
@@ -451,11 +455,11 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, 0, 0);
+            let result = pack_map_layer(value, &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    0,
+                    Default::default(),
                     "map.layers[0].transform".to_string()
                 ))
             );
@@ -479,11 +483,11 @@ mod test {
                 "start-z": v,
                 "attribution": "",
             });
-            let result = pack_map_layer(value, 0, 0);
+            let result = pack_map_layer(value, &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    0,
+                    Default::default(),
                     "map.layers[0].start-z".to_string()
                 ))
             );
@@ -525,11 +529,11 @@ mod test {
                 "start-z": 0,
                 "attribution": v,
             });
-            let result = pack_map_layer(value, 0, 0);
+            let result = pack_map_layer(value, &Default::default(), 0);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
-                    0,
+                    Default::default(),
                     "map.layers[0].attribution".to_string()
                 ))
             );
@@ -554,7 +558,7 @@ mod test {
             },
         });
 
-        let result = pack_map_layer(value, 0, 0);
+        let result = pack_map_layer(value, &Default::default(), 0);
 
         assert_eq!(
             result,
