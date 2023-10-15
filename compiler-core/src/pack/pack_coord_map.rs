@@ -6,7 +6,7 @@ use crate::json::Cast;
 use crate::prop;
 use crate::types::{Axis, MapCoordMap};
 
-use super::{PackerError, PackerResult, ConfigTrace};
+use super::{ConfigTrace, PackerError, PackerResult};
 
 macro_rules! check_coord_map_required_property {
     ($property:expr, $trace:ident, $value:expr) => {
@@ -46,7 +46,10 @@ macro_rules! try_parse_axis {
 
 pub async fn pack_coord_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapCoordMap> {
     let mut obj = value.try_into_object().map_err(|_| {
-        PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::MAP, prop::COORD_MAP))
+        PackerError::InvalidConfigProperty(
+            trace.clone(),
+            format!("{}.{}", prop::MAP, prop::COORD_MAP),
+        )
     })?;
 
     let mapping_2d =

@@ -6,7 +6,7 @@ use crate::prop;
 use crate::types::{EntryPoints, RouteMetadata};
 use crate::util::async_for;
 
-use super::{ConfigBuilder, PackerError, PackerResult, Resource, ConfigTrace};
+use super::{ConfigBuilder, ConfigTrace, PackerError, PackerResult, Resource};
 
 macro_rules! check_metadata_not_array_or_object {
     ($property:expr, $value:ident) => {{

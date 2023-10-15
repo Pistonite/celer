@@ -45,6 +45,10 @@ impl ConfigTrace {
         self.0.len()
     }
     #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+    #[inline]
     pub fn push(&mut self, v: usize) {
         self.0.push(v)
     }
@@ -56,7 +60,15 @@ impl ConfigTrace {
 
 impl Display for ConfigTrace {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "trace=[{}]", self.0.iter().map(|x|x.to_string()).collect::<Vec<_>>().join(","))
+        write!(
+            f,
+            "trace=[{}]",
+            self.0
+                .iter()
+                .map(|x| x.to_string())
+                .collect::<Vec<_>>()
+                .join(",")
+        )
     }
 }
 
@@ -134,9 +146,7 @@ pub enum PackerError {
     #[error("Project config ({0}): The preset {1} is invalid")]
     InvalidPreset(ConfigTrace, String),
 
-    #[error(
-        "Project config ({0}): defining map when a previous config already defines one"
-    )]
+    #[error("Project config ({0}): defining map when a previous config already defines one")]
     DuplicateMap(ConfigTrace),
 
     #[error("Project config ({0}): config is nesting too deep!")]
@@ -147,7 +157,6 @@ pub enum PackerError {
 
     #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
     MaxEntryPointDepthExceeded(String),
-
 
     #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
     InvalidPlugin(String),

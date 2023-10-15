@@ -7,7 +7,7 @@ use crate::prop;
 use crate::types::{GameCoord, MapMetadata};
 use crate::util::async_for;
 
-use super::{PackerError, PackerResult, ConfigTrace};
+use super::{ConfigTrace, PackerError, PackerResult};
 
 macro_rules! check_map_required_property {
     ($property:expr, $trace:ident, $value:expr) => {
@@ -129,7 +129,10 @@ mod test {
             let result = pack_map(v, &trace).await;
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(trace.clone(), prop::MAP.to_string()))
+                Err(PackerError::InvalidConfigProperty(
+                    trace.clone(),
+                    prop::MAP.to_string()
+                ))
             );
             trace.pop();
         }

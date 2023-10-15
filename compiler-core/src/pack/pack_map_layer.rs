@@ -6,7 +6,7 @@ use crate::json::{Cast, Coerce};
 use crate::prop;
 use crate::types::{MapAttribution, MapLayerAttr, MapTilesetTransform};
 
-use super::{PackerError, PackerResult, ConfigTrace};
+use super::{ConfigTrace, PackerError, PackerResult};
 
 macro_rules! check_layer_required_property {
     ($property:expr, $trace:ident, $layer_index:ident, $obj:ident) => {
@@ -36,18 +36,14 @@ pub fn pack_map_layer(
     })?;
 
     let name = check_layer_required_property!(prop::NAME, trace, layer_index, obj)?;
-    let template_url =
-        check_layer_required_property!(prop::TEMPLATE_URL, trace, layer_index, obj)?;
+    let template_url = check_layer_required_property!(prop::TEMPLATE_URL, trace, layer_index, obj)?;
     let size = check_layer_required_property!(prop::SIZE, trace, layer_index, obj)?;
-    let zoom_bounds =
-        check_layer_required_property!(prop::ZOOM_BOUNDS, trace, layer_index, obj)?;
+    let zoom_bounds = check_layer_required_property!(prop::ZOOM_BOUNDS, trace, layer_index, obj)?;
     let max_native_zoom =
         check_layer_required_property!(prop::MAX_NATIVE_ZOOM, trace, layer_index, obj)?;
-    let transform =
-        check_layer_required_property!(prop::TRANSFORM, trace, layer_index, obj)?;
+    let transform = check_layer_required_property!(prop::TRANSFORM, trace, layer_index, obj)?;
     let start_z = check_layer_required_property!(prop::START_Z, trace, layer_index, obj)?;
-    let attribution =
-        check_layer_required_property!(prop::ATTRIBUTION, trace, layer_index, obj)?;
+    let attribution = check_layer_required_property!(prop::ATTRIBUTION, trace, layer_index, obj)?;
 
     if let Some(k) = obj.keys().next() {
         return Err(PackerError::UnusedConfigProperty(

@@ -5,13 +5,13 @@ use serde_json::{json, Value};
 use crate::api::Setting;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
-use crate::macros::{maybe_send, async_recursion};
+use crate::macros::{async_recursion, maybe_send};
 use crate::plug::{BuiltInPlugin, Plugin, PluginInstance};
 use crate::prop;
 use crate::types::{DocTag, MapMetadata};
 use crate::util::async_for;
 
-use super::{PackerError, PackerResult, Resource, Use, ValidUse, ConfigTrace};
+use super::{ConfigTrace, PackerError, PackerResult, Resource, Use, ValidUse};
 
 const MAX_CONFIG_DEPTH: usize = 16;
 
@@ -167,9 +167,9 @@ async fn process_plugins_config(
     plugins: Value,
     trace: &mut ConfigTrace,
 ) -> PackerResult<()> {
-    let plugins = plugins
-        .try_into_array()
-        .map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), prop::PLUGINS.to_string()))?;
+    let plugins = plugins.try_into_array().map_err(|_| {
+        PackerError::InvalidConfigProperty(trace.clone(), prop::PLUGINS.to_string())
+    })?;
 
     let _ = async_for!((i, v) in plugins.into_iter().enumerate(), {
         let v = v.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), format!("{}[{}]", prop::PLUGINS, i)))?;

@@ -9,7 +9,7 @@ use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
 use crate::util::async_for;
 
-use super::{PackerError, PackerResult, ConfigTrace};
+use super::{ConfigTrace, PackerError, PackerResult};
 
 pub async fn pack_presets(
     value: Value,
