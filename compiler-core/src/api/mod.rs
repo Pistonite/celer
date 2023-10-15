@@ -1,21 +1,21 @@
 //! Celer Compiler API
-use instant::Instant;
-use log::{error, info};
 use std::borrow::Cow;
 use std::collections::HashMap;
+
+use derivative::Derivative;
+use instant::Instant;
+use log::{error, info};
+
+use crate::comp::Compiler;
+use crate::lang::Preset;
+use crate::pack::{PackerError, PackerResult, Phase0, Resource, Use, ValidUse};
+use crate::plug::PluginInstance;
+use crate::types::{ExecDoc, RouteMetadata};
 
 mod prepare;
 pub use prepare::*;
 mod compile;
 pub use compile::*;
-
-use derivative::Derivative;
-
-use crate::comp::Compiler;
-use crate::lang::Preset;
-use crate::pack::{PackerError, PackerResult, Phase0, Resource, ValidUse};
-use crate::plug::PluginInstance;
-use crate::types::{ExecDoc, RouteMetadata};
 
 /// Resolve project.yaml resource under the root resource
 pub async fn resolve_project(root_resource: &Resource) -> PackerResult<Resource> {
@@ -26,6 +26,18 @@ pub async fn resolve_project(root_resource: &Resource) -> PackerResult<Resource>
             Err(PackerError::InvalidProject)
         }
         x => x,
+    }
+}
+
+/// Resolve an absolute path from the resource
+///
+/// Returns Err if the path is not a valid absolute path that can be used with a `use` property
+pub async fn resolve_absolute(resource: &Resource, path: String) -> PackerResult<Resource> {
+    match Use::from(path) {
+        Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
+            resource.resolve(&valid).await
+        }
+        other => Err(PackerError::InvalidPath(other.to_string())),
     }
 }
 

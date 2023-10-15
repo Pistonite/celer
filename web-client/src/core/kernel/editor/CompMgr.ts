@@ -17,6 +17,8 @@ export class CompMgr {
 
     private needCompile: boolean;
     private compiling: boolean;
+    /// The entry point path to pass to the compiler
+    private entryPath?: string;
 
     constructor(dispatcher: AppDispatcher) {
         this.dispatcher = dispatcher;
@@ -45,7 +47,8 @@ export class CompMgr {
     /// after this function is called.
     ///
     /// After compilation is done, the document will automatically be updated
-    public triggerCompile() {
+    public triggerCompile(entryPoint?: string) {
+        this.entryPath = entryPoint;
         this.needCompile = true;
         this.compilerDebouncer.dispatch();
     }
@@ -67,7 +70,10 @@ export class CompMgr {
             // to trigger another compile
             this.needCompile = false;
             CompilerLog.info("invoking compiler...");
-            const result = await wrapAsync(compile_document);
+            const result = await wrapAsync(() => {
+                // if this.entryPoint is empty string, change it to undefined
+                return compile_document(this.entryPath || undefined);
+            });
             if (result.isErr()) {
                 console.error(result.inner());
             } else {

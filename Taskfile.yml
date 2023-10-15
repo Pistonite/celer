@@ -39,7 +39,7 @@ tasks:
     desc: Install development dependencies and packages
     cmds:
     - rustup update
-    - cargo install cargo-watch wasm-pack regen-lang
+    - cargo install cargo-watch cargo-expand wasm-pack regen-lang
     - cargo install cross --git https://github.com/cross-rs/cross
     - cargo install txtpp --features cli
     - task: themes:install
@@ -64,7 +64,7 @@ tasks:
 
   fix:rs:
     cmds:
-    - cargo fmt
+    - cargo fmt --all
 
   build:
     desc: Build production assets

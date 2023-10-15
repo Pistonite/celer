@@ -7,8 +7,9 @@
 //! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
 //! and a json blob of the route.
 
-use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
+
+use serde::{Deserialize, Serialize};
 
 use crate::lang;
 use crate::types::DocDiagnostic;
@@ -17,6 +18,8 @@ mod pack_config;
 pub use pack_config::*;
 mod pack_coord_map;
 pub use pack_coord_map::*;
+mod pack_entry_points;
+pub use pack_entry_points::*;
 mod pack_map;
 pub use pack_map::*;
 mod pack_map_layer;
@@ -99,6 +102,12 @@ pub enum PackerError {
 
     #[error("Project config at index {0}: the `{1}` property is unused")]
     UnusedConfigProperty(usize, String),
+
+    #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
+    InvalidEntryPoint(String, String),
+
+    #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
+    MaxEntryPointDepthExceeded(String),
 
     #[error("Project config at index {0}: The preset {1} is invalid")]
     InvalidPreset(usize, String),
