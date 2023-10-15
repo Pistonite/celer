@@ -164,4 +164,3 @@ To switch between entry points in the web editor:
 2. Click on `Settings` in the toolbar, then go to the `Editor` category.
 3. Under the `Compiler` section, find `Entry point` settings and change the entry point.
 4. Close the settings dialog, and the document should reload to use the new entry point.
-
