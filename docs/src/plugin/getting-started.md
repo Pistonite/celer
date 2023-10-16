@@ -26,9 +26,27 @@ Note that the `use` property takes `"link"`, which is not any of the syntax ment
 [File structure](../route/file-structure.md). This signals Celer that you want to use a built-in
 plugin. Built-in plugins are implemented in Rust and has higher performance.
 :::
+:::warning
+Plugins can be specified multiple times. They will NOT be de-duplicated and you usually want to avoid it.
+For example, you might be `use`-ing a config file someone else made where a plugin is already specified.
+:::
+
+## Additional Settings
+Some plugins take additional settings through the `with` property
+```yaml
+config:
+- plugins:
+  - use: variables
+    with:
+      init:
+        x: 3
+```
+Please refer to the documentation for the plugin you are using on what settings are available.
 
 ## Built-in Plugins
 Here is a list of all built-in plugins. The `ID` column is what you put after `use` in the config.
 |Name|ID|Description|
 |-|-|-|
 |[Link](./link.md)|`link`|Turns `link` tags into clickable links|
+|[Variables](./variables.md)|`variables`|Adds a variable system that can be used to track completion, item counts, etc.|
+|[Assertion](./assertion.md)|`assertion`|Adds an assertion system that can give warning when a value does not meet some condition|
