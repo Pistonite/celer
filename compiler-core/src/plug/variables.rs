@@ -9,11 +9,11 @@ use crate::comp::{CompDoc, CompLine};
 use crate::json::Coerce;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
-use crate::types::{DocRichText, DocDiagnostic};
+use crate::types::{DocDiagnostic, DocRichText};
 use crate::util::async_for;
 use crate::{lang, prop};
 
-use super::{PlugResult, PluginRuntime, operation};
+use super::{operation, PlugResult, PluginRuntime};
 
 const ADD: &str = "add";
 const SUB: &str = "sub";
@@ -53,14 +53,14 @@ fn floor_nonneg(a: f64) -> Option<u64> {
 fn to_hex(a: f64) -> String {
     match floor_nonneg(a) {
         Some(i) => format!("{i:x}"),
-        None => float_to_string(a)
+        None => float_to_string(a),
     }
 }
 
 fn to_hex_upper(a: f64) -> String {
     match floor_nonneg(a) {
         Some(i) => format!("{i:X}"),
-        None => float_to_string(a)
+        None => float_to_string(a),
     }
 }
 
@@ -173,10 +173,15 @@ impl VariablesPlugin {
         )
     }
 
-    pub fn transform_text(&self, diagnostics: &mut Vec<DocDiagnostic>, text: &mut DocRichText, new_tag: &str) {
+    pub fn transform_text(
+        &self,
+        diagnostics: &mut Vec<DocDiagnostic>,
+        text: &mut DocRichText,
+        new_tag: &str,
+    ) {
         if let Err(e) = self.transform_text_with_tag(text, new_tag) {
-            diagnostics.push(DocDiagnostic { 
-                msg: lang::parse_poor(&e), 
+            diagnostics.push(DocDiagnostic {
+                msg: lang::parse_poor(&e),
                 msg_type: "error".to_string(),
                 source: "plugin/variables".to_string(),
             });
@@ -185,9 +190,11 @@ impl VariablesPlugin {
 
     fn transform_text_with_tag(&self, text: &mut DocRichText, new_tag: &str) -> Result<(), String> {
         match text.tag.as_ref().map(String::as_ref) {
-            Some(VAR) => self.transform_text_fn(text, float_to_string, |x: f64|float_to_string(x.floor())),
-            Some(VAR_HEX)  => self.transform_text_fn(text, to_hex, to_hex),
-            Some(VAR_HEX_UPPER)=> self.transform_text_fn(text, to_hex_upper, to_hex_upper),
+            Some(VAR) => {
+                self.transform_text_fn(text, float_to_string, |x: f64| float_to_string(x.floor()))
+            }
+            Some(VAR_HEX) => self.transform_text_fn(text, to_hex, to_hex),
+            Some(VAR_HEX_UPPER) => self.transform_text_fn(text, to_hex_upper, to_hex_upper),
             Some(VAR_ROMAN) => self.transform_text_fn(text, to_roman, to_roman),
             Some(VAR_ROMAN_UPPER) => self.transform_text_fn(text, to_roman_upper, to_roman_upper),
             _ => return Ok(()),
@@ -197,56 +204,91 @@ impl VariablesPlugin {
         Ok(())
     }
 
-    fn transform_text_fn<FExact, FRound>(&self, text: &mut DocRichText, fn_exact: FExact, fn_round: FRound) -> Result<(), String>
+    fn transform_text_fn<FExact, FRound>(
+        &self,
+        text: &mut DocRichText,
+        fn_exact: FExact,
+        fn_round: FRound,
+    ) -> Result<(), String>
     where
         FExact: Fn(f64) -> String,
         FRound: Fn(f64) -> String,
     {
+        if text.text.is_empty() {
+            return Err("variable name cannot be empty".to_string());
+        }
         let mut iter = text.text.split(':').rev();
-        let mut new_text = if let Some(variable) = iter.next() {
-    let value = self.current.get(variable).copied().unwrap_or(0.0);
+        let variable = iter.next().unwrap(); // empty case is checked above
+        let value = self.current.get(variable).copied().unwrap_or(0.0);
+        let mut next_op = iter.next();
+        let mut new_text = if next_op.is_some() {
+            // If there is formatting needed, always round
             fn_round(value)
         } else {
-    let value = self.current.get(&text.text).copied().unwrap_or(0.0);
-    fn_exact(value)
+            fn_exact(value)
         };
 
-        while let Some(op) = iter.next() {
+        // we need to track the length seperately because the padding may not be ascii
+        let mut new_text_length = new_text.len();
+
+        while let Some(op) = next_op {
             if let Some(x) = op.strip_prefix("pad") {
                 let mut iter = x.chars();
-                let pad = iter.next().ok_or("`pad` must be followed by the character to pad")?;
+                let pad = iter
+                    .next()
+                    .ok_or("`pad` must be followed by the character to pad")?;
                 let width = iter.collect::<String>().parse::<usize>().map_err(|_| {
                     format!("`pad` must be followed by the character to pad, then the width as a number")
                 })?;
-                if new_text.len() < width {
-                    let pad_len = width - new_text.len();
+                if new_text_length < width {
+                    let pad_len = width - new_text_length;
                     let mut padding = String::with_capacity(pad_len);
                     for _ in 0..pad_len {
                         padding.push(pad);
                     }
                     new_text.insert_str(0, &padding);
+                    new_text_length = width;
                 }
-                continue;
-            }
-            if let Some(x) = op.strip_prefix("last") {
+            } else if let Some(x) = op.strip_prefix("last") {
                 let width = x.parse::<usize>().map_err(|_| {
                     format!("`last` must be followed by the width as a non-negative number")
                 })?;
-                if new_text.len() > width {
-                    new_text.replace_range(0..(new_text.len() - width), "");
+                if new_text_length > width {
+                    new_text = new_text
+                        .chars()
+                        .rev()
+                        .take(width)
+                        .collect::<Vec<_>>()
+                        .into_iter()
+                        .rev()
+                        .collect();
+                    new_text_length = width;
                 }
+            } else {
+                return Err(format!("`{op}` is not a valid format function."));
             }
-            return Err(format!("`{op}` is not a valid format function."));
+            next_op = iter.next();
         }
 
         text.text = new_text;
         Ok(())
     }
 
+    pub fn increment(&mut self, var: &str) {
+        match self.current.get_mut(var) {
+            Some(v) => {
+                *v += 1.0;
+            } // likely
+            None => {
+                self.current.insert(var.to_string(), 1.0);
+            }
+        };
+    }
+
     pub async fn update_vars(&mut self, diagnostics: &mut Vec<DocDiagnostic>, vars: &Value) {
         if let Err(e) = self.update_vars_internal(vars).await {
-            diagnostics.push(DocDiagnostic { 
-                msg: lang::parse_poor(&e), 
+            diagnostics.push(DocDiagnostic {
+                msg: lang::parse_poor(&e),
                 msg_type: "error".to_string(),
                 source: "plugin/variables".to_string(),
             });
@@ -322,13 +364,14 @@ impl PluginRuntime for VariablesPlugin {
             if let Some(vars) = line.properties.get(prop::VARS) {
                 self.update_vars(&mut line.diagnostics, vars).await
             }
+            if let Some(t) = line.counter_text.as_mut() {
+                let tag = t.text.to_string();
+                self.increment(&tag);
+                self.transform_text(&mut line.diagnostics, t, &tag);
+            }
             operation::for_each_rich_text_except_counter!(block in line {
                 self.transform_text(&mut line.diagnostics, block, VAL);
             });
-            if let Some(t) = line.counter_text.as_mut() {
-                let tag = t.text.to_string();
-                self.transform_text(&mut line.diagnostics, t, &tag);
-            }
             if self.expose {
                 line.properties.insert(prop::VALS.to_string(), self.get_vals());
             }

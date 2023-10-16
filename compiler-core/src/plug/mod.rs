@@ -67,6 +67,9 @@ impl PluginInstance {
                     &self.props,
                     context.get_start_time(),
                 )),
+                BuiltInPlugin::Variables => Box::new(variables::VariablesPlugin::from_props(
+                    &self.props,
+                )),
             },
             // TODO #24 implement JS plugin engine
             Plugin::Script(_) => Box::new(ScriptPluginRuntime),
@@ -98,4 +101,6 @@ pub enum BuiltInPlugin {
     Metrics,
     /// Transform link tags to clickable links. See [`link`]
     Link,
+    /// Variable system
+    Variables,
 }
