@@ -157,6 +157,37 @@ route:
         # turned into .counter-korok(2)
 ```
 
+### Formatting
+Besides the `.var` tag, there are additional tags that can format the variable in different ways:
+
+|Tag|Format|Example|
+|-|-|-|
+|`.var-roman`|Lowercase Roman numeral|`lxiii`|
+|`.var-roman-upper`|Uppercase Roman numeral|`LXIII`|
+|`.var-hex`|Lowercase Hexadecimal|`3f`|
+|`.var-hex-upper`|Uppercase Hexadecimal|`3F`|
+
+Additionally, you can pad the result to X characters or get the last X digits:
+```yaml
+# get the value of my-var (decimal), and pad the `_` character until
+# it is 4 characters long
+- .var(pad_4:my-var)  # if my-var is "378", the result is "_378"
+
+# get the last 2 digits of my-var in hex
+- .var-hex(last2:my-var) # if my-var is "378" (17A in hex), the result is "7A"
+
+# get the last 2 digits of x, then pad it to 2 characters (if x is only 1 digit)
+- .var(pad02:last2:x) # if x is "7", then result is "07"
+                      # if x is "317", then result is "17"
+```
+:::tip
+The number is always rounded down to an integer before formatting with `pad` and `last`
+:::
+
+This is how the functions work exactly. `X` is any character and `ZZZZ...` is a non-negative integer
+- `padXZZZZ...`: Left pad the result with character `X` until the text is `ZZZZ...` characters long
+- `lastZZZZ...`: Get the last `ZZZZ...` characters of the result, or the whole result if it the length is less than `ZZZZ...`
+
 ## Advanced Configuration
 Advanced configurations are available with extra properties:
 ```yaml

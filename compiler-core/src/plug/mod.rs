@@ -11,6 +11,7 @@ use crate::types::{DocDiagnostic, ExecDoc};
 mod link;
 mod metrics;
 mod operation;
+mod variables;
 
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum PlugError {
