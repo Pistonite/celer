@@ -7,7 +7,7 @@ that can be manipulated through addition, subtraction, multiplication
 and division. Those numbers can then be interpolated into the text
 or used as counters.
 
-Add the plugins with
+Add the plugin with
 ```yaml
 config:
 - plugins:
