@@ -166,6 +166,10 @@ Besides the `.var` tag, there are additional tags that can format the variable i
 |`.var-roman-upper`|Uppercase Roman numeral|`LXIII`|
 |`.var-hex`|Lowercase Hexadecimal|`3f`|
 |`.var-hex-upper`|Uppercase Hexadecimal|`3F`|
+:::warning
+The value will be rounded down for the conversion. If the conversion is not possible (say the number is negative),
+then it will be treated as `.var`
+:::
 
 Additionally, you can pad the result to X characters or get the last X digits:
 ```yaml
@@ -176,9 +180,10 @@ Additionally, you can pad the result to X characters or get the last X digits:
 # get the last 2 digits of my-var in hex
 - .var-hex(last2:my-var) # if my-var is "378" (17A in hex), the result is "7A"
 
-# get the last 2 digits of x, then pad it to 2 characters (if x is only 1 digit)
-- .var(pad02:last2:x) # if x is "7", then result is "07"
-                      # if x is "317", then result is "17"
+# get the last 2 digits of x, then pad it to 3 characters
+# note the order of operation here.
+- .var(pad03:last2:x) # if x is "7", then result is "007"
+                      # if x is "317", then result is "017"
 ```
 :::tip
 The number is always rounded down to an integer before formatting with `pad` and `last`
