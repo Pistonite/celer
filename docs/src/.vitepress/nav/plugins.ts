@@ -11,7 +11,7 @@ export const pluginsSideBar = {
                 { text: "Getting Started", link: "/plugin/getting-started" },
                 { text: "Link", link: "/plugin/link" },
                 { text: "Variables", link: "/plugin/variables" },
-                { text: "Assertion", link: "/plugin/assertion" },
+                // { text: "Assertion", link: "/plugin/assertion" },
             ],
         },
         // {

@@ -59,8 +59,8 @@ tasks:
   check:rs:
     deps: [core:grammar]
     cmds:
-    - cargo fmt --check
     - cargo clippy --all-features --all-targets -- -D warnings -D clippy::todo
+    - cargo fmt --check
 
   fix:rs:
     cmds:

@@ -333,7 +333,7 @@ export class EditorKernelImpl implements EditorKernel {
         // do this last so we can get the latest save status after auto-save
         this.fileMgr.updateDirtyFileList(unsavedFiles);
         // TODO #78: Performance is really bad so temporarily limit recompilation to 5 seconds of idle
-        if (shouldRecompile && duration > 5000) { 
+        if (shouldRecompile && duration > 5000) {
             this.compile();
         }
     }

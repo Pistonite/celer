@@ -27,12 +27,12 @@ tasks:
     aliases: [lint]
     cmds:
     - node tools/lint/run-custom-lints.cjs
-    - task: prettier
-      vars:
-        PRETTIER_ARGS: --check
     - task: eslint
       vars:
         ESLINT_ARGS: ""
+    - task: prettier
+      vars:
+        PRETTIER_ARGS: --check
 
   fix:
     desc: Fix linting and formatting issues in web client

@@ -8,19 +8,17 @@ use serde_json::{json, Map, Value};
 use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::CompDoc;
 use crate::json::Coerce;
+use crate::lang;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
+use crate::prop;
 use crate::types::{DocDiagnostic, DocRichText};
 use crate::util::async_for;
-use crate::lang;
-use crate::prop;
 
 use super::{operation, PlugResult, PluginRuntime};
 
 mod convert;
 mod transform;
-mod assertion;
-pub use assertion::AssertionPlugin;
 
 const ADD: &str = "add";
 const SUB: &str = "sub";
@@ -47,14 +45,26 @@ enum Operator<'a> {
     Assign(Operand<'a>),
 }
 
+macro_rules! map_for_var {
+    ($k:ident, $($self:tt)+) => {
+        {
+            if $k.starts_with('_') {
+                $($self)*.temporary
+            } else {
+                $($self)*.current
+            }
+        }
+    }
+}
+
 impl<'a> Operator<'a> {
     /// Apply the operator to value `v`
-    pub fn apply(&self, v: &f64, vars: &HashMap<String, f64>) -> f64 {
+    pub fn apply(&self, v: f64, vars: &VariablesPlugin) -> f64 {
         match self {
-            Self::Add(op) => *v + op.eval(vars),
-            Self::Sub(op) => *v - op.eval(vars),
-            Self::Mul(op) => *v * op.eval(vars),
-            Self::Div(op) => *v / op.eval(vars),
+            Self::Add(op) => v + op.eval(vars),
+            Self::Sub(op) => v - op.eval(vars),
+            Self::Mul(op) => v * op.eval(vars),
+            Self::Div(op) => v / op.eval(vars),
             Self::Assign(op) => op.eval(vars),
         }
     }
@@ -70,10 +80,10 @@ impl<'a> Operand<'a> {
         arg.parse::<f64>().ok().map(Operand::Num)
     }
 
-    pub fn eval(&self, vars: &HashMap<String, f64>) -> f64 {
+    pub fn eval(&self, vars: &VariablesPlugin) -> f64 {
         match self {
             Operand::Num(num) => *num,
-            Operand::Var(var) => vars.get(var.as_ref()).copied().unwrap_or(0.0),
+            Operand::Var(var) => vars.get(var.as_ref()),
         }
     }
 }
@@ -91,6 +101,7 @@ impl<'a> From<&'a str> for Operand<'a> {
 #[derive(Debug, Clone, Default)]
 pub struct VariablesPlugin {
     current: HashMap<String, f64>,
+    temporary: HashMap<String, f64>,
     expose: bool,
 }
 impl VariablesPlugin {
@@ -106,7 +117,7 @@ impl VariablesPlugin {
                 if let Some(init_map) = init.as_object() {
                     for (k, v) in init_map {
                         if let Some(num) = v.try_coerce_to_f64() {
-                            plugin.current.insert(k.to_string(), num);
+                            plugin.insert(k.to_string(), num);
                         }
                     }
                 }
@@ -114,6 +125,18 @@ impl VariablesPlugin {
         }
 
         plugin
+    }
+
+    pub fn insert(&mut self, k: String, v: f64) {
+        map_for_var!(k, &mut self).insert(k, v);
+    }
+
+    pub fn get(&self, k: &str) -> f64 {
+        map_for_var!(k, &self).get(k).copied().unwrap_or(0.0)
+    }
+
+    pub fn get_mut(&mut self, k: &str) -> Option<&mut f64> {
+        map_for_var!(k, &mut self).get_mut(k)
     }
 
     /// Get a copy of current values map as a json object
@@ -143,31 +166,52 @@ impl VariablesPlugin {
 
     fn transform_text_with_tag(&self, text: &mut DocRichText, new_tag: &str) -> Result<(), String> {
         let text_ref = &text.text;
-        let get_fn = |t: &str| self.current.get(t).copied().unwrap_or(0.0);
+        let get_fn = |t: &str| self.get(t);
         text.text = match text.tag.as_ref().map(String::as_ref) {
-            Some(VAR) => {
-                transform::transform_text_fn(text_ref, get_fn, convert::float_to_string, |x: f64| convert::float_to_string(x.round()))
+            Some(VAR) => transform::transform_text_fn(
+                text_ref,
+                get_fn,
+                convert::float_to_string,
+                |x: f64| convert::float_to_string(x.round()),
+            ),
+            Some(VAR_HEX) => {
+                transform::transform_text_fn(text_ref, get_fn, convert::to_hex, convert::to_hex)
             }
-            Some(VAR_HEX) => transform::transform_text_fn(text_ref, get_fn, convert::to_hex, convert::to_hex),
-            Some(VAR_HEX_UPPER) => transform::transform_text_fn(text_ref, get_fn, convert::to_hex_upper, convert::to_hex_upper),
-            Some(VAR_ROMAN) => transform::transform_text_fn(text_ref, get_fn, convert::to_roman, convert::to_roman),
-            Some(VAR_ROMAN_UPPER) => transform::transform_text_fn(text_ref, get_fn, convert::to_roman_upper, convert::to_roman_upper),
+            Some(VAR_HEX_UPPER) => transform::transform_text_fn(
+                text_ref,
+                get_fn,
+                convert::to_hex_upper,
+                convert::to_hex_upper,
+            ),
+            Some(VAR_ROMAN) => {
+                transform::transform_text_fn(text_ref, get_fn, convert::to_roman, convert::to_roman)
+            }
+            Some(VAR_ROMAN_UPPER) => transform::transform_text_fn(
+                text_ref,
+                get_fn,
+                convert::to_roman_upper,
+                convert::to_roman_upper,
+            ),
             _ => return Ok(()),
         }?;
-        
+
         text.tag = Some(new_tag.to_string());
         Ok(())
     }
 
     pub fn increment(&mut self, var: &str) {
-        match self.current.get_mut(var) {
+        match self.get_mut(var) {
             Some(v) => {
                 *v += 1.0;
             } // likely
             None => {
-                self.current.insert(var.to_string(), 1.0);
+                self.insert(var.to_string(), 1.0);
             }
         };
+    }
+
+    pub fn clear_temporary(&mut self) {
+        self.temporary.clear();
     }
 
     pub async fn update_vars(&mut self, diagnostics: &mut Vec<DocDiagnostic>, vars: &Value) {
@@ -215,14 +259,13 @@ impl VariablesPlugin {
                 Some(DIV) => Operator::Div(text_ref.into()),
                 Some(other) => return Err(format!("`{other}` is not a valid operator tag")),
             };
-            let v = self.current.get(k).unwrap_or(&0.0);
-            let new_v = op.apply(v, &self.current);
+            let new_v = op.apply(self.get(k), self);
             updates.push((k, new_v));
         });
         let _ = async_for!((k, v) in updates, {
-            match self.current.get_mut(k) {
+            match self.get_mut(k) {
                 Some(v_ref) => {*v_ref = v;}// likely
-                None => {self.current.insert(k.to_string(), v);}
+                None => {self.insert(k.to_string(), v);}
             };
         });
         Ok(())
@@ -260,6 +303,7 @@ impl PluginRuntime for VariablesPlugin {
             if self.expose {
                 line.properties.insert(prop::VALS.to_string(), self.get_vals());
             }
+            self.clear_temporary();
             line
         });
 

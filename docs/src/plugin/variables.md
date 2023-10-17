@@ -218,4 +218,6 @@ If `init` property is not given, all variables will have the value 0 when they a
 ### Expose
 If `expose` is `true`, the plugin will add a `vals` property to each line, containing
 a mapping of variable name to variable value. Plugins can rely on this feature to
-do extra things based on the variable values. One example is the [Assertion Plugin](./assertion.md).
+do extra things based on the variable values. 
+
+<!--One example is the [Assertion Plugin](./assertion.md).-->

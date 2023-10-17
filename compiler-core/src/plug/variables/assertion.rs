@@ -15,11 +15,6 @@ struct Assertion {
     pub message: String,
 }
 
-impl Assertion {
-    pub fn try_from(value: &Value) -> {
-    }
-}
-
 enum Cmp {
     Eq(Operand<'static>),
     Ne(Operand<'static>),

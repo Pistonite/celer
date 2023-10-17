@@ -1,4 +1,3 @@
-
 // TODO #78: async_for no longer needed in the future
 
 /// Transform all [`CompLine`] in a document
@@ -31,4 +30,3 @@ macro_rules! for_each_rich_text_except_counter {
     };
 }
 pub(crate) use for_each_rich_text_except_counter;
-

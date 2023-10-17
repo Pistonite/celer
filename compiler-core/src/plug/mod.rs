@@ -67,9 +67,9 @@ impl PluginInstance {
                     &self.props,
                     context.get_start_time(),
                 )),
-                BuiltInPlugin::Variables => Box::new(variables::VariablesPlugin::from_props(
-                    &self.props,
-                )),
+                BuiltInPlugin::Variables => {
+                    Box::new(variables::VariablesPlugin::from_props(&self.props))
+                }
             },
             // TODO #24 implement JS plugin engine
             Plugin::Script(_) => Box::new(ScriptPluginRuntime),

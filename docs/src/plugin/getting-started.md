@@ -27,7 +27,7 @@ Note that the `use` property takes `"link"`, which is not any of the syntax ment
 plugin. Built-in plugins are implemented in Rust and has higher performance.
 :::
 :::warning
-Plugins can be specified multiple times. They will NOT be de-duplicated and you usually want to avoid it.
+Plugins can be specified multiple times. Duplicates will NOT be removed, and you usually want to avoid it.
 For example, you might be `use`-ing a config file someone else made where a plugin is already specified.
 :::
 
@@ -49,4 +49,7 @@ Here is a list of all built-in plugins. The `ID` column is what you put after `u
 |-|-|-|
 |[Link](./link.md)|`link`|Turns `link` tags into clickable links|
 |[Variables](./variables.md)|`variables`|Adds a variable system that can be used to track completion, item counts, etc.|
+
+<!--
 |[Assertion](./assertion.md)|`assertion`|Adds an assertion system that can give warning when a value does not meet some condition|
+-->
