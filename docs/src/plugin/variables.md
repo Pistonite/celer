@@ -188,6 +188,9 @@ Additionally, you can pad the result to X characters or get the last X digits:
 :::tip
 The number is always rounded down to an integer before formatting with `pad` and `last`
 :::
+:::warning
+If the variable name contains `:`, then you cannot use this to format.
+:::
 
 This is how the functions work exactly. `X` is any character and `ZZZZ...` is a non-negative integer
 - `padXZZZZ...`: Left pad the result with character `X` until the text is `ZZZZ...` characters long

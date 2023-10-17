@@ -2,18 +2,22 @@
 
 use std::collections::HashMap;
 
-use serde_json::{json, Map, Number, Value};
+use serde_json::{json, Map, Value};
 
 use crate::api::{CompilerContext, CompilerMetadata};
-use crate::comp::{CompDoc, CompLine};
+use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::types::{DocDiagnostic, DocRichText};
 use crate::util::async_for;
-use crate::{lang, prop};
+use crate::lang;
+use crate::prop;
 
 use super::{operation, PlugResult, PluginRuntime};
+
+mod convert;
+mod transform;
 
 const ADD: &str = "add";
 const SUB: &str = "sub";
@@ -21,6 +25,7 @@ const MUL: &str = "mul";
 const DIV: &str = "div";
 const VAR: &str = "var";
 const VAL: &str = "val";
+
 const VAR_HEX: &str = "var-hex";
 const VAR_HEX_UPPER: &str = "var-hex-upper";
 const VAR_ROMAN: &str = "var-roman";
@@ -29,61 +34,6 @@ const VAR_ROMAN_UPPER: &str = "var-roman-upper";
 #[inline]
 fn float_eq(a: f64, b: f64) -> bool {
     (a - b).abs() < f64::EPSILON
-}
-
-fn float_to_string(a: f64) -> String {
-    let rounded = a.round();
-    if float_eq(a, rounded) {
-        (rounded as i64).to_string()
-    } else {
-        a.to_string()
-    }
-}
-
-#[inline]
-fn floor_nonneg(a: f64) -> Option<u64> {
-    let i = a.floor() as i64;
-    if i < 0 {
-        None
-    } else {
-        Some(i as u64)
-    }
-}
-
-fn to_hex(a: f64) -> String {
-    match floor_nonneg(a) {
-        Some(i) => format!("{i:x}"),
-        None => float_to_string(a),
-    }
-}
-
-fn to_hex_upper(a: f64) -> String {
-    match floor_nonneg(a) {
-        Some(i) => format!("{i:X}"),
-        None => float_to_string(a),
-    }
-}
-
-fn to_roman(a: f64) -> String {
-    match to_roman_core(a) {
-        Some(mut s) => {
-            s.make_ascii_lowercase();
-            s
-        }
-        None => float_to_string(a),
-    }
-}
-
-fn to_roman_upper(a: f64) -> String {
-    to_roman_core(a).unwrap_or_else(|| float_to_string(a))
-}
-
-#[inline]
-fn to_roman_core(a: f64) -> Option<String> {
-    match floor_nonneg(a) {
-        Some(i) if i >= 1 && i <= roman::MAX as u64 => roman::to(i as i32),
-        _ => None,
-    }
 }
 
 enum Operator<'a> {
@@ -189,88 +139,20 @@ impl VariablesPlugin {
     }
 
     fn transform_text_with_tag(&self, text: &mut DocRichText, new_tag: &str) -> Result<(), String> {
-        match text.tag.as_ref().map(String::as_ref) {
+        let text_ref = &text.text;
+        let get_fn = |t: &str| self.current.get(t).copied().unwrap_or(0.0);
+        text.text = match text.tag.as_ref().map(String::as_ref) {
             Some(VAR) => {
-                self.transform_text_fn(text, float_to_string, |x: f64| float_to_string(x.floor()))
+                transform::transform_text_fn(text_ref, get_fn, convert::float_to_string, |x: f64| convert::float_to_string(x.round()))
             }
-            Some(VAR_HEX) => self.transform_text_fn(text, to_hex, to_hex),
-            Some(VAR_HEX_UPPER) => self.transform_text_fn(text, to_hex_upper, to_hex_upper),
-            Some(VAR_ROMAN) => self.transform_text_fn(text, to_roman, to_roman),
-            Some(VAR_ROMAN_UPPER) => self.transform_text_fn(text, to_roman_upper, to_roman_upper),
+            Some(VAR_HEX) => transform::transform_text_fn(text_ref, get_fn, convert::to_hex, convert::to_hex),
+            Some(VAR_HEX_UPPER) => transform::transform_text_fn(text_ref, get_fn, convert::to_hex_upper, convert::to_hex_upper),
+            Some(VAR_ROMAN) => transform::transform_text_fn(text_ref, get_fn, convert::to_roman, convert::to_roman),
+            Some(VAR_ROMAN_UPPER) => transform::transform_text_fn(text_ref, get_fn, convert::to_roman_upper, convert::to_roman_upper),
             _ => return Ok(()),
         }?;
-
+        
         text.tag = Some(new_tag.to_string());
-        Ok(())
-    }
-
-    fn transform_text_fn<FExact, FRound>(
-        &self,
-        text: &mut DocRichText,
-        fn_exact: FExact,
-        fn_round: FRound,
-    ) -> Result<(), String>
-    where
-        FExact: Fn(f64) -> String,
-        FRound: Fn(f64) -> String,
-    {
-        if text.text.is_empty() {
-            return Err("variable name cannot be empty".to_string());
-        }
-        let mut iter = text.text.split(':').rev();
-        let variable = iter.next().unwrap(); // empty case is checked above
-        let value = self.current.get(variable).copied().unwrap_or(0.0);
-        let mut next_op = iter.next();
-        let mut new_text = if next_op.is_some() {
-            // If there is formatting needed, always round
-            fn_round(value)
-        } else {
-            fn_exact(value)
-        };
-
-        // we need to track the length seperately because the padding may not be ascii
-        let mut new_text_length = new_text.len();
-
-        while let Some(op) = next_op {
-            if let Some(x) = op.strip_prefix("pad") {
-                let mut iter = x.chars();
-                let pad = iter
-                    .next()
-                    .ok_or("`pad` must be followed by the character to pad")?;
-                let width = iter.collect::<String>().parse::<usize>().map_err(|_| {
-                    format!("`pad` must be followed by the character to pad, then the width as a number")
-                })?;
-                if new_text_length < width {
-                    let pad_len = width - new_text_length;
-                    let mut padding = String::with_capacity(pad_len);
-                    for _ in 0..pad_len {
-                        padding.push(pad);
-                    }
-                    new_text.insert_str(0, &padding);
-                    new_text_length = width;
-                }
-            } else if let Some(x) = op.strip_prefix("last") {
-                let width = x.parse::<usize>().map_err(|_| {
-                    format!("`last` must be followed by the width as a non-negative number")
-                })?;
-                if new_text_length > width {
-                    new_text = new_text
-                        .chars()
-                        .rev()
-                        .take(width)
-                        .collect::<Vec<_>>()
-                        .into_iter()
-                        .rev()
-                        .collect();
-                    new_text_length = width;
-                }
-            } else {
-                return Err(format!("`{op}` is not a valid format function."));
-            }
-            next_op = iter.next();
-        }
-
-        text.text = new_text;
         Ok(())
     }
 
