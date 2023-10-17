@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use serde::{Deserialize, Serialize};
 
 use crate::json::{Cast, Coerce};
@@ -18,6 +20,8 @@ pub struct CompDoc {
     pub route: Vec<CompSection>,
     /// Overall diagnostics (that don't apply to any line)
     pub diagnostics: Vec<DocDiagnostic>,
+    /// Properties that are marked as known by plugins
+    pub known_props: HashSet<String>,
 }
 
 impl<'a> Compiler<'a> {
@@ -43,6 +47,7 @@ impl<'a> Compiler<'a> {
                 preface,
                 route: route_vec,
                 diagnostics: vec![],
+                known_props: Default::default(),
             })
         } else {
             Ok(self.create_empty_doc_for_error(&errors).await)
@@ -102,6 +107,7 @@ impl<'a> Compiler<'a> {
             route: vec![self.create_empty_section_for_error(errors).await],
             preface: vec![],
             diagnostics: vec![],
+            known_props: Default::default(),
         }
     }
 }

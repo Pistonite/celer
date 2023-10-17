@@ -2,13 +2,13 @@
 :::tip
 The plugin system is currently unstable.
 :::
-The link plugin transforms `link` tags in texts into clickable link.
+The `link` plugin transforms `link` tags in texts into clickable link.
 
 Add the plugin with
 ```yaml
 config:
 - plugins:
-    use: link
+  - use: link
 ```
 
 ## Examples
@@ -16,7 +16,7 @@ Add clickable links in primary, secondary, or note section of a line
 ```yaml
 config:
 - plugins:
-    use: link
+  - use: link
 route:
 - Example Section:
   - Link in the notes:
@@ -29,7 +29,7 @@ Override the link text by putting it in `[` and `]`
 ```yaml
 config:
 - plugins:
-    use: link
+  - use: link
 route:
 - Example Section:
   - Example Line:
@@ -41,7 +41,7 @@ Override the link style by defining the `link` tag in config
 ```yaml
 config:
 - plugins:
-    use: link
+  - use: link
   tags:
     link:
       italic: true # show links in italic
