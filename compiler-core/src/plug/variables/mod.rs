@@ -1,5 +1,6 @@
-//! Variables and Assertion plugins
+//! Variables plugin
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use serde_json::{json, Map, Value};
@@ -18,6 +19,8 @@ use super::{operation, PlugResult, PluginRuntime};
 
 mod convert;
 mod transform;
+mod assertion;
+pub use assertion::AssertionPlugin;
 
 const ADD: &str = "add";
 const SUB: &str = "sub";
@@ -59,7 +62,7 @@ impl<'a> Operator<'a> {
 
 enum Operand<'a> {
     Num(f64),
-    Var(&'a str),
+    Var(Cow<'a, str>),
 }
 
 impl<'a> Operand<'a> {
@@ -70,7 +73,7 @@ impl<'a> Operand<'a> {
     pub fn eval(&self, vars: &HashMap<String, f64>) -> f64 {
         match self {
             Operand::Num(num) => *num,
-            Operand::Var(var) => vars.get(*var).copied().unwrap_or(0.0),
+            Operand::Var(var) => vars.get(var.as_ref()).copied().unwrap_or(0.0),
         }
     }
 }
@@ -80,7 +83,7 @@ impl<'a> From<&'a str> for Operand<'a> {
         if let Ok(num) = s.parse::<f64>() {
             Operand::Num(num)
         } else {
-            Operand::Var(s)
+            Operand::Var(Cow::Borrowed(s))
         }
     }
 }
@@ -205,7 +208,7 @@ impl VariablesPlugin {
             let text_ref: &str = &text;
             let op = match op.tag.as_ref().map(String::as_ref) {
                 None => Operator::Assign(Operand::try_num(&text).ok_or(format!("`{text}` is not a valid number. If you meant to assign the variable, use `.var({text})`"))?),
-                Some(VAR) => Operator::Assign(Operand::Var(&text)),
+                Some(VAR) => Operator::Assign(Operand::Var(Cow::Borrowed(&text))),
                 Some(ADD) => Operator::Add(text_ref.into()),
                 Some(SUB) => Operator::Sub(text_ref.into()),
                 Some(MUL) => Operator::Mul(text_ref.into()),
