@@ -86,17 +86,16 @@ impl PresetBlob {
                     result.push((key, sub, value));
                 }
                 if has_template {
-                    let props = 
-                        result
-                            .into_iter()
-                            .map(|(key, sub, value)| {
-                                if let Some(sub) = sub {
-                                    (key, sub)
-                                } else {
-                                    (key, Self::NonTemplate(value.take()))
-                                }
-                            })
-                            .collect();
+                    let props = result
+                        .into_iter()
+                        .map(|(key, sub, value)| {
+                            if let Some(sub) = sub {
+                                (key, sub)
+                            } else {
+                                (key, Self::NonTemplate(value.take()))
+                            }
+                        })
+                        .collect();
                     Some(Self::Object(props))
                 } else {
                     None
@@ -138,9 +137,12 @@ mod test {
             "a": "foo",
             "b": "foo$(1)",
         });
-        let expected = Some(Preset(vec! [
+        let expected = Some(Preset(vec![
             (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
-            (TempStr::from("b"), PresetBlob::Template(TempStr::from("foo$(1)"))),
+            (
+                TempStr::from("b"),
+                PresetBlob::Template(TempStr::from("foo$(1)")),
+            ),
         ]));
         assert_eq!(Preset::compile(value).await, expected);
     }
@@ -175,41 +177,65 @@ mod test {
             },
         });
         let expected = Some(Preset(vec![
-            (TempStr::from("$(7)"), PresetBlob::NonTemplate(json!(["foo", "foo", {
-                "a": "foo",
-                "b": "foo",
-                "c": ["bar"]
-            }]))),
+            (
+                TempStr::from("$(7)"),
+                PresetBlob::NonTemplate(json!(["foo", "foo", {
+                    "a": "foo",
+                    "b": "foo",
+                    "c": ["bar"]
+                }])),
+            ),
             (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
-            (TempStr::from("b"), PresetBlob::Template(TempStr::from("foo$(1)"))),
-            (TempStr::from("c"), PresetBlob::Object(
-                vec![
+            (
+                TempStr::from("b"),
+                PresetBlob::Template(TempStr::from("foo$(1)")),
+            ),
+            (
+                TempStr::from("c"),
+                PresetBlob::Object(vec![
                     (TempStr::from("d"), PresetBlob::NonTemplate(json!("foo"))),
-                    (TempStr::from("e"), PresetBlob::Template(TempStr::from("foo$(1)")))
-                ]
-            )),
-            (TempStr::from("d"), PresetBlob::NonTemplate(json!({
-                "a": "foo",
-                "b": "foo",
-            }))),
-            (TempStr::from("e"), PresetBlob::NonTemplate(json!(["foo", "foo"]))),
-            (TempStr::from("f"), PresetBlob::Array(vec![
-                PresetBlob::NonTemplate(json!("foo")),
-                PresetBlob::NonTemplate(json!("foo")),
-                PresetBlob::Object(
-                    vec![
+                    (
+                        TempStr::from("e"),
+                        PresetBlob::Template(TempStr::from("foo$(1)")),
+                    ),
+                ]),
+            ),
+            (
+                TempStr::from("d"),
+                PresetBlob::NonTemplate(json!({
+                    "a": "foo",
+                    "b": "foo",
+                })),
+            ),
+            (
+                TempStr::from("e"),
+                PresetBlob::NonTemplate(json!(["foo", "foo"])),
+            ),
+            (
+                TempStr::from("f"),
+                PresetBlob::Array(vec![
+                    PresetBlob::NonTemplate(json!("foo")),
+                    PresetBlob::NonTemplate(json!("foo")),
+                    PresetBlob::Object(vec![
                         (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
-                        (TempStr::from("b"), PresetBlob::Template(TempStr::from("foo$(1)"))),
-                        (TempStr::from("c"), PresetBlob::NonTemplate(json!(["bar"])))
-                    ],
-                ),
-            ])),
-            (TempStr::from("h"), PresetBlob::Object(
-                vec![
-                    (TempStr::from("$(12)"), PresetBlob::NonTemplate(json!(["bar"]))),
+                        (
+                            TempStr::from("b"),
+                            PresetBlob::Template(TempStr::from("foo$(1)")),
+                        ),
+                        (TempStr::from("c"), PresetBlob::NonTemplate(json!(["bar"]))),
+                    ]),
+                ]),
+            ),
+            (
+                TempStr::from("h"),
+                PresetBlob::Object(vec![
+                    (
+                        TempStr::from("$(12)"),
+                        PresetBlob::NonTemplate(json!(["bar"])),
+                    ),
                     (TempStr::from("b"), PresetBlob::NonTemplate(json!("foo"))),
-                ]
-            )),
+                ]),
+            ),
         ]));
         assert_eq!(Preset::compile(value).await, expected);
     }

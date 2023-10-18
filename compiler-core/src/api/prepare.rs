@@ -44,10 +44,11 @@ pub async fn prepare_compiler(
     let mut presets = std::mem::take(&mut context.phase0.meta.presets);
 
     while let Some((name, mut preset)) = presets.pop_first() {
-        preset.optimize(&mut presets, &mut context.phase0.meta.presets).await;
+        preset
+            .optimize(&mut presets, &mut context.phase0.meta.presets)
+            .await;
         context.phase0.meta.presets.insert(name, preset);
     }
-    
 
     // TODO #78: I don't know why it is fine in compile but not here
     // however it is fine in WASM so we can keep it this way until Alpha 2

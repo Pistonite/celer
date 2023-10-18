@@ -11,7 +11,11 @@ impl Preset {
     /// This will also attempt to optimize any preset referred to by this preset. However, this
     /// will not give error if the referred preset is not found or there is a cycle. It will leave it unoptimized and
     /// defer to the compiler to give error, if this preset is ever instantiated.
-    pub async fn optimize(&mut self, _presets: &mut BTreeMap<String, Preset>, _optimized_presets: &mut BTreeMap<String, Preset>) {
+    pub async fn optimize(
+        &mut self,
+        _presets: &mut BTreeMap<String, Preset>,
+        _optimized_presets: &mut BTreeMap<String, Preset>,
+    ) {
         // TODO #114: optimize presets
 
         // Generally should work like this:
@@ -25,10 +29,8 @@ impl Preset {
         // do this until the first non-static preset is found
         //
         // Lastly, apply self to the hydrated presets
-
     }
 }
 
 #[cfg(test)]
-mod test {
-}
+mod test {}
