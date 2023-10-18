@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 
 use serde_json::{json, Value};
 
@@ -20,7 +20,7 @@ pub struct ConfigBuilder {
     pub map: Option<MapMetadata>,
     pub icons: HashMap<String, String>,
     pub tags: HashMap<String, DocTag>,
-    pub presets: HashMap<String, Preset>,
+    pub presets: BTreeMap<String, Preset>,
     pub plugins: Vec<PluginInstance>,
     pub default_icon_priority: Option<i64>,
 }

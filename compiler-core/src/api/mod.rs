@@ -1,6 +1,6 @@
 //! Celer Compiler API
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use derivative::Derivative;
 use instant::Instant;
@@ -97,7 +97,7 @@ impl CompilerContext {
 /// IDEs may also find this useful to provide auto-complete, etc.
 #[derive(Default, Debug, Clone)]
 pub struct CompilerMetadata {
-    pub presets: HashMap<String, Preset>,
+    pub presets: BTreeMap<String, Preset>,
     pub plugins: Vec<PluginInstance>,
     pub default_icon_priority: i64,
 }

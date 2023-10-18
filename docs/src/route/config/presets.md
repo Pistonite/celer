@@ -145,8 +145,23 @@ The preset in the example above is expanded to
       hello: .add(5)
     notes: Add 5 to `hello` variable
 ```
+If the template key conflicts with a static key, the result is undefined.
+```yaml
+config:
+- presets:
+    What:
+      text: "hello"
+      $(0): "world"
 
-Finally, you can escape the `$` with `$$`:
+route:
+- Example:
+  - _What<text> 
+  # text is mostly likely "hello" because of how the compiler is implemented
+  # however there's no guarantee it will stay this way, even across compilations!
+```
+
+### Escaping
+If you need to put literally the symbol `$`, you can escape the `$` with `$$`, if it conflicts with the syntax.
 ```yaml
 config:
 - presets:
@@ -155,5 +170,10 @@ config:
 ```
 `_EscapeExample<Hi>` will be literally `$(0)`, not `Hi`.
 
-
-
+In most cases, however, the `$` doesn't conflict with the syntax, and there's no need to escape it:
+```yaml
+config:
+- presets:
+    NoNeedEscapeExample:
+      text: I have a lot of $ money
+```

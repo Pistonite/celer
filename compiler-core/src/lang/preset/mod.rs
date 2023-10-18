@@ -1,12 +1,15 @@
-mod blob;
-mod grammar;
-mod hydrate;
-mod parse;
+//! Preset parsing, hydration and pre-compile optimization
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use super::TempStr;
+
+mod blob;
+mod grammar;
+mod hydrate;
+mod parse;
+mod optimize;
 
 /// A preset is an arbitrary json object blob that can contain template strings
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
