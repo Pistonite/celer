@@ -120,6 +120,32 @@ parsed as a preset. However, you cannot pass data structures like mapping or seq
 If the preset references a variable not provided (like `$(2)` in `_Example<A,B>`),
 an empty string will be put in the place.
 
+### Substituting keys
+
+Keys in mappings can also be substituted with variables with the same syntax
+```yaml
+config:
+- presets:
+    AddFive:
+      vars:
+        $(0): .add(5)
+
+route:
+- Example:
+  - _AddFive<hello>:
+      notes: Add 5 to `hello` variable
+```
+:::tip
+The `vars` property and the variable system requires the [`variables`](../../plugin/variables.md) plugin.
+:::
+The preset in the example above is expanded to
+```yaml
+- _AddFive<hello>:
+    vars:
+      hello: .add(5)
+    notes: Add 5 to `hello` variable
+```
+
 Finally, you can escape the `$` with `$$`:
 ```yaml
 config:
