@@ -15,7 +15,7 @@ impl Preset {
     {
         let mut out = BTreeMap::new();
         for (key, value) in self.0.iter() {
-            out.insert(key.clone(), value.hydrate(args).await);
+            out.insert(key.hydrate(args).await, value.hydrate(args).await);
         }
         out
     }
@@ -41,9 +41,10 @@ impl PresetBlob {
                 }
                 Value::Array(out)
             }
-            Self::Object(obj) => {
+            Self::Object(props) => {
                 let mut out = json!({});
-                for (key, val) in obj {
+                for (key_template, val) in props {
+                    let key = key_template.hydrate(args).await;
                     out[key] = val.hydrate(args).await;
                 }
                 out
@@ -54,6 +55,8 @@ impl PresetBlob {
 
 #[cfg(test)]
 mod test {
+    use map_macro::btree_map;
+
     use super::*;
 
     const ARGS: &[&str] = &["hello", "world", "temp"];
@@ -62,7 +65,7 @@ mod test {
     async fn test_emptyobj() {
         let preset = Preset::compile(json!({})).await.unwrap();
 
-        assert_eq!(preset.hydrate(ARGS).await, [].into_iter().collect());
+        assert_eq!(preset.hydrate(ARGS).await, btree_map! {});
     }
 
     #[tokio::test]
@@ -77,13 +80,11 @@ mod test {
 
         assert_eq!(
             preset.hydrate(ARGS).await,
-            [
-                ("a".to_string(), json!("fooworld")),
-                ("b".to_string(), json!("world")),
-                ("c".to_string(), json!("tehellomp")),
-            ]
-            .into_iter()
-            .collect()
+            btree_map! {
+                "a".to_string() => json!("fooworld"),
+                "b".to_string() => json!("world"),
+                "c".to_string() => json!("tehellomp"),
+            }
         );
     }
 
@@ -94,25 +95,22 @@ mod test {
             "b": ["world$(2)", {
                 "c": "te$(0)mp"
             }],
-            "c": "temp$(0)$(1)"
+            "c": "temp$(0)$(1)",
+            "$(1)a$(2)": "$(0)"
         }))
         .await
         .unwrap();
 
         assert_eq!(
             preset.hydrate(ARGS).await,
-            [
-                ("a".to_string(), json!("fooworld")),
-                (
-                    "b".to_string(),
-                    json!(["worldtemp", {
-                        "c": "tehellomp"
-                    }])
-                ),
-                ("c".to_string(), json!("temphelloworld")),
-            ]
-            .into_iter()
-            .collect()
+            btree_map! {
+                "a".to_string() => json!("fooworld"),
+                "b".to_string() => json!(["worldtemp", {
+                    "c": "tehellomp"
+                }]),
+                "c".to_string() => json!("temphelloworld"),
+                "worldatemp".to_string() => json!("hello"),
+            }
         );
     }
 }

@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use serde_json::Value;
 
 use crate::lang::TempStr;
@@ -16,10 +14,10 @@ impl Preset {
             Value::Object(obj) => obj,
             _ => return None,
         };
-        let mut properties = BTreeMap::new();
+        let mut properties = Vec::with_capacity(obj.len());
         for (key, value) in obj.into_iter() {
             let sub = PresetBlob::compile(value).await;
-            properties.insert(key, sub);
+            properties.push((TempStr::from(key), sub));
         }
         Some(Self(properties))
     }
@@ -36,7 +34,7 @@ impl PresetBlob {
     /// Recursive compile helper
     ///
     /// If the blob has any template strings in it, returns a Some variant with
-    /// the template strings compiled and the input value taken out.
+    /// the template strings compiled and the input value `.take()`-en out.
     /// Otherwise returns a None variant.
     #[maybe_send(async_recursion)]
     async fn compile_internal(value: &mut Value) -> Option<Self> {
@@ -80,25 +78,25 @@ impl PresetBlob {
                 let mut result = vec![];
                 let mut has_template = false;
                 for (key, value) in obj.iter_mut() {
+                    let key = TempStr::from(key);
                     let sub = Self::compile_internal(value).await;
-                    if sub.is_some() {
+                    if sub.is_some() || !key.is_literal() {
                         has_template = true;
                     }
                     result.push((key, sub, value));
                 }
                 if has_template {
-                    Some(Self::Object(
-                        result
-                            .into_iter()
-                            .map(|(key, sub, value)| {
-                                if let Some(sub) = sub {
-                                    (key.clone(), sub)
-                                } else {
-                                    (key.clone(), Self::NonTemplate(value.take()))
-                                }
-                            })
-                            .collect(),
-                    ))
+                    let props = result
+                        .into_iter()
+                        .map(|(key, sub, value)| {
+                            if let Some(sub) = sub {
+                                (key, sub)
+                            } else {
+                                (key, Self::NonTemplate(value.take()))
+                            }
+                        })
+                        .collect();
+                    Some(Self::Object(props))
                 } else {
                     None
                 }
@@ -135,116 +133,110 @@ mod test {
 
     #[tokio::test]
     async fn test_one_level() {
-        assert_eq!(
-            Preset::compile(json!({
-                "a": "foo",
-                "b": "foo$(1)",
-            }))
-            .await,
-            Some(Preset(
-                [
-                    ("a".to_string(), PresetBlob::NonTemplate(json!("foo"))),
-                    (
-                        "b".to_string(),
-                        PresetBlob::Template(TempStr::from("foo$(1)"))
-                    ),
-                ]
-                .into_iter()
-                .collect()
-            ))
-        );
+        let value = json!({
+            "a": "foo",
+            "b": "foo$(1)",
+        });
+        let expected = Some(Preset(vec![
+            (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
+            (
+                TempStr::from("b"),
+                PresetBlob::Template(TempStr::from("foo$(1)")),
+            ),
+        ]));
+        assert_eq!(Preset::compile(value).await, expected);
     }
 
     #[tokio::test]
-    async fn test_many_level() {
-        assert_eq!(
-            Preset::compile(json!({
+    async fn test_many_levels() {
+        let value = json!({
+            "a": "foo",
+            "b": "foo$(1)",
+            "c": {
+                "d": "foo",
+                "e": "foo$(1)",
+            },
+            "d": {
+                "a": "foo",
+                "b": "foo",
+            },
+            "e": ["foo", "foo"],
+            "f": ["foo", "foo", {
                 "a": "foo",
                 "b": "foo$(1)",
-                "c": {
-                    "d": "foo",
-                    "e": "foo$(1)",
-                },
-                "d": {
+                "c": ["bar"]
+            }],
+            "$(7)": ["foo", "foo", {
+                "a": "foo",
+                "b": "foo",
+                "c": ["bar"]
+            }],
+            "h": {
+                "b": "foo",
+                "$(12)": ["bar"]
+            },
+        });
+        let expected = Some(Preset(vec![
+            (
+                TempStr::from("$(7)"),
+                PresetBlob::NonTemplate(json!(["foo", "foo", {
                     "a": "foo",
                     "b": "foo",
-                },
-                "e": ["foo", "foo"],
-                "f": ["foo", "foo", {
-                    "a": "foo",
-                    "b": "foo$(1)",
                     "c": ["bar"]
-                }],
-                "g": ["foo", "foo", {
+                }])),
+            ),
+            (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
+            (
+                TempStr::from("b"),
+                PresetBlob::Template(TempStr::from("foo$(1)")),
+            ),
+            (
+                TempStr::from("c"),
+                PresetBlob::Object(vec![
+                    (TempStr::from("d"), PresetBlob::NonTemplate(json!("foo"))),
+                    (
+                        TempStr::from("e"),
+                        PresetBlob::Template(TempStr::from("foo$(1)")),
+                    ),
+                ]),
+            ),
+            (
+                TempStr::from("d"),
+                PresetBlob::NonTemplate(json!({
                     "a": "foo",
                     "b": "foo",
-                    "c": ["bar"]
-                }],
-            }))
-            .await,
-            Some(Preset(
-                [
-                    ("a".to_string(), PresetBlob::NonTemplate(json!("foo"))),
+                })),
+            ),
+            (
+                TempStr::from("e"),
+                PresetBlob::NonTemplate(json!(["foo", "foo"])),
+            ),
+            (
+                TempStr::from("f"),
+                PresetBlob::Array(vec![
+                    PresetBlob::NonTemplate(json!("foo")),
+                    PresetBlob::NonTemplate(json!("foo")),
+                    PresetBlob::Object(vec![
+                        (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
+                        (
+                            TempStr::from("b"),
+                            PresetBlob::Template(TempStr::from("foo$(1)")),
+                        ),
+                        (TempStr::from("c"), PresetBlob::NonTemplate(json!(["bar"]))),
+                    ]),
+                ]),
+            ),
+            (
+                TempStr::from("h"),
+                PresetBlob::Object(vec![
                     (
-                        "b".to_string(),
-                        PresetBlob::Template(TempStr::from("foo$(1)"))
+                        TempStr::from("$(12)"),
+                        PresetBlob::NonTemplate(json!(["bar"])),
                     ),
-                    (
-                        "c".to_string(),
-                        PresetBlob::Object(
-                            [
-                                ("d".to_string(), PresetBlob::NonTemplate(json!("foo"))),
-                                (
-                                    "e".to_string(),
-                                    PresetBlob::Template(TempStr::from("foo$(1)"))
-                                )
-                            ]
-                            .into_iter()
-                            .collect()
-                        )
-                    ),
-                    (
-                        "d".to_string(),
-                        PresetBlob::NonTemplate(json!({
-                            "a": "foo",
-                            "b": "foo",
-                        }))
-                    ),
-                    (
-                        "e".to_string(),
-                        PresetBlob::NonTemplate(json!(["foo", "foo"]))
-                    ),
-                    (
-                        "f".to_string(),
-                        PresetBlob::Array(vec![
-                            PresetBlob::NonTemplate(json!("foo")),
-                            PresetBlob::NonTemplate(json!("foo")),
-                            PresetBlob::Object(
-                                [
-                                    ("a".to_string(), PresetBlob::NonTemplate(json!("foo"))),
-                                    (
-                                        "b".to_string(),
-                                        PresetBlob::Template(TempStr::from("foo$(1)"))
-                                    ),
-                                    ("c".to_string(), PresetBlob::NonTemplate(json!(["bar"])))
-                                ]
-                                .into_iter()
-                                .collect()
-                            ),
-                        ])
-                    ),
-                    (
-                        "g".to_string(),
-                        PresetBlob::NonTemplate(json!(["foo", "foo", {
-                            "a": "foo",
-                            "b": "foo",
-                            "c": ["bar"]
-                        }]))
-                    ),
-                ]
-                .into_iter()
-                .collect()
-            ))
-        );
+                    (TempStr::from("b"), PresetBlob::NonTemplate(json!("foo"))),
+                ]),
+            ),
+        ]));
+        assert_eq!(Preset::compile(value).await, expected);
     }
 }

@@ -1,18 +1,19 @@
-mod blob;
-mod grammar;
-mod hydrate;
-mod parse;
-
-use std::collections::BTreeMap;
+//! Preset parsing, hydration and pre-compile optimization
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use super::TempStr;
 
+mod blob;
+mod grammar;
+mod hydrate;
+mod optimize;
+mod parse;
+
 /// A preset is an arbitrary json object blob that can contain template strings
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-pub struct Preset(BTreeMap<String, PresetBlob>);
+pub struct Preset(Vec<(TempStr, PresetBlob)>);
 
 #[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
@@ -24,7 +25,7 @@ pub enum PresetBlob {
     /// Array value
     Array(Vec<PresetBlob>),
     /// Object value
-    Object(BTreeMap<String, PresetBlob>),
+    Object(Vec<(TempStr, PresetBlob)>),
 }
 
 /// Instantiation of a preset with the name and args

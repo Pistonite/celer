@@ -1,6 +1,6 @@
 //! Builder for making a compiler in tests
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::api::CompilerMetadata;
 use crate::lang::Preset;
@@ -11,7 +11,7 @@ use super::Compiler;
 #[derive(Default, Debug, Clone)]
 pub struct CompilerBuilder {
     project: RouteMetadata,
-    presets: HashMap<String, Preset>,
+    presets: BTreeMap<String, Preset>,
     color: String,
     coord: GameCoord,
     default_icon_priority: i64,
@@ -23,7 +23,6 @@ impl CompilerBuilder {
             color,
             coord,
             project,
-            presets: HashMap::new(),
             ..Default::default()
         }
     }

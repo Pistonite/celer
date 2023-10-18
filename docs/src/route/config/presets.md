@@ -120,7 +120,48 @@ parsed as a preset. However, you cannot pass data structures like mapping or seq
 If the preset references a variable not provided (like `$(2)` in `_Example<A,B>`),
 an empty string will be put in the place.
 
-Finally, you can escape the `$` with `$$`:
+### Substituting keys
+
+Keys in mappings can also be substituted with variables with the same syntax
+```yaml
+config:
+- presets:
+    AddFive:
+      vars:
+        $(0): .add(5)
+
+route:
+- Example:
+  - _AddFive<hello>:
+      notes: Add 5 to `hello` variable
+```
+:::tip
+The `vars` property and the variable system requires the [`variables`](../../plugin/variables.md) plugin.
+:::
+The preset in the example above is expanded to
+```yaml
+- _AddFive<hello>:
+    vars:
+      hello: .add(5)
+    notes: Add 5 to `hello` variable
+```
+If the template key conflicts with a static key, the result is undefined.
+```yaml
+config:
+- presets:
+    What:
+      text: "hello"
+      $(0): "world"
+
+route:
+- Example:
+  - _What<text> 
+  # text is mostly likely "hello" because of how the compiler is implemented
+  # however there's no guarantee it will stay this way, even across compilations!
+```
+
+### Escaping
+If you need to put literally the symbol `$`, you can escape the `$` with `$$`, if it conflicts with the syntax.
 ```yaml
 config:
 - presets:
@@ -129,5 +170,10 @@ config:
 ```
 `_EscapeExample<Hi>` will be literally `$(0)`, not `Hi`.
 
-
-
+In most cases, however, the `$` doesn't conflict with the syntax, and there's no need to escape it:
+```yaml
+config:
+- presets:
+    NoNeedEscapeExample:
+      text: I have a lot of $ money
+```
