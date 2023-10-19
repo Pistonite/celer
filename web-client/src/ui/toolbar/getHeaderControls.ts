@@ -4,7 +4,7 @@ import { HeaderControlList } from "./util";
 import { SwitchToolbarLocation } from "./SwitchToolbarLocation";
 import { SwitchLayout } from "./SwitchLayout";
 import { SwitchMapLayer } from "./SwitchMapLayer";
-import { Settings } from "./Settings";
+import { OpenSettings } from "./OpenSettings";
 import { ZoomIn, ZoomOut } from "./Zoom";
 import { ViewDiagnostics } from "./ViewDiagnostics";
 import { SelectSection } from "./SelectSection";
@@ -49,7 +49,7 @@ export const getHeaderControls = (mode: StageMode): HeaderControlList => {
         // Misc
         {
             priority: 10,
-            controls: [Settings, OpenDocs],
+            controls: [OpenSettings, OpenDocs],
         },
     ];
 };

@@ -126,3 +126,61 @@ export const getLineScrollView = (
         scrollBottom: top + line.clientHeight,
     };
 };
+
+/// Update the styles/classes for rich tags
+export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
+    let styleTag = document.querySelector("style[data-inject=\"rich-text\"");
+    if (!styleTag) {
+        DocLog.info("creating rich text css...");
+        styleTag = document.createElement("style");
+        styleTag.setAttribute("data-inject", "rich-text");
+        const head = document.querySelector("head");
+        if (!head) {
+            DocLog.error("cannot find `head`");
+            return;
+        }
+        head.appendChild(styleTag);
+    }
+    (styleTag as HTMLStyleElement).innerText=Object.entries(tags).map(([tag, data]) => {
+        let css = `span.${getTagClassName(tag)}{`;
+        if (data.bold) {
+            css += "font-weight:bold;";
+        }
+        if (data.italic) {
+            css += "font-style:italic;";
+        }
+        if (data.strikethrough || data.underline) {
+            css += "text-decoration:";
+            if (data.strikethrough) {
+                css += "line-through ";
+            }
+            if (data.underline) {
+                css += "underline";
+            }
+            css += ";"
+        }
+        if (data.color) {
+            // TODO separate light and dark
+            css += `--rich-text-fg-light:${data.color};`;
+            css += `--rich-text-fg-dark:${data.color};`;
+        }
+        if (data.background)
+        {
+            // TODO separate light and dark
+            css += `--rich-text-bg-light:${data.background};`;
+            css += `--rich-text-bg-dark:${data.background};`;
+        }
+        console.log(css);
+        return css;
+    }).join("");
+    DocLog.info("rich test css updated.");
+}
+
+export const getTagClassName = (tag: string) => {
+    return `rich-text-tag--${getTagCanonicalName(tag)}`;
+}
+
+/// Clean the tag name and only keep alphanumerical values and dashes
+const getTagCanonicalName = (tag: string) => {
+    return tag.toLowerCase().replaceAll(/[^a-z0-9\-]/g, "-");
+}

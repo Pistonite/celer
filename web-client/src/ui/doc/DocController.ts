@@ -26,6 +26,7 @@ import {
     getLineScrollView,
     getScrollContainerOffsetY,
     getScrollView,
+    updateDocTagsStyle,
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
 import { updateNotePositions } from "./updateNotePositions";
@@ -79,7 +80,8 @@ export class DocController {
         const watchStore = reduxWatch(store.getState);
         const unwatchStore = store.subscribe(
             watchStore((newState, oldState) => {
-                const newDocSerial = documentSelector(newState).serial;
+                const newDoc = documentSelector(newState);
+                const newDocSerial = newDoc.serial;
                 const oldDocSerial = documentSelector(oldState).serial;
                 const newView = viewSelector(newState);
                 const oldView = viewSelector(oldState);
@@ -94,6 +96,11 @@ export class DocController {
                     setTimeout(() => {
                         this.updateViewAsync(true);
                     }, 0);
+
+                    // Also update the rich text styles
+                    if (newDoc.document) {
+                        updateDocTagsStyle(newDoc.document.project.tags);
+                    }
                     return;
                 }
                 if (
