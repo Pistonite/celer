@@ -4,13 +4,13 @@ import clsx from "clsx";
 import React from "react";
 import { Text } from "@fluentui/react-components";
 
-import { RichText, removeTags } from "core/doc";
+// import { RichText, removeTags } from "core/doc";
 import { viewActions } from "core/store";
-import { DocDiagnostic } from "low/celerc";
+import { DocDiagnostic, DocRichText } from "low/celerc";
 import { useActions } from "low/store";
 
 import { Rich } from "./Rich";
-import { DocLineContainerClass, findLineByIndex } from "./utils";
+import { DocLineContainerClass, findLineByIndex, getTagClassName } from "./utils";
 import { Poor } from "./Poor";
 import { updateNotePositions } from "./updateNotePositions";
 
@@ -23,13 +23,13 @@ type DocLineProps = {
     /// Color of the line
     lineColor: string;
     /// The text to display
-    text: RichText[];
+    text: DocRichText[];
     /// Url of the icon to display
     iconUrl?: string;
     /// Secondary text
-    secondaryText: RichText[];
+    secondaryText: DocRichText[];
     /// Counter properties
-    counterText?: RichText;
+    counterText?: DocRichText;
     /// Counter type if any
     counterType?: string;
     /// Diagnostic messages
@@ -73,12 +73,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                 >
                     {counterText && (
                         <div
-                            className="docline-counter"
-                            style={{
-                                backgroundColor:
-                                    counterText.tag?.background || undefined,
-                                color: counterText.tag?.color || undefined,
-                            }}
+                            className={clsx("docline-counter", counterText.tag && getTagClassName(counterText.tag))}
                         >
                             <Text size={500} font="monospace">
                                 {counterText.text}
@@ -104,11 +99,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                                 iconUrl && "docline-icon-text",
                             )}
                         >
-                            {removeTags(text).trim().length === 0 ? (
-                                <span>&nbsp;</span>
-                            ) : (
-                                <Rich size={500} content={text} />
-                            )}
+                                <Rich size={500} content={text} />   
                         </div>
                         {secondaryText.length > 0 && (
                             <div

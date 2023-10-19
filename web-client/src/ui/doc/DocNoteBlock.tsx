@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { DocNote, DocTag } from "low/celerc";
 
 import { Rich } from "./Rich";
-import { DocScrollId, resolveTags } from "./utils";
+import { DocScrollId } from "./utils";
 
 /// Class name for expanded note blocks
 export const DocNoteExpandedClass = "docnote-container-expanded";
@@ -16,15 +16,15 @@ export type DocNoteBlockProps = {
     lineIndex: number;
     /// The note blocks to display
     notes: DocNote[];
-    /// Tag map used for resolving the tags
-    tagMap: Record<string, DocTag>;
+    // /// Tag map used for resolving the tags
+    // tagMap: Record<string, DocTag>;
 };
 
 export const DocNoteBlock: React.FC<DocNoteBlockProps> = ({
     sectionIndex,
     lineIndex,
     notes,
-    tagMap,
+    //tagMap,
 }) => {
     const ref = useRef<HTMLDivElement>(null);
     return (
@@ -67,7 +67,7 @@ export const DocNoteBlock: React.FC<DocNoteBlockProps> = ({
                         <div key={i} className="docnote-block">
                             <Rich
                                 size={400}
-                                content={resolveTags(tagMap, note.content)}
+                                content={note.content}
                             />
                         </div>
                     );

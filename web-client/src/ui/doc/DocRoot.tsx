@@ -14,8 +14,8 @@ import {
     DocContentContainerId,
     DocLog,
     DocScrollId,
-    resolveTag,
-    resolveTags,
+    // resolveTag,
+    // resolveTags,
 } from "./utils";
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
@@ -71,7 +71,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                         sectionIndex: i,
                         lineIndex: j,
                         notes: line.notes,
-                        tagMap,
+                        //tagMap,
                     });
                 }
             });
@@ -97,7 +97,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                     {document.preface.map((text, i) => (
                         <div key={i} className="doc-preface-block">
                             <Rich
-                                content={resolveTags(tagMap, text)}
+                                content={text}
                                 size={400}
                             />
                         </div>
@@ -114,7 +114,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                         key={j}
                                         diagnostics={line.diagnostics}
                                         lineColor={line.lineColor}
-                                        text={resolveTags(tagMap, line.text)}
+                                        text={line.text}
                                         iconUrl={
                                             line.icon
                                                 ? document.project.icons[
@@ -122,17 +122,11 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                                   ]
                                                 : undefined
                                         }
-                                        secondaryText={resolveTags(
-                                            tagMap,
-                                            line.secondaryText,
-                                        )}
+                                        secondaryText={
+                                            line.secondaryText
+                                        }
                                         counterText={
                                             line.counterText
-                                                ? resolveTag(
-                                                      tagMap,
-                                                      line.counterText,
-                                                  )
-                                                : undefined
                                         }
                                         counterType={
                                             line.counterText?.tag || undefined

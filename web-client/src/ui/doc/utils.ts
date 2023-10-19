@@ -1,6 +1,5 @@
 //! Utilities
 
-import { RichText } from "core/doc";
 import { DocRichText, DocTag } from "low/celerc";
 import { Logger } from "low/utils";
 
@@ -18,33 +17,33 @@ export const DocContentContainerId = "doc-content-container";
 export const DocLineContainerClass = "docline-container";
 
 /// Helper function to resolve tag names to the tag definition
-export const resolveTags = (
-    tagMap: Record<string, DocTag>,
-    docRichTexts: DocRichText[],
-): RichText[] => {
-    return docRichTexts.map((docRichText) => resolveTag(tagMap, docRichText));
-};
+// export const resolveTags = (
+//     tagMap: Record<string, DocTag>,
+//     docRichTexts: DocRichText[],
+// ): RichText[] => {
+//     return docRichTexts.map((docRichText) => resolveTag(tagMap, docRichText));
+// };
 
-export const resolveTag = (
-    tagMap: Record<string, DocTag>,
-    docRichText: DocRichText,
-): RichText => {
-    const { tag, text, link } = docRichText;
-    if (!tag) {
-        return { text, link };
-    }
+// export const resolveTag = (
+//     tagMap: Record<string, DocTag>,
+//     docRichText: DocRichText,
+// ): RichText => {
+//     const { tag, text, link } = docRichText;
+//     if (!tag) {
+//         return { text, link };
+//     }
 
-    const tagDef = tagMap[tag];
-    if (!tagDef) {
-        // Silently ignore unknown tag because compiler will add a warning (TODO: make sure you actually you taht)
-        return { text, link };
-    }
-    return {
-        text,
-        tag: tagDef,
-        link,
-    };
-};
+//     const tagDef = tagMap[tag];
+//     if (!tagDef) {
+//         // Silently ignore unknown tag because compiler will add a warning (TODO: make sure you actually you taht)
+//         return { text, link };
+//     }
+//     return {
+//         text,
+//         tag: tagDef,
+//         link,
+//     };
+// };
 
 /// Scroll view type
 export type ScrollView = {
@@ -127,6 +126,8 @@ export const getLineScrollView = (
     };
 };
 
+export const RichTextClassName = "rich-text";
+
 /// Update the styles/classes for rich tags
 export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
     let styleTag = document.querySelector("style[data-inject=\"rich-text\"");
@@ -142,7 +143,7 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
         head.appendChild(styleTag);
     }
     (styleTag as HTMLStyleElement).innerText=Object.entries(tags).map(([tag, data]) => {
-        let css = `span.${getTagClassName(tag)}{`;
+        let css = `.${getTagClassName(tag)}{`;
         if (data.bold) {
             css += "font-weight:bold;";
         }
@@ -170,8 +171,7 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
             css += `--rich-text-bg-light:${data.background};`;
             css += `--rich-text-bg-dark:${data.background};`;
         }
-        console.log(css);
-        return css;
+        return css + "}";
     }).join("");
     DocLog.info("rich test css updated.");
 }

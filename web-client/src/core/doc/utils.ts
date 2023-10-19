@@ -54,17 +54,17 @@ export const getRelativeLocation = (
 };
 
 /// Rich text type with resolved tag
-export type RichText = Omit<DocRichText, "tag"> & {
-    /// The tag of the text
-    tag?: DocTag;
-};
+// export type RichText = Omit<DocRichText, "tag"> & {
+//     /// The tag of the text
+//     tag?: DocTag;
+// };
 
 /// Function to remove the tag from the text and return the just text content
-export const removeTags = (text: Omit<RichText, "tag">[]): string => {
+export const removeTags = (text: Omit<DocRichText, "tag">[]): string => {
     return text.map(removeTag).join("");
 };
 
-export const removeTag = (text: Omit<RichText, "tag">): string => {
+export const removeTag = (text: Omit<DocRichText, "tag">): string => {
     return text.text;
 };
 
