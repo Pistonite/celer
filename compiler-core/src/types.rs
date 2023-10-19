@@ -98,12 +98,31 @@ pub struct DocTag {
     /// Strikethrough style
     #[serde(default)]
     strikethrough: bool,
-    /// Color of the text
+    /// Color of the text (light, dark)
     #[serde(skip_serializing_if = "Option::is_none")]
-    color: Option<String>,
-    /// Background color of the text
+    color: Option<DocColor>,
+    /// Background color of the text (light, dark)
     #[serde(skip_serializing_if = "Option::is_none")]
-    background: Option<String>,
+    background: Option<DocColor>,
+}
+
+/// Document color specification
+///
+/// Used to specify color for [`DocTag`]s. 
+#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm(feature = "wasm")]
+pub enum DocColor {
+    /// Single color for any background
+    Single(String),
+    /// Different colors for light and dark backgrounds
+    LightDark{
+        /// Color to set if the text is displayed with a light background
+        #[serde(skip_serializing_if = "Option::is_none")]
+        light: Option<String>,
+        /// Color to set if the text is displayed with a dark background
+        #[serde(skip_serializing_if = "Option::is_none")]
+        dark: Option<String>,
+    }
 }
 
 /// A section in the executed document

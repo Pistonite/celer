@@ -40,6 +40,35 @@ The following properties are available for each tag. All properties are optional
 |`italic`|`boolean`|Show text as italic|
 |`underline`|`boolean`|Underline the text|
 |`strikethrough`|`boolean`|Strike through the text|
-|`color`|`string`|Color of the text as a [CSS Color](https://www.w3schools.com/cssref/css_colors.php)|
-|`background`|`string`|Background color of the text as a [CSS Color](https://www.w3schools.com/cssref/css_colors.php)|
+|`color`|`string` or [see below](#accessibility)|Color of the text as a [CSS Color](https://www.w3schools.com/cssref/css_colors.php)|
+|`background`|`string` or [see below](#accessibility)|Background color of the text as a [CSS Color](https://www.w3schools.com/cssref/css_colors.php)|
       
+## Accessibility
+The `color` and `background` property let you change the color of the text. However, this introduces an issue with Celer's theme system. Each theme could set different backgrounds (light or dark) for different parts of the document. If you specify a color like `cyan`, it will look fine with dark backgrounds, but it will be barely visible in lighter backgrounds.
+
+To address this problem, Celer let's you define separately what the color of the Rich Text tag should be under light and dark backgrounds.
+```yaml
+config:
+- tags:
+    wonderful:
+      bold: true
+      color:
+        # display wonderful tag with dark blue color
+        # if it's on a light background
+        light: darkblue
+        # ... or cyan if it's on a dark background
+        dark: cyan
+    wonderful-background:
+      # works for both color and background
+      color:
+        light: black
+        dark: white
+      background:
+        light: white
+        dark: black
+```
+
+You can still use the string shorthand from the previous example (i.e. `color: red`). This will set the color to `red` for both light and dark backgrounds. This could be helpful if:
+
+1. The color looks fine in both light and dark backgrounds, or
+2. The tag is for a `counter` block. Counter backgrounds cover the entire block. However you can still define different colors for counters under different backgrounds.
