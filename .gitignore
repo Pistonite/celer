@@ -30,3 +30,6 @@ yarn-error.log*
 *.crt
 *.pfx
 
+# generated files
+*.g.css
+*.g.ts

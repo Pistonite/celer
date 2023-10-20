@@ -3,6 +3,7 @@
 //! abc.css => postcss => clean-css => abc.min.css
 
 const fs = require("fs");
+const { spawn, spawnSync } = require("child_process");
 const path = require("path");
 const autoprefixer = require("autoprefixer");
 const postcss = require("postcss");
@@ -20,6 +21,15 @@ fs.rmSync(minifiedDistDir, { recursive: true, force: true });
 fs.mkdirSync(minifiedDistDir);
 fs.rmSync(intermediateDistDir, { recursive: true, force: true });
 fs.mkdirSync(intermediateDistDir);
+
+function runTxtpp() {
+    const proc = spawnSync("txtpp", ["-r", "src"], {
+        stdio: "inherit",
+    });
+    if (proc.status !== 0) {
+        throw new Error("txtpp failed");
+    }
+}
 
 function writeIntermediateOutput(filePath, result) {
     fs.writeFile(filePath, result.css, () => true);
@@ -48,14 +58,18 @@ async function processSrcFile(fileName) {
     console.log(`${srcFile} => ${minDistFile}`);
 }
 
+const EXTS = [".g.css", ".css"];
 async function processSrcDir() {
     const files = await fs.promises.readdir(srcDir);
     const baseNames = (
         await Promise.all(
             files.map(async (file) => {
-                if (path.extname(file) === ".css") {
+                const ext = EXTS.find((ext) => file.endsWith(ext));
+                if (ext) {
+                    const base = path.basename(file, ext);
+                    console.log(base);
                     await processSrcFile(file);
-                    return path.basename(file, ".css");
+                    return path.basename(file, ext);
                 }
             }),
         )
@@ -79,4 +93,5 @@ export const ThemeIds = [${baseNames.map((name) => `"${name}"`).join(", ")}];
     fs.writeFileSync(path.join(defDistDir, "themes.g.ts"), content, "utf8");
 }
 
+runTxtpp();
 processSrcDir();

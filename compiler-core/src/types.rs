@@ -111,6 +111,7 @@ pub struct DocTag {
 /// Used to specify color for [`DocTag`]s. 
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm(feature = "wasm")]
+#[serde(untagged)]
 pub enum DocColor {
     /// Single color for any background
     Single(String),

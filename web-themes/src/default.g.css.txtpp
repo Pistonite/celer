@@ -59,6 +59,18 @@
     background-color: #001a00;
 }
 
+/* Always use dark color for main column*/
+.docline-body span.rich-text {
+    color: var(--rich-text-fg-dark, inherit);
+    background-color: var(--rich-text-bg-dark, inherit);
+}
+
+/* Use light colors for notes */
+.docnote-container span.rich-text {
+    color: var(--rich-text-fg-light, inherit);
+    background-color: var(--rich-text-bg-light, inherit);
+}
+
 /* Note blocks */
 .docnote-container {
     color: black;

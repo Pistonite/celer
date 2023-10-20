@@ -1,6 +1,6 @@
 //! Utilities
 
-import { DocRichText, DocTag } from "low/celerc";
+import { DocColor, DocRichText, DocTag } from "low/celerc";
 import { Logger } from "low/utils";
 
 export const DocLog = new Logger("doc");
@@ -161,19 +161,29 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
             css += ";"
         }
         if (data.color) {
-            // TODO separate light and dark
-            css += `--rich-text-fg-light:${data.color};`;
-            css += `--rich-text-fg-dark:${data.color};`;
+            css += createCssStringForColor(data.color, "fg");
         }
         if (data.background)
         {
-            // TODO separate light and dark
-            css += `--rich-text-bg-light:${data.background};`;
-            css += `--rich-text-bg-dark:${data.background};`;
+            css += createCssStringForColor(data.background, "bg");
         }
         return css + "}";
     }).join("");
     DocLog.info("rich test css updated.");
+}
+
+const createCssStringForColor = (color: DocColor, type: "fg" | "bg") => {
+    if (typeof color === "string") {
+        return `--rich-text-${type}-light:${color};--rich-text-${type}-dark:${color};`;
+    }
+    let css = "";
+        if (color.light) {
+            css += `--rich-text-${type}-light:${color.light};`;
+        }
+        if (color.dark) {
+            css += `--rich-text-${type}-dark:${color.dark};`;
+        }
+    return css;
 }
 
 export const getTagClassName = (tag: string) => {
