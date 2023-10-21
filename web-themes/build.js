@@ -40,9 +40,9 @@ function writeIntermediateOutput(filePath, result) {
 
 /// Process a single src file
 ///
-/// File name is not the full path (i.e. "abc.css")
-async function processSrcFile(fileName) {
-    const baseName = path.basename(fileName, ".css");
+/// File name is not the full path (i.e. "abc.g.css"),
+/// Base name is the name without the extension (i.e. "abc")
+async function processSrcFile(fileName, baseName) {
     const srcFile = path.join(srcDir, fileName);
     const cssInput = await fs.promises.readFile(srcFile, "utf8");
     const interDistFile = path.join(intermediateDistDir, fileName);
@@ -67,9 +67,8 @@ async function processSrcDir() {
                 const ext = EXTS.find((ext) => file.endsWith(ext));
                 if (ext) {
                     const base = path.basename(file, ext);
-                    console.log(base);
-                    await processSrcFile(file);
-                    return path.basename(file, ext);
+                    await processSrcFile(file, base);
+                    return base;
                 }
             }),
         )

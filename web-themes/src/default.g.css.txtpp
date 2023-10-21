@@ -6,7 +6,9 @@
  *
  */
 
-/* Root element for the document viewer */
+/*
+ * Overall colors
+ */
 #doc-container {
     color: white;
 }
@@ -16,6 +18,9 @@
     }
 }
 
+/*
+ * Preface
+ */
 #doc-preface-container {
     background-color: #a2c4c4;
     color: black;
@@ -25,6 +30,11 @@
 }
 .doc-preface-block {
     border-bottom: 3px solid #446666;
+}
+/* Preface always have light background */
+.doc-preface-block span.rich-text {
+/*TXTPP#include shared/rich-text-light.css
+  TXTPP#end*/
 }
 
 /* Section banner */
@@ -61,64 +71,31 @@
 
 /* Always use dark color for main column*/
 .docline-body span.rich-text {
-    color: var(--rich-text-fg-dark, inherit);
-    background-color: var(--rich-text-bg-dark, inherit);
+/*TXTPP#include shared/rich-text-dark.css
+  TXTPP#end*/
 }
 
-/* Use light colors for notes */
-.docnote-container span.rich-text {
-    color: var(--rich-text-fg-light, inherit);
-    background-color: var(--rich-text-bg-light, inherit);
-}
-
-/* Note blocks */
+/*
+ * Note blocks
+ */
 .docnote-container {
     color: black;
 }
-
 /* Alternating color for note block */
 .docnote-container:nth-child(odd) {
     background-color: #8888ee;
 }
-
 .docnote-container:nth-child(even) {
     background-color: #ffcc33;
 }
-
-/* Diagnostic blocks */
-/* Text color */
-.docline-diagnostic-head {
-    color: white;
-}
-.docline-diagnostic-body {
-    color: black;
+/* Use light colors for notes */
+.docnote-container span.rich-text {
+/*TXTPP#include shared/rich-text-light.css
+  TXTPP#end*/
 }
 
-/* Different colors for different diagnostic types*/
-/* Error */
-.docline-diagnostic-head.docline-diagnostic-error {
-    background-color: #990000;
-}
-.docline-diagnostic-body.docline-diagnostic-error {
-    background-color: #ff6666;
-}
-.docline-diagnostic-body.docline-diagnostic-error a {
-    color: #0000ff !important;
-}
-/* Warning */
-.docline-diagnostic-head.docline-diagnostic-warn {
-    background-color: #883300;
-}
-.docline-diagnostic-body.docline-diagnostic-warn {
-    background-color: #ffbb00;
-}
-/* Other */
-.docline-diagnostic-head {
-    background-color: #8888ee;
-}
-.docline-diagnostic-body {
-    background-color: #ccccff;
-}
+/*TXTPP#include shared/default-diagnostics.css
+  TXTPP#end */
 
 /* Darken the line on hover */
 
