@@ -62,7 +62,6 @@ type DocInternalProps = {
 };
 const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
     DocLog.info("rendering document");
-    const tagMap = document.project.tags;
     const flatNotes = document.route.reduce(
         (acc: DocNoteBlockProps[], section, i) => {
             section.lines.forEach((line, j) => {
@@ -93,9 +92,9 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
             }}
         >
             <div id={DocContainerId}>
-                <div id="doc-preface-container">
+                <div id="docpreface-container">
                     {document.preface.map((text, i) => (
-                        <div key={i} className="doc-preface-block">
+                        <div key={i} className="docpreface-block">
                             <Rich
                                 content={text}
                                 size={400}

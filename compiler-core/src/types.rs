@@ -88,22 +88,22 @@ pub struct RouteMetadata {
 pub struct DocTag {
     /// Bold style
     #[serde(default)]
-    bold: bool,
+    pub bold: bool,
     /// Italic style
     #[serde(default)]
-    italic: bool,
+    pub italic: bool,
     /// Underline style
     #[serde(default)]
-    underline: bool,
+    pub underline: bool,
     /// Strikethrough style
     #[serde(default)]
-    strikethrough: bool,
+    pub strikethrough: bool,
     /// Color of the text (light, dark)
     #[serde(skip_serializing_if = "Option::is_none")]
-    color: Option<DocColor>,
+    pub color: Option<DocColor>,
     /// Background color of the text (light, dark)
     #[serde(skip_serializing_if = "Option::is_none")]
-    background: Option<DocColor>,
+    pub background: Option<DocColor>,
 }
 
 /// Document color specification
@@ -116,7 +116,7 @@ pub enum DocColor {
     /// Single color for any background
     Single(String),
     /// Different colors for light and dark backgrounds
-    LightDark{
+    LightDark {
         /// Color to set if the text is displayed with a light background
         #[serde(skip_serializing_if = "Option::is_none")]
         light: Option<String>,

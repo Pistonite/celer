@@ -12,23 +12,15 @@
 #doc-container {
     color: white;
 }
-@media (prefers-color-scheme: light) {
-    #doc-container a {
-        color: #8888ff;
-    }
-}
 
 /*
  * Preface
  */
-#doc-preface-container {
+#docpreface-container {
     background-color: #a2c4c4;
     color: black;
 }
-#doc-preface-container a {
-    color: #0000ff !important;
-}
-.doc-preface-block {
+.docpreface-block {
     border-bottom: 3px solid #446666;
 }
 /* Preface always have light background */

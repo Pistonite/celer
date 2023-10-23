@@ -10,6 +10,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
+
+    --link-text-color-light: #0000ee;
+    --link-text-color-dark: #8888ff;
+    --link-text-background-light: transparent;
+    --link-text-background-dark: transparent;
 }
 
 body {

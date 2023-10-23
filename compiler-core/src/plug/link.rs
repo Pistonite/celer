@@ -6,7 +6,7 @@ use crate::comp::CompDoc;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::types::DocRichText;
+use crate::types::{DocRichText, DocTag, DocColor};
 use crate::util::async_for;
 
 use super::{operation, PlugResult, PluginRuntime};
@@ -20,7 +20,17 @@ impl PluginRuntime for LinkPlugin {
             .project
             .tags
             .entry(prop::LINK.to_string())
-            .or_default();
+            .or_insert_with(|| DocTag {
+                color: Some(DocColor::LightDark { 
+                    light: Some("var(--link-text-color-light)".to_string()), 
+                    dark: Some("var(--link-text-color-dark)".to_string())
+                }),
+                background: Some(DocColor::LightDark { 
+                    light: Some("var(--link-text-background-light)".to_string()), 
+                    dark: Some("var(--link-text-background-dark)".to_string())
+                }),
+                ..Default::default()
+            });
         Ok(())
     }
     async fn on_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
