@@ -85,6 +85,8 @@
 /* Alternating color for note block */
 .docnote-container:nth-child(odd) {
     background-color: #8888ee;
+    --link-text-color-light: #ffcc33;
+    --link-text-color-dark: #ffcc33;
 }
 .docnote-container:nth-child(even) {
     background-color: #ffcc33;

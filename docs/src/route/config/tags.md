@@ -67,6 +67,7 @@ config:
         light: white
         dark: black
 ```
+The themes will then pick the appropriate color, depending on where the text is displayed.
 
 You can still use the string shorthand from the previous example (i.e. `color: red`). This will set the color to `red` for both light and dark backgrounds. This could be helpful if:
 
