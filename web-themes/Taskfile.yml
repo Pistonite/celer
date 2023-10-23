@@ -11,9 +11,8 @@ tasks:
 
   dev:
     desc: Watch for changes in themes and rebuild
-    aliases: [d]
     cmds:
-    - cargo watch -s "node build.js -- {{.CLI_ARGS}}"
+    - cargo watch -C . -s "node build.js -- {{.CLI_ARGS}}"
 
   build:
     desc: Build theme assets and copy them to web-client

@@ -1,5 +1,5 @@
-/* 
- * Shared CSS properties for diagnostics
+/* ==========================================
+ * Diagnostics
  */
 /* Text Color */
 .docline-diagnostic-head {
@@ -15,9 +15,6 @@
 .docline-diagnostic-body.docline-diagnostic-error {
     background-color: #ff6666;
 }
-.docline-diagnostic-body.docline-diagnostic-error a {
-    color: #0000ff !important;
-}
 /* Warning */
 .docline-diagnostic-head.docline-diagnostic-warn {
     background-color: #883300;
@@ -31,4 +28,7 @@
 }
 .docline-diagnostic-body {
     background-color: #ccccff;
+}
+.docline-diagnostic-body a {
+    color: var(--link-text-color-light) !important;
 }

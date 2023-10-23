@@ -6,14 +6,14 @@
  *
  */
 
-/*
+/* ==========================================
  * Overall colors
  */
 #doc-container {
     color: white;
 }
 
-/*
+/* ==========================================
  * Preface
  */
 #docpreface-container {
@@ -24,20 +24,21 @@
     border-bottom: 3px solid #446666;
 }
 /* Preface always have light background */
-.doc-preface-block span.rich-text {
+.docpreface-block span.rich-text, .docpreface-block span.rich-text * {
 /*TXTPP#include shared/rich-text-light.css
-  TXTPP#end*/
+ *TXTPP# */
 }
 
+/* ==========================================
+ * Main panel
+ */
 /* Section banner */
-.docsection-head {
-    background-color: #001a00;
-}
-.docsection-container {
+.docsection-head, .docsection-container {
     background-color: #001a00;
 }
 
-/* Alternating colors for the lines*/
+/* Line head */
+/* Alternating colors for the line head*/
 @media (prefers-color-scheme: dark) {
     .docline-container:nth-child(odd) .docline-head {
         background-color: #242424;
@@ -46,7 +47,6 @@
         background-color: #292929;
     }
 }
-
 @media (prefers-color-scheme: light) {
     .docline-container:nth-child(odd) .docline-head {
         background-color: #dddddd;
@@ -55,20 +55,29 @@
         background-color: #ffffff;
     }
 }
+/* Highlight on hover */
+@media (prefers-color-scheme: dark) {
+    .docline-head:hover {
+        background-color: #393939 !important;
+    }
+}
+@media (prefers-color-scheme: light) {
+    .docline-head:hover {
+        background-color: #bbbbbb !important;
+    }
+}
 
-/* Background color of the primary column */
 .docline-body {
     background-color: #001a00;
 }
-
-/* Always use dark color for main column*/
-.docline-body span.rich-text {
+/* Always use dark color*/
+.docline-body span.rich-text, .docline-body span.rich-text * {
 /*TXTPP#include shared/rich-text-dark.css
-  TXTPP#end*/
+ *TXTPP# */
 }
 
-/*
- * Note blocks
+/* ==========================================
+ * Note panel
  */
 .docnote-container {
     color: black;
@@ -81,23 +90,10 @@
     background-color: #ffcc33;
 }
 /* Use light colors for notes */
-.docnote-container span.rich-text {
+.docnote-container span.rich-text, .docnote-container span.rich-text * {
 /*TXTPP#include shared/rich-text-light.css
-  TXTPP#end*/
+ *TXTPP# */
 }
 
 /*TXTPP#include shared/default-diagnostics.css
-  TXTPP#end */
-
-/* Darken the line on hover */
-
-@media (prefers-color-scheme: dark) {
-    .docline-head:hover {
-        background-color: #393939 !important;
-    }
-}
-@media (prefers-color-scheme: light) {
-    .docline-head:hover {
-        background-color: #bbbbbb !important;
-    }
-}
+ *TXTPP# */
