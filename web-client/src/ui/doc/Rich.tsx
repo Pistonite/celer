@@ -48,14 +48,6 @@ const RichBlock: React.FC<RichBlockProps> = ({ text, tag, link, size }) => {
             as="span"
             size={size}
             className={clsx(RichTextClassName, tag && getTagClassName(tag))}
-            // weight={tag.bold ? "bold" : "regular"}
-            // underline={tag.underline}
-            // strikethrough={tag.strikethrough}
-            // italic={tag.italic}
-            // style={{
-            //     color: tag.color || undefined,
-            //     backgroundColor: tag.background || undefined,
-            // }}
         >
             {link ? (
                 <a href={link} target="_blank">

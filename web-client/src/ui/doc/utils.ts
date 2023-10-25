@@ -16,35 +16,6 @@ export const DocContentContainerId = "doc-content-container";
 /// Class for the doc line container
 export const DocLineContainerClass = "docline-container";
 
-/// Helper function to resolve tag names to the tag definition
-// export const resolveTags = (
-//     tagMap: Record<string, DocTag>,
-//     docRichTexts: DocRichText[],
-// ): RichText[] => {
-//     return docRichTexts.map((docRichText) => resolveTag(tagMap, docRichText));
-// };
-
-// export const resolveTag = (
-//     tagMap: Record<string, DocTag>,
-//     docRichText: DocRichText,
-// ): RichText => {
-//     const { tag, text, link } = docRichText;
-//     if (!tag) {
-//         return { text, link };
-//     }
-
-//     const tagDef = tagMap[tag];
-//     if (!tagDef) {
-//         // Silently ignore unknown tag because compiler will add a warning (TODO: make sure you actually you taht)
-//         return { text, link };
-//     }
-//     return {
-//         text,
-//         tag: tagDef,
-//         link,
-//     };
-// };
-
 /// Scroll view type
 export type ScrollView = {
     /// Top of the scroll
