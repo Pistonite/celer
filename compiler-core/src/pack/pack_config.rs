@@ -90,11 +90,7 @@ async fn process_config(
                 process_icons_config(builder, resource, value, trace).await?;
             }
             prop::TAGS => {
-                let tags = value.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), prop::TAGS.to_string()))?;
-                let _ = async_for!((key, value) in tags.into_iter(), {
-                    let tag = serde_json::from_value::<DocTag>(value).map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::TAGS, key)))?;
-                    builder.tags.insert(key, tag);
-                });
+                process_tags_config(builder, value, trace).await?;
             }
             prop::PRESETS => {
                 let presets = super::pack_presets(value, trace, setting.max_preset_namespace_depth).await?;
@@ -209,6 +205,46 @@ async fn process_plugins_config(
             plugin,
             props,
         });
+    });
+
+    Ok(())
+}
+
+/// Process the `tags` property
+async fn process_tags_config(
+    builder: &mut ConfigBuilder,
+    tags: Value,
+    trace: &ConfigTrace,
+) -> PackerResult<()> {
+    let tags = tags
+        .try_into_object()
+        .map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), prop::TAGS.to_string()))?;
+    let _ = async_for!((key, mut value) in tags.into_iter(), {
+        let mut tag = DocTag::default();
+        // resolve includes
+        if let Some(includes) = value.as_object_mut().and_then(|map|map.remove(prop::INCLUDES)) {
+            let includes = match includes {
+                Value::Array(v) => v,
+                Value::Object(_) => return Err(PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}.{}", prop::TAGS, key, prop::INCLUDES))),
+                other => vec![other],
+            };
+            let _ = async_for!(include in includes, {
+                let include = include.coerce_to_string();
+
+                let include_tag = match builder.tags.get(&include) {
+                    None if include != key => return Err(PackerError::TagNotFound(trace.clone(), include.clone())),
+                    other => other,
+                };
+                if let Some(t) = include_tag {
+                    tag.apply_from(t);
+                }
+            });
+        }
+
+        let last_tag = serde_json::from_value::<DocTag>(value).map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::TAGS, key)))?;
+        tag.apply_from(&last_tag);
+
+        builder.tags.insert(key, tag);
     });
 
     Ok(())

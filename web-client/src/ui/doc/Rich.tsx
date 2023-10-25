@@ -1,18 +1,23 @@
 //! Rich text component
 
 import { Text, TextProps } from "@fluentui/react-components";
-import { RichText } from "core/doc";
+import clsx from "clsx";
+
+import { DocRichText } from "low/celerc";
+
+import { RichTextClassName, getTagClassName } from "./utils";
 
 /// Rich text display component
 type RichProps = {
     /// The text to display
-    content: RichText[];
+    content: DocRichText[];
     /// Size of the text
     size: TextProps["size"];
 };
 
 export const Rich: React.FC<RichProps> = ({ content, size }) => {
-    if (!content.find((t) => t.text)) {
+    // if all blocks are white spaces, return a non-breaking space to keep the line height
+    if (!content.find((t) => t.text.trim())) {
         return <span>&nbsp;</span>;
     }
     return (
@@ -25,7 +30,7 @@ export const Rich: React.FC<RichProps> = ({ content, size }) => {
 };
 
 /// Internal rich text display component
-type RichBlockProps = RichText & {
+type RichBlockProps = DocRichText & {
     size: TextProps["size"];
 };
 
@@ -42,14 +47,7 @@ const RichBlock: React.FC<RichBlockProps> = ({ text, tag, link, size }) => {
         <Text
             as="span"
             size={size}
-            weight={tag.bold ? "bold" : "regular"}
-            underline={tag.underline}
-            strikethrough={tag.strikethrough}
-            italic={tag.italic}
-            style={{
-                color: tag.color || undefined,
-                backgroundColor: tag.background || undefined,
-            }}
+            className={clsx(RichTextClassName, tag && getTagClassName(tag))}
         >
             {link ? (
                 <a href={link} target="_blank">

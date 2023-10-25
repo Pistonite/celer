@@ -1,0 +1,34 @@
+/* ==========================================
+ * Diagnostics
+ */
+/* Text Color */
+.docline-diagnostic-head {
+    color: white;
+}
+.docline-diagnostic-body {
+    color: black;
+}
+/* Error */
+.docline-diagnostic-head.docline-diagnostic-error {
+    background-color: #990000;
+}
+.docline-diagnostic-body.docline-diagnostic-error {
+    background-color: #ff6666;
+}
+/* Warning */
+.docline-diagnostic-head.docline-diagnostic-warn {
+    background-color: #883300;
+}
+.docline-diagnostic-body.docline-diagnostic-warn {
+    background-color: #ffbb00;
+}
+/* Other */
+.docline-diagnostic-head {
+    background-color: #8888ee;
+}
+.docline-diagnostic-body {
+    background-color: #ccccff;
+}
+.docline-diagnostic-body a {
+    color: var(--link-text-color-light) !important;
+}

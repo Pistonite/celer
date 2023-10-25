@@ -9,6 +9,11 @@ tasks:
     cmds:
     - npm ci
 
+  dev:
+    desc: Watch for changes in themes and rebuild
+    cmds:
+    - cargo watch -C . -s "node build.js -- {{.CLI_ARGS}}"
+
   build:
     desc: Build theme assets and copy them to web-client
     cmds:

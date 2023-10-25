@@ -3,6 +3,7 @@
 //! abc.css => postcss => clean-css => abc.min.css
 
 const fs = require("fs");
+const { spawn, spawnSync } = require("child_process");
 const path = require("path");
 const autoprefixer = require("autoprefixer");
 const postcss = require("postcss");
@@ -21,6 +22,15 @@ fs.mkdirSync(minifiedDistDir);
 fs.rmSync(intermediateDistDir, { recursive: true, force: true });
 fs.mkdirSync(intermediateDistDir);
 
+function runTxtpp() {
+    const proc = spawnSync("txtpp", ["-r", "src"], {
+        stdio: "inherit",
+    });
+    if (proc.status !== 0) {
+        throw new Error("txtpp failed");
+    }
+}
+
 function writeIntermediateOutput(filePath, result) {
     fs.writeFile(filePath, result.css, () => true);
     if (result.map) {
@@ -30,9 +40,9 @@ function writeIntermediateOutput(filePath, result) {
 
 /// Process a single src file
 ///
-/// File name is not the full path (i.e. "abc.css")
-async function processSrcFile(fileName) {
-    const baseName = path.basename(fileName, ".css");
+/// File name is not the full path (i.e. "abc.g.css"),
+/// Base name is the name without the extension (i.e. "abc")
+async function processSrcFile(fileName, baseName) {
     const srcFile = path.join(srcDir, fileName);
     const cssInput = await fs.promises.readFile(srcFile, "utf8");
     const interDistFile = path.join(intermediateDistDir, fileName);
@@ -48,14 +58,17 @@ async function processSrcFile(fileName) {
     console.log(`${srcFile} => ${minDistFile}`);
 }
 
+const EXTS = [".g.css", ".css"];
 async function processSrcDir() {
     const files = await fs.promises.readdir(srcDir);
     const baseNames = (
         await Promise.all(
             files.map(async (file) => {
-                if (path.extname(file) === ".css") {
-                    await processSrcFile(file);
-                    return path.basename(file, ".css");
+                const ext = EXTS.find((ext) => file.endsWith(ext));
+                if (ext) {
+                    const base = path.basename(file, ext);
+                    await processSrcFile(file, base);
+                    return base;
                 }
             }),
         )
@@ -79,4 +92,5 @@ export const ThemeIds = [${baseNames.map((name) => `"${name}"`).join(", ")}];
     fs.writeFileSync(path.join(defDistDir, "themes.g.ts"), content, "utf8");
 }
 
+runTxtpp();
 processSrcDir();

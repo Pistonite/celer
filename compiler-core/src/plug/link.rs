@@ -6,7 +6,7 @@ use crate::comp::CompDoc;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::types::DocRichText;
+use crate::types::{DocColor, DocRichText, DocTag};
 use crate::util::async_for;
 
 use super::{operation, PlugResult, PluginRuntime};
@@ -16,11 +16,23 @@ pub struct LinkPlugin;
 impl PluginRuntime for LinkPlugin {
     async fn on_pre_compile(&mut self, ctx: &mut CompilerContext) -> PackerResult<()> {
         // add the link tag if not defined already
+        let link_tag = DocTag {
+            color: Some(DocColor::LightDark {
+                light: Some("var(--link-text-color-light)".to_string()),
+                dark: Some("var(--link-text-color-dark)".to_string()),
+            }),
+            background: Some(DocColor::LightDark {
+                light: Some("var(--link-text-background-light)".to_string()),
+                dark: Some("var(--link-text-background-dark)".to_string()),
+            }),
+            ..Default::default()
+        };
         ctx.phase0
             .project
             .tags
             .entry(prop::LINK.to_string())
-            .or_default();
+            .and_modify(|tag| tag.apply_from(&link_tag))
+            .or_insert(link_tag);
         Ok(())
     }
     async fn on_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {

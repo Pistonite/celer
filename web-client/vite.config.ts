@@ -1,4 +1,5 @@
 import path from "path";
+import fs from "fs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -22,13 +23,13 @@ const removeRustStyleDocComments = () => {
 
 const createHttpsConfig = () => {
     try {
-        return {
-            key: path.join(__dirname, "../cert/cert-key.pem"),
-            cert: path.join(__dirname, "../cert/cert.pem"),
-        };
-    } catch (e) {
-        return undefined;
-    }
+        const key = path.join(__dirname, "../cert/cert-key.pem");
+        const cert = path.join(__dirname, "../cert/cert.pem");
+        if (fs.existsSync(key) && fs.existsSync(cert)) {
+            return { key, cert };
+        }
+    } catch (e) {}
+    return undefined;
 };
 
 // https://vitejs.dev/config/

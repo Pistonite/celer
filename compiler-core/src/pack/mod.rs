@@ -152,6 +152,9 @@ pub enum PackerError {
     #[error("Project config ({0}): config is nesting too deep!")]
     MaxConfigDepthExceeded(ConfigTrace),
 
+    #[error("Project config ({0}): the tag `{1}` is not defined")]
+    TagNotFound(ConfigTrace, String),
+
     #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
     InvalidEntryPoint(String, String),
 

@@ -14,8 +14,6 @@ import {
     DocContentContainerId,
     DocLog,
     DocScrollId,
-    resolveTag,
-    resolveTags,
 } from "./utils";
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
@@ -62,7 +60,6 @@ type DocInternalProps = {
 };
 const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
     DocLog.info("rendering document");
-    const tagMap = document.project.tags;
     const flatNotes = document.route.reduce(
         (acc: DocNoteBlockProps[], section, i) => {
             section.lines.forEach((line, j) => {
@@ -71,7 +68,6 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                         sectionIndex: i,
                         lineIndex: j,
                         notes: line.notes,
-                        tagMap,
                     });
                 }
             });
@@ -93,13 +89,10 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
             }}
         >
             <div id={DocContainerId}>
-                <div id="doc-preface-container">
+                <div id="docpreface-container">
                     {document.preface.map((text, i) => (
-                        <div key={i} className="doc-preface-block">
-                            <Rich
-                                content={resolveTags(tagMap, text)}
-                                size={400}
-                            />
+                        <div key={i} className="docpreface-block">
+                            <Rich content={text} size={400} />
                         </div>
                     ))}
                 </div>
@@ -114,7 +107,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                         key={j}
                                         diagnostics={line.diagnostics}
                                         lineColor={line.lineColor}
-                                        text={resolveTags(tagMap, line.text)}
+                                        text={line.text}
                                         iconUrl={
                                             line.icon
                                                 ? document.project.icons[
@@ -122,18 +115,8 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                                   ]
                                                 : undefined
                                         }
-                                        secondaryText={resolveTags(
-                                            tagMap,
-                                            line.secondaryText,
-                                        )}
-                                        counterText={
-                                            line.counterText
-                                                ? resolveTag(
-                                                      tagMap,
-                                                      line.counterText,
-                                                  )
-                                                : undefined
-                                        }
+                                        secondaryText={line.secondaryText}
+                                        counterText={line.counterText}
                                         counterType={
                                             line.counterText?.tag || undefined
                                         }

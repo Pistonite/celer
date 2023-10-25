@@ -1,0 +1,103 @@
+/*
+ * Celer granatus theme
+ *
+ * Celer was originally inspired by the BOTW Granatus route doc in Google Sheets.
+ * This theme was created to mimic the feel of that
+ */
+/* ==========================================
+ * Overall colors
+ */
+#doc-container {
+    color: black;
+}
+
+/* ==========================================
+ * Preface
+ */
+#docpreface-container {
+    background-color: #a2c4c4;
+}
+.docpreface-block {
+    border-top: 3px solid #446666;
+}
+/* Preface always have light background */
+.docpreface-block span.rich-text, .docpreface-block span.rich-text * {
+    /*TXTPP#include shared/rich-text-light.css
+     *TXTPP# */
+}
+
+/* ==========================================
+ * Main panel
+ */
+/* Section banner */
+.docsection-head {
+    background-color: #3388ff;
+    border: 3px solid black;
+}
+
+/* Highlight the line head on hover */
+@media (prefers-color-scheme: light) {
+    .docline-head:hover {
+        background-color: rgba(0, 0, 0, 0.1) !important;
+    }
+}
+@media (prefers-color-scheme: dark) {
+    .docline-head:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+}
+.docline-body {
+    border-bottom: 1px solid black;
+    background-color: #ffd866;
+}
+/* Always use light color*/
+.docline-body span.rich-text, .docline-body span.rich-text * {
+    /*TXTPP#include shared/rich-text-light.css
+     *TXTPP# */
+}
+
+/* Different colors for different counter types */
+/* TODO #21: will support this when split type systen is available*/
+/* .docline-body.docline-body-shrine,
+.docline-body.docline-body-tower {
+    background-color: black;
+    color: white;
+}
+.docline-body.docline-body-warp {
+    background-color: #a2c4c4;
+}
+.docline-body.docline-body-boss {
+    background-color: #ff4444;
+}
+.docline-body.docline-body-korok {
+    background-color: #c07ba0;
+} */
+
+/* ==========================================
+ * Note panel
+ */
+@media (prefers-color-scheme: dark) {
+    .docnote-container {
+        color: white;
+        background-color: #333333;
+        border: 1px solid #eeeeee;
+    }
+    .docnote-container span.rich-text, .docnote-container span.rich-text * {
+        /*TXTPP#include shared/rich-text-dark.css
+         *TXTPP# */
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    .docnote-container {
+        color: black;
+        background-color: #eeeeee;
+    }
+    .docnote-container span.rich-text, .docnote-container span.rich-text * {
+        /*TXTPP#include shared/rich-text-light.css
+         *TXTPP# */
+    }
+}
+
+/*TXTPP#include shared/default-diagnostics.css
+ *TXTPP# */

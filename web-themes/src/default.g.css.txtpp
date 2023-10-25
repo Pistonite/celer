@@ -1,0 +1,101 @@
+/*
+ * Celer default theme
+ *
+ * Use this as an example for creating new themes.
+ * You can also use other CSS attributes, not just the colors and background colors.
+ *
+ */
+
+/* ==========================================
+ * Overall colors
+ */
+#doc-container {
+    color: white;
+}
+
+/* ==========================================
+ * Preface
+ */
+#docpreface-container {
+    background-color: #a2c4c4;
+    color: black;
+}
+.docpreface-block {
+    border-bottom: 3px solid #446666;
+}
+/* Preface always have light background */
+.docpreface-block span.rich-text, .docpreface-block span.rich-text * {
+/*TXTPP#include shared/rich-text-light.css
+ *TXTPP# */
+}
+
+/* ==========================================
+ * Main panel
+ */
+/* Section banner */
+.docsection-head, .docsection-container {
+    background-color: #001a00;
+}
+
+/* Line head */
+/* Alternating colors for the line head*/
+@media (prefers-color-scheme: dark) {
+    .docline-container:nth-child(odd) .docline-head {
+        background-color: #242424;
+    }
+    .docline-container:nth-child(even) .docline-head {
+        background-color: #292929;
+    }
+}
+@media (prefers-color-scheme: light) {
+    .docline-container:nth-child(odd) .docline-head {
+        background-color: #dddddd;
+    }
+    .docline-container:nth-child(even) .docline-head {
+        background-color: #ffffff;
+    }
+}
+/* Highlight on hover */
+@media (prefers-color-scheme: dark) {
+    .docline-head:hover {
+        background-color: #393939 !important;
+    }
+}
+@media (prefers-color-scheme: light) {
+    .docline-head:hover {
+        background-color: #bbbbbb !important;
+    }
+}
+
+.docline-body {
+    background-color: #001a00;
+}
+/* Always use dark color*/
+.docline-body span.rich-text, .docline-body span.rich-text * {
+/*TXTPP#include shared/rich-text-dark.css
+ *TXTPP# */
+}
+
+/* ==========================================
+ * Note panel
+ */
+.docnote-container {
+    color: black;
+}
+/* Alternating color for note block */
+.docnote-container:nth-child(odd) {
+    background-color: #8888ee;
+    --link-text-color-light: #ffcc33;
+    --link-text-color-dark: #ffcc33;
+}
+.docnote-container:nth-child(even) {
+    background-color: #ffcc33;
+}
+/* Use light colors for notes */
+.docnote-container span.rich-text, .docnote-container span.rich-text * {
+/*TXTPP#include shared/rich-text-light.css
+ *TXTPP# */
+}
+
+/*TXTPP#include shared/default-diagnostics.css
+ *TXTPP# */

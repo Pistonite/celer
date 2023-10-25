@@ -23,7 +23,7 @@ import { ControlComponentProps, ToolbarControl } from "./util";
 import { SettingsDialog } from "./settings";
 
 /// The settings control
-export const Settings: ToolbarControl = {
+export const OpenSettings: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
         return (
             <SettingsInternal>
