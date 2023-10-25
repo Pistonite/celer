@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { DocNote, DocTag } from "low/celerc";
+import { DocNote } from "low/celerc";
 
 import { Rich } from "./Rich";
 import { DocScrollId } from "./utils";
@@ -65,10 +65,7 @@ export const DocNoteBlock: React.FC<DocNoteBlockProps> = ({
                 if (note.type === "text") {
                     return (
                         <div key={i} className="docnote-block">
-                            <Rich
-                                size={400}
-                                content={note.content}
-                            />
+                            <Rich size={400} content={note.content} />
                         </div>
                     );
                 }

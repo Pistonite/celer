@@ -95,10 +95,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                 <div id="docpreface-container">
                     {document.preface.map((text, i) => (
                         <div key={i} className="docpreface-block">
-                            <Rich
-                                content={text}
-                                size={400}
-                            />
+                            <Rich content={text} size={400} />
                         </div>
                     ))}
                 </div>
@@ -121,12 +118,8 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                                   ]
                                                 : undefined
                                         }
-                                        secondaryText={
-                                            line.secondaryText
-                                        }
-                                        counterText={
-                                            line.counterText
-                                        }
+                                        secondaryText={line.secondaryText}
+                                        counterText={line.counterText}
                                         counterType={
                                             line.counterText?.tag || undefined
                                         }

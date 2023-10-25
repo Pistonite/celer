@@ -1,6 +1,6 @@
 //! Utilities for document
 
-import { DocPoorText, DocRichText, DocTag, ExecDoc } from "low/celerc";
+import { DocPoorText, DocRichText, ExecDoc } from "low/celerc";
 
 import {
     DocSettingsState,

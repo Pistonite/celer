@@ -2,7 +2,9 @@
 
 import { Text, TextProps } from "@fluentui/react-components";
 import clsx from "clsx";
-import { DocRichText } from "low/celerc/celercwasm";
+
+import { DocRichText } from "low/celerc";
+
 import { RichTextClassName, getTagClassName } from "./utils";
 
 /// Rich text display component

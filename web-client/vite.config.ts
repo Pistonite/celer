@@ -26,10 +26,9 @@ const createHttpsConfig = () => {
         const key = path.join(__dirname, "../cert/cert-key.pem");
         const cert = path.join(__dirname, "../cert/cert.pem");
         if (fs.existsSync(key) && fs.existsSync(cert)) {
-            return {key, cert};
+            return { key, cert };
         }
-    } catch (e) {
-    }
+    } catch (e) {}
     return undefined;
 };
 
@@ -43,7 +42,7 @@ export default defineConfig({
         topLevelAwait(),
     ],
     server: {
-      //  https: createHttpsConfig(),
+        //  https: createHttpsConfig(),
         proxy: {
             "/docs": {
                 target: "http://localhost:3173",

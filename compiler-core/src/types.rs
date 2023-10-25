@@ -108,7 +108,7 @@ pub struct DocTag {
 
 /// Document color specification
 ///
-/// Used to specify color for [`DocTag`]s. 
+/// Used to specify color for [`DocTag`]s.
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm(feature = "wasm")]
 #[serde(untagged)]
@@ -123,7 +123,7 @@ pub enum DocColor {
         /// Color to set if the text is displayed with a dark background
         #[serde(skip_serializing_if = "Option::is_none")]
         dark: Option<String>,
-    }
+    },
 }
 
 /// A section in the executed document

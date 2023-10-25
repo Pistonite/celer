@@ -8,7 +8,6 @@ import {
     settingsSelector,
     viewActions,
 } from "core/store";
-import { DocTag } from "low/celerc";
 import { console, Logger, isInDarkMode } from "low/utils";
 
 import type { EditorKernel } from "./editor";

@@ -10,7 +10,11 @@ import { DocDiagnostic, DocRichText } from "low/celerc";
 import { useActions } from "low/store";
 
 import { Rich } from "./Rich";
-import { DocLineContainerClass, findLineByIndex, getTagClassName } from "./utils";
+import {
+    DocLineContainerClass,
+    findLineByIndex,
+    getTagClassName,
+} from "./utils";
 import { Poor } from "./Poor";
 import { updateNotePositions } from "./updateNotePositions";
 
@@ -73,7 +77,11 @@ export const DocLine: React.FC<DocLineProps> = ({
                 >
                     {counterText && (
                         <div
-                            className={clsx("docline-counter", counterText.tag && getTagClassName(counterText.tag))}
+                            className={clsx(
+                                "docline-counter",
+                                counterText.tag &&
+                                    getTagClassName(counterText.tag),
+                            )}
                         >
                             <Text size={500} font="monospace">
                                 {counterText.text}
@@ -99,7 +107,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                                 iconUrl && "docline-icon-text",
                             )}
                         >
-                                <Rich size={500} content={text} />   
+                            <Rich size={500} content={text} />
                         </div>
                         {secondaryText.length > 0 && (
                             <div

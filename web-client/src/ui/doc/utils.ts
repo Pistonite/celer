@@ -1,6 +1,6 @@
 //! Utilities
 
-import { DocColor, DocRichText, DocTag } from "low/celerc";
+import { DocColor, DocTag } from "low/celerc";
 import { Logger } from "low/utils";
 
 export const DocLog = new Logger("doc");
@@ -130,7 +130,7 @@ export const RichTextClassName = "rich-text";
 
 /// Update the styles/classes for rich tags
 export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
-    let styleTag = document.querySelector("style[data-inject=\"rich-text\"");
+    let styleTag = document.querySelector('style[data-inject="rich-text"');
     if (!styleTag) {
         DocLog.info("creating rich text css...");
         styleTag = document.createElement("style");
@@ -142,55 +142,56 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
         }
         head.appendChild(styleTag);
     }
-    (styleTag as HTMLStyleElement).innerText=Object.entries(tags).map(([tag, data]) => {
-        let css = `.${getTagClassName(tag)}{`;
-        if (data.bold) {
-            css += "font-weight:bold;";
-        }
-        if (data.italic) {
-            css += "font-style:italic;";
-        }
-        if (data.strikethrough || data.underline) {
-            css += "text-decoration:";
-            if (data.strikethrough) {
-                css += "line-through ";
+    (styleTag as HTMLStyleElement).innerText = Object.entries(tags)
+        .map(([tag, data]) => {
+            let css = `.${getTagClassName(tag)}{`;
+            if (data.bold) {
+                css += "font-weight:bold;";
             }
-            if (data.underline) {
-                css += "underline";
+            if (data.italic) {
+                css += "font-style:italic;";
             }
-            css += ";"
-        }
-        if (data.color) {
-            css += createCssStringForColor(data.color, "fg");
-        }
-        if (data.background)
-        {
-            css += createCssStringForColor(data.background, "bg");
-        }
-        return css + "}";
-    }).join("");
+            if (data.strikethrough || data.underline) {
+                css += "text-decoration:";
+                if (data.strikethrough) {
+                    css += "line-through ";
+                }
+                if (data.underline) {
+                    css += "underline";
+                }
+                css += ";";
+            }
+            if (data.color) {
+                css += createCssStringForColor(data.color, "fg");
+            }
+            if (data.background) {
+                css += createCssStringForColor(data.background, "bg");
+            }
+            return css + "}";
+        })
+        .join("");
     DocLog.info("rich test css updated.");
-}
+};
 
 const createCssStringForColor = (color: DocColor, type: "fg" | "bg") => {
     if (typeof color === "string") {
         return `--rich-text-${type}-light:${color};--rich-text-${type}-dark:${color};`;
     }
     let css = "";
-        if (color.light) {
-            css += `--rich-text-${type}-light:${color.light};`;
-        }
-        if (color.dark) {
-            css += `--rich-text-${type}-dark:${color.dark};`;
-        }
+    if (color.light) {
+        css += `--rich-text-${type}-light:${color.light};`;
+    }
+    if (color.dark) {
+        css += `--rich-text-${type}-dark:${color.dark};`;
+    }
     return css;
-}
+};
 
 export const getTagClassName = (tag: string) => {
     return `rich-text-tag--${getTagCanonicalName(tag)}`;
-}
+};
 
 /// Clean the tag name and only keep alphanumerical values and dashes
 const getTagCanonicalName = (tag: string) => {
-    return tag.toLowerCase().replaceAll(/[^a-z0-9\-]/g, "-");
-}
+    return tag.toLowerCase().replaceAll(/[^a-z0-9-]/g, "-");
+};
