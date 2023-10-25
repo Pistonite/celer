@@ -87,23 +87,43 @@ pub struct RouteMetadata {
 #[serde(rename_all = "camelCase")]
 pub struct DocTag {
     /// Bold style
-    #[serde(default)]
-    pub bold: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bold: Option<bool>,
     /// Italic style
-    #[serde(default)]
-    pub italic: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub italic: Option<bool>,
     /// Underline style
-    #[serde(default)]
-    pub underline: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub underline: Option<bool>,
     /// Strikethrough style
-    #[serde(default)]
-    pub strikethrough: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub strikethrough: Option<bool>,
     /// Color of the text (light, dark)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<DocColor>,
     /// Background color of the text (light, dark)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub background: Option<DocColor>,
+}
+
+macro_rules! apply_tag_prop {
+    ($self:ident, $other:ident, $prop:ident) => {
+        if $other.$prop.is_some() {
+            $self.$prop = $other.$prop.as_ref().cloned();
+        }
+    };
+}
+
+impl DocTag {
+    /// Apply the styles from another tag
+    pub fn apply_from(&mut self, other: &DocTag) {
+        apply_tag_prop!(self, other, bold);
+        apply_tag_prop!(self, other, italic);
+        apply_tag_prop!(self, other, underline);
+        apply_tag_prop!(self, other, strikethrough);
+        apply_tag_prop!(self, other, color);
+        apply_tag_prop!(self, other, background);
+    }
 }
 
 /// Document color specification

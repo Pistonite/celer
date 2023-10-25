@@ -16,15 +16,12 @@ export type DocNoteBlockProps = {
     lineIndex: number;
     /// The note blocks to display
     notes: DocNote[];
-    // /// Tag map used for resolving the tags
-    // tagMap: Record<string, DocTag>;
 };
 
 export const DocNoteBlock: React.FC<DocNoteBlockProps> = ({
     sectionIndex,
     lineIndex,
     notes,
-    //tagMap,
 }) => {
     const ref = useRef<HTMLDivElement>(null);
     return (

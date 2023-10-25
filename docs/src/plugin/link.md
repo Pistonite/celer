@@ -44,6 +44,7 @@ config:
   - use: link
   tags:
     link:
+      includes: link
       italic: true # show links in italic
 route:
 - Example Section:
@@ -52,8 +53,8 @@ route:
       notes: Click .link([here]https://example.com) to see the notes
 ```
 :::tip
-The link already inherits styles from the Celer UI (with a different color and underline).
-Only override the style if needed!
+The `includes: link` makes sure that the existing link style are inherited. See [Tags Configuration](../route/config/tags.md)
+for more details.
 :::
 :::warning
 Specifying `underline: false` will probably have no effect because Celer UI renders

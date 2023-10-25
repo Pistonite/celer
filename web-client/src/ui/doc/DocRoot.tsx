@@ -14,8 +14,6 @@ import {
     DocContentContainerId,
     DocLog,
     DocScrollId,
-    // resolveTag,
-    // resolveTags,
 } from "./utils";
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocNoteContainerId } from "./updateNotePositions";
@@ -70,7 +68,6 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                         sectionIndex: i,
                         lineIndex: j,
                         notes: line.notes,
-                        //tagMap,
                     });
                 }
             });

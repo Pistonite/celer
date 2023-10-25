@@ -42,7 +42,7 @@ export default defineConfig({
         topLevelAwait(),
     ],
     server: {
-        //  https: createHttpsConfig(),
+        https: createHttpsConfig(),
         proxy: {
             "/docs": {
                 target: "http://localhost:3173",
