@@ -8,6 +8,7 @@ use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::types::{DocDiagnostic, ExecDoc};
 
+mod compat;
 mod link;
 mod metrics;
 mod operation;
@@ -70,6 +71,7 @@ impl PluginInstance {
                 BuiltInPlugin::Variables => {
                     Box::new(variables::VariablesPlugin::from_props(&self.props))
                 }
+                BuiltInPlugin::Compat => Box::new(compat::CompatPlugin),
             },
             // TODO #24 implement JS plugin engine
             Plugin::Script(_) => Box::new(ScriptPluginRuntime),
@@ -97,10 +99,8 @@ pub enum Plugin {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BuiltInPlugin {
-    /// Collect compiler metrics and report them through the stats API
     Metrics,
-    /// Transform link tags to clickable links. See [`link`]
     Link,
-    /// Variable system
     Variables,
+    Compat,
 }
