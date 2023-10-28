@@ -236,13 +236,13 @@ async fn process_tags_config(
                     other => other,
                 };
                 if let Some(t) = include_tag {
-                    tag.apply_from(t);
+                    tag.apply_override(t);
                 }
             });
         }
 
         let last_tag = serde_json::from_value::<DocTag>(value).map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::TAGS, key)))?;
-        tag.apply_from(&last_tag);
+        tag.apply_override(&last_tag);
 
         builder.tags.insert(key, tag);
     });

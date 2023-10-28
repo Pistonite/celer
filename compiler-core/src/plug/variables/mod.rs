@@ -12,7 +12,7 @@ use crate::lang;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::types::{DocDiagnostic, DocRichText};
+use crate::types::{DocColor, DocDiagnostic, DocRichText, DocTag};
 use crate::util::async_for;
 
 use super::{operation, PlugResult, PluginRuntime};
@@ -276,6 +276,19 @@ impl VariablesPlugin {
 impl PluginRuntime for VariablesPlugin {
     async fn on_pre_compile(&mut self, ctx: &mut CompilerContext) -> PackerResult<()> {
         // add the val tag if not defined already
+        let tag = DocTag {
+            color: Some(DocColor::LightDark {
+                light: Some("#800".to_string()),
+                dark: Some("#ffc0cb".to_string()),
+            }),
+            ..Default::default()
+        };
+        ctx.phase0
+            .project
+            .tags
+            .entry(VAL.to_string())
+            .and_modify(|t| t.apply_to_default(&tag))
+            .or_insert(tag);
         ctx.phase0.project.tags.entry(VAL.to_string()).or_default();
         Ok(())
     }
