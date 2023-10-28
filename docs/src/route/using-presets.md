@@ -38,6 +38,7 @@ in front of `8769`. The second variable will have the value `" 8769"`.
 Sometimes it's ok, depending on how the preset uses the variable.
 :::
 
+## Escaping
 If the variable value contains `,` or `>`, you can escape it by prepending a `\`
 The example below specifies a single variable with value `Hello, World!`:
 ```

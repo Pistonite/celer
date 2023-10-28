@@ -92,6 +92,11 @@ There's also a shorthand that will probably be more commonly used:
       doc: shrine 
       map: shrine 
 ```
+:::tip
+If you want to hide the icon on the map, but keep the icon already specified by a preset,
+check out the [Compatibility Plugin](../plugin/compat.md) which brings back the `hide-icon-on-map` property
+from old Celer.
+:::
 
 ## Color
 Use the `color` property to change the line color, both on the map and on the document.

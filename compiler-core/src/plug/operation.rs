@@ -5,6 +5,7 @@ macro_rules! for_each_line {
     ($line:ident in $comp_doc:ident $fun:block) => {
         let _ = $crate::util::async_for!(section in $comp_doc.route.iter_mut(), {
             let lines = std::mem::take(&mut section.lines);
+            #[allow(unused_mut)]
             let _ = $crate::util::async_for!(mut $line in lines.into_iter(), {
                 let l = $fun;
                 section.lines.push(l);
