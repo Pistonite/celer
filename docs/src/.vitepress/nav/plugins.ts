@@ -12,6 +12,7 @@ export const pluginsSideBar = {
                 { text: "Link", link: "/plugin/link" },
                 { text: "Variables", link: "/plugin/variables" },
                 // { text: "Assertion", link: "/plugin/assertion" },
+                { text: "Compatibility", link: "/plugin/compat" },
             ],
         },
         // {
