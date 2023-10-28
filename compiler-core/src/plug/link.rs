@@ -31,7 +31,7 @@ impl PluginRuntime for LinkPlugin {
             .project
             .tags
             .entry(prop::LINK.to_string())
-            .and_modify(|tag| tag.apply_from(&link_tag))
+            .and_modify(|tag| tag.apply_to_default(&link_tag))
             .or_insert(link_tag);
         Ok(())
     }

@@ -114,15 +114,33 @@ macro_rules! apply_tag_prop {
     };
 }
 
+macro_rules! apply_tag_if_none {
+    ($self:ident, $other:ident, $prop:ident) => {
+        if $self.$prop.is_none() {
+            $self.$prop = $other.$prop.as_ref().cloned();
+        }
+    };
+}
+
 impl DocTag {
-    /// Apply the styles from another tag
-    pub fn apply_from(&mut self, other: &DocTag) {
+    /// Apply the styles from another tag if the other tag has the property
+    pub fn apply_override(&mut self, other: &DocTag) {
         apply_tag_prop!(self, other, bold);
         apply_tag_prop!(self, other, italic);
         apply_tag_prop!(self, other, underline);
         apply_tag_prop!(self, other, strikethrough);
         apply_tag_prop!(self, other, color);
         apply_tag_prop!(self, other, background);
+    }
+
+    /// Apply the styles from another tag if self doesn't have the property
+    pub fn apply_to_default(&mut self, other: &DocTag) {
+        apply_tag_if_none!(self, other, bold);
+        apply_tag_if_none!(self, other, italic);
+        apply_tag_if_none!(self, other, underline);
+        apply_tag_if_none!(self, other, strikethrough);
+        apply_tag_if_none!(self, other, color);
+        apply_tag_if_none!(self, other, background);
     }
 }
 
