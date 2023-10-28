@@ -16,10 +16,10 @@
     background-color: #ff6666;
 }
 /* Warning */
-.docline-diagnostic-head.docline-diagnostic-warn {
+.docline-diagnostic-head.docline-diagnostic-warning {
     background-color: #883300;
 }
-.docline-diagnostic-body.docline-diagnostic-warn {
+.docline-diagnostic-body.docline-diagnostic-warning {
     background-color: #ffbb00;
 }
 /* Other */
