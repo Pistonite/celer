@@ -1,5 +1,10 @@
 import { TransformContext, defineConfig } from "vitepress";
-import { homeNav, homeSideBar, writingRoutesNav, writingRoutesSidebar } from "./nav";
+import {
+    homeNav,
+    homeSideBar,
+    writingRoutesNav,
+    writingRoutesSidebar,
+} from "./nav";
 import { pluginsNav, pluginsSideBar } from "./nav";
 
 // https://vitepress.dev/reference/site-config
@@ -39,7 +44,7 @@ export default defineConfig({
             {
                 src: "/docs/transform-fluent-icon.js",
             },
-        ]
+        ],
     ],
     transformHead: async (context: TransformContext) => {
         const page =

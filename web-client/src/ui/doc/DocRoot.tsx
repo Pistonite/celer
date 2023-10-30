@@ -30,9 +30,13 @@ export const DocRoot: React.FC = () => {
 
     if (!document) {
         if (stageMode === "edit") {
-            return <div className="blank-div-message">Doc will be shown here once a project is opened</div>;
+            return (
+                <div className="blank-div-message">
+                    Doc will be shown here once a project is opened
+                </div>
+            );
         }
-        return <LoadScreen color="yellow"/>;
+        return <LoadScreen color="yellow" />;
     }
 
     if (isEditingLayout) {

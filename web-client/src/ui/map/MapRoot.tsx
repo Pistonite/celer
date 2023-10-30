@@ -31,9 +31,13 @@ export const MapRoot: React.FC = () => {
 
     if (!document) {
         if (stageMode === "edit") {
-            return <div className="blank-div-message">Map will be shown here once a project is opened</div>;
+            return (
+                <div className="blank-div-message">
+                    Map will be shown here once a project is opened
+                </div>
+            );
         }
-        return <LoadScreen color="green"/>;
+        return <LoadScreen color="green" />;
     }
 
     if (document.project.map.layers.length <= 0) {

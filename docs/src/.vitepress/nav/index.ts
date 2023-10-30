@@ -4,7 +4,7 @@ export * from "./plugin";
 export const homeNav = {
     text: "Home",
     link: "/",
-}
+};
 
 export const homeSideBar = {
     "/": [
@@ -15,7 +15,7 @@ export const homeSideBar = {
                 { text: "Toolbar", link: "/toolbar" },
                 { text: "Document", link: "/doc" },
                 { text: "Map", link: "/map" },
-            ]
-        }
-    ]
-}
+            ],
+        },
+    ],
+};
