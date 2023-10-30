@@ -1,2 +1,21 @@
-export * from "./writing-routes";
-export * from "./plugins";
+export * from "./route";
+export * from "./plugin";
+
+export const homeNav = {
+    text: "Home",
+    link: "/",
+};
+
+export const homeSideBar = {
+    "/": [
+        {
+            text: "Web Viewer",
+            items: [
+                { text: "Layout", link: "/layout" },
+                { text: "Toolbar", link: "/toolbar" },
+                { text: "Document", link: "/doc" },
+                { text: "Map", link: "/map" },
+            ],
+        },
+    ],
+};

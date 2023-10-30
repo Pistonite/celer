@@ -1,5 +1,5 @@
 # Compatibility Plugin
-:::tip
+:::info
 The plugin system is currently unstable.
 :::
 The `compat` plugin gives additional short-hands for properties. Some of them are for compatibility with old Celer syntax.

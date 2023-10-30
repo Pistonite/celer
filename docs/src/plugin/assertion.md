@@ -1,5 +1,5 @@
 # Assertion
-:::tip
+:::info
 The plugin system is currently unstable.
 :::
 The `assertion` plugin uses the output of the `variables` plugin,

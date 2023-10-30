@@ -1,5 +1,5 @@
 # Variables
-:::tip
+:::info
 The plugin system is currently unstable.
 :::
 The `variables` plugin adds a variable system. Variables are numbers

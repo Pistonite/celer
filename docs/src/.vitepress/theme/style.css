@@ -88,3 +88,18 @@
 .DocSearch {
     --docsearch-primary-color: var(--vp-c-brand) !important;
 }
+
+/**
+ * Component: FluentIcon
+ * -------------------------------------------------------------------------- */
+.fluent-icon {
+    display: inline-flex;
+    vertical-align: text-bottom;
+}
+/* .fluent-icon svg { */
+/*     display: inline; */
+/* } */
+.fluent-icon svg path {
+    color: var(--vp-c-text-1);
+    fill: var(--vp-c-text-1);
+}
