@@ -13,6 +13,6 @@ tasks:
       CELERSERVER_HTTPS_CERT: ../cert/cert.pem
       CELERSERVER_HTTPS_KEY: ../cert/cert-key.pem
       CELERSERVER_SITE_ORIGIN: https://pistonite.local
-      CELERSERVER_GZIP: "true"
+      CELERSERVER_GZIP: "false"
     cmds:
     - cargo watch -B 1 -s "cargo run --bin celerserver -- {{.CLI_ARGS}}"
