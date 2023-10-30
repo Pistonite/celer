@@ -2,7 +2,8 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
 
-use crate::{json::Coerce, prop};
+use crate::json::Coerce;
+use crate::prop;
 
 use super::CompError;
 
