@@ -4,7 +4,8 @@
 //! It is recommended to use a reverse proxy such as nginx to handle HTTPS.
 //! Alternatively, you can use a CDN such as Cloudflare to proxy the website.
 
-use axum::{Router, Server};
+use axum::response::Redirect;
+use axum::{routing, Router, Server};
 use std::io;
 use std::path::{Path, PathBuf};
 use tower_http::services::{ServeDir, ServeFile};
@@ -42,6 +43,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("configuring routes...");
 
     let router = Router::new();
+    let router = init_home(router);
     let router = init_docs(router, &env.docs_dir)?;
     let router = init_edit(router, &env.app_dir)?;
     let router = init_static(router, &env.app_dir, &["/static", "/assets", "/themes"])?;
@@ -67,6 +69,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+/// Redirect / to /docs
+fn init_home(router: Router) -> Router {
+    debug!("/ -> /docs");
+    router.route("/", routing::get(|| async { Redirect::temporary("/docs") }))
 }
 
 /// Setup the /docs route
