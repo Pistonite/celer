@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
 
-use crate::json::Coerce;
+use crate::{json::Coerce, prop};
 
 use super::CompError;
 
@@ -48,8 +48,12 @@ pub async fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError>
 /// Some properties like `coord` are simply short-hand for other properties.
 /// They are converted to their long-hand form here.
 pub async fn desugar_properties(properties: &mut BTreeMap<String, Value>) {
-    if let Some(value) = properties.remove("coord") {
-        properties.insert("movements".to_string(), json!([value]));
+    if let Some(value) = properties.remove(prop::COORD) {
+        properties.insert(prop::MOVEMENTS.to_string(), json!([value]));
+    }
+    if let Some(value) = properties.remove(prop::ICON) {
+        properties.insert(prop::ICON_DOC.to_string(), value.clone());
+        properties.insert(prop::ICON_MAP.to_string(), value);
     }
 }
 
@@ -136,5 +140,15 @@ mod test {
         desugar_properties(&mut properties).await;
         assert!(properties.get("coord").is_none());
         assert_eq!(properties.get("movements").unwrap(), &json!([[1, 2]]));
+    }
+
+    #[tokio::test]
+    async fn test_properties_icon() {
+        let mut properties = BTreeMap::new();
+        properties.insert("icon".to_string(), json!([1, 2]));
+        desugar_properties(&mut properties).await;
+        assert!(properties.get("icon").is_none());
+        assert_eq!(properties.get("icon-doc").unwrap(), &json!([1, 2]));
+        assert_eq!(properties.get("icon-map").unwrap(), &json!([1, 2]));
     }
 }

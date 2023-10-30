@@ -55,48 +55,54 @@ This is the replacement for the `split-type` property in the older Celer format
 :::
 
 ## Icon
-You can configure the icon by using the `icon` property, which takes 3 (optional) sub-properties:
+You can configure the icon by using the `icon-*` properties:
 |Property|Type|Description|
 |-|-|-|
-|`doc`|`string`|Icon ID of the icon on the document|
-|`map`|`string`|Icon ID of the icon on the map|
-|`priority`|0, 1 or 2|Set the priority/level of the icon.|
+|`icon-doc`|`string`|Icon ID of the icon on the document|
+|`icon-map`|`string`|Icon ID of the icon on the map|
+|`icon-priority`|0, 1 or 2|Set the priority/level of the icon.|
 
 When setting priority, `0` is primary, `1` is secondary, and other values are "other".
-If not set, the default priority is `2` and can be configured using global configuration
+If not set, the default priority is `2` and can be configured. See [`Configuration`](./config/other.md) for more details.
 
 Example:
 ```yaml
 - Only icon on the map:
-    icon: 
-      map: shrine
+    icon-map: shrine
 - icon on the map with priority:
-    icon:
-      map: temple
-      priority: 1
+    icon-map: temple
+    icon-priority: 1
 - icon only on the doc:
-    icon:
-      doc: chest
+    icon-doc: chest
 - different icons on doc/map:
-    icon:
-      doc: chest
-      map: shrine
+    icon-doc: chest
+    icon-map: shrine
 ```
-There's also a shorthand that will probably be more commonly used:
+
+If you are setting the same icon on both doc and map (which is very common), you can use the `icon` shorthand:
 ```yaml
 - specify both doc and map with default priority:
     icon: shrine 
 # above and below are the same
 - specify both doc and map with default priority:
-    icon:
-      doc: shrine 
-      map: shrine 
+    icon-doc: shrine
+    icon-map: shrine 
+
+# you can also use the shorthand and `icon-priority`
+- specify both doc and map icon with priority 0:
+    icon: shrine
+    icon-priority: 0
 ```
-:::tip
-If you want to hide the icon on the map, but keep the icon already specified by a preset,
-check out the [Compatibility Plugin](../plugin/compat.md) which brings back the `hide-icon-on-map` property
-from old Celer.
-:::
+
+You can also change an icon from a preset:
+```yaml
+- _SomePresetWithIcon:
+    icon: shrine     # override the icon on both doc and map
+- _SomePresetWithIcon:
+    icon-doc: shrine # only override the icon on the doc
+- _SomePresetWithIcon:
+    icon-map: null   # hide the icon on the map, `""`, `false` also work
+```
 
 ## Color
 Use the `color` property to change the line color, both on the map and on the document.

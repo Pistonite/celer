@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -49,9 +49,8 @@ pub struct CompLine {
     pub split_name: Option<Vec<DocRichText>>,
     /// The rest of the properties as json blobs
     ///
-    /// These are ignored by ExecDoc, but the transformers can use them
-    #[serde(skip)]
-    pub properties: HashMap<String, Value>,
+    /// These are ignored by ExecDoc, but the plugins can use them
+    pub properties: BTreeMap<String, Value>,
 }
 
 impl<'a> Compiler<'a> {
@@ -185,57 +184,35 @@ impl<'a> Compiler<'a> {
                     output.split_name = Some(lang::parse_rich(&value.coerce_to_string()));
                 }
             }
-            prop::ICON => match value {
-                Value::Array(_) => {
-                    errors.push(CompError::InvalidLinePropertyType(prop::ICON.to_string()));
+            prop::ICON_DOC => {
+                if validate_not_array_or_object!(&value, errors, prop::ICON_DOC.to_string()) {
+                    if value.coerce_truthy() {
+                        output.doc_icon = Some(value.coerce_to_string());
+                    } else {
+                        output.doc_icon = None;
+                    }
                 }
-                Value::Object(obj) => {
-                    // ignore error from async loop
-                    let _ = async_for!((key, value) in obj, {
-                        match key.as_str() {
-                            prop::DOC => {
-                                if validate_not_array_or_object!(
-                                    &value,
-                                    errors,
-                                    format!("{}.{}", prop::ICON, prop::DOC)
-                                ) {
-                                    output.doc_icon = Some(value.coerce_to_string());
-                                }
-                            }
-                            prop::MAP => {
-                                if validate_not_array_or_object!(
-                                    &value,
-                                    errors,
-                                    format!("{}.{}", prop::ICON, prop::MAP)
-                                ) {
-                                    output.map_icon = Some(value.coerce_to_string());
-                                }
-                            }
-                            prop::PRIORITY => {
-                                if let Some(i) = value.try_coerce_to_i64() {
-                                    output.map_icon_priority = i;
-                                } else {
-                                    errors.push(CompError::InvalidLinePropertyType(format!(
-                                        "{}.{}",
-                                        prop::ICON, prop::PRIORITY
-                                    )));
-                                }
-                            }
-                            key => {
-                                errors.push(CompError::UnusedProperty(format!(
-                                    "{}.{key}",
-                                    prop::ICON
-                                )));
-                            }
-                        }
-                    });
+            }
+            prop::ICON_MAP => {
+                if validate_not_array_or_object!(&value, errors, prop::ICON_MAP.to_string()) {
+                    if value.coerce_truthy() {
+                        output.map_icon = Some(value.coerce_to_string());
+                    } else {
+                        output.map_icon = None;
+                    }
                 }
-                _ => {
-                    let icon = value.coerce_to_string();
-                    output.doc_icon = Some(icon.clone());
-                    output.map_icon = Some(icon);
+            }
+            prop::ICON_PRIORITY => {
+                if validate_not_array_or_object!(&value, errors, prop::ICON_PRIORITY.to_string()) {
+                    if let Some(i) = value.try_coerce_to_i64() {
+                        output.map_icon_priority = i;
+                    } else {
+                        errors.push(CompError::InvalidLinePropertyType(
+                            prop::ICON_PRIORITY.to_string(),
+                        ));
+                    }
                 }
-            },
+            }
             prop::COUNTER => {
                 if validate_not_array_or_object!(&value, errors, prop::COUNTER.to_string()) {
                     let text = value.coerce_to_string();
@@ -322,6 +299,7 @@ impl<'a> Compiler<'a> {
 
 #[cfg(test)]
 mod test {
+    use map_macro::btree_map;
     use serde_json::json;
 
     use crate::comp::test_utils;
@@ -954,7 +932,10 @@ mod test {
                 text: vec![DocRichText::text("icon is string")],
                 ..Default::default()
             },
-            vec![CompError::InvalidLinePropertyType("icon".to_string())],
+            vec![
+                CompError::InvalidLinePropertyType("icon-doc".to_string()),
+                CompError::InvalidLinePropertyType("icon-map".to_string()),
+            ],
         )
         .await;
 
@@ -969,37 +950,42 @@ mod test {
                 text: vec![DocRichText::text("icon is array")],
                 ..Default::default()
             },
-            vec![CompError::InvalidLinePropertyType("icon".to_string())],
+            vec![
+                CompError::InvalidLinePropertyType("icon-doc".to_string()),
+                CompError::InvalidLinePropertyType("icon-map".to_string()),
+            ],
         )
         .await;
 
-        test_comp_ok(
+        test_comp_err(
             &mut compiler,
             json!({
                 "icon is empty object": {
-                    "icon": {},
+                    "icon": {}
                 },
             }),
             CompLine {
                 text: vec![DocRichText::text("icon is empty object")],
                 ..Default::default()
             },
+            vec![
+                CompError::InvalidLinePropertyType("icon-doc".to_string()),
+                CompError::InvalidLinePropertyType("icon-map".to_string()),
+            ],
         )
         .await;
 
         test_comp_ok(
             &mut compiler,
             json!({
-                "icon is object": {
-                    "icon": {
-                        "doc": "my-doc-icon",
-                        "map": "my-map-icon",
-                        "priority": "1",
-                    },
+                "icon all 3": {
+                    "icon-doc": "my-doc-icon",
+                    "icon-map": "my-map-icon",
+                    "icon-priority": "1",
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("icon is object")],
+                text: vec![DocRichText::text("icon all 3")],
                 doc_icon: Some("my-doc-icon".to_string()),
                 map_icon: Some("my-map-icon".to_string()),
                 map_icon_priority: 1,
@@ -1012,23 +998,23 @@ mod test {
             &mut compiler,
             json!({
                 "icon is object": {
-                    "icon": {
-                        "doc":{},
-                        "map": ["my-map-icon"],
-                        "priority": 1.2,
-                        "boo": "foo",
-                    },
+                    "icon-doc":{},
+                    "icon-map": ["my-map-icon"],
+                    "icon-priority": 1.2,
+                    "icon-boo": "foo",
                 },
             }),
             CompLine {
                 text: vec![DocRichText::text("icon is object")],
+                properties: btree_map! {
+                    "icon-boo".to_string() => json!("foo"),
+                },
                 ..Default::default()
             },
             vec![
-                CompError::UnusedProperty("icon.boo".to_string()),
-                CompError::InvalidLinePropertyType("icon.doc".to_string()),
-                CompError::InvalidLinePropertyType("icon.map".to_string()),
-                CompError::InvalidLinePropertyType("icon.priority".to_string()),
+                CompError::InvalidLinePropertyType("icon-doc".to_string()),
+                CompError::InvalidLinePropertyType("icon-map".to_string()),
+                CompError::InvalidLinePropertyType("icon-priority".to_string()),
             ],
         )
         .await;
@@ -1044,9 +1030,7 @@ mod test {
             &mut compiler,
             json!({
                 "icon is partial": {
-                    "icon": {
-                        "map": "my-map-icon",
-                    },
+                    "icon-map": "my-map-icon",
                 },
             }),
             CompLine {
@@ -1054,6 +1038,53 @@ mod test {
                 doc_icon: None,
                 map_icon: Some("my-map-icon".to_string()),
                 map_icon_priority: 10,
+                ..Default::default()
+            },
+        )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn test_icon_hide() {
+        let mut builder = CompilerBuilder::default();
+        builder.add_preset(
+            "_Example",
+            Preset::compile(json!({
+                "icon-doc": "my-doc-icon",
+                "icon-map": "my-map-icon",
+            }))
+            .await
+            .unwrap(),
+        );
+        let mut compiler = builder.build();
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "_Example": {
+                    "icon-map": null,
+                },
+            }),
+            CompLine {
+                text: vec![DocRichText::text("_Example")],
+                map_icon: None,
+                doc_icon: Some("my-doc-icon".to_string()),
+                ..Default::default()
+            },
+        )
+        .await;
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "_Example": {
+                    "icon-doc": false,
+                },
+            }),
+            CompLine {
+                text: vec![DocRichText::text("_Example")],
+                doc_icon: None,
+                map_icon: Some("my-map-icon".to_string()),
                 ..Default::default()
             },
         )
