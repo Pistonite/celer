@@ -44,7 +44,7 @@ type HeaderProps = {
 export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
     const { document } = useSelector(documentSelector);
     const { stageMode } = useSelector(viewSelector);
-    const title = document?.project.title ?? "Loading...";
+    const title = document?.project.title ?? (stageMode==="edit" ? "Celer Editor" : "Loading...");
 
     const headerControls = useMemo(() => {
         return getHeaderControls(stageMode);

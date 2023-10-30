@@ -1,5 +1,5 @@
 # Plugins
-:::tip
+:::info
 The plugin system is currently unstable.
 :::
 This section contains guides for how to utilize Celer's plugin system to add

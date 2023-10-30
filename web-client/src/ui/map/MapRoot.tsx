@@ -4,8 +4,8 @@ import "./Map.css";
 
 import { useEffect, useRef } from "react";
 import { useSelector, useStore } from "react-redux";
-import { LoadScreen, ErrorBoundary } from "ui/shared";
-import { AppStore, documentSelector } from "core/store";
+import { ErrorBoundary, LoadScreen } from "ui/shared";
+import { AppStore, documentSelector, viewSelector } from "core/store";
 
 import { MapState, initMap } from "./MapState";
 import { RootContainerId } from "./MapContainerMgr";
@@ -13,6 +13,7 @@ import { RootContainerId } from "./MapContainerMgr";
 /// Map root container that the leaflet map instance binds to
 export const MapRoot: React.FC = () => {
     const { serial, document } = useSelector(documentSelector);
+    const { stageMode } = useSelector(viewSelector);
     const store = useStore();
     const mapState = useRef<MapState | null>(null);
     /* eslint-disable react-hooks/exhaustive-deps*/
@@ -29,11 +30,14 @@ export const MapRoot: React.FC = () => {
     /* eslint-enable react-hooks/exhaustive-deps*/
 
     if (!document) {
-        return <LoadScreen color="green" />;
+        if (stageMode === "edit") {
+            return <div className="blank-div-message">Map will be shown here once a project is opened</div>;
+        }
+        return <LoadScreen color="green"/>;
     }
 
     if (document.project.map.layers.length <= 0) {
-        return <div id="map-error">This map has no layers</div>;
+        return <div className="blank-div-message">This map has no layers</div>;
     }
 
     return (

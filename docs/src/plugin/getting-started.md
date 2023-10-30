@@ -1,5 +1,5 @@
 # Getting Started
-:::tip
+:::info
 The plugin system is currently unstable.
 :::
 The principle of the plugin system is to separate core Celer functionalities from additional (and mostly optional) functionalities.

@@ -1,5 +1,5 @@
 # Link Plugin
-:::tip
+:::info
 The plugin system is currently unstable.
 :::
 The `link` plugin transforms `link` tags in texts into clickable link.

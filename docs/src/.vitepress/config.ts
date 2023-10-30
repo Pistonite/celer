@@ -1,5 +1,5 @@
 import { TransformContext, defineConfig } from "vitepress";
-import { writingRoutesNav, writingRoutesSidebar } from "./nav";
+import { homeNav, homeSideBar, writingRoutesNav, writingRoutesSidebar } from "./nav";
 import { pluginsNav, pluginsSideBar } from "./nav";
 
 // https://vitepress.dev/reference/site-config
@@ -34,6 +34,12 @@ export default defineConfig({
                 content: "Documentation for Celer Route Engine",
             },
         ],
+        [
+            "script",
+            {
+                src: "/docs/transform-fluent-icon.js",
+            },
+        ]
     ],
     transformHead: async (context: TransformContext) => {
         const page =
@@ -62,30 +68,31 @@ export default defineConfig({
 
         // https://vitepress.dev/reference/default-theme-config
         nav: [
-            { text: "Home", link: "/" },
+            homeNav,
             writingRoutesNav,
             pluginsNav,
-            { text: "Developer", link: "/developer/" },
+            // { text: "Developer", link: "/developer/" },
         ],
 
         sidebar: {
+            ...homeSideBar,
             ...writingRoutesSidebar,
             ...pluginsSideBar,
-            "/developer/": [
-                {
-                    text: "Web Client",
-                    items: [
-                        {
-                            text: "core-engine",
-                            link: "/developer/web-client/core-engine",
-                        },
-                        {
-                            text: "Redux Store",
-                            link: "/developer/web-client/data-store",
-                        },
-                    ],
-                },
-            ],
+            // "/developer/": [
+            //     {
+            //         text: "Web Client",
+            //         items: [
+            //             {
+            //                 text: "core-engine",
+            //                 link: "/developer/web-client/core-engine",
+            //             },
+            //             {
+            //                 text: "Redux Store",
+            //                 link: "/developer/web-client/data-store",
+            //             },
+            //         ],
+            //     },
+            // ],
         },
 
         socialLinks: [
