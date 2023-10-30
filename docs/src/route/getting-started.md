@@ -1,25 +1,64 @@
 # Getting Started
-:::info
-Page under construction
-:::
-To get started with creating a route in Celer, first create an empty folder
-to put all the project files. Then create a file called `project.yaml` with
-the following content:
-```yaml
-# project.yaml
-title: My Project
-version: 1.0.0
-route: 
-  use: ./main.yaml
-config: []
-```
+In this section, we will create a minimal working route in Celer using the [Web Editor](scheme://celer.placeholder.domain/edit)
+
+## Creating Files
+The Web Editor currently does not support creating files. So we need to do that ourselves:
+
+1. Create an empty folder on your PC.
+2. Create 2 empty files called `project.yaml` and `main.yaml`
 :::tip
-The file names are case-sensitive. This file should be named `project.yaml`,
+The file names are case-sensitive. The file should be named `project.yaml`,
 not `Project.yaml` or `project.yml`
 :::
-Then, create a `main.yaml` file in the same folder with the following content:
+
+## Open Project
+:::warning
+Currently, you can only open a project using drag-and-drop. If you don't have a graphical file manager,
+you currently cannot use the Web Editor. This issue is tracked by [#122](https://github.com/Pistonite/celer/issues/122)
+:::
+To open the project in the Web Editor:
+
+1. Go to [Web Editor](scheme://celer.placeholder.domain/edit)
+2. Drag and drop the folder from your PC to the drop box in the Web Editor
+
+The project will compile with an error. Don't worry. That's because we haven't added any content yet!
+
+## Add Project Detail
+Open `project.yaml` and add the following content
 ```yaml
-- hello world!
+# The name of your project/route.
+# This will be displayed in the header for people who are viewing your route
+title: My Project
+
+# The version of your route. There's no particular format here.
+# This will be displayed in the metadata in the settings dialog
+version: 1.0.0
+
+# This is the route itself. Here it points to the main.yaml file we created earlier
+route: 
+  use: ./main.yaml
+
+# Extra configuration.
+# The project must define a map to compile properly.
+# For now, we will use the Breath of the Wild celer map maintained by Pistonight
+config:
+- use: Pistonight/celer-presets/botw/map.yaml
+```
+Wait for a few seconds for the editor to pick up your changes, or press <FluentIcon name="Box20Regular"/> `Compile` on the Toolbar to compile manually.
+
+Now you should see a slightly different error message. That's because we haven't added anything to `main.yaml`. Let's do that now.
+
+## Add Route Detail
+Open `main.yaml` and add the following content
+```yaml
+- This is my route
 - Section 1:
   - Step 1
 ```
+
+Wait for a few seconds for the editor to pick up your changes, or press <FluentIcon name="Box20Regular"/> `Compile` on the Toolbar to compile manually.
+
+Now you should see the route document displayed. 
+![example of the route made](https://cdn.discordapp.com/attachments/951389021114871819/1168371134463488021/image.png?ex=65518569&is=653f1069&hm=a7b00b766a766de8b53394996299092f94cde0c3e95ee12e91b45d9aa421afb8&)
+Congratulations! You made your first route in Celer!
+
