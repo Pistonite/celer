@@ -207,6 +207,5 @@ mod test {
                 args: vec!["".to_string(), "a".to_string(), "".to_string()],
             }
         );
-
     }
 }
