@@ -5,6 +5,7 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
 
+/// Output directory relative to the wasm package (not current dir)
 const OUTPUT_DIR: &str = "../web-client/src/low/celerc";
 
 pub fn main() {
@@ -49,6 +50,7 @@ fn wasm_pack_build() -> io::Result<()> {
 fn build_wasm_pack_command() -> Command {
     let mut command = Command::new("wasm-pack");
     command.args(["build", "--out-dir", OUTPUT_DIR, "--dev"]);
+    command.current_dir("..");
     command
 }
 
@@ -56,12 +58,13 @@ fn build_wasm_pack_command() -> Command {
 fn build_wasm_pack_command() -> Command {
     let mut command = Command::new("wasm-pack");
     command.args(&["build", "--out-dir", OUTPUT_DIR, "--release"]);
+    command.current_dir("..");
     command
 }
 
 fn override_typescript_definitions() -> io::Result<()> {
     println!("generating typescript definitions");
-    let path = Path::new(OUTPUT_DIR).join("celercwasm.d.ts");
+    let path = Path::new("..").join(OUTPUT_DIR).join("celercwasm.d.ts");
     let d_ts = fs::read_to_string(&path)?;
 
     // https://github.com/madonoharu/tsify/issues/37
@@ -76,7 +79,7 @@ fn add_console_log() -> io::Result<()> {
     // open file for appending
     let mut file = fs::OpenOptions::new()
         .append(true)
-        .open(Path::new(OUTPUT_DIR).join("celercwasm.js"))?;
+        .open(Path::new("..").join(OUTPUT_DIR).join("celercwasm.js"))?;
 
     // write to file
     writeln!(

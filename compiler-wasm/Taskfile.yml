@@ -3,10 +3,12 @@ version: '3'
 tasks:
   dev:
     desc: Start wasm builds in watch mode
+    dir: build
     cmds:
-    - cargo watch -x run
+    - cargo watch -x run {{.CLI_ARGS}}
 
   build:
     desc: Build debug wasm module
+    dir: build
     cmds:
-    - cargo run
+    - cargo run {{.CLI_ARGS}}

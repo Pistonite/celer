@@ -1,0 +1,12 @@
+[package]
+name = "compiler-wasm-build"
+version = "0.0.0"
+description = "Build script for the wasm package"
+edition = "2021"
+default-run = "buildwasm"
+
+[dependencies]
+
+[[bin]]
+name = "buildwasm"
+path = "src/build.rs"

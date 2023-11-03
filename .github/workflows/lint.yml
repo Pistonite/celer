@@ -24,7 +24,6 @@ jobs:
     - uses: baptiste0928/cargo-install@v2
       with:
         crate: txtpp
-        features: cli
     - run: task themes:ci client:ci docs:ci --output group
     - run: task themes:check client:check docs:check --output group
 

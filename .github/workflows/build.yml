@@ -31,7 +31,6 @@ jobs:
     - uses: baptiste0928/cargo-install@v2
       with:
         crate: txtpp
-        features: cli
     - run: task themes:ci client:ci --output group
     - run: task build:client --output group
     - uses: actions/upload-artifact@v3
