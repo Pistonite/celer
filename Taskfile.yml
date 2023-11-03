@@ -88,7 +88,7 @@ tasks:
     - task: client:build
 
   build:wasm:
-    dir: ./compiler-wasm
+    dir: ./compiler-wasm/build
     deps:
     - core:grammar
     cmds:

@@ -23,15 +23,14 @@ rule SubNamespace(
 
 rule Args(
     _: token Symbol"<",
-    first: ArgText,
+    first: optional ArgText,
     rest: optional ArgListTail+,
-    trailing_comma: optional token Symbol",",
     _: token Symbol">"
 );
 
 rule ArgListTail(
     _: token Symbol",",
-    arg: ArgText
+    arg: optional ArgText
 );
 
 rule ArgText(blocks: ArgBlock+);

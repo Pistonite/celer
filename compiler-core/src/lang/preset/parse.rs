@@ -29,9 +29,15 @@ fn from_pt(pt: &pt::Preset) -> PresetInst {
     }
     let mut args = vec![];
     if let Some(pt_args) = &pt.m_args {
-        args.push(parse_arg(&pt_args.m_first));
+        match &pt_args.m_first {
+            Some(arg) => args.push(parse_arg(arg)),
+            None => args.push("".to_string()),
+        }
         for pt_arg in &pt_args.m_rest {
-            args.push(parse_arg(&pt_arg.m_arg));
+            match &pt_arg.m_arg {
+                Some(arg) => args.push(parse_arg(arg)),
+                None => args.push("".to_string()),
+            }
         }
     }
 
@@ -113,9 +119,7 @@ mod test {
     }
 
     #[test]
-    fn test_empty_args_not_allowed() {
-        assert_eq!(PresetInst::try_parse("hello<>"), None);
-        assert_eq!(PresetInst::try_parse("_hello::world<>"), None);
+    fn test_incomplete_args_not_allowed() {
         assert_eq!(PresetInst::try_parse("_hello::world>"), None);
         assert_eq!(PresetInst::try_parse("_hello::world<"), None);
     }
@@ -171,5 +175,37 @@ mod test {
     fn test_no_trailing() {
         assert_eq!(PresetInst::try_parse("hello<world> "), None);
         assert_eq!(PresetInst::try_parse("hello<world>a"), None);
+    }
+
+    #[test]
+    fn test_empty_arg() {
+        assert_eq!(
+            PresetInst::try_parse("hello::world<>").unwrap(),
+            PresetInst {
+                name: "hello::world".to_string(),
+                args: vec!["".to_string()],
+            }
+        );
+        assert_eq!(
+            PresetInst::try_parse("hello::world<,,>").unwrap(),
+            PresetInst {
+                name: "hello::world".to_string(),
+                args: vec!["".to_string(), "".to_string(), "".to_string()],
+            }
+        );
+        assert_eq!(
+            PresetInst::try_parse("hello::world<a,,a>").unwrap(),
+            PresetInst {
+                name: "hello::world".to_string(),
+                args: vec!["a".to_string(), "".to_string(), "a".to_string()],
+            }
+        );
+        assert_eq!(
+            PresetInst::try_parse("hello::world<,a,>").unwrap(),
+            PresetInst {
+                name: "hello::world".to_string(),
+                args: vec!["".to_string(), "a".to_string(), "".to_string()],
+            }
+        );
     }
 }
