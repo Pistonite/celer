@@ -5,7 +5,6 @@ use serde_json::Value;
 use crate::json::{Cast, Coerce};
 use crate::prop;
 use crate::types::{GameCoord, MapMetadata};
-use crate::util::async_for;
 
 use super::{ConfigTrace, PackerError, PackerResult};
 
@@ -22,7 +21,7 @@ macro_rules! check_map_required_property {
 }
 
 /// Parses the `map` property in a config json blob
-pub async fn pack_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapMetadata> {
+pub fn pack_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapMetadata> {
     let mut map_obj = value
         .try_into_object()
         .map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), prop::MAP.to_string()))?;
@@ -57,7 +56,7 @@ pub async fn pack_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapMeta
         PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::MAP, prop::LAYERS))
     })?;
 
-    let coord_map = super::pack_coord_map(coord_map, trace).await?;
+    let coord_map = super::pack_coord_map(coord_map, trace)?;
     let initial_coord = match serde_json::from_value::<GameCoord>(initial_coord) {
         Ok(c) => c,
         Err(_) => {
@@ -89,9 +88,9 @@ pub async fn pack_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapMeta
 
     let layers = {
         let mut packed_layers = Vec::with_capacity(layers.len());
-        let _ = async_for!((i, layer) in layers.into_iter().enumerate(), {
+        for (i, layer) in layers.into_iter().enumerate() {
             packed_layers.push(super::pack_map_layer(layer, trace, i)?);
-        });
+        }
         packed_layers
     };
 
@@ -110,8 +109,8 @@ mod test {
 
     use super::*;
 
-    #[tokio::test]
-    async fn test_invalid_value() {
+    #[test]
+    fn test_invalid_value() {
         let values = vec![
             json!(null),
             json!(false),
@@ -126,7 +125,7 @@ mod test {
 
         for (i, v) in values.into_iter().enumerate() {
             trace.push(i);
-            let result = pack_map(v, &trace).await;
+            let result = pack_map(v, &trace);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
@@ -138,9 +137,9 @@ mod test {
         }
     }
 
-    #[tokio::test]
-    async fn test_missing_properties() {
-        let result = pack_map(json!({}), &Default::default()).await;
+    #[test]
+    fn test_missing_properties() {
+        let result = pack_map(json!({}), &Default::default());
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
@@ -154,8 +153,7 @@ mod test {
                 "layers": {}
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
@@ -170,8 +168,7 @@ mod test {
                 "coord-map": {}
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
@@ -187,8 +184,7 @@ mod test {
                 "initial-coord": {}
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
@@ -205,8 +201,7 @@ mod test {
                 "initial-zoom": {},
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
@@ -216,8 +211,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_extra_properties() {
+    #[test]
+    fn test_extra_properties() {
         let result = pack_map(
             json!({
                 "layers": {},
@@ -228,8 +223,7 @@ mod test {
                 "extra": {},
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::UnusedConfigProperty(
@@ -239,8 +233,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_invalid_property_types() {
+    #[test]
+    fn test_invalid_property_types() {
         let result = pack_map(
             json!({
                 "layers": {},
@@ -250,8 +244,7 @@ mod test {
                 "initial-color": {},
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
@@ -269,8 +262,7 @@ mod test {
                 "initial-color": {},
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
@@ -291,8 +283,7 @@ mod test {
                 "initial-color": {},
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
@@ -313,8 +304,7 @@ mod test {
                 "initial-color": {},
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
@@ -335,8 +325,7 @@ mod test {
                 "initial-color": {},
             }),
             &Default::default(),
-        )
-        .await;
+        );
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(

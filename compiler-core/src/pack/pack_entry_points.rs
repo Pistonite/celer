@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use crate::json::Cast;
 use crate::types::EntryPoints;
-use crate::util::{async_for, Path};
+use crate::util::{Path, yield_budget};
 use crate::{json::Coerce, prop};
 
 use super::{PackerError, PackerResult};
@@ -18,7 +18,8 @@ pub async fn pack_entry_points(value: Value) -> PackerResult<EntryPoints> {
         .map_err(|_| PackerError::InvalidMetadataPropertyType(prop::ENTRY_POINTS.to_string()))?;
 
     let mut map = HashMap::with_capacity(obj.len());
-    let _ = async_for!((key, value) in obj, {
+    for (key, value) in obj {
+        yield_budget(64).await;
         let value = value.coerce_to_string();
         let path = if value.starts_with('/') {
             match Path::try_from(&value) {
@@ -30,9 +31,10 @@ pub async fn pack_entry_points(value: Value) -> PackerResult<EntryPoints> {
         };
 
         map.insert(key, path);
-    });
+    }
 
-    let _ = async_for!((key, value) in &map, {
+    for (key, value) in &map {
+        yield_budget(64).await;
         let valid = if value.is_empty() {
             false
         } else {
@@ -41,7 +43,7 @@ pub async fn pack_entry_points(value: Value) -> PackerResult<EntryPoints> {
         if !valid {
             return Err(PackerError::InvalidEntryPoint(key.to_string(), value.to_string()));
         }
-    });
+    }
 
     Ok(EntryPoints(map))
 }

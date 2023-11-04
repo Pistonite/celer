@@ -6,7 +6,7 @@ use crate::json::{Cast, Coerce};
 use crate::lang::parse_rich;
 use crate::pack::{PackerError, PackerValue};
 use crate::types::{DocDiagnostic, DocRichText};
-use crate::util::async_for;
+use crate::util::yield_budget;
 
 use super::{CompError, CompLine, CompSection, Compiler};
 
@@ -33,9 +33,10 @@ impl<'a> Compiler<'a> {
 
         match route.try_into_array() {
             Ok(sections) => {
-                async_for!(value in sections.into_iter(), {
+                for value in sections.into_iter() {
+                    yield_budget(64).await;
                     self.add_section_or_preface(&mut preface, &mut route_vec, value).await?;
-                });
+                }
             }
             Err(_) => {
                 errors.push(CompError::InvalidRouteType);
@@ -82,9 +83,9 @@ impl<'a> Compiler<'a> {
 
     async fn create_empty_section_for_error(&self, errors: &[CompError]) -> CompSection {
         let mut diagnostics = vec![];
-        let _ = async_for!(error in errors, {
+        for error in errors {
             error.add_to_diagnostics(&mut diagnostics);
-        });
+        }
         let line = CompLine {
             line_color: self.color.clone(),
             diagnostics,

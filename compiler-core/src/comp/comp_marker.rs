@@ -4,7 +4,6 @@ use serde_json::Value;
 use crate::json::{Cast, Coerce};
 use crate::prop;
 use crate::types::GameCoord;
-use crate::util::async_for;
 
 use super::{CompError, Compiler};
 
@@ -30,7 +29,7 @@ impl<'a> Compiler<'a> {
     /// The following are valid:
     /// - one coords value (array of 2 or 3)
     /// - object with `at` property, an optionally `color`
-    pub async fn comp_marker(
+    pub fn comp_marker(
         &self,
         prop_name: &str,
         prop: Value,
@@ -54,8 +53,7 @@ impl<'a> Compiler<'a> {
         let mut color = None;
         let mut should_fail = false;
 
-        // ignore error from async loop
-        let _ = async_for!((key, value) in mapping, {
+        for (key, value) in mapping {
             match key.as_ref() {
                 prop::AT => match self.transform_coord(value) {
                     Ok(coord) => at = Some(coord),
@@ -75,7 +73,7 @@ impl<'a> Compiler<'a> {
                 }
                 _ => errors.push(CompError::UnusedProperty(format!("{prop_name}.{key}"))),
             }
-        });
+        }
 
         match at {
             None => {
@@ -101,8 +99,8 @@ mod test {
 
     use super::*;
 
-    #[tokio::test]
-    async fn test_value_invalid() {
+    #[test]
+    fn test_value_invalid() {
         let vals = vec![
             json!(1),
             json!(null),
@@ -117,7 +115,7 @@ mod test {
 
         for v in vals.into_iter() {
             let mut errors = vec![];
-            assert_eq!(compiler.comp_marker("", v, &mut errors).await, None,);
+            assert_eq!(compiler.comp_marker("", v, &mut errors), None,);
             assert_eq!(errors, vec![CompError::InvalidMarkerType]);
         }
     }
@@ -128,42 +126,38 @@ mod test {
         let mut errors = vec![];
         assert_eq!(
             compiler
-                .comp_marker("", json!([1, 2, 3, 4]), &mut errors)
-                .await,
+                .comp_marker("", json!([1, 2, 3, 4]), &mut errors),
             None
         );
         assert_eq!(errors, vec![CompError::InvalidCoordinateArray]);
     }
 
-    #[tokio::test]
-    async fn test_valid_coord() {
+    #[test]
+    fn test_valid_coord() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
             compiler
-                .comp_marker("", json!([1, 2, 4]), &mut errors)
-                .await,
+                .comp_marker("", json!([1, 2, 4]), &mut errors),
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_object() {
+    #[test]
+    fn test_object() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
             compiler
-                .comp_marker("", json!({"at": [1, 2, 4]}), &mut errors)
-                .await,
+                .comp_marker("", json!({"at": [1, 2, 4]}), &mut errors),
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
 
         assert_eq!(
             compiler
-                .comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors)
-                .await,
+                .comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors),
             Some(CompMarker {
                 at: GameCoord(1.0, 2.0, 4.0),
                 color: Some("123".to_string())
@@ -173,8 +167,7 @@ mod test {
 
         assert_eq!(
             compiler
-                .comp_marker("test", json!({"at": {}, "color": {}}), &mut errors)
-                .await,
+                .comp_marker("test", json!({"at": {}, "color": {}}), &mut errors),
             None
         );
         assert_eq!(
@@ -187,8 +180,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_unused_property() {
+    #[test]
+    fn test_unused_property() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
@@ -200,8 +193,7 @@ mod test {
                         "unused": 1,
                     }),
                     &mut errors
-                )
-                .await,
+                ),
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(

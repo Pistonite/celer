@@ -61,7 +61,7 @@ movements:
 ```
 
 ## Movement Stack
-The movement stack is a new system that replaces the `temp` property of the
+The movement stack is a new system that replaces the `away` property of the
 older Celer format. This system allows you to save the state of the current movements
 and return to it at a later point, even from a different line.
 

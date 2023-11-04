@@ -4,7 +4,6 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
 use crate::lang::PresetInst;
-use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
 
 use super::{validate_not_array_or_object, CompError, Compiler};
@@ -13,8 +12,7 @@ impl<'a> Compiler<'a> {
     /// Apply the preset to the output.
     ///
     /// Presets are applied recursively, including presets in the movements
-    #[maybe_send(async_recursion)]
-    pub async fn apply_preset(
+    pub fn apply_preset(
         &self,
         depth: usize,
         inst: &PresetInst,
@@ -32,18 +30,17 @@ impl<'a> Compiler<'a> {
             }
             Some(preset) => preset,
         };
-        let mut properties = preset.hydrate(&inst.args).await;
+        let mut properties = preset.hydrate(&inst.args);
         if let Some(presets) = properties.remove(prop::PRESETS) {
-            self.process_presets(depth, presets, output, errors).await;
+            self.process_presets(depth, presets, output, errors);
         }
 
-        super::desugar_properties(&mut properties).await;
+        super::desugar_properties(&mut properties);
 
         if let Some(movements) = properties.remove(prop::MOVEMENTS) {
             properties.insert(
                 prop::MOVEMENTS.to_string(),
                 self.expand_presets_in_movements(depth, movements, errors)
-                    .await,
             );
         }
 
@@ -53,7 +50,7 @@ impl<'a> Compiler<'a> {
     /// Process the "presets" property in the line object
     ///
     /// Saves the properties from the preset to the output map
-    pub async fn process_presets(
+    pub fn process_presets(
         &self,
         depth: usize,
         presets: Value,
@@ -85,14 +82,14 @@ impl<'a> Compiler<'a> {
                     errors.push(CompError::InvalidPresetString(preset_string));
                 }
                 Some(inst) => {
-                    self.apply_preset(depth + 1, &inst, output, errors).await;
+                    self.apply_preset(depth + 1, &inst, output, errors);
                 }
             }
         }
     }
 
     /// Expand presets in the movements array
-    pub async fn expand_presets_in_movements(
+    pub fn expand_presets_in_movements(
         &self,
         depth: usize,
         movements: Value,
@@ -120,8 +117,7 @@ impl<'a> Compiler<'a> {
                 Some(inst) => inst,
             };
             let mut map = BTreeMap::new();
-            self.apply_preset(depth + 1, &preset_inst, &mut map, errors)
-                .await;
+            self.apply_preset(depth + 1, &preset_inst, &mut map, errors);
 
             match map
                 .remove(prop::MOVEMENTS)
@@ -148,8 +144,8 @@ mod test {
 
     use super::*;
 
-    #[tokio::test]
-    async fn test_one_level() {
+    #[test]
+    fn test_one_level() {
         let mut builder = CompilerBuilder::default();
         builder
             .add_preset(
@@ -158,7 +154,6 @@ mod test {
                     "text": "hello world",
                     "comment": "foo bar",
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -167,7 +162,6 @@ mod test {
                     "text": "_preset",
                     "comment": "foo bar",
                 }))
-                .await
                 .unwrap(),
             );
         let compiler = builder.build();
@@ -183,8 +177,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         assert_eq!(
             output,
@@ -208,8 +201,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         assert_eq!(
             output,
@@ -222,8 +214,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_one_level_invalid() {
+    #[test]
+    fn test_one_level_invalid() {
         let mut builder = CompilerBuilder::default();
         builder.add_preset(
             "_preset",
@@ -231,7 +223,6 @@ mod test {
                 "text": "hello world",
                 "comment": "foo bar",
             }))
-            .await
             .unwrap(),
         );
         let compiler = builder.build();
@@ -247,8 +238,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
@@ -257,8 +247,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_complex() {
+    #[test]
+    fn test_complex() {
         let mut builder = CompilerBuilder::default();
         builder
             .add_preset(
@@ -266,7 +256,6 @@ mod test {
                 Preset::compile(json!({
                     "comment": "preset one",
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -275,7 +264,6 @@ mod test {
                     "comment": "preset two",
                     "text": "preset two text",
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -284,7 +272,6 @@ mod test {
                     "text": "preset three",
                     "presets": "_preset::two"
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -293,7 +280,6 @@ mod test {
                     "text": "preset four: arg is $(0)",
                     "presets": ["_preset::one", "_preset::three"]
                 }))
-                .await
                 .unwrap(),
             );
         let compiler = builder.build();
@@ -310,8 +296,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         assert_eq!(
             output,
@@ -334,8 +319,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
         assert_eq!(
             output,
             [
@@ -357,8 +341,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
         assert_eq!(
             output,
             [
@@ -371,8 +354,8 @@ mod test {
         assert_eq!(errors, vec![]);
     }
 
-    #[tokio::test]
-    async fn test_complex_invalid() {
+    #[test]
+    fn test_complex_invalid() {
         let mut builder = CompilerBuilder::default();
         builder
             .add_preset(
@@ -380,7 +363,6 @@ mod test {
                 Preset::compile(json!({
                     "presets": "preset one",
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -388,7 +370,6 @@ mod test {
                 Preset::compile(json!({
                     "presets": [{}, "foo", "_foo", "_hello::", 123],
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -396,7 +377,6 @@ mod test {
                 Preset::compile(json!({
                     "presets": ["_preset::three"]
                 }))
-                .await
                 .unwrap(),
             );
         let compiler = builder.build();
@@ -413,8 +393,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
@@ -432,8 +411,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
@@ -457,8 +435,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
@@ -468,8 +445,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_movement() {
+    #[test]
+    fn test_movement() {
         let mut builder = CompilerBuilder::default();
         builder
             .add_preset(
@@ -481,7 +458,6 @@ mod test {
                     "pop",
                 ]
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -489,7 +465,6 @@ mod test {
                 Preset::compile(json!({
                     "coord": [1, 2, 3]
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -497,7 +472,6 @@ mod test {
                 Preset::compile(json!({
                     "movements": 1
                 }))
-                .await
                 .unwrap(),
             );
         let compiler = builder.build();
@@ -514,8 +488,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         assert_eq!(
             output,
@@ -536,8 +509,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         assert_eq!(
             output,
@@ -547,8 +519,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_movements_invalid() {
+    #[test]
+    fn test_movements_invalid() {
         let mut builder = CompilerBuilder::default();
         builder
             .add_preset(
@@ -556,7 +528,6 @@ mod test {
                 Preset::compile(json!({
                     "movements": 1
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -564,7 +535,6 @@ mod test {
                 Preset::compile(json!({
                     "text": 1
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -579,7 +549,6 @@ mod test {
                         [0,0,0]
                     ]
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -590,7 +559,6 @@ mod test {
                         "_invalid::overflow"
                     ]
                 }))
-                .await
                 .unwrap(),
             );
         let compiler = builder.build();
@@ -607,8 +575,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         assert_eq!(
             output,
@@ -627,8 +594,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         assert_eq!(
             output,
@@ -660,8 +626,7 @@ mod test {
                 },
                 &mut output,
                 &mut errors,
-            )
-            .await;
+            );
 
         // we don't care what the output is here
 

@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::json::Cast;
+use crate::util::yield_budget;
 use crate::lang::parse_rich;
 use crate::pack::PackerValue;
-use crate::util::async_for;
 
 use super::{CompError, CompLine, Compiler};
 
@@ -50,7 +50,6 @@ impl<'a> Compiler<'a> {
         if let PackerValue::Err(e) = section_value {
             section.lines.push(
                 self.create_empty_line_for_error(&[CompError::PackerErrors(vec![e])])
-                    .await,
             );
             return Ok(section);
         }
@@ -59,40 +58,39 @@ impl<'a> Compiler<'a> {
             Err(_) => {
                 section.lines.push(
                     self.create_empty_line_for_error(&[CompError::InvalidSectionType])
-                        .await,
                 );
                 return Ok(section);
             }
         };
-        async_for!(line in section_lines, {
-            match line.flatten().await {
+        for line in section_lines {
+            yield_budget(64).await;
+            match line.flatten() {
                 Ok(v) => {
-                    let line = match self.comp_line(v).await {
+                    let line = match self.comp_line(v) {
                         Ok(l) => l,
                         Err((mut l, errors)) => {
-                            async_for!(error in errors, {
+                            for error in errors {
                                 error.add_to_diagnostics(&mut l.diagnostics);
-                            });
+                            }
                             l
                         }
                     };
                     section.lines.push(line);
                 }
                 Err(errors) => {
-                    section.lines.push(self.create_empty_line_for_error(&[CompError::PackerErrors(errors)]).await);
+                    section.lines.push(self.create_empty_line_for_error(&[CompError::PackerErrors(errors)]));
                 }
             }
-        });
+        }
 
         Ok(section)
     }
 
-    async fn create_empty_line_for_error(&self, errors: &[CompError]) -> CompLine {
+    fn create_empty_line_for_error(&self, errors: &[CompError]) -> CompLine {
         let mut diagnostics = vec![];
-        // ignore if async loop fails
-        let _ = async_for!(error in errors, {
+        for error in errors {
             error.add_to_diagnostics(&mut diagnostics);
-        });
+        }
         CompLine {
             text: parse_rich("[compile error]"),
             line_color: self.color.clone(),

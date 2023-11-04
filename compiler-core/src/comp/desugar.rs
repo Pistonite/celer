@@ -17,7 +17,7 @@ type DesugarLineError = (String, CompError);
 /// - string (desugared to `{[value]: {}}`)
 /// - null (desugared to `{"": {}}`)
 /// - boolean, number (desugared to string representation)
-pub async fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError> {
+pub fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError> {
     let text = value.coerce_to_string();
     match value {
         Value::Array(_) => Err((text, CompError::ArrayCannotBeLine)),
@@ -48,7 +48,7 @@ pub async fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError>
 ///
 /// Some properties like `coord` are simply short-hand for other properties.
 /// They are converted to their long-hand form here.
-pub async fn desugar_properties(properties: &mut BTreeMap<String, Value>) {
+pub fn desugar_properties(properties: &mut BTreeMap<String, Value>) {
     if let Some(value) = properties.remove(prop::COORD) {
         properties.insert(prop::MOVEMENTS.to_string(), json!([value]));
     }
@@ -62,62 +62,61 @@ pub async fn desugar_properties(properties: &mut BTreeMap<String, Value>) {
 mod test {
     use super::*;
 
-    #[tokio::test]
-    async fn test_line_primitive() {
+    #[test]
+    fn test_line_primitive() {
         assert_eq!(
-            desugar_line(json!(null)).await,
+            desugar_line(json!(null)),
             Ok(("".to_string(), Map::new()))
         );
         assert_eq!(
-            desugar_line(json!(true)).await,
+            desugar_line(json!(true)),
             Ok(("true".to_string(), Map::new()))
         );
         assert_eq!(
-            desugar_line(json!(false)).await,
+            desugar_line(json!(false)),
             Ok(("false".to_string(), Map::new()))
         );
         assert_eq!(
-            desugar_line(json!("")).await,
+            desugar_line(json!("")),
             Ok(("".to_string(), Map::new()))
         );
         assert_eq!(
-            desugar_line(json!("hello world")).await,
+            desugar_line(json!("hello world")),
             Ok(("hello world".to_string(), Map::new()))
         );
     }
 
-    #[tokio::test]
-    async fn test_line_array() {
+    #[test]
+    fn test_line_array() {
         assert_eq!(
-            desugar_line(json!([])).await,
+            desugar_line(json!([])),
             Err(("[object array]".to_string(), CompError::ArrayCannotBeLine))
         );
     }
 
-    #[tokio::test]
-    async fn test_line_object_invalid() {
+    #[test]
+    fn test_line_object_invalid() {
         let str = "[object object]";
         assert_eq!(
-            desugar_line(json!({})).await,
+            desugar_line(json!({})),
             Err((str.to_string(), CompError::EmptyObjectCannotBeLine))
         );
         assert_eq!(
-            desugar_line(json!({"one":"two", "three":"four" })).await,
+            desugar_line(json!({"one":"two", "three":"four" })),
             Err((str.to_string(), CompError::TooManyKeysInObjectLine))
         );
         assert_eq!(
-            desugar_line(json!({"one": []})).await,
+            desugar_line(json!({"one": []})),
             Err((str.to_string(), CompError::LinePropertiesMustBeObject))
         );
     }
 
-    #[tokio::test]
-    async fn test_line_object_valid() {
+    #[test]
+    fn test_line_object_valid() {
         assert_eq!(
             desugar_line(json!({"one": {
                 "two": "three"
-            }}))
-            .await,
+            }})),
             Ok((
                 "one".to_string(),
                 [{ ("two".to_string(), json!("three")) }]
@@ -127,27 +126,27 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_properties_empty() {
+    #[test]
+    fn test_properties_empty() {
         let mut properties = BTreeMap::new();
-        desugar_properties(&mut properties).await;
+        desugar_properties(&mut properties);
         assert_eq!(properties, BTreeMap::new());
     }
 
-    #[tokio::test]
-    async fn test_properties_coord() {
+    #[test]
+    fn test_properties_coord() {
         let mut properties = BTreeMap::new();
         properties.insert("coord".to_string(), json!([1, 2]));
-        desugar_properties(&mut properties).await;
+        desugar_properties(&mut properties);
         assert!(properties.get("coord").is_none());
         assert_eq!(properties.get("movements").unwrap(), &json!([[1, 2]]));
     }
 
-    #[tokio::test]
-    async fn test_properties_icon() {
+    #[test]
+    fn test_properties_icon() {
         let mut properties = BTreeMap::new();
         properties.insert("icon".to_string(), json!([1, 2]));
-        desugar_properties(&mut properties).await;
+        desugar_properties(&mut properties);
         assert!(properties.get("icon").is_none());
         assert_eq!(properties.get("icon-doc").unwrap(), &json!([1, 2]));
         assert_eq!(properties.get("icon-map").unwrap(), &json!([1, 2]));

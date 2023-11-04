@@ -44,7 +44,7 @@ macro_rules! try_parse_axis {
     };
 }
 
-pub async fn pack_coord_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapCoordMap> {
+pub fn pack_coord_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapCoordMap> {
     let mut obj = value.try_into_object().map_err(|_| {
         PackerError::InvalidConfigProperty(
             trace.clone(),
@@ -132,8 +132,8 @@ mod test {
 
     use serde_json::json;
 
-    #[tokio::test]
-    async fn test_invalid_value() {
+    #[test]
+    fn test_invalid_value() {
         let values = vec![
             json!(null),
             json!(false),
@@ -148,7 +148,7 @@ mod test {
 
         for (i, v) in values.into_iter().enumerate() {
             trace.push(i);
-            let result = pack_coord_map(v, &trace).await;
+            let result = pack_coord_map(v, &trace);
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
@@ -160,10 +160,10 @@ mod test {
         }
     }
 
-    #[tokio::test]
-    async fn test_missing_properties() {
+    #[test]
+    fn test_missing_properties() {
         let v = json!({});
-        let result = pack_coord_map(v, &Default::default()).await;
+        let result = pack_coord_map(v, &Default::default());
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
@@ -173,7 +173,7 @@ mod test {
         );
 
         let v = json!({"2d": {}});
-        let result = pack_coord_map(v, &Default::default()).await;
+        let result = pack_coord_map(v, &Default::default());
         assert_eq!(
             result,
             Err(PackerError::MissingConfigProperty(
@@ -183,10 +183,10 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_extra_properties() {
+    #[test]
+    fn test_extra_properties() {
         let v = json!({"2d": {}, "3d": {}, "extra": 1});
-        let result = pack_coord_map(v, &Default::default()).await;
+        let result = pack_coord_map(v, &Default::default());
         assert_eq!(
             result,
             Err(PackerError::UnusedConfigProperty(
@@ -196,8 +196,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_invalid_coord_map_type() {
+    #[test]
+    fn test_invalid_coord_map_type() {
         let values = vec![
             json!(null),
             json!(false),
@@ -210,7 +210,7 @@ mod test {
 
         for v in values.iter() {
             let v = json!({"2d": v.clone(), "3d": {}});
-            let result = pack_coord_map(v, &Default::default()).await;
+            let result = pack_coord_map(v, &Default::default());
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
@@ -222,7 +222,7 @@ mod test {
 
         for v in values.into_iter() {
             let v = json!({"2d": [], "3d": v});
-            let result = pack_coord_map(v, &Default::default()).await;
+            let result = pack_coord_map(v, &Default::default());
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
@@ -233,8 +233,8 @@ mod test {
         }
     }
 
-    #[tokio::test]
-    async fn test_invalid_axis_count() {
+    #[test]
+    fn test_invalid_axis_count() {
         let values = vec![
             json!([]),
             json!(["x"]),
@@ -244,7 +244,7 @@ mod test {
 
         for v in values.iter() {
             let v = json!({"2d": v.clone(), "3d": []});
-            let result = pack_coord_map(v, &Default::default()).await;
+            let result = pack_coord_map(v, &Default::default());
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
@@ -256,7 +256,7 @@ mod test {
 
         for v in values.into_iter() {
             let v = json!({"2d": ["x", "y"], "3d": v});
-            let result = pack_coord_map(v, &Default::default()).await;
+            let result = pack_coord_map(v, &Default::default());
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
@@ -267,7 +267,7 @@ mod test {
         }
 
         let v = json!({"2d": ["x", "y", "z"], "3d": []});
-        let result = pack_coord_map(v, &Default::default()).await;
+        let result = pack_coord_map(v, &Default::default());
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
@@ -277,7 +277,7 @@ mod test {
         );
 
         let v = json!({"2d": ["x", "y"], "3d": ["x", "y"]});
-        let result = pack_coord_map(v, &Default::default()).await;
+        let result = pack_coord_map(v, &Default::default());
         assert_eq!(
             result,
             Err(PackerError::InvalidConfigProperty(
@@ -287,8 +287,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_invalid_axis() {
+    #[test]
+    fn test_invalid_axis() {
         let values = vec![
             (json!(["h", "j"]), 0),
             (json!(["h", "x"]), 0),
@@ -297,7 +297,7 @@ mod test {
 
         for (v, j) in values.into_iter() {
             let v = json!({"2d": v, "3d": ["h", "j", "k"]});
-            let result = pack_coord_map(v, &Default::default()).await;
+            let result = pack_coord_map(v, &Default::default());
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
@@ -319,7 +319,7 @@ mod test {
 
         for (v, j) in values.iter() {
             let v = json!({"2d": ["z", "z"], "3d": v});
-            let result = pack_coord_map(v, &Default::default()).await;
+            let result = pack_coord_map(v, &Default::default());
             assert_eq!(
                 result,
                 Err(PackerError::InvalidConfigProperty(
@@ -330,13 +330,13 @@ mod test {
         }
     }
 
-    #[tokio::test]
-    async fn test_valid() {
+    #[test]
+    fn test_valid() {
         let v = json!({
             "2d": ["x", "y"],
             "3d": ["x", "y", "z"],
         });
-        let result = pack_coord_map(v, &Default::default()).await;
+        let result = pack_coord_map(v, &Default::default());
         assert_eq!(
             result,
             Ok(MapCoordMap {
@@ -349,7 +349,7 @@ mod test {
             "2d": ["x", "x"],
             "3d": ["x", "z", "z"],
         });
-        let result = pack_coord_map(v, &Default::default()).await;
+        let result = pack_coord_map(v, &Default::default());
         assert_eq!(
             result,
             Ok(MapCoordMap {
@@ -362,7 +362,7 @@ mod test {
             "2d": ["-x", "x"],
             "3d": ["x", "-z", "-y"],
         });
-        let result = pack_coord_map(v, &Default::default()).await;
+        let result = pack_coord_map(v, &Default::default());
         assert_eq!(
             result,
             Ok(MapCoordMap {

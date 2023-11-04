@@ -32,7 +32,7 @@ pub async fn yield_budget(budget_limit: u32) {
             use web_sys::WorkerGlobalScope;
             use js_sys::{Reflect, global, Promise};
 
-            info!("yielding to worker...");
+            // info!("yielding to worker...");
 
             let global_self: WorkerGlobalScope = Reflect::get(&global(), &JsValue::from("self"))?.dyn_into()?;
             let promise = Promise::new(&mut |resolve, _| {

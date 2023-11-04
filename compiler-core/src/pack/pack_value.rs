@@ -77,9 +77,9 @@ impl PackerValue {
     ///
     /// If the value contains any error, returns `Err` with all the errors,
     /// otherwise, returns Ok with the inner value.
-    pub async fn flatten(self) -> Result<Value, Vec<PackerError>> {
+    pub fn flatten(self) -> Result<Value, Vec<PackerError>> {
         let mut errors = vec![];
-        let flattened = self.flatten_internal(&mut errors).await;
+        let flattened = self.flatten_internal(&mut errors);
 
         if errors.is_empty() {
             match flattened {
@@ -91,8 +91,7 @@ impl PackerValue {
         }
     }
 
-    #[maybe_send(async_recursion)]
-    async fn flatten_internal(self, output_errors: &mut Vec<PackerError>) -> Option<Value> {
+    fn flatten_internal(self, output_errors: &mut Vec<PackerError>) -> Option<Value> {
         match self {
             Self::Ok(x) => Some(x),
             Self::Err(x) => {
@@ -102,7 +101,7 @@ impl PackerValue {
             Self::Array(v) => {
                 let mut new_arr = vec![];
                 for x in v.into_iter() {
-                    if let Some(x) = x.flatten_internal(output_errors).await {
+                    if let Some(x) = x.flatten_internal(output_errors) {
                         new_arr.push(x);
                     }
                 }
@@ -111,7 +110,7 @@ impl PackerValue {
             Self::Object(o) => {
                 let mut new_obj = Map::new();
                 for (key, value) in o.into_iter() {
-                    if let Some(x) = value.flatten_internal(output_errors).await {
+                    if let Some(x) = value.flatten_internal(output_errors) {
                         new_obj.insert(key, x);
                     }
                 }
