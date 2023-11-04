@@ -1,9 +1,9 @@
 use std::borrow::Cow;
+use std::sync::OnceLock;
 
 use celerc::types::EntryPointsSorted;
-use interop::OpaqueExecDoc;
 use js_sys::Function;
-use log::info;
+use log::{info, warn};
 use wasm_bindgen::prelude::*;
 
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
@@ -11,6 +11,7 @@ use celerc::util::{Marc, Path};
 use celerc::Setting;
 
 mod interop;
+use interop::OpaqueExecDoc;
 mod loader_file;
 mod loader_url;
 mod logger;
@@ -99,12 +100,6 @@ pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDo
 
     let x = context.compile().await;
     OpaqueExecDoc::wrap(x)
-}
-
-/// Request current compilation be cancelled
-#[wasm_bindgen]
-pub fn request_cancel() {
-    celerc::cancel_current_compilation();
 }
 
 /// Create a resource that corresponds to the project root

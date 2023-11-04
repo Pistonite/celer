@@ -18,7 +18,7 @@ impl CompSection {
         async_for!((index, line) in self.lines.into_iter().enumerate(), {
             let exec_line = line.exec(project, section_number, index, map_builder).await?;
             lines.push(exec_line);
-        })?;
+        });
         Ok(ExecSection {
             name: self.name,
             lines,

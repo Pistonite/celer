@@ -72,7 +72,7 @@ impl<'a> Compiler<'a> {
                         Err((mut l, errors)) => {
                             async_for!(error in errors, {
                                 error.add_to_diagnostics(&mut l.diagnostics);
-                            })?;
+                            });
                             l
                         }
                     };
@@ -82,7 +82,7 @@ impl<'a> Compiler<'a> {
                     section.lines.push(self.create_empty_line_for_error(&[CompError::PackerErrors(errors)]).await);
                 }
             }
-        })?;
+        });
 
         Ok(section)
     }

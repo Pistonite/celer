@@ -15,7 +15,7 @@ impl CompDoc {
         async_for!((index, section) in self.route.into_iter().enumerate(), {
             let exec_section = section.exec(project, index, &mut map_builder).await?;
             sections.push(exec_section);
-        })?;
+        });
         Ok(ExecDoc {
             project: Cow::Borrowed(project),
             preface: self.preface,

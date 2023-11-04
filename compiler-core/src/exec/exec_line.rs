@@ -40,7 +40,7 @@ impl CompLine {
                 section_index: section_number,
                 color: marker.color.unwrap_or_else(|| self.line_color.clone()),
             });
-        })?;
+        });
 
         let mut map_coords = vec![];
         async_for!(movement in self.movements, {
@@ -80,7 +80,7 @@ impl CompLine {
                     map_builder.commit(false);
                 }
             }
-        })?;
+        });
 
         let split_name = self
             .split_name

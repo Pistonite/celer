@@ -35,7 +35,7 @@ impl<'a> Compiler<'a> {
             Ok(sections) => {
                 async_for!(value in sections.into_iter(), {
                     self.add_section_or_preface(&mut preface, &mut route_vec, value).await?;
-                })?;
+                });
             }
             Err(_) => {
                 errors.push(CompError::InvalidRouteType);

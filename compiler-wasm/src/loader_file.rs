@@ -9,8 +9,7 @@ use wasm_bindgen::prelude::*;
 
 use celerc::macros::async_trait;
 use celerc::pack::{ImageFormat, MarcLoader, PackerError, PackerResult, ResourceLoader};
-use celerc::util::Marc;
-use celerc::yield_now;
+use celerc::util::{Marc, yield_budget};
 
 use crate::interop::{self, JsIntoFuture};
 use crate::logger;
@@ -39,7 +38,7 @@ pub struct FileLoader;
 impl ResourceLoader for FileLoader {
     async fn load_raw(&self, path: &str) -> PackerResult<Vec<u8>> {
         info!("loading {path}");
-        let _ = yield_now!();
+        yield_budget(1).await;
 
         let bytes = async {
             LOAD_FILE

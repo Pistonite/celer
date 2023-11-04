@@ -4,7 +4,7 @@ use crate::api::{CompilerMetadata, Setting};
 use crate::json::{Cast, Coerce};
 use crate::prop;
 use crate::types::{EntryPoints, RouteMetadata};
-use crate::util::async_for;
+use crate::util::yield_budget;
 
 use super::{ConfigBuilder, ConfigTrace, PackerError, PackerResult, Resource};
 
@@ -94,11 +94,12 @@ async fn pack_project(
 
     let mut builder = ConfigBuilder::default();
     let mut config_trace = ConfigTrace::default();
-    let _ = async_for!((i, config) in config.into_iter().enumerate(), {
+    for (i, config) in config.into_iter().enumerate() {
+        yield_budget(64).await;
         config_trace.0.push(i);
         super::pack_config(&mut builder, project_resource, config, &mut config_trace, setting).await?;
         config_trace.0.pop();
-    });
+    }
 
     let project = RouteMetadata {
         source: source.to_string(),

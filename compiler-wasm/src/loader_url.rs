@@ -6,8 +6,7 @@ use wasm_bindgen::prelude::*;
 
 use celerc::macros::async_trait;
 use celerc::pack::{MarcLoader, PackerError, PackerResult, ResourceLoader};
-use celerc::util::Marc;
-use celerc::yield_now;
+use celerc::util::{yield_budget, Marc};
 
 use crate::interop::{self, JsIntoFuture};
 use crate::logger;
@@ -36,7 +35,7 @@ pub struct UrlLoader;
 impl ResourceLoader for UrlLoader {
     async fn load_raw(&self, url: &str) -> PackerResult<Vec<u8>> {
         info!("loading {url}");
-        let _ = yield_now!();
+        yield_budget(1).await;
         let bytes = async {
             LOAD_URL
                 .with_borrow(|f| f.call1(&JsValue::UNDEFINED, &JsValue::from(url)))?

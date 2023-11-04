@@ -122,10 +122,3 @@ pub struct Setting {
     #[derivative(Default(value = "8"))]
     pub max_preset_ref_depth: usize,
 }
-
-#[cfg(feature = "wasm")]
-#[inline]
-pub fn cancel_current_compilation() {
-    crate::util::set_cancelled(true);
-    info!("cancel requested");
-}
