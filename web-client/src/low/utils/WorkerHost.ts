@@ -3,13 +3,21 @@ import { Logger } from "./Logger";
 let worker: Worker;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const specialHandlers: { [key: string]: (data: any) => any } = {};
-const workerHandlers: { [key: number]: [(x: any) => void, (x: any) => void] } = {};
+const workerHandlers: { [key: number]: [(x: any) => void, (x: any) => void] } =
+    {};
 let nextId = 0;
 
 export type LoadFileFn = (path: string) => Promise<Uint8Array>;
 
+export function registerWorkerHandler(
+    name: string,
+    handler: (data: any) => any,
+) {
+    specialHandlers[name] = handler;
+}
+
 /// Set the worker and post the "ready" message
-export function setWorker(w: Worker, logger: Logger, loadFile: LoadFileFn ) {
+export function setWorker(w: Worker, logger: Logger) {
     if (worker) {
         worker.terminate();
     }
@@ -17,14 +25,6 @@ export function setWorker(w: Worker, logger: Logger, loadFile: LoadFileFn ) {
     specialHandlers["info_fn"] = logger.info.bind(logger);
     specialHandlers["warn_fn"] = logger.warn.bind(logger);
     specialHandlers["error_fn"] = logger.error.bind(logger);
-    specialHandlers["load_file"] = async (x: string) => {
-        try {
-            const result = await loadFile(x);
-            worker.postMessage(["file", 0, [x, result]]);
-        } catch (e) {
-            worker.postMessage(["file", 1, [x, e]]);
-        }
-    };
     worker.onmessage = (e) => {
         const [handleId, ok, result] = e.data;
         if (typeof handleId === "string") {
@@ -43,10 +43,10 @@ export function setWorker(w: Worker, logger: Logger, loadFile: LoadFileFn ) {
                 reject(result);
             }
         }
-    }
+    };
     worker.onerror = (e) => {
         console.error(e);
-    }
+    };
     return new Promise((resolve) => {
         let handle: any;
         specialHandlers["ready"] = () => {

@@ -21,7 +21,8 @@ import { DocController, initDocController } from "./DocController";
 import { Rich } from "./Rich";
 
 export const DocRoot: React.FC = () => {
-    const { stageMode, isEditingLayout, compileInProgress } = useSelector(viewSelector);
+    const { stageMode, isEditingLayout, compileInProgress } =
+        useSelector(viewSelector);
     const { document, serial } = useSelector(documentSelector);
     const store = useStore();
     const controller = useMemo(() => {
