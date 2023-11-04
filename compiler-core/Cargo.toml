@@ -43,7 +43,7 @@ wasm = [
     "dep:wasm-bindgen", 
     "dep:wasm-bindgen-futures",
     "dep:js-sys",
-    "web-sys/Window",
+    "web-sys/WorkerGlobalScope",
     "instant/wasm-bindgen",
     "no-async-send",
     "dep:tsify",

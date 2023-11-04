@@ -1,13 +1,9 @@
 use std::cell::UnsafeCell;
 
-use js_sys::Promise;
+// use js_sys::Promise;
 use log::warn;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::Window;
-
-thread_local! {
-    static WINDOW: Window = web_sys::window().expect("no global `window` exists");
-}
+// use wasm_bindgen_futures::JsFuture;
+// use web_sys::WorkerGlobalScope;
 
 thread_local! {
     static CANCELLED: UnsafeCell<bool> = UnsafeCell::new(false);
@@ -48,12 +44,11 @@ pub async fn set_timeout_yield() -> Result<(), WasmError> {
     if has_budget {
         return Ok(());
     }
-    let promise = WINDOW.with(|window| {
-        Promise::new(&mut |resolve, _| {
-            let _ = window.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);
-        })
-    });
-    let _ = JsFuture::from(promise).await;
+    // Promise::new(&mut |resolve, _| {
+    //     web_sys::worker_global_scope();
+    //     let _ = WorkerGlobalScope::self_().set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);
+    // });
+    // let _ = JsFuture::from(promise).await;
     CANCELLED.with(|cancelled| unsafe {
         if *cancelled.get() {
             warn!("cancelling...");

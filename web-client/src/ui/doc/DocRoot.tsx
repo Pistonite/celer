@@ -21,7 +21,7 @@ import { DocController, initDocController } from "./DocController";
 import { Rich } from "./Rich";
 
 export const DocRoot: React.FC = () => {
-    const { stageMode, isEditingLayout } = useSelector(viewSelector);
+    const { stageMode, isEditingLayout, compileInProgress } = useSelector(viewSelector);
     const { document, serial } = useSelector(documentSelector);
     const store = useStore();
     const controller = useMemo(() => {
@@ -29,7 +29,7 @@ export const DocRoot: React.FC = () => {
     }, [store]);
 
     if (!document) {
-        if (stageMode === "edit") {
+        if (stageMode === "edit" && !compileInProgress) {
             return (
                 <div className="blank-div-message">
                     Doc will be shown here once a project is opened

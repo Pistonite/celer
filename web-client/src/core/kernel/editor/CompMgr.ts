@@ -1,6 +1,6 @@
 import { AppDispatcher, documentActions, viewActions } from "core/store";
-import { init, compile_document } from "low/celerc";
-import { Debouncer, Logger, wrapAsync, console } from "low/utils";
+import { compile_document } from "low/celerc";
+import { Debouncer, Logger, wrapAsync, console, setWorker } from "low/utils";
 
 const CompilerLog = new Logger("com");
 
@@ -29,16 +29,10 @@ export class CompMgr {
 
     public async init(
         loadFile: RequestFileFunction,
-        loadUrl: RequestFileFunction,
     ) {
-        init(
-            window.location.origin,
-            (x: string) => CompilerLog.info(x),
-            (x: string) => CompilerLog.warn(x),
-            (x: string) => CompilerLog.error(x),
-            loadFile,
-            loadUrl,
-        );
+        CompilerLog.info("initializing compiler worker...");
+        const worker = new Worker("/celerc/worker.js");
+        await setWorker(worker, CompilerLog, loadFile);
     }
 
     /// Trigger compilation of the document
