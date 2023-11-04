@@ -19,7 +19,6 @@ thiserror = "1.0.47"
 tokio = { version = "1.32.0", features = [
     "macros",
 ], optional = true}
-tokio-stream = { version = "0.1.14", optional = true }
 wasm-bindgen = { version = "0.2.87", optional = true }
 wasm-bindgen-futures = { version = "0.4.37", optional = true }
 js-sys = { version = "0.3.64", optional = true }
@@ -33,15 +32,12 @@ map-macro = "0.2.6"
 
 [features]
 default = [
-    "tokio", 
-    "tokio-stream", 
+    "dep:tokio", 
     "tokio/rt-multi-thread",
     "cached/async_tokio_rt_multi_thread",
 ]
 wasm = [
     "cached/wasm", 
-    "tokio/rt",
-    "tokio/time",
     "dep:wasm-bindgen", 
     "dep:wasm-bindgen-futures",
     "dep:js-sys",
