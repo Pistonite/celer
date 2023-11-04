@@ -97,7 +97,14 @@ async fn pack_project(
     for (i, config) in config.into_iter().enumerate() {
         yield_budget(64).await;
         config_trace.0.push(i);
-        super::pack_config(&mut builder, project_resource, config, &mut config_trace, setting).await?;
+        super::pack_config(
+            &mut builder,
+            project_resource,
+            config,
+            &mut config_trace,
+            setting,
+        )
+        .await?;
         config_trace.0.pop();
     }
 

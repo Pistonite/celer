@@ -1,9 +1,7 @@
 //! Utils for the compiler to run co-operatively. i.e. allow other tasks to run concurrently
 //! alongside a compilation on the same thread.
 
-use std::{sync::OnceLock, cell::RefCell};
-
-use log::info;
+use std::cell::RefCell;
 
 thread_local! {
     /// Current number of ticks ran without yielding
@@ -27,25 +25,25 @@ pub async fn yield_budget(budget_limit: u32) {
     if !has_budget {
         #[cfg(feature = "wasm")]
         let _ = async {
-            use wasm_bindgen_futures::JsFuture;
+            use js_sys::{global, Promise, Reflect};
             use wasm_bindgen::prelude::*;
+            use wasm_bindgen_futures::JsFuture;
             use web_sys::WorkerGlobalScope;
-            use js_sys::{Reflect, global, Promise};
 
-            // info!("yielding to worker...");
-
-            let global_self: WorkerGlobalScope = Reflect::get(&global(), &JsValue::from("self"))?.dyn_into()?;
+            let global_self: WorkerGlobalScope =
+                Reflect::get(&global(), &JsValue::from("self"))?.dyn_into()?;
             let promise = Promise::new(&mut |resolve, _| {
-                let _ = global_self.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);
+                let _ =
+                    global_self.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);
             });
             JsFuture::from(promise).await?;
 
             Ok::<(), JsValue>(())
-        }.await;
+        }
+        .await;
         #[cfg(not(feature = "wasm"))]
         {
             tokio::task::yield_now().await;
         }
     }
-
 }

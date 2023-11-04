@@ -51,7 +51,7 @@ async fn pack_presets_internal(
             } else {
                 format!("{preset_name}::{namespace}")
             };
-            pack_presets_internal(&full_key, value, trace, depth+1, max_depth, output).await?;
+            pack_presets_internal(&full_key, value, trace, depth + 1, max_depth, output).await?;
         } else {
             // preset
             let full_key = if preset_name.is_empty() {
@@ -59,9 +59,8 @@ async fn pack_presets_internal(
             } else {
                 format!("{preset_name}::{key}")
             };
-            let preset = Preset::compile(value).ok_or_else(|| {
-                PackerError::InvalidPreset(trace.clone(), full_key.clone())
-            })?;
+            let preset = Preset::compile(value)
+                .ok_or_else(|| PackerError::InvalidPreset(trace.clone(), full_key.clone()))?;
             output.push((full_key, preset));
         }
     }

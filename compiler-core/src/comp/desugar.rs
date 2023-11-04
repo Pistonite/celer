@@ -64,10 +64,7 @@ mod test {
 
     #[test]
     fn test_line_primitive() {
-        assert_eq!(
-            desugar_line(json!(null)),
-            Ok(("".to_string(), Map::new()))
-        );
+        assert_eq!(desugar_line(json!(null)), Ok(("".to_string(), Map::new())));
         assert_eq!(
             desugar_line(json!(true)),
             Ok(("true".to_string(), Map::new()))
@@ -76,10 +73,7 @@ mod test {
             desugar_line(json!(false)),
             Ok(("false".to_string(), Map::new()))
         );
-        assert_eq!(
-            desugar_line(json!("")),
-            Ok(("".to_string(), Map::new()))
-        );
+        assert_eq!(desugar_line(json!("")), Ok(("".to_string(), Map::new())));
         assert_eq!(
             desugar_line(json!("hello world")),
             Ok(("hello world".to_string(), Map::new()))

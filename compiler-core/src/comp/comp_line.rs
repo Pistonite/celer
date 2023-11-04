@@ -106,7 +106,7 @@ impl<'a> Compiler<'a> {
         if let Some(movements) = properties.remove(prop::MOVEMENTS) {
             properties.insert(
                 prop::MOVEMENTS.to_string(),
-                self.expand_presets_in_movements(0, movements, &mut errors)
+                self.expand_presets_in_movements(0, movements, &mut errors),
             );
         }
 
@@ -234,9 +234,11 @@ impl<'a> Compiler<'a> {
                         // need to track the coordinate of the final position with a stack
                         let mut ref_stack = vec![];
                         for (i, v) in array.into_iter().enumerate() {
-                            if let Some(m) = self
-                                .comp_movement(&format!("{p}[{i}]", p = prop::MOVEMENTS), v, errors)
-                            {
+                            if let Some(m) = self.comp_movement(
+                                &format!("{p}[{i}]", p = prop::MOVEMENTS),
+                                v,
+                                errors,
+                            ) {
                                 match &m {
                                     CompMovement::Push => {
                                         if let Some(i) = ref_stack.last() {
@@ -271,8 +273,8 @@ impl<'a> Compiler<'a> {
             prop::MARKERS => match value {
                 Value::Array(array) => {
                     for (i, v) in array.into_iter().enumerate() {
-                        if let Some(m) = self
-                            .comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
+                        if let Some(m) =
+                            self.comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
                         {
                             output.markers.push(m);
                         }

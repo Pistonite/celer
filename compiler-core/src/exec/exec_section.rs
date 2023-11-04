@@ -42,7 +42,8 @@ mod test {
             ..Default::default()
         };
         let exec_section = test_section
-            .exec(&Default::default(), 1, &mut MapSectionBuilder::default()).await;
+            .exec(&Default::default(), 1, &mut MapSectionBuilder::default())
+            .await;
 
         assert_eq!(exec_section.name, "test");
     }

@@ -1,4 +1,3 @@
-
 /// Transform all [`CompLine`] in a document
 macro_rules! for_each_line {
     ($line:ident in $comp_doc:ident $fun:block) => {

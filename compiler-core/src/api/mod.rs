@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use derivative::Derivative;
 use instant::Instant;
-use log::{error, info};
+use log::error;
 
 use crate::comp::Compiler;
 use crate::lang::Preset;
@@ -50,12 +50,8 @@ pub fn make_project_for_error(source: &str) -> RouteMetadata {
     }
 }
 
-pub async fn make_doc_for_packer_error(
-    source: &str,
-    error: PackerError,
-) -> ExecDoc<'static> {
-    let comp_doc = Compiler::default()
-        .create_empty_doc_for_packer_error(error);
+pub async fn make_doc_for_packer_error(source: &str, error: PackerError) -> ExecDoc<'static> {
+    let comp_doc = Compiler::default().create_empty_doc_for_packer_error(error);
     let project = make_project_for_error(source);
     let exec_doc = comp_doc.exec(&project).await;
     ExecDoc {

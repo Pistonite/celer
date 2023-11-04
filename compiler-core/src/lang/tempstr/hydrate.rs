@@ -35,10 +35,7 @@ mod test {
             TempStr::from("abcd").hydrate(&["hello".to_string()]),
             "abcd"
         );
-        assert_eq!(
-            TempStr::from("abcd").hydrate(&["hello", "world"]),
-            "abcd"
-        );
+        assert_eq!(TempStr::from("abcd").hydrate(&["hello", "world"]), "abcd");
     }
 
     #[test]
@@ -60,8 +57,7 @@ mod test {
             "bartempfooworld"
         );
         assert_eq!(
-            TempStr::from("bar$(3)$(3) $(2)$(1)$(2)")
-                .hydrate(args),
+            TempStr::from("bar$(3)$(3) $(2)$(1)$(2)").hydrate(args),
             "bar tempworldtemp"
         );
     }

@@ -65,7 +65,8 @@ impl<'a> Compiler<'a> {
                 prop::COLOR => {
                     if value.is_array() || value.is_object() {
                         errors.push(CompError::InvalidLinePropertyType(format!(
-                            "{prop_name}.{}", prop::COLOR
+                            "{prop_name}.{}",
+                            prop::COLOR
                         )))
                     } else {
                         color = Some(value.coerce_to_string())
@@ -125,8 +126,7 @@ mod test {
         let compiler = Compiler::default();
         let mut errors = vec![];
         assert_eq!(
-            compiler
-                .comp_marker("", json!([1, 2, 3, 4]), &mut errors),
+            compiler.comp_marker("", json!([1, 2, 3, 4]), &mut errors),
             None
         );
         assert_eq!(errors, vec![CompError::InvalidCoordinateArray]);
@@ -137,8 +137,7 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler
-                .comp_marker("", json!([1, 2, 4]), &mut errors),
+            compiler.comp_marker("", json!([1, 2, 4]), &mut errors),
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
@@ -149,15 +148,13 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler
-                .comp_marker("", json!({"at": [1, 2, 4]}), &mut errors),
+            compiler.comp_marker("", json!({"at": [1, 2, 4]}), &mut errors),
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler
-                .comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors),
+            compiler.comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors),
             Some(CompMarker {
                 at: GameCoord(1.0, 2.0, 4.0),
                 color: Some("123".to_string())
@@ -166,8 +163,7 @@ mod test {
         assert_eq!(errors, vec![]);
 
         assert_eq!(
-            compiler
-                .comp_marker("test", json!({"at": {}, "color": {}}), &mut errors),
+            compiler.comp_marker("test", json!({"at": {}, "color": {}}), &mut errors),
             None
         );
         assert_eq!(
@@ -185,15 +181,14 @@ mod test {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
         let mut errors = vec![];
         assert_eq!(
-            compiler
-                .comp_marker(
-                    "test",
-                    json!({
-                        "at": [1, 2, 4],
-                        "unused": 1,
-                    }),
-                    &mut errors
-                ),
+            compiler.comp_marker(
+                "test",
+                json!({
+                    "at": [1, 2, 4],
+                    "unused": 1,
+                }),
+                &mut errors
+            ),
             Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
         );
         assert_eq!(

@@ -26,9 +26,7 @@ impl CompilerContext {
         let mut compiler = self.create_compiler();
         let mut comp_doc = match compiler.comp_doc(route).await {
             Ok(doc) => doc,
-            Err(e) => {
-                compiler.create_empty_doc_for_error(&[e])
-            }
+            Err(e) => compiler.create_empty_doc_for_error(&[e]),
         };
 
         for plugin in plugin_runtimes.iter_mut() {

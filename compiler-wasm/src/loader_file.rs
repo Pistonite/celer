@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::*;
 
 use celerc::macros::async_trait;
 use celerc::pack::{ImageFormat, MarcLoader, PackerError, PackerResult, ResourceLoader};
-use celerc::util::{Marc, yield_budget};
+use celerc::util::{yield_budget, Marc};
 
 use crate::interop::{self, JsIntoFuture};
 use crate::logger;

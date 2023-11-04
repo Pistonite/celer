@@ -35,7 +35,8 @@ impl<'a> Compiler<'a> {
             Ok(sections) => {
                 for value in sections.into_iter() {
                     yield_budget(64).await;
-                    self.add_section_or_preface(&mut preface, &mut route_vec, value).await?;
+                    self.add_section_or_preface(&mut preface, &mut route_vec, value)
+                        .await?;
                 }
             }
             Err(_) => {

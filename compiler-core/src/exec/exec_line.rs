@@ -1,6 +1,6 @@
 use crate::comp::{CompLine, CompMovement};
 use crate::types::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
-use crate::util::{self};
+use crate::util;
 
 use super::{add_engine_diagnostics, ExecResult, MapSectionBuilder};
 
@@ -61,11 +61,11 @@ impl CompLine {
                             add_missing_icon_diagnostics(&mut self.diagnostics, &icon);
                         }
                         map_builder.icons.push(MapIcon {
-                        id: icon,
-                        coord: to.clone(),
-                        line_index: line_number,
-                        section_index: section_number,
-                        priority: self.map_icon_priority,
+                            id: icon,
+                            coord: to.clone(),
+                            line_index: line_number,
+                            section_index: section_number,
+                            priority: self.map_icon_priority,
                         })
                     }
 
@@ -254,8 +254,7 @@ mod test {
             ..Default::default()
         };
         let mut map_section = Default::default();
-        let exec_line = test_line
-            .exec(&Default::default(), 0, 0, &mut map_section);
+        let exec_line = test_line.exec(&Default::default(), 0, 0, &mut map_section);
         let expected = vec![
             GameCoord(3.4, 5.0, 6.0),
             GameCoord(3.4, 7.0, 6.0),
@@ -350,8 +349,7 @@ mod test {
         };
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
-        test_line
-            .exec(&Default::default(), 0, 0, &mut map_builder);
+        test_line.exec(&Default::default(), 0, 0, &mut map_builder);
         let map_section = map_builder.build();
         assert_eq!(
             map_section.lines,
@@ -393,8 +391,7 @@ mod test {
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
         map_builder.add_coord("blue", &GameCoord::default());
-        test_line
-            .exec(&Default::default(), 0, 0, &mut map_builder);
+        test_line.exec(&Default::default(), 0, 0, &mut map_builder);
 
         map_builder.add_coord("test color", &GameCoord::default());
         let map = map_builder.build();
@@ -438,8 +435,8 @@ mod test {
             ..Default::default()
         };
 
-        let exec_line = test_line
-            .exec(&Default::default(), 0, 0, &mut MapSectionBuilder::default());
+        let exec_line =
+            test_line.exec(&Default::default(), 0, 0, &mut MapSectionBuilder::default());
         assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
     }
 
@@ -452,8 +449,7 @@ mod test {
             ..Default::default()
         };
         let mut builder = Default::default();
-        let exec_line = test_line
-            .exec(&Default::default(), 4, 5, &mut builder);
+        let exec_line = test_line.exec(&Default::default(), 4, 5, &mut builder);
         assert_eq!(exec_line.diagnostics.len(), 3);
         assert_eq!(exec_line.diagnostics[0].msg_type, "warning");
         assert_eq!(exec_line.diagnostics[0].source, "celer/engine");

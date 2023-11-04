@@ -1,9 +1,8 @@
 use std::borrow::Cow;
-use std::sync::OnceLock;
 
 use celerc::types::EntryPointsSorted;
 use js_sys::Function;
-use log::{info, warn};
+use log::info;
 use wasm_bindgen::prelude::*;
 
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};

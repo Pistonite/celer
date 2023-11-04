@@ -61,10 +61,11 @@ async fn pack_route_internal(
                             resource,
                             x,
                             use_depth,
-                            ref_depth+1,
+                            ref_depth + 1,
                             max_use_depth,
-                            max_ref_depth
-                        ).await;
+                            max_ref_depth,
+                        )
+                        .await;
                         output.push(result);
                     }
                     Ok(Use::Valid(valid_use)) => {
@@ -74,7 +75,8 @@ async fn pack_route_internal(
                             use_depth,
                             max_use_depth,
                             max_ref_depth,
-                        ).await;
+                        )
+                        .await;
                         match result {
                             PackerValue::Array(arr) => {
                                 output.extend(arr);
@@ -105,10 +107,11 @@ async fn pack_route_internal(
                             resource,
                             value,
                             use_depth,
-                            ref_depth+1,
+                            ref_depth + 1,
                             max_use_depth,
-                            max_ref_depth
-                        ).await;
+                            max_ref_depth,
+                        )
+                        .await;
                         new_obj.insert(key, result);
                     }
                     PackerValue::Object(new_obj)

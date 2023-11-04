@@ -229,7 +229,9 @@ impl VariablesPlugin {
             Value::Object(map) => self.update_vars_map(map)?,
             Value::Array(arr) => {
                 for v in arr {
-                    let map = v.as_object().ok_or("vars array must contain objects".to_string())?;
+                    let map = v
+                        .as_object()
+                        .ok_or("vars array must contain objects".to_string())?;
                     self.update_vars_map(map)?;
                 }
             }
@@ -244,7 +246,9 @@ impl VariablesPlugin {
             let text = v.coerce_to_string();
             let ops = lang::parse_rich(&text);
             let mut iter = ops.into_iter();
-            let op = iter.next().ok_or(format!("invalid empty operation: `{text}`"))?;
+            let op = iter
+                .next()
+                .ok_or(format!("invalid empty operation: `{text}`"))?;
             if iter.next().is_some() {
                 return Err(format!("invalid operation: `{text}`"));
             }
@@ -264,8 +268,12 @@ impl VariablesPlugin {
         }
         for (k, v) in updates {
             match self.get_mut(k) {
-                Some(v_ref) => {*v_ref = v;}// likely
-                None => {self.insert(k.to_string(), v);}
+                Some(v_ref) => {
+                    *v_ref = v;
+                } // likely
+                None => {
+                    self.insert(k.to_string(), v);
+                }
             };
         }
         Ok(())

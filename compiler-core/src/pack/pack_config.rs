@@ -93,21 +93,29 @@ async fn process_config(
                 process_tags_config(builder, value, trace).await?;
             }
             prop::PRESETS => {
-                let presets = super::pack_presets(value, trace, setting.max_preset_namespace_depth).await?;
+                let presets =
+                    super::pack_presets(value, trace, setting.max_preset_namespace_depth).await?;
                 for (key, value) in presets.into_iter() {
                     yield_budget(256).await;
                     builder.presets.insert(key, value);
                 }
             }
             prop::DEFAULT_ICON_PRIORITY => {
-                let priority = value.try_coerce_to_i64().ok_or_else(|| PackerError::InvalidConfigProperty(trace.clone(), prop::DEFAULT_ICON_PRIORITY.to_string()))?;
+                let priority = value.try_coerce_to_i64().ok_or_else(|| {
+                    PackerError::InvalidConfigProperty(
+                        trace.clone(),
+                        prop::DEFAULT_ICON_PRIORITY.to_string(),
+                    )
+                })?;
                 builder.default_icon_priority = Some(priority);
             }
             prop::PLUGINS => {
                 process_plugins_config(builder, resource, value, trace).await?;
             }
             prop::INCLUDES => {
-                let config = value.try_into_array().map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), prop::INCLUDES.to_string()))?;
+                let config = value.try_into_array().map_err(|_| {
+                    PackerError::InvalidConfigProperty(trace.clone(), prop::INCLUDES.to_string())
+                })?;
                 for (i, config) in config.into_iter().enumerate() {
                     trace.push(i);
                     pack_config(builder, resource, config, trace, setting).await?;
@@ -139,7 +147,10 @@ async fn process_icons_config(
             Err(v) => {
                 // not a use, just a icon url
                 if v.is_array() || v.is_object() {
-                    return Err(PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::ICONS, key)));
+                    return Err(PackerError::InvalidConfigProperty(
+                        trace.clone(),
+                        format!("{}.{}", prop::ICONS, key),
+                    ));
                 }
                 builder.icons.insert(key, v.coerce_to_string());
             }
@@ -169,7 +180,9 @@ async fn process_plugins_config(
     })?;
 
     for (i, v) in plugins.into_iter().enumerate() {
-        let v = v.try_into_object().map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), format!("{}[{}]", prop::PLUGINS, i)))?;
+        let v = v.try_into_object().map_err(|_| {
+            PackerError::InvalidConfigProperty(trace.clone(), format!("{}[{}]", prop::PLUGINS, i))
+        })?;
         let mut plugin = None;
         let mut props = json!(null);
         for (key, value) in v.into_iter() {
@@ -195,17 +208,24 @@ async fn process_plugins_config(
                 prop::WITH => {
                     props = value;
                 }
-                _ => return Err(PackerError::UnusedConfigProperty(trace.clone(), format!("{}[{}].{}", prop::PLUGINS, i, key))),
+                _ => {
+                    return Err(PackerError::UnusedConfigProperty(
+                        trace.clone(),
+                        format!("{}[{}].{}", prop::PLUGINS, i, key),
+                    ))
+                }
             }
         }
         let plugin = match plugin {
             Some(v) => v,
-            None => return Err(PackerError::MissingConfigProperty(trace.clone(), format!("{}[{}].{}", prop::PLUGINS, i, prop::USE))),
+            None => {
+                return Err(PackerError::MissingConfigProperty(
+                    trace.clone(),
+                    format!("{}[{}].{}", prop::PLUGINS, i, prop::USE),
+                ))
+            }
         };
-        builder.plugins.push(PluginInstance {
-            plugin,
-            props,
-        });
+        builder.plugins.push(PluginInstance { plugin, props });
     }
 
     Ok(())
@@ -223,17 +243,27 @@ async fn process_tags_config(
     for (key, mut value) in tags.into_iter() {
         let mut tag = DocTag::default();
         // resolve includes
-        if let Some(includes) = value.as_object_mut().and_then(|map|map.remove(prop::INCLUDES)) {
+        if let Some(includes) = value
+            .as_object_mut()
+            .and_then(|map| map.remove(prop::INCLUDES))
+        {
             let includes = match includes {
                 Value::Array(v) => v,
-                Value::Object(_) => return Err(PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}.{}", prop::TAGS, key, prop::INCLUDES))),
+                Value::Object(_) => {
+                    return Err(PackerError::InvalidConfigProperty(
+                        trace.clone(),
+                        format!("{}.{}.{}", prop::TAGS, key, prop::INCLUDES),
+                    ))
+                }
                 other => vec![other],
             };
             for include in includes {
                 let include = include.coerce_to_string();
 
                 let include_tag = match builder.tags.get(&include) {
-                    None if include != key => return Err(PackerError::TagNotFound(trace.clone(), include.clone())),
+                    None if include != key => {
+                        return Err(PackerError::TagNotFound(trace.clone(), include.clone()))
+                    }
                     other => other,
                 };
                 if let Some(t) = include_tag {
@@ -242,7 +272,9 @@ async fn process_tags_config(
             }
         }
 
-        let last_tag = serde_json::from_value::<DocTag>(value).map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::TAGS, key)))?;
+        let last_tag = serde_json::from_value::<DocTag>(value).map_err(|_| {
+            PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::TAGS, key))
+        })?;
         tag.apply_override(&last_tag);
 
         builder.tags.insert(key, tag);

@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use crate::json::Cast;
 use crate::types::EntryPoints;
-use crate::util::{Path, yield_budget};
+use crate::util::{yield_budget, Path};
 use crate::{json::Coerce, prop};
 
 use super::{PackerError, PackerResult};
@@ -24,7 +24,7 @@ pub async fn pack_entry_points(value: Value) -> PackerResult<EntryPoints> {
         let path = if value.starts_with('/') {
             match Path::try_from(&value) {
                 Some(path) => format!("/{path}"),
-                None => value
+                None => value,
             }
         } else {
             value
@@ -41,7 +41,10 @@ pub async fn pack_entry_points(value: Value) -> PackerResult<EntryPoints> {
             value.starts_with('/') || resolve_alias(&map, value, 0)?.is_some()
         };
         if !valid {
-            return Err(PackerError::InvalidEntryPoint(key.to_string(), value.to_string()));
+            return Err(PackerError::InvalidEntryPoint(
+                key.to_string(),
+                value.to_string(),
+            ));
         }
     }
 

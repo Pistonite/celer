@@ -40,7 +40,7 @@ impl<'a> Compiler<'a> {
         if let Some(movements) = properties.remove(prop::MOVEMENTS) {
             properties.insert(
                 prop::MOVEMENTS.to_string(),
-                self.expand_presets_in_movements(depth, movements, errors)
+                self.expand_presets_in_movements(depth, movements, errors),
             );
         }
 
@@ -168,16 +168,15 @@ mod test {
         let mut output = BTreeMap::new();
         let mut errors = Vec::new();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         assert_eq!(
             output,
@@ -192,16 +191,15 @@ mod test {
 
         output.clear();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset2".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset2".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         assert_eq!(
             output,
@@ -229,16 +227,15 @@ mod test {
         let mut output = BTreeMap::new();
         let mut errors = Vec::new();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset2".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset2".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
@@ -287,16 +284,15 @@ mod test {
         let mut output = BTreeMap::new();
         let mut errors = Vec::new();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset::three".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset::three".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         assert_eq!(
             output,
@@ -310,16 +306,15 @@ mod test {
         assert_eq!(errors, vec![]);
 
         output.clear();
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset::three".to_string(),
-                    args: vec!["1".to_string()],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset::three".to_string(),
+                args: vec!["1".to_string()],
+            },
+            &mut output,
+            &mut errors,
+        );
         assert_eq!(
             output,
             [
@@ -332,16 +327,15 @@ mod test {
         assert_eq!(errors, vec![]);
 
         output.clear();
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset::four".to_string(),
-                    args: vec![" abcde ".to_string()],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset::four".to_string(),
+                args: vec![" abcde ".to_string()],
+            },
+            &mut output,
+            &mut errors,
+        );
         assert_eq!(
             output,
             [
@@ -384,16 +378,15 @@ mod test {
         let mut output = BTreeMap::new();
         let mut errors = Vec::new();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset::one".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset::one".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
@@ -402,16 +395,15 @@ mod test {
 
         errors.clear();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset::two".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset::two".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
@@ -426,16 +418,15 @@ mod test {
 
         errors.clear();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset::three".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset::three".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
         assert_eq!(output, BTreeMap::new());
         assert_eq!(
             errors,
@@ -479,16 +470,15 @@ mod test {
         let mut output = BTreeMap::new();
         let mut errors = Vec::new();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset::one".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset::one".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         assert_eq!(
             output,
@@ -500,16 +490,15 @@ mod test {
 
         output.clear();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_preset::two".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_preset::two".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         assert_eq!(
             output,
@@ -566,16 +555,15 @@ mod test {
         let mut output = BTreeMap::new();
         let mut errors = Vec::new();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_invalid::one".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_invalid::one".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         assert_eq!(
             output,
@@ -585,16 +573,15 @@ mod test {
 
         output.clear();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_invalid::two".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_invalid::two".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         assert_eq!(
             output,
@@ -617,16 +604,15 @@ mod test {
         output.clear();
         errors.clear();
 
-        compiler
-            .apply_preset(
-                0,
-                &PresetInst {
-                    name: "_invalid::overflow".to_string(),
-                    args: vec![],
-                },
-                &mut output,
-                &mut errors,
-            );
+        compiler.apply_preset(
+            0,
+            &PresetInst {
+                name: "_invalid::overflow".to_string(),
+                args: vec![],
+            },
+            &mut output,
+            &mut errors,
+        );
 
         // we don't care what the output is here
 

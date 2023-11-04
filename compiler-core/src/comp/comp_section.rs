@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::json::Cast;
-use crate::util::yield_budget;
 use crate::lang::parse_rich;
 use crate::pack::PackerValue;
+use crate::util::yield_budget;
 
 use super::{CompError, CompLine, Compiler};
 
@@ -48,17 +48,17 @@ impl<'a> Compiler<'a> {
             lines: vec![],
         };
         if let PackerValue::Err(e) = section_value {
-            section.lines.push(
-                self.create_empty_line_for_error(&[CompError::PackerErrors(vec![e])])
-            );
+            section
+                .lines
+                .push(self.create_empty_line_for_error(&[CompError::PackerErrors(vec![e])]));
             return Ok(section);
         }
         let section_lines = match section_value.try_into_array() {
             Ok(v) => v,
             Err(_) => {
-                section.lines.push(
-                    self.create_empty_line_for_error(&[CompError::InvalidSectionType])
-                );
+                section
+                    .lines
+                    .push(self.create_empty_line_for_error(&[CompError::InvalidSectionType]));
                 return Ok(section);
             }
         };
@@ -78,7 +78,9 @@ impl<'a> Compiler<'a> {
                     section.lines.push(line);
                 }
                 Err(errors) => {
-                    section.lines.push(self.create_empty_line_for_error(&[CompError::PackerErrors(errors)]));
+                    section
+                        .lines
+                        .push(self.create_empty_line_for_error(&[CompError::PackerErrors(errors)]));
                 }
             }
         }
