@@ -2,7 +2,6 @@ use std::borrow::Cow;
 
 use crate::comp::CompDoc;
 use crate::types::{ExecDoc, RouteMetadata};
-use crate::util::async_for;
 
 use super::{ExecResult, MapSectionBuilder};
 
@@ -12,16 +11,16 @@ impl CompDoc {
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("", &project.map.initial_coord);
         let mut sections = vec![];
-        async_for!((index, section) in self.route.into_iter().enumerate(), {
-            let exec_section = section.exec(project, index, &mut map_builder).await?;
+        for (index, section) in self.route.into_iter().enumerate() {
+            let exec_section = section.exec(project, index, &mut map_builder).await;
             sections.push(exec_section);
-        });
-        Ok(ExecDoc {
+        }
+        ExecDoc {
             project: Cow::Borrowed(project),
             preface: self.preface,
             route: sections,
             diagnostics: self.diagnostics,
-        })
+        }
     }
 }
 
@@ -59,7 +58,7 @@ mod test {
             ..Default::default()
         };
 
-        let exec_doc = test_doc.exec(&test_metadata).await.unwrap();
+        let exec_doc = test_doc.exec(&test_metadata).await;
         assert_eq!(exec_doc.project, Cow::Borrowed(&test_metadata));
         assert_eq!(exec_doc.preface, test_preface);
         assert_eq!(exec_doc.diagnostics, test_diagnostics);
@@ -99,7 +98,7 @@ mod test {
             ..Default::default()
         };
 
-        let exec_doc = test_doc.exec(&project).await.unwrap();
+        let exec_doc = test_doc.exec(&project).await;
         assert_eq!(
             exec_doc.route,
             vec![

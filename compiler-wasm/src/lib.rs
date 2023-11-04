@@ -57,9 +57,6 @@ pub async fn get_entry_points() -> Result<EntryPointsSorted, JsValue> {
 }
 
 /// Compile a document from web editor
-///
-/// Return undefined if the compilation was interrupted
-/// TODO #78: undefined no longer needed
 #[wasm_bindgen]
 pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDoc, JsValue> {
     let root_resource = create_root_resource();

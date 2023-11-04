@@ -1,5 +1,3 @@
-use crate::util::async_for;
-
 use super::{TempStr, TempStrBlock};
 
 impl TempStr {

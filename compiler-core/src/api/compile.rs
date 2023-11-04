@@ -4,13 +4,12 @@ use crate::comp::Compiler;
 use crate::pack::pack_route;
 use crate::plug::PluginRuntime;
 use crate::types::ExecDoc;
-use crate::util::async_for;
+use crate::util::yield_budget;
 
 use super::CompilerContext;
 
 impl CompilerContext {
-    // TODO #78: will no longer need Option after compiler become not cancelable
-    pub async fn compile(&self) -> Option<ExecDoc<'_>> {
+    pub async fn compile(&self) -> ExecDoc<'_> {
         let mut plugin_runtimes = self.create_plugin_runtimes().await;
 
         // pack phase 1
@@ -24,12 +23,11 @@ impl CompilerContext {
         .await;
 
         // comp phase
-        let compiler = self.create_compiler();
+        let mut compiler = self.create_compiler();
         let mut comp_doc = match compiler.comp_doc(route).await {
             Ok(doc) => doc,
-            // TODO #78: will no longer need Option after compiler become not cancelable
-            Err(_) => {
-                return None;
+            Err(e) => {
+                compiler.create_empty_doc_for_error(&[e])
             }
         };
 
@@ -40,13 +38,7 @@ impl CompilerContext {
         }
 
         // exec phase
-        let mut exec_doc = match comp_doc.exec(&self.phase0.project).await {
-            Ok(doc) => doc,
-            // TODO #78: will no longer need Option after compiler become not cancelable
-            Err(_) => {
-                return None;
-            }
-        };
+        let mut exec_doc = comp_doc.exec(&self.phase0.project).await;
 
         for plugin in plugin_runtimes.iter_mut() {
             if let Err(e) = plugin
@@ -56,14 +48,16 @@ impl CompilerContext {
                 e.add_to_diagnostics(&mut exec_doc.diagnostics);
             }
         }
-        Some(exec_doc)
+        exec_doc
     }
+
     async fn create_plugin_runtimes(&self) -> Vec<Box<dyn PluginRuntime>> {
         let mut runtimes = Vec::with_capacity(self.phase0.meta.plugins.len());
-        let _ = async_for!(plugin_inst in &self.phase0.meta.plugins, {
+        for plugin_inst in &self.phase0.meta.plugins {
+            yield_budget(1).await;
             let runtime = plugin_inst.create_runtime(self);
             runtimes.push(runtime);
-        });
+        }
         runtimes
     }
     fn create_compiler(&self) -> Compiler<'_> {

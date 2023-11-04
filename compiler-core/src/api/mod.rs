@@ -50,22 +50,20 @@ pub fn make_project_for_error(source: &str) -> RouteMetadata {
     }
 }
 
-// TODO #78: Option no longer needed
 pub async fn make_doc_for_packer_error(
     source: &str,
     error: PackerError,
-) -> Option<ExecDoc<'static>> {
+) -> ExecDoc<'static> {
     let comp_doc = Compiler::default()
-        .create_empty_doc_for_packer_error(error)
-        .await;
+        .create_empty_doc_for_packer_error(error);
     let project = make_project_for_error(source);
-    let exec_doc = comp_doc.exec(&project).await.ok()?;
-    Some(ExecDoc {
+    let exec_doc = comp_doc.exec(&project).await;
+    ExecDoc {
         preface: exec_doc.preface,
         route: exec_doc.route,
         diagnostics: exec_doc.diagnostics,
         project: Cow::Owned(project),
-    })
+    }
 }
 
 pub struct CompilerContext {

@@ -9,8 +9,6 @@ use crate::lang::parse_poor;
 use crate::pack::PackerError;
 use crate::types::{DocDiagnostic, GameCoord, RouteMetadata};
 use crate::util;
-#[cfg(feature = "wasm")]
-use crate::util::WasmError;
 
 mod comp_coord;
 pub use comp_coord::*;
@@ -138,10 +136,6 @@ pub enum CompError {
     /// When the `route` property is invalid
     #[error("Route data is not the correct type.")]
     InvalidRouteType,
-
-    #[cfg(feature = "wasm")]
-    #[error("Wasm execution error: {0}")]
-    Wasm(#[from] WasmError),
 }
 
 impl From<Infallible> for CompError {
@@ -177,8 +171,6 @@ impl CompError {
                 "/docs/route/route-structure"
             }
             CompError::InvalidRouteType => "/docs/route/route-structure#entry-point",
-            #[cfg(feature = "wasm")]
-            CompError::Wasm(_) => "",
         }
     }
 
@@ -204,8 +196,6 @@ impl CompError {
             | CompError::InvalidRouteType => "error",
 
             CompError::UnusedProperty(_) | CompError::TooManyTagsInCounter => "warn",
-            #[cfg(feature = "wasm")]
-            CompError::Wasm(_) => "error",
         };
 
         s.to_string()
@@ -230,14 +220,6 @@ impl CompError {
                 });
             }
         }
-    }
-
-    pub fn is_cancel(&self) -> bool {
-        #[cfg(feature = "wasm")]
-        let x = matches!(self, Self::Wasm(WasmError::Cancel));
-        #[cfg(not(feature = "wasm"))]
-        let x = false;
-        x
     }
 }
 

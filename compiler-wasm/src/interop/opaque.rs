@@ -7,17 +7,14 @@ use celerc::types::ExecDoc;
 
 pub struct OpaqueExecDoc(JsValue);
 impl OpaqueExecDoc {
-    pub fn wrap(exec_doc: Option<ExecDoc<'_>>) -> Result<Self, JsValue> {
-        match exec_doc {
-            Some(exec_doc) => Ok(Self(exec_doc.try_to_js_value()?)),
-            None => Ok(Self(JsValue::undefined())),
-        }
+    pub fn wrap(exec_doc: ExecDoc<'_>) -> Result<Self, JsValue> {
+        Ok(Self(exec_doc.try_to_js_value()?))
     }
 }
 
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(typescript_type = "ExecDoc | undefined")]
+    #[wasm_bindgen(typescript_type = "ExecDoc")]
     type JsType;
 }
 

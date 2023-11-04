@@ -19,6 +19,7 @@ export function registerWorkerHandler(
 /// Set the worker and post the "ready" message
 export function setWorker(w: Worker, logger: Logger) {
     if (worker) {
+        logger.info("terminating existing worker");
         worker.terminate();
     }
     worker = w;

@@ -1,6 +1,6 @@
 use crate::comp::{CompLine, CompMovement};
 use crate::types::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
-use crate::util::{self, async_for};
+use crate::util::{self};
 
 use super::{add_engine_diagnostics, ExecResult, MapSectionBuilder};
 
@@ -13,7 +13,7 @@ impl CompLine {
     /// Execute the line.
     ///
     /// Map features will be added to the builder
-    pub async fn exec(
+    pub fn exec(
         mut self,
         project: &RouteMetadata,
         section_number: usize,
@@ -33,17 +33,17 @@ impl CompLine {
             });
         }
 
-        async_for!(marker in self.markers, {
+        for marker in self.markers {
             map_builder.markers.push(MapMarker {
                 coord: marker.at,
                 line_index: line_number,
                 section_index: section_number,
                 color: marker.color.unwrap_or_else(|| self.line_color.clone()),
             });
-        });
+        }
 
         let mut map_coords = vec![];
-        async_for!(movement in self.movements, {
+        for movement in self.movements {
             match movement {
                 CompMovement::To {
                     to,
@@ -80,12 +80,12 @@ impl CompLine {
                     map_builder.commit(false);
                 }
             }
-        });
+        }
 
         let split_name = self
             .split_name
             .map(|v| v.into_iter().map(|v| v.text).collect::<Vec<_>>().join(""));
-        Ok(ExecLine {
+        ExecLine {
             section: section_number,
             index: line_number,
             text: self.text,
@@ -97,7 +97,7 @@ impl CompLine {
             notes: self.notes,
             map_coords,
             split_name,
-        })
+        }
     }
 }
 
@@ -154,8 +154,8 @@ mod test {
         ]
     }
 
-    #[tokio::test]
-    async fn test_copy() {
+    #[test]
+    fn test_copy() {
         let mut map_section = Default::default();
         let test_text = vec![
             DocRichText {
@@ -235,7 +235,7 @@ mod test {
                 .collect(),
             ..Default::default()
         };
-        let exec_line = line.exec(&project, 3, 4, &mut map_section).await.unwrap();
+        let exec_line = line.exec(&project, 3, 4, &mut map_section);
         assert_eq!(exec_line.section, 3);
         assert_eq!(exec_line.index, 4);
         assert_eq!(exec_line.text, test_text);
@@ -247,17 +247,15 @@ mod test {
         assert_eq!(exec_line.notes, test_notes);
     }
 
-    #[tokio::test]
-    async fn test_map_coords() {
+    #[test]
+    fn test_map_coords() {
         let test_line = CompLine {
             movements: create_test_movements(),
             ..Default::default()
         };
         let mut map_section = Default::default();
         let exec_line = test_line
-            .exec(&Default::default(), 0, 0, &mut map_section)
-            .await
-            .unwrap();
+            .exec(&Default::default(), 0, 0, &mut map_section);
         let expected = vec![
             GameCoord(3.4, 5.0, 6.0),
             GameCoord(3.4, 7.0, 6.0),
@@ -269,8 +267,8 @@ mod test {
         assert_eq!(exec_line.map_coords, expected);
     }
 
-    #[tokio::test]
-    async fn test_add_map_icon_and_markers() {
+    #[test]
+    fn test_add_map_icon_and_markers() {
         let test_line = CompLine {
             line_color: "test color".to_string(),
             map_icon: Some("test icon".to_string()),
@@ -297,7 +295,7 @@ mod test {
             .collect(),
             ..Default::default()
         };
-        test_line.exec(&project, 4, 5, &mut builder).await.unwrap();
+        test_line.exec(&project, 4, 5, &mut builder);
         assert_eq!(
             builder.icons,
             vec![
@@ -343,8 +341,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_map_lines() {
+    #[test]
+    fn test_map_lines() {
         let test_line = CompLine {
             line_color: "test color".to_string(),
             movements: create_test_movements(),
@@ -353,9 +351,7 @@ mod test {
         let mut map_builder = MapSectionBuilder::default();
         map_builder.add_coord("blue", &GameCoord::default());
         test_line
-            .exec(&Default::default(), 0, 0, &mut map_builder)
-            .await
-            .unwrap();
+            .exec(&Default::default(), 0, 0, &mut map_builder);
         let map_section = map_builder.build();
         assert_eq!(
             map_section.lines,
@@ -388,8 +384,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_change_color_no_movement() {
+    #[test]
+    fn test_change_color_no_movement() {
         let test_line = CompLine {
             line_color: "test color".to_string(),
             ..Default::default()
@@ -398,9 +394,7 @@ mod test {
         map_builder.add_coord("blue", &GameCoord::default());
         map_builder.add_coord("blue", &GameCoord::default());
         test_line
-            .exec(&Default::default(), 0, 0, &mut map_builder)
-            .await
-            .unwrap();
+            .exec(&Default::default(), 0, 0, &mut map_builder);
 
         map_builder.add_coord("test color", &GameCoord::default());
         let map = map_builder.build();
@@ -419,8 +413,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_split_name() {
+    #[test]
+    fn test_split_name() {
         let test_split_name = vec![
             DocRichText {
                 tag: None,
@@ -445,14 +439,12 @@ mod test {
         };
 
         let exec_line = test_line
-            .exec(&Default::default(), 0, 0, &mut MapSectionBuilder::default())
-            .await
-            .unwrap();
+            .exec(&Default::default(), 0, 0, &mut MapSectionBuilder::default());
         assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
     }
 
-    #[tokio::test]
-    async fn test_missing_icons() {
+    #[test]
+    fn test_missing_icons() {
         let test_line = CompLine {
             map_icon: Some("test icon".to_string()),
             map_coord: GameCoord(1.2, 55.0, 87.8),
@@ -461,9 +453,7 @@ mod test {
         };
         let mut builder = Default::default();
         let exec_line = test_line
-            .exec(&Default::default(), 4, 5, &mut builder)
-            .await
-            .unwrap();
+            .exec(&Default::default(), 4, 5, &mut builder);
         assert_eq!(exec_line.diagnostics.len(), 3);
         assert_eq!(exec_line.diagnostics[0].msg_type, "warning");
         assert_eq!(exec_line.diagnostics[0].source, "celer/engine");

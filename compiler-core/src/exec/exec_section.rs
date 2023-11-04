@@ -1,6 +1,6 @@
 use crate::comp::CompSection;
 use crate::types::{ExecSection, RouteMetadata};
-use crate::util::async_for;
+use crate::util::yield_budget;
 
 use super::{ExecResult, MapSectionBuilder};
 
@@ -15,15 +15,16 @@ impl CompSection {
         map_builder: &mut MapSectionBuilder,
     ) -> ExecResult<ExecSection> {
         let mut lines = vec![];
-        async_for!((index, line) in self.lines.into_iter().enumerate(), {
-            let exec_line = line.exec(project, section_number, index, map_builder).await?;
+        for (index, line) in self.lines.into_iter().enumerate() {
+            yield_budget(64).await;
+            let exec_line = line.exec(project, section_number, index, map_builder);
             lines.push(exec_line);
-        });
-        Ok(ExecSection {
+        }
+        ExecSection {
             name: self.name,
             lines,
             map: map_builder.build(),
-        })
+        }
     }
 }
 
@@ -41,9 +42,7 @@ mod test {
             ..Default::default()
         };
         let exec_section = test_section
-            .exec(&Default::default(), 1, &mut MapSectionBuilder::default())
-            .await
-            .unwrap();
+            .exec(&Default::default(), 1, &mut MapSectionBuilder::default()).await;
 
         assert_eq!(exec_section.name, "test");
     }
@@ -56,8 +55,7 @@ mod test {
         };
         let exec_section = test_section
             .exec(&Default::default(), 3, &mut MapSectionBuilder::default())
-            .await
-            .unwrap();
+            .await;
         assert_eq!(exec_section.lines[0].section, 3);
         assert_eq!(exec_section.lines[0].index, 0);
         assert_eq!(exec_section.lines[1].section, 3);
@@ -82,8 +80,7 @@ mod test {
 
         let exec_section = test_section
             .exec(&Default::default(), 4, &mut MapSectionBuilder::default())
-            .await
-            .unwrap();
+            .await;
         assert_eq!(
             exec_section.map.icons,
             vec![
@@ -133,8 +130,7 @@ mod test {
 
         let exec_section = test_section
             .exec(&Default::default(), 4, &mut MapSectionBuilder::default())
-            .await
-            .unwrap();
+            .await;
         assert_eq!(
             exec_section.map.markers,
             vec![
@@ -189,8 +185,7 @@ mod test {
 
         let exec_section = test_section
             .exec(&Default::default(), 4, &mut builder)
-            .await
-            .unwrap();
+            .await;
 
         assert_eq!(
             exec_section.map.lines,
