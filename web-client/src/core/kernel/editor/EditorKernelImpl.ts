@@ -11,7 +11,6 @@ import {
     settingsActions,
 } from "core/store";
 import { EntryPointsSorted, get_entry_points } from "low/celerc";
-import { fetchAsBytes } from "low/fetch";
 import { FileSys, FsResult } from "low/fs";
 import { Result, allocOk, isInDarkMode, sleep, wrapAsync } from "low/utils";
 
@@ -85,10 +84,7 @@ export class EditorKernelImpl implements EditorKernel {
     }
 
     public async init(): Promise<void> {
-        await this.compMgr.init(
-            this.fileMgr.getFileAsBytes.bind(this.fileMgr),
-            fetchAsBytes,
-        );
+        await this.compMgr.init(this.fileMgr.getFileAsBytes.bind(this.fileMgr));
     }
 
     /// Reset the editor with a new file system. Unsaved changes will be lost
