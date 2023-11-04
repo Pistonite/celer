@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use celerc::types::EntryPointsSorted;
-use interop::OpaqueExecDoc;
 use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
@@ -11,6 +10,7 @@ use celerc::util::{Marc, Path};
 use celerc::Setting;
 
 mod interop;
+use interop::OpaqueExecDoc;
 mod loader_file;
 mod loader_url;
 mod logger;
@@ -56,9 +56,6 @@ pub async fn get_entry_points() -> Result<EntryPointsSorted, JsValue> {
 }
 
 /// Compile a document from web editor
-///
-/// Return undefined if the compilation was interrupted
-/// TODO #78: undefined no longer needed
 #[wasm_bindgen]
 pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDoc, JsValue> {
     let root_resource = create_root_resource();
@@ -99,12 +96,6 @@ pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDo
 
     let x = context.compile().await;
     OpaqueExecDoc::wrap(x)
-}
-
-/// Request current compilation be cancelled
-#[wasm_bindgen]
-pub fn request_cancel() {
-    celerc::cancel_current_compilation();
 }
 
 /// Create a resource that corresponds to the project root

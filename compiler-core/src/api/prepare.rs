@@ -50,8 +50,8 @@ pub async fn prepare_compiler(
         context.phase0.meta.presets.insert(name, preset);
     }
 
-    // TODO #78: I don't know why it is fine in compile but not here
-    // however it is fine in WASM so we can keep it this way until Alpha 2
+    // TODO #25: I don't know why it is fine in compile but not here
+    // however it is fine in WASM so we can keep it this way until compiler runs on the server
 
     #[cfg(feature = "no-async-send")]
     for plugin in &plugins {

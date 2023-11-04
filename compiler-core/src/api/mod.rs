@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use derivative::Derivative;
 use instant::Instant;
-use log::{error, info};
+use log::error;
 
 use crate::comp::Compiler;
 use crate::lang::Preset;
@@ -50,22 +50,16 @@ pub fn make_project_for_error(source: &str) -> RouteMetadata {
     }
 }
 
-// TODO #78: Option no longer needed
-pub async fn make_doc_for_packer_error(
-    source: &str,
-    error: PackerError,
-) -> Option<ExecDoc<'static>> {
-    let comp_doc = Compiler::default()
-        .create_empty_doc_for_packer_error(error)
-        .await;
+pub async fn make_doc_for_packer_error(source: &str, error: PackerError) -> ExecDoc<'static> {
+    let comp_doc = Compiler::default().create_empty_doc_for_packer_error(error);
     let project = make_project_for_error(source);
-    let exec_doc = comp_doc.exec(&project).await.ok()?;
-    Some(ExecDoc {
+    let exec_doc = comp_doc.exec(&project).await;
+    ExecDoc {
         preface: exec_doc.preface,
         route: exec_doc.route,
         diagnostics: exec_doc.diagnostics,
         project: Cow::Owned(project),
-    })
+    }
 }
 
 pub struct CompilerContext {
@@ -121,11 +115,4 @@ pub struct Setting {
     /// The maximum depth of preset references in route
     #[derivative(Default(value = "8"))]
     pub max_preset_ref_depth: usize,
-}
-
-#[cfg(feature = "wasm")]
-#[inline]
-pub fn cancel_current_compilation() {
-    crate::util::set_cancelled(true);
-    info!("cancel requested");
 }

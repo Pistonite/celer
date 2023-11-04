@@ -13,7 +13,7 @@ use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
 use crate::types::{DocColor, DocDiagnostic, DocRichText, DocTag};
-use crate::util::async_for;
+use crate::util::yield_budget;
 
 use super::{operation, PlugResult, PluginRuntime};
 
@@ -214,8 +214,8 @@ impl VariablesPlugin {
         self.temporary.clear();
     }
 
-    pub async fn update_vars(&mut self, diagnostics: &mut Vec<DocDiagnostic>, vars: &Value) {
-        if let Err(e) = self.update_vars_internal(vars).await {
+    pub fn update_vars(&mut self, diagnostics: &mut Vec<DocDiagnostic>, vars: &Value) {
+        if let Err(e) = self.update_vars_internal(vars) {
             diagnostics.push(DocDiagnostic {
                 msg: lang::parse_poor(&e),
                 msg_type: "error".to_string(),
@@ -224,27 +224,31 @@ impl VariablesPlugin {
         }
     }
 
-    async fn update_vars_internal(&mut self, vars: &Value) -> Result<(), String> {
+    fn update_vars_internal(&mut self, vars: &Value) -> Result<(), String> {
         match vars {
-            Value::Object(map) => self.update_vars_map(map).await?,
+            Value::Object(map) => self.update_vars_map(map)?,
             Value::Array(arr) => {
-                let _ = async_for!(v in arr, {
-                    let map = v.as_object().ok_or("vars array must contain objects".to_string())?;
-                    self.update_vars_map(map).await?;
-                });
+                for v in arr {
+                    let map = v
+                        .as_object()
+                        .ok_or("vars array must contain objects".to_string())?;
+                    self.update_vars_map(map)?;
+                }
             }
             _ => return Err("vars must be an object or an array of objects".to_string()),
         }
         Ok(())
     }
 
-    async fn update_vars_map(&mut self, vars: &Map<String, Value>) -> Result<(), String> {
+    fn update_vars_map(&mut self, vars: &Map<String, Value>) -> Result<(), String> {
         let mut updates = vec![];
-        let _ = async_for!((k, v) in vars, {
+        for (k, v) in vars {
             let text = v.coerce_to_string();
             let ops = lang::parse_rich(&text);
             let mut iter = ops.into_iter();
-            let op = iter.next().ok_or(format!("invalid empty operation: `{text}`"))?;
+            let op = iter
+                .next()
+                .ok_or(format!("invalid empty operation: `{text}`"))?;
             if iter.next().is_some() {
                 return Err(format!("invalid operation: `{text}`"));
             }
@@ -261,13 +265,17 @@ impl VariablesPlugin {
             };
             let new_v = op.apply(self.get(k), self);
             updates.push((k, new_v));
-        });
-        let _ = async_for!((k, v) in updates, {
+        }
+        for (k, v) in updates {
             match self.get_mut(k) {
-                Some(v_ref) => {*v_ref = v;}// likely
-                None => {self.insert(k.to_string(), v);}
+                Some(v_ref) => {
+                    *v_ref = v;
+                } // likely
+                None => {
+                    self.insert(k.to_string(), v);
+                }
             };
-        });
+        }
         Ok(())
     }
 }
@@ -296,14 +304,15 @@ impl PluginRuntime for VariablesPlugin {
         comp_doc.known_props.insert(prop::VARS.to_string());
         comp_doc.known_props.insert(prop::VALS.to_string());
 
-        let _ = async_for!(preface in comp_doc.preface.iter_mut(), {
+        for preface in comp_doc.preface.iter_mut() {
+            yield_budget(64).await;
             for block in preface.iter_mut() {
                 self.transform_text(&mut comp_doc.diagnostics, block, VAL);
             }
-        });
+        }
         operation::for_each_line!(line in comp_doc {
             if let Some(vars) = line.properties.get(prop::VARS) {
-                self.update_vars(&mut line.diagnostics, vars).await
+                self.update_vars(&mut line.diagnostics, vars);
             }
             if let Some(t) = line.counter_text.as_mut() {
                 let tag = t.text.to_string();

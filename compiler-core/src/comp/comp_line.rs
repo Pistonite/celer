@@ -8,7 +8,6 @@ use crate::lang;
 use crate::lang::PresetInst;
 use crate::prop;
 use crate::types::{DocDiagnostic, DocNote, DocRichText, GameCoord};
-use crate::util::async_for;
 
 use super::{
     validate_not_array_or_object, CompError, CompMarker, CompMovement, Compiler, CompilerResult,
@@ -65,11 +64,11 @@ impl<'a> Compiler<'a> {
     ///
     /// Errors are returned as an Err variant with the line and the errors.
     /// Diagnostics are not added to the line.
-    pub async fn comp_line(&mut self, value: Value) -> CompilerResult<CompLine> {
+    pub fn comp_line(&mut self, value: Value) -> CompilerResult<CompLine> {
         let mut errors = vec![];
 
         // Convert line into object form
-        let (text, mut line_obj) = match super::desugar_line(value).await {
+        let (text, mut line_obj) = match super::desugar_line(value) {
             Ok(line) => line,
             Err((text, error)) => {
                 errors.push(error);
@@ -85,8 +84,7 @@ impl<'a> Compiler<'a> {
 
         // Process the presets
         if let Some(presets) = line_obj.remove(prop::PRESETS) {
-            self.process_presets(0, presets, &mut properties, &mut errors)
-                .await;
+            self.process_presets(0, presets, &mut properties, &mut errors);
         }
 
         if !properties.contains_key(prop::TEXT) {
@@ -99,18 +97,16 @@ impl<'a> Compiler<'a> {
                 // At this level, we will only process the preset if it exists
                 // otherwise treat the string as a regular string
                 if self.meta.presets.contains_key(&inst.name) {
-                    self.apply_preset(0, &inst, &mut properties, &mut errors)
-                        .await;
+                    self.apply_preset(0, &inst, &mut properties, &mut errors);
                 }
             }
         }
         properties.extend(line_obj);
-        super::desugar_properties(&mut properties).await;
+        super::desugar_properties(&mut properties);
         if let Some(movements) = properties.remove(prop::MOVEMENTS) {
             properties.insert(
                 prop::MOVEMENTS.to_string(),
-                self.expand_presets_in_movements(0, movements, &mut errors)
-                    .await,
+                self.expand_presets_in_movements(0, movements, &mut errors),
             );
         }
 
@@ -119,7 +115,6 @@ impl<'a> Compiler<'a> {
         // Process each property
         for (key, value) in properties.into_iter() {
             self.process_property(key.as_str(), value, &mut output, &mut errors)
-                .await;
         }
 
         if errors.is_empty() {
@@ -139,7 +134,7 @@ impl<'a> Compiler<'a> {
     }
 
     /// Process a property and save it to the output line
-    async fn process_property(
+    fn process_property(
         &mut self,
         key: &str,
         value: Value,
@@ -166,8 +161,7 @@ impl<'a> Compiler<'a> {
                 };
 
                 let mut notes = vec![];
-                // ignore error from async loop
-                let _ = async_for!((i, note_value) in iter.enumerate(), {
+                for (i, note_value) in iter.enumerate() {
                     validate_not_array_or_object!(
                         &note_value,
                         errors,
@@ -176,7 +170,7 @@ impl<'a> Compiler<'a> {
                     notes.push(DocNote::Text {
                         content: lang::parse_rich(&note_value.coerce_to_string()),
                     });
-                });
+                }
                 output.notes = notes;
             }
             prop::SPLIT_NAME => {
@@ -239,11 +233,12 @@ impl<'a> Compiler<'a> {
                     Value::Array(array) => {
                         // need to track the coordinate of the final position with a stack
                         let mut ref_stack = vec![];
-                        let _ = async_for!((i, v) in array.into_iter().enumerate(), {
-                            if let Some(m) = self
-                                .comp_movement(&format!("{p}[{i}]", p = prop::MOVEMENTS), v, errors)
-                                .await
-                            {
+                        for (i, v) in array.into_iter().enumerate() {
+                            if let Some(m) = self.comp_movement(
+                                &format!("{p}[{i}]", p = prop::MOVEMENTS),
+                                v,
+                                errors,
+                            ) {
                                 match &m {
                                     CompMovement::Push => {
                                         if let Some(i) = ref_stack.last() {
@@ -260,7 +255,7 @@ impl<'a> Compiler<'a> {
                                 }
                                 output.movements.push(m);
                             }
-                        });
+                        }
                         if let Some(i) = ref_stack.last() {
                             if let CompMovement::To { to, .. } = &output.movements[*i] {
                                 output.map_coord = to.clone();
@@ -277,14 +272,13 @@ impl<'a> Compiler<'a> {
             }
             prop::MARKERS => match value {
                 Value::Array(array) => {
-                    let _ = async_for!((i, v) in array.into_iter().enumerate(), {
-                        if let Some(m) = self
-                            .comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
-                            .await
+                    for (i, v) in array.into_iter().enumerate() {
+                        if let Some(m) =
+                            self.comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
                         {
                             output.markers.push(m);
                         }
-                    });
+                    }
                 }
                 _ => errors.push(CompError::InvalidLinePropertyType(
                     prop::MARKERS.to_string(),
@@ -309,25 +303,25 @@ mod test {
 
     use super::*;
 
-    async fn test_comp_ok(compiler: &mut Compiler<'static>, input: Value, expected: CompLine) {
-        let result = compiler.comp_line(input).await;
+    fn test_comp_ok(compiler: &mut Compiler<'static>, input: Value, expected: CompLine) {
+        let result = compiler.comp_line(input);
         assert_eq!(result, Ok(expected));
     }
 
-    async fn test_comp_err(
+    fn test_comp_err(
         compiler: &mut Compiler<'static>,
         input: Value,
         expected: CompLine,
         errors: Vec<CompError>,
     ) {
-        let result = compiler.comp_line(input).await;
+        let result = compiler.comp_line(input);
         assert_eq!(result, Err((expected, errors)));
     }
 
-    #[tokio::test]
-    async fn test_primitive() {
+    #[test]
+    fn test_primitive() {
         let mut compiler = Compiler::default();
-        test_comp_ok(&mut compiler, json!(null), CompLine::default()).await;
+        test_comp_ok(&mut compiler, json!(null), CompLine::default());
 
         test_comp_ok(
             &mut compiler,
@@ -336,8 +330,7 @@ mod test {
                 text: vec![DocRichText::text("true")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -346,8 +339,7 @@ mod test {
                 text: vec![DocRichText::text("false")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -356,8 +348,7 @@ mod test {
                 text: vec![DocRichText::text("0")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -366,8 +357,7 @@ mod test {
                 text: vec![DocRichText::text("-123")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -376,8 +366,7 @@ mod test {
                 text: vec![DocRichText::text("456")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -386,8 +375,7 @@ mod test {
                 text: vec![DocRichText::text("hello world")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -399,12 +387,11 @@ mod test {
                 ],
                 ..Default::default()
             },
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_invalid() {
+    #[test]
+    fn test_invalid() {
         let mut compiler = Compiler::default();
 
         test_comp_err(
@@ -415,8 +402,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::ArrayCannotBeLine],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -426,8 +412,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::EmptyObjectCannotBeLine],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -440,8 +425,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::TooManyKeysInObjectLine],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -453,12 +437,11 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::LinePropertiesMustBeObject],
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_text_overrides() {
+    #[test]
+    fn test_text_overrides() {
         let mut compiler = Compiler::default();
 
         test_comp_ok(
@@ -472,8 +455,7 @@ mod test {
                 text: vec![DocRichText::text("hello world")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -487,8 +469,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("text".to_string())],
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -502,8 +483,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("hello world")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -518,8 +498,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("comment".to_string())],
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -535,8 +514,7 @@ mod test {
                 }],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -557,8 +535,7 @@ mod test {
                 ],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -572,8 +549,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("notes".to_string())],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -600,8 +576,7 @@ mod test {
                 CompError::InvalidLinePropertyType("comment".to_string()),
                 CompError::InvalidLinePropertyType("notes[1]".to_string()),
             ],
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -618,8 +593,7 @@ mod test {
                 ]),
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -633,8 +607,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("split-name".to_string())],
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -648,12 +621,11 @@ mod test {
                 split_name: Some(vec![]),
                 ..Default::default()
             },
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_preset_one_level() {
+    #[test]
+    fn test_preset_one_level() {
         let mut builder = CompilerBuilder::default();
         builder
             .add_preset(
@@ -662,7 +634,6 @@ mod test {
                     "text": "hello world",
                     "comment": "foo bar",
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -670,7 +641,6 @@ mod test {
                 Preset::compile(json!({
                     "comment": "foo bar",
                 }))
-                .await
                 .unwrap(),
             );
         let mut compiler = builder.build();
@@ -683,8 +653,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("foo bar")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -698,8 +667,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("foo bar 2")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -713,8 +681,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("foo bar 2")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -728,8 +695,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("foo bar")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -743,8 +709,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("foo bar 2")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -757,12 +722,11 @@ mod test {
                 text: vec![DocRichText::text("_preset")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_preset_nested() {
+    #[test]
+    fn test_preset_nested() {
         let mut builder = CompilerBuilder::default();
         builder
             .add_preset(
@@ -770,7 +734,6 @@ mod test {
                 Preset::compile(json!({
                     "comment": "preset one",
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -779,7 +742,6 @@ mod test {
                     "comment": "preset two",
                     "text": "preset two text",
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -788,7 +750,6 @@ mod test {
                     "text": "preset three",
                     "presets": ["_preset::two"]
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -797,7 +758,6 @@ mod test {
                     "text": "preset four: arg is $(0)",
                     "presets": ["_preset::one", "_preset::three"]
                 }))
-                .await
                 .unwrap(),
             )
             .add_preset(
@@ -805,7 +765,6 @@ mod test {
                 Preset::compile(json!({
                     "presets": ["_preset::overflow"]
                 }))
-                .await
                 .unwrap(),
             );
         let mut compiler = builder.build();
@@ -822,8 +781,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("preset one")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -837,8 +795,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidPresetString("foo".to_string())],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -858,8 +815,7 @@ mod test {
                 CompError::InvalidPresetString("_hello::".to_string()),
                 CompError::InvalidPresetString("123".to_string()),
             ],
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -873,8 +829,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("preset two")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -884,8 +839,7 @@ mod test {
                 secondary_text: vec![DocRichText::text("preset two")],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -897,12 +851,11 @@ mod test {
             vec![CompError::MaxPresetDepthExceeded(
                 "_preset::overflow".to_string(),
             )],
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_icon_overrides() {
+    #[test]
+    fn test_icon_overrides() {
         let mut compiler = Compiler::default();
 
         test_comp_ok(
@@ -918,8 +871,7 @@ mod test {
                 map_icon: Some("my-icon".to_string()),
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -936,8 +888,7 @@ mod test {
                 CompError::InvalidLinePropertyType("icon-doc".to_string()),
                 CompError::InvalidLinePropertyType("icon-map".to_string()),
             ],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -954,8 +905,7 @@ mod test {
                 CompError::InvalidLinePropertyType("icon-doc".to_string()),
                 CompError::InvalidLinePropertyType("icon-map".to_string()),
             ],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -972,8 +922,7 @@ mod test {
                 CompError::InvalidLinePropertyType("icon-doc".to_string()),
                 CompError::InvalidLinePropertyType("icon-map".to_string()),
             ],
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -991,8 +940,7 @@ mod test {
                 map_icon_priority: 1,
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -1016,12 +964,11 @@ mod test {
                 CompError::InvalidLinePropertyType("icon-map".to_string()),
                 CompError::InvalidLinePropertyType("icon-priority".to_string()),
             ],
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_default_icon_priority() {
+    #[test]
+    fn test_default_icon_priority() {
         let mut builder = CompilerBuilder::default();
         builder.set_default_icon_priority(10);
         let mut compiler = builder.build();
@@ -1040,12 +987,11 @@ mod test {
                 map_icon_priority: 10,
                 ..Default::default()
             },
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_icon_hide() {
+    #[test]
+    fn test_icon_hide() {
         let mut builder = CompilerBuilder::default();
         builder.add_preset(
             "_Example",
@@ -1053,7 +999,6 @@ mod test {
                 "icon-doc": "my-doc-icon",
                 "icon-map": "my-map-icon",
             }))
-            .await
             .unwrap(),
         );
         let mut compiler = builder.build();
@@ -1071,8 +1016,7 @@ mod test {
                 doc_icon: Some("my-doc-icon".to_string()),
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -1087,12 +1031,11 @@ mod test {
                 map_icon: Some("my-map-icon".to_string()),
                 ..Default::default()
             },
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_counter_override() {
+    #[test]
+    fn test_counter_override() {
         let mut compiler = Compiler::default();
 
         test_comp_ok(
@@ -1107,8 +1050,7 @@ mod test {
                 counter_text: Some(DocRichText::text("hello")),
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -1122,8 +1064,7 @@ mod test {
                 counter_text: Some(DocRichText::with_tag("test", "hello")),
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -1137,8 +1078,7 @@ mod test {
                 counter_text: Some(DocRichText::with_tag("test", "")),
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_ok(
             &mut compiler,
@@ -1152,8 +1092,7 @@ mod test {
                 counter_text: None,
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -1167,8 +1106,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("counter".to_string())],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -1183,12 +1121,11 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::TooManyTagsInCounter],
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_inherit_color_coord() {
+    #[test]
+    fn test_inherit_color_coord() {
         let builder = CompilerBuilder::new(
             Default::default(),
             "color".to_string(),
@@ -1205,12 +1142,11 @@ mod test {
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_change_color() {
+    #[test]
+    fn test_change_color() {
         let builder = CompilerBuilder::new(
             Default::default(),
             "color".to_string(),
@@ -1231,8 +1167,7 @@ mod test {
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -1248,12 +1183,11 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("color".to_string())],
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_change_coord() {
+    #[test]
+    fn test_change_coord() {
         let builder = CompilerBuilder::new(
             RouteMetadata {
                 map: MapMetadata {
@@ -1283,8 +1217,7 @@ mod test {
                 movements: vec![CompMovement::to(GameCoord(4.0, 5.0, 6.0))],
                 ..Default::default()
             },
-        )
-        .await;
+        );
         assert_eq!(compiler.coord, GameCoord(4.0, 5.0, 6.0));
 
         let mut compiler = builder.clone().build();
@@ -1309,8 +1242,7 @@ mod test {
                 ],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         let mut compiler = builder.build();
         test_comp_err(
@@ -1326,12 +1258,11 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("movements".to_string())],
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_movements_preset() {
+    #[test]
+    fn test_movements_preset() {
         let mut builder = CompilerBuilder::new(
             RouteMetadata {
                 map: MapMetadata {
@@ -1354,7 +1285,6 @@ mod test {
                     [7, "8", 9],
                 ]
             }))
-            .await
             .unwrap(),
         );
         let mut compiler = builder.build();
@@ -1379,12 +1309,11 @@ mod test {
                 ],
                 ..Default::default()
             },
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_markers() {
+    #[test]
+    fn test_markers() {
         let mut compiler = test_utils::create_test_compiler_with_coord_transform();
 
         test_comp_ok(
@@ -1408,8 +1337,7 @@ mod test {
                 ],
                 ..Default::default()
             },
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -1423,8 +1351,7 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("markers".to_string())],
-        )
-        .await;
+        );
 
         test_comp_err(
             &mut compiler,
@@ -1440,12 +1367,11 @@ mod test {
                 ..Default::default()
             },
             vec![CompError::InvalidMarkerType],
-        )
-        .await;
+        );
     }
 
-    #[tokio::test]
-    async fn test_unused_properties() {
+    #[test]
+    fn test_unused_properties() {
         let mut compiler = Compiler::default();
 
         test_comp_ok(
@@ -1462,7 +1388,6 @@ mod test {
                     .collect(),
                 ..Default::default()
             },
-        )
-        .await;
+        );
     }
 }

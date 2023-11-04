@@ -8,7 +8,7 @@ use serde_json::Value;
 
 use crate::json::Cast;
 use crate::macros::{async_recursion, maybe_send};
-use crate::util::async_for;
+use crate::util::yield_budget;
 
 use super::{PackerError, PackerValue, Resource, Use, ValidUse};
 
@@ -50,7 +50,8 @@ async fn pack_route_internal(
     let route = match route.try_into_array() {
         Ok(arr) => {
             let mut output = vec![];
-            let _ = async_for!(x in arr.into_iter(), {
+            for x in arr.into_iter() {
+                yield_budget(64).await;
                 match Use::try_from(x) {
                     Ok(Use::Invalid(path)) => {
                         output.push(PackerValue::Err(PackerError::InvalidUse(path)));
@@ -60,10 +61,11 @@ async fn pack_route_internal(
                             resource,
                             x,
                             use_depth,
-                            ref_depth+1,
+                            ref_depth + 1,
                             max_use_depth,
-                            max_ref_depth
-                        ).await;
+                            max_ref_depth,
+                        )
+                        .await;
                         output.push(result);
                     }
                     Ok(Use::Valid(valid_use)) => {
@@ -73,7 +75,8 @@ async fn pack_route_internal(
                             use_depth,
                             max_use_depth,
                             max_ref_depth,
-                        ).await;
+                        )
+                        .await;
                         match result {
                             PackerValue::Array(arr) => {
                                 output.extend(arr);
@@ -84,7 +87,7 @@ async fn pack_route_internal(
                         }
                     }
                 }
-            });
+            }
 
             return PackerValue::Array(output);
         }
@@ -98,18 +101,19 @@ async fn pack_route_internal(
             match x.try_into_object() {
                 Ok(obj) => {
                     let mut new_obj = BTreeMap::new();
-                    // ignore errors in iteration
-                    let _ = async_for!((key, value) in obj.into_iter(), {
+                    for (key, value) in obj.into_iter() {
+                        yield_budget(64).await;
                         let result = pack_route_internal(
                             resource,
                             value,
                             use_depth,
-                            ref_depth+1,
+                            ref_depth + 1,
                             max_use_depth,
-                            max_ref_depth
-                        ).await;
+                            max_ref_depth,
+                        )
+                        .await;
                         new_obj.insert(key, result);
-                    });
+                    }
                     PackerValue::Object(new_obj)
                 }
                 Err(x) => {

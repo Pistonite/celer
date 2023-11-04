@@ -8,7 +8,6 @@ use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
 use crate::types::{DocColor, DocRichText, DocTag};
-use crate::util::async_for;
 
 use super::{operation, PlugResult, PluginRuntime};
 
@@ -37,11 +36,11 @@ impl PluginRuntime for LinkPlugin {
         Ok(())
     }
     async fn on_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
-        let _ = async_for!(preface in comp_doc.preface.iter_mut(), {
+        for preface in comp_doc.preface.iter_mut() {
             for block in preface.iter_mut() {
                 transform_link_tag(block);
             }
-        });
+        }
         operation::for_each_line!(line in comp_doc {
             operation::for_each_rich_text_except_counter!(rich_text in line {
                 transform_link_tag(rich_text);

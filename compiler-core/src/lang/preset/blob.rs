@@ -1,7 +1,6 @@
 use serde_json::Value;
 
 use crate::lang::TempStr;
-use crate::macros::{async_recursion, maybe_send};
 
 use super::{Preset, PresetBlob};
 
@@ -9,14 +8,14 @@ impl Preset {
     /// Compile a preset
     ///
     /// Returns None if the json blob is not an object
-    pub async fn compile(value: Value) -> Option<Self> {
+    pub fn compile(value: Value) -> Option<Self> {
         let obj = match value {
             Value::Object(obj) => obj,
             _ => return None,
         };
         let mut properties = Vec::with_capacity(obj.len());
         for (key, value) in obj.into_iter() {
-            let sub = PresetBlob::compile(value).await;
+            let sub = PresetBlob::compile(value);
             properties.push((TempStr::from(key), sub));
         }
         Some(Self(properties))
@@ -25,8 +24,8 @@ impl Preset {
 
 impl PresetBlob {
     /// Compile template strings in a json blob
-    pub async fn compile(mut value: Value) -> Self {
-        match Self::compile_internal(&mut value).await {
+    pub fn compile(mut value: Value) -> Self {
+        match Self::compile_internal(&mut value) {
             Some(blob) => blob,
             None => Self::NonTemplate(value),
         }
@@ -36,8 +35,7 @@ impl PresetBlob {
     /// If the blob has any template strings in it, returns a Some variant with
     /// the template strings compiled and the input value `.take()`-en out.
     /// Otherwise returns a None variant.
-    #[maybe_send(async_recursion)]
-    async fn compile_internal(value: &mut Value) -> Option<Self> {
+    fn compile_internal(value: &mut Value) -> Option<Self> {
         match value {
             Value::String(s) => {
                 let tempstr = TempStr::from(s);
@@ -51,7 +49,7 @@ impl PresetBlob {
                 let mut result = vec![];
                 let mut has_template = false;
                 for value in arr.iter_mut() {
-                    let sub = Self::compile_internal(value).await;
+                    let sub = Self::compile_internal(value);
                     if sub.is_some() {
                         has_template = true;
                     }
@@ -79,7 +77,7 @@ impl PresetBlob {
                 let mut has_template = false;
                 for (key, value) in obj.iter_mut() {
                     let key = TempStr::from(key);
-                    let sub = Self::compile_internal(value).await;
+                    let sub = Self::compile_internal(value);
                     if sub.is_some() || !key.is_literal() {
                         has_template = true;
                     }
@@ -114,25 +112,25 @@ mod test {
 
     use super::*;
 
-    #[tokio::test]
-    async fn test_error() {
-        assert_eq!(Preset::compile(json!([])).await, None);
-        assert_eq!(Preset::compile(json!("something")).await, None);
-        assert_eq!(Preset::compile(json!(true)).await, None);
-        assert_eq!(Preset::compile(json!(null)).await, None);
-        assert_eq!(Preset::compile(json!(0)).await, None);
+    #[test]
+    fn test_error() {
+        assert_eq!(Preset::compile(json!([])), None);
+        assert_eq!(Preset::compile(json!("something")), None);
+        assert_eq!(Preset::compile(json!(true)), None);
+        assert_eq!(Preset::compile(json!(null)), None);
+        assert_eq!(Preset::compile(json!(0)), None);
     }
 
-    #[tokio::test]
-    async fn test_empty() {
+    #[test]
+    fn test_empty() {
         assert_eq!(
-            Preset::compile(json!({})).await,
+            Preset::compile(json!({})),
             Some(Preset([].into_iter().collect()))
         );
     }
 
-    #[tokio::test]
-    async fn test_one_level() {
+    #[test]
+    fn test_one_level() {
         let value = json!({
             "a": "foo",
             "b": "foo$(1)",
@@ -144,11 +142,11 @@ mod test {
                 PresetBlob::Template(TempStr::from("foo$(1)")),
             ),
         ]));
-        assert_eq!(Preset::compile(value).await, expected);
+        assert_eq!(Preset::compile(value), expected);
     }
 
-    #[tokio::test]
-    async fn test_many_levels() {
+    #[test]
+    fn test_many_levels() {
         let value = json!({
             "a": "foo",
             "b": "foo$(1)",
@@ -237,6 +235,6 @@ mod test {
                 ]),
             ),
         ]));
-        assert_eq!(Preset::compile(value).await, expected);
+        assert_eq!(Preset::compile(value), expected);
     }
 }

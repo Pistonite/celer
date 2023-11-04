@@ -1,21 +1,19 @@
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
-use crate::macros::{async_recursion, maybe_send};
-
 use super::{Preset, PresetBlob};
 
 impl Preset {
     /// Hydrate a preset with the given arguments
     ///
     /// Return a new json blob with all template strings hydrated with the arguments
-    pub async fn hydrate<S>(&self, args: &[S]) -> BTreeMap<String, Value>
+    pub fn hydrate<S>(&self, args: &[S]) -> BTreeMap<String, Value>
     where
         S: AsRef<str> + Sync,
     {
         let mut out = BTreeMap::new();
         for (key, value) in self.0.iter() {
-            out.insert(key.hydrate(args).await, value.hydrate(args).await);
+            out.insert(key.hydrate(args), value.hydrate(args));
         }
         out
     }
@@ -23,29 +21,28 @@ impl Preset {
 
 impl PresetBlob {
     /// Hydrate a preset blob with the given arguments
-    #[maybe_send(async_recursion)]
-    pub async fn hydrate<S>(&self, args: &[S]) -> Value
+    pub fn hydrate<S>(&self, args: &[S]) -> Value
     where
         S: AsRef<str> + Sync,
     {
         match self {
             Self::NonTemplate(value) => value.clone(),
             Self::Template(tempstr) => {
-                let str = tempstr.hydrate(args).await;
+                let str = tempstr.hydrate(args);
                 Value::String(str)
             }
             Self::Array(arr) => {
                 let mut out = vec![];
                 for x in arr {
-                    out.push(x.hydrate(args).await);
+                    out.push(x.hydrate(args));
                 }
                 Value::Array(out)
             }
             Self::Object(props) => {
                 let mut out = json!({});
                 for (key_template, val) in props {
-                    let key = key_template.hydrate(args).await;
-                    out[key] = val.hydrate(args).await;
+                    let key = key_template.hydrate(args);
+                    out[key] = val.hydrate(args);
                 }
                 out
             }
@@ -61,25 +58,24 @@ mod test {
 
     const ARGS: &[&str] = &["hello", "world", "temp"];
 
-    #[tokio::test]
-    async fn test_emptyobj() {
-        let preset = Preset::compile(json!({})).await.unwrap();
+    #[test]
+    fn test_emptyobj() {
+        let preset = Preset::compile(json!({})).unwrap();
 
-        assert_eq!(preset.hydrate(ARGS).await, btree_map! {});
+        assert_eq!(preset.hydrate(ARGS), btree_map! {});
     }
 
-    #[tokio::test]
-    async fn test_one_level() {
+    #[test]
+    fn test_one_level() {
         let preset = Preset::compile(json!({
             "a": "foo$(1)",
             "b": "world",
             "c": "te$(0)mp"
         }))
-        .await
         .unwrap();
 
         assert_eq!(
-            preset.hydrate(ARGS).await,
+            preset.hydrate(ARGS),
             btree_map! {
                 "a".to_string() => json!("fooworld"),
                 "b".to_string() => json!("world"),
@@ -88,8 +84,8 @@ mod test {
         );
     }
 
-    #[tokio::test]
-    async fn test_nested() {
+    #[test]
+    fn test_nested() {
         let preset = Preset::compile(json!({
             "a": "foo$(1)",
             "b": ["world$(2)", {
@@ -98,11 +94,10 @@ mod test {
             "c": "temp$(0)$(1)",
             "$(1)a$(2)": "$(0)"
         }))
-        .await
         .unwrap();
 
         assert_eq!(
-            preset.hydrate(ARGS).await,
+            preset.hydrate(ARGS),
             btree_map! {
                 "a".to_string() => json!("fooworld"),
                 "b".to_string() => json!(["worldtemp", {

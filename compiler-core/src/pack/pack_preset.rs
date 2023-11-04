@@ -7,7 +7,7 @@ use crate::json::Cast;
 use crate::lang::Preset;
 use crate::macros::{async_recursion, maybe_send};
 use crate::prop;
-use crate::util::async_for;
+use crate::util::yield_budget;
 
 use super::{ConfigTrace, PackerError, PackerResult};
 
@@ -42,7 +42,8 @@ async fn pack_presets_internal(
         }
     })?;
 
-    let _ = async_for!((key, value) in obj.into_iter(), {
+    for (key, value) in obj.into_iter() {
+        yield_budget(256).await;
         if let Some(namespace) = key.strip_prefix('_') {
             // sub namespace
             let full_key = if preset_name.is_empty() {
@@ -50,7 +51,7 @@ async fn pack_presets_internal(
             } else {
                 format!("{preset_name}::{namespace}")
             };
-            pack_presets_internal(&full_key, value, trace, depth+1, max_depth, output).await?;
+            pack_presets_internal(&full_key, value, trace, depth + 1, max_depth, output).await?;
         } else {
             // preset
             let full_key = if preset_name.is_empty() {
@@ -58,12 +59,11 @@ async fn pack_presets_internal(
             } else {
                 format!("{preset_name}::{key}")
             };
-            let preset = Preset::compile(value).await.ok_or_else(|| {
-                PackerError::InvalidPreset(trace.clone(), full_key.clone())
-            })?;
+            let preset = Preset::compile(value)
+                .ok_or_else(|| PackerError::InvalidPreset(trace.clone(), full_key.clone()))?;
             output.push((full_key, preset));
         }
-    });
+    }
 
     Ok(())
 }
