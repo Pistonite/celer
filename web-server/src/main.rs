@@ -46,7 +46,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let router = init_home(router);
     let router = init_docs(router, &env.docs_dir)?;
     let router = init_edit(router, &env.app_dir)?;
-    let router = init_static(router, &env.app_dir, &["/celerc", "/static", "/assets", "/themes"])?;
+    let router = init_static(
+        router,
+        &env.app_dir,
+        &["/celerc", "/static", "/assets", "/themes"],
+    )?;
 
     let router = router.layer(
         tower_http::trace::TraceLayer::new_for_http()
