@@ -18,4 +18,4 @@ export const initCompiler = (store: AppStore): CompilerKernel => {
     const compiler = new CompilerKernelImpl(store);
     window.__theCompilerKernel = compiler;
     return compiler;
-}
+};

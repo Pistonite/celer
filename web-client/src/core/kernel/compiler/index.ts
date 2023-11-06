@@ -3,4 +3,3 @@ CompilerLog.info("loading compiler module");
 
 export * from "./CompilerKernel";
 export * from "./initCompiler";
-

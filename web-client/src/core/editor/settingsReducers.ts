@@ -34,8 +34,9 @@ export const setCompilerEntryPath = withPayload<EditorSettingsState, string>(
     },
 );
 
-export const setCompilerUseCachePack0 = withPayload<EditorSettingsState, boolean>(
-    (state, compilerUseCachePack0) => {
-        state.compilerUseCachePack0 = compilerUseCachePack0;
-    },
-);
+export const setCompilerUseCachePack0 = withPayload<
+    EditorSettingsState,
+    boolean
+>((state, compilerUseCachePack0) => {
+    state.compilerUseCachePack0 = compilerUseCachePack0;
+});

@@ -234,7 +234,6 @@ export class Kernel {
         } else {
             // TODO #122: bind FileSys directly to compiler
         }
-
     }
     async initCompilerWithRetry(fileAccess: FileAccess) {
         const MAX_TRIES = 10;

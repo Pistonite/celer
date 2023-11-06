@@ -205,7 +205,7 @@ export const EditorSettings: React.FC = () => {
                         })}
                     </Dropdown>
                 </Field>
-                <Field 
+                <Field
                     label="Cache Config"
                     hint="Allow the compiler to cache certain configurations such as presets and plugins to speed up compilation."
                 >

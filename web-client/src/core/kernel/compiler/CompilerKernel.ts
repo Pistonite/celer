@@ -14,7 +14,7 @@ export interface CompilerKernel {
 
     /// Cleanup the compiler.
     ///
-    /// Note that this may not stop the worker, 
+    /// Note that this may not stop the worker,
     /// which is automatically stopped if there is a new worker
     delete(): void;
 

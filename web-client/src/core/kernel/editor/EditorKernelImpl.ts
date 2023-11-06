@@ -10,7 +10,7 @@ import {
     SettingsState,
 } from "core/store";
 import { FileAccess, FileSys, FsResult } from "low/fs";
-import { isInDarkMode, } from "low/utils";
+import { isInDarkMode } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
 import { EditorLog, toFsPath } from "./utils";
@@ -169,7 +169,10 @@ export class EditorKernelImpl implements EditorKernel, FileAccess {
         return this;
     }
 
-    public async getFileContent(path: string, checkChanged: boolean): Promise<FsResult<Uint8Array>> {
+    public async getFileContent(
+        path: string,
+        checkChanged: boolean,
+    ): Promise<FsResult<Uint8Array>> {
         return await this.fileMgr.getFileAsBytes(path, checkChanged);
     }
 

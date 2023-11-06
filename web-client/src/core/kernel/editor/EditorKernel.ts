@@ -9,7 +9,7 @@ import { FileAccess, FileSys, FsResult } from "low/fs";
 /// without importing the editor module.
 export interface EditorKernel {
     /// Initialize
-    /// 
+    ///
     /// Argument:
     /// - compile: a function that triggers a compilation
     init(compile: () => void): void;

@@ -392,7 +392,10 @@ export class FileMgr {
     }
 
     private modifiedTimeWhenLastAccessed: { [path: string]: number } = {};
-    public async getFileAsBytes(path: string, checkChanged: boolean): Promise<FsResult<Uint8Array>> {
+    public async getFileAsBytes(
+        path: string,
+        checkChanged: boolean,
+    ): Promise<FsResult<Uint8Array>> {
         return await this.ensureLockedFs("getFileAsBytes", async () => {
             if (!this.fs) {
                 return allocErr(FsResultCodes.Fail);
@@ -404,10 +407,14 @@ export class FileMgr {
                 this.files[fsPath.path] = fsFile;
             }
             if (checkChanged) {
-                const modifiedTimeLast = this.modifiedTimeWhenLastAccessed[path];
+                const modifiedTimeLast =
+                    this.modifiedTimeWhenLastAccessed[path];
                 const modifiedTimeCurrent = await fsFile.getLastModified();
                 this.modifiedTimeWhenLastAccessed[path] = modifiedTimeCurrent;
-                if (modifiedTimeLast && modifiedTimeLast >= modifiedTimeCurrent) {
+                if (
+                    modifiedTimeLast &&
+                    modifiedTimeLast >= modifiedTimeCurrent
+                ) {
                     // 1. file was accessed before
                     // 2. file was not modified since last access
                     return allocErr(FsResultCodes.NotModified);

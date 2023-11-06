@@ -1,7 +1,18 @@
 import reduxWatch from "redux-watch";
 
-import { AppStore, SettingsState, documentActions, settingsActions, settingsSelector, viewActions } from "core/store";
-import { EntryPointsSorted, compile_document, get_entry_points } from "low/celerc";
+import {
+    AppStore,
+    SettingsState,
+    documentActions,
+    settingsActions,
+    settingsSelector,
+    viewActions,
+} from "core/store";
+import {
+    EntryPointsSorted,
+    compile_document,
+    get_entry_points,
+} from "low/celerc";
 import {
     Debouncer,
     wrapAsync,
@@ -40,7 +51,10 @@ export class CompilerKernelImpl implements CompilerKernel {
 
     constructor(store: AppStore) {
         this.store = store;
-        this.compilerDebouncer = new Debouncer(100, this.compileInternal.bind(this));
+        this.compilerDebouncer = new Debouncer(
+            100,
+            this.compileInternal.bind(this),
+        );
         this.needCompile = false;
         this.compiling = false;
 
@@ -67,23 +81,39 @@ export class CompilerKernelImpl implements CompilerKernel {
         CompilerLog.info("initializing compiler worker...");
         this.fileAccess = fileAccess;
         const worker = new Worker("/celerc/worker.js");
-        registerWorkerHandler("load_file", async ([path, checkChanged]: [string, boolean]) => {
-            if (!isFileAccessAvailable(this.fileAccess)) {
-                worker.postMessage(["file", 1, path, "file access not available"]);
-                return;
-            }
-            const result = await this.fileAccess.getFileContent(path, checkChanged);
-            if (result.isOk()) {
-                worker.postMessage(["file", 0, path, [true, result.inner()]]);
-            } else {
-                const err = result.inner();
-                if (err === FsResultCodes.NotModified) {
-                    worker.postMessage(["file", 0, path, [false]]);
-                } else {
-                    worker.postMessage(["file", 1, path, err]);
+        registerWorkerHandler(
+            "load_file",
+            async ([path, checkChanged]: [string, boolean]) => {
+                if (!isFileAccessAvailable(this.fileAccess)) {
+                    worker.postMessage([
+                        "file",
+                        1,
+                        path,
+                        "file access not available",
+                    ]);
+                    return;
                 }
-            }
-        });
+                const result = await this.fileAccess.getFileContent(
+                    path,
+                    checkChanged,
+                );
+                if (result.isOk()) {
+                    worker.postMessage([
+                        "file",
+                        0,
+                        path,
+                        [true, result.inner()],
+                    ]);
+                } else {
+                    const err = result.inner();
+                    if (err === FsResultCodes.NotModified) {
+                        worker.postMessage(["file", 0, path, [false]]);
+                    } else {
+                        worker.postMessage(["file", 1, path, err]);
+                    }
+                }
+            },
+        );
 
         await setWorker(worker, CompilerLog);
         this.workerReady = true;
@@ -112,13 +142,15 @@ export class CompilerKernelImpl implements CompilerKernel {
             await sleep(500);
         }
         // check if entry path is a valid file
-        const { compilerEntryPath } = settingsSelector(
-            this.store.getState(),
-        );
-        if ( compilerEntryPath) {
-            const filePath = compilerEntryPath.startsWith("/") ? compilerEntryPath.substring(1) : compilerEntryPath;
-            if (!await this.fileAccess.exists(filePath)) {
-                CompilerLog.warn("entry path is invalid, attempting correction...");
+        const { compilerEntryPath } = settingsSelector(this.store.getState());
+        if (compilerEntryPath) {
+            const filePath = compilerEntryPath.startsWith("/")
+                ? compilerEntryPath.substring(1)
+                : compilerEntryPath;
+            if (!(await this.fileAccess.exists(filePath))) {
+                CompilerLog.warn(
+                    "entry path is invalid, attempting correction...",
+                );
             }
 
             const newEntryPath = await this.correctEntryPath(compilerEntryPath);
@@ -156,9 +188,14 @@ export class CompilerKernelImpl implements CompilerKernel {
             // to trigger another compile
             this.needCompile = false;
             CompilerLog.info("invoking compiler...");
-            const { compilerUseCachePack0 } = settingsSelector(this.store.getState());
+            const { compilerUseCachePack0 } = settingsSelector(
+                this.store.getState(),
+            );
             const result = await wrapAsync(() => {
-                return compile_document(this.validatedEntryPath, compilerUseCachePack0);
+                return compile_document(
+                    this.validatedEntryPath,
+                    compilerUseCachePack0,
+                );
             });
             if (result.isErr()) {
                 console.error(result.inner());
@@ -203,8 +240,10 @@ export class CompilerKernelImpl implements CompilerKernel {
                 if (!isFileAccessAvailable(this.fileAccess)) {
                     return "";
                 }
-                const filePath = path.startsWith("/") ? path.substring(1) : path;
-                if ( (await this.fileAccess.exists(filePath))) {
+                const filePath = path.startsWith("/")
+                    ? path.substring(1)
+                    : path;
+                if (await this.fileAccess.exists(filePath)) {
                     return path;
                 }
                 break;
@@ -216,8 +255,10 @@ export class CompilerKernelImpl implements CompilerKernel {
                 if (!isFileAccessAvailable(this.fileAccess)) {
                     return "";
                 }
-                const filePath = path.startsWith("/") ? path.substring(1) : path;
-                if ( (await this.fileAccess.exists(filePath))) {
+                const filePath = path.startsWith("/")
+                    ? path.substring(1)
+                    : path;
+                if (await this.fileAccess.exists(filePath)) {
                     return path;
                 }
             }
