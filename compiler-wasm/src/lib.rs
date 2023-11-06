@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::*;
 
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
 use celerc::util::{Marc, Path};
-use celerc::{Setting, CompilerContext};
+use celerc::{CompilerContext, Setting};
 
 mod interop;
 use interop::OpaqueExecDoc;
@@ -82,11 +82,9 @@ async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
             return false;
         }
     }
-    let is_same = CACHED_COMPILER_ENTRY_PATH.with_borrow(|x| {
-        x.as_ref() == entry_path
-    });
+    let is_same = CACHED_COMPILER_ENTRY_PATH.with_borrow(|x| x.as_ref() == entry_path);
     if !is_same {
-            info!("entry changed");
+        info!("entry changed");
         return false;
     }
 
@@ -95,7 +93,10 @@ async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
 
 /// Compile a document from web editor
 #[wasm_bindgen]
-pub async fn compile_document(entry_path: Option<String>, use_cache: bool) -> Result<OpaqueExecDoc, JsValue> {
+pub async fn compile_document(
+    entry_path: Option<String>,
+    use_cache: bool,
+) -> Result<OpaqueExecDoc, JsValue> {
     if use_cache && is_cached_compiler_valid(entry_path.as_ref()).await {
         if let Some(mut context) = CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.take()) {
             info!("using cached compiler context");

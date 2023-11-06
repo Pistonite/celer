@@ -3,13 +3,13 @@ use std::cell::RefCell;
 
 use base64::engine::general_purpose;
 use base64::Engine;
-use js_sys::{Function, Uint8Array, Array};
+use js_sys::{Array, Function, Uint8Array};
 use log::info;
 use wasm_bindgen::prelude::*;
 
 use celerc::macros::async_trait;
 use celerc::pack::{ImageFormat, MarcLoader, PackerError, PackerResult, ResourceLoader};
-use celerc::util::{yield_budget, Marc};
+use celerc::util::Marc;
 
 use crate::interop::{self, JsIntoFuture};
 use crate::logger;
@@ -40,7 +40,13 @@ pub fn bind(load_file: Function) {
 
 pub async fn load_file_from_js(path: &str, check_changed: bool) -> Result<LoadOutput, JsValue> {
     let result = LOAD_FILE
-        .with_borrow(|f| f.call2(&JsValue::UNDEFINED, &JsValue::from(path), &JsValue::from(check_changed)))?
+        .with_borrow(|f| {
+            f.call2(
+                &JsValue::UNDEFINED,
+                &JsValue::from(path),
+                &JsValue::from(check_changed),
+            )
+        })?
         .into_future()
         .await?
         .dyn_into::<Array>()?;
@@ -67,12 +73,14 @@ impl ResourceLoader for FileLoader {
 
         match load_file_from_js(path, false).await {
             Ok(LoadOutput::Loaded(bytes)) => Ok(bytes),
-            Ok(LoadOutput::NotModified) => {
-                Err(PackerError::LoadFile(format!("unreachable: file {path} not modified")))
-            }
+            Ok(LoadOutput::NotModified) => Err(PackerError::LoadFile(format!(
+                "unreachable: file {path} not modified"
+            ))),
             Err(e) => {
                 logger::raw_error(&e);
-                Err(PackerError::LoadFile(format!("loading {path} from JS failed.")))
+                Err(PackerError::LoadFile(format!(
+                    "loading {path} from JS failed."
+                )))
             }
         }
     }
