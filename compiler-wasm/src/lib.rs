@@ -1,13 +1,15 @@
 use std::borrow::Cow;
+use std::cell::RefCell;
 
 use celerc::types::EntryPointsSorted;
 use js_sys::Function;
+use loader_file::LoadOutput;
 use log::info;
 use wasm_bindgen::prelude::*;
 
 use celerc::pack::{LocalResourceResolver, Resource, ResourcePath};
 use celerc::util::{Marc, Path};
-use celerc::Setting;
+use celerc::{CompilerContext, Setting};
 
 mod interop;
 use interop::OpaqueExecDoc;
@@ -55,9 +57,59 @@ pub async fn get_entry_points() -> Result<EntryPointsSorted, JsValue> {
     Ok(entry_points)
 }
 
+thread_local! {
+    static CACHED_COMPILER_CONTEXT: RefCell<Option<CompilerContext>> = RefCell::new(None);
+}
+
+thread_local! {
+    static CACHED_COMPILER_ENTRY_PATH: RefCell<Option<String>> = RefCell::new(None);
+}
+
+async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
+    let root_project_result = loader_file::load_file_from_js("project.yaml", true).await;
+    if !matches!(root_project_result, Ok(LoadOutput::NotModified)) {
+        info!("root project.yaml is modified");
+        return false;
+    }
+    if let Some(entry_path) = entry_path {
+        let entry_path = match entry_path.strip_prefix('/') {
+            Some(x) => x,
+            None => entry_path,
+        };
+        let entry_result = loader_file::load_file_from_js(entry_path, true).await;
+        if !matches!(entry_result, Ok(LoadOutput::NotModified)) {
+            info!("entry project.yaml is modified");
+            return false;
+        }
+    }
+    let is_same = CACHED_COMPILER_ENTRY_PATH.with_borrow(|x| x.as_ref() == entry_path);
+    if !is_same {
+        info!("entry changed");
+        return false;
+    }
+
+    true
+}
+
 /// Compile a document from web editor
 #[wasm_bindgen]
-pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDoc, JsValue> {
+pub async fn compile_document(
+    entry_path: Option<String>,
+    use_cache: bool,
+) -> Result<OpaqueExecDoc, JsValue> {
+    if use_cache && is_cached_compiler_valid(entry_path.as_ref()).await {
+        if let Some(mut context) = CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.take()) {
+            info!("using cached compiler context");
+            context.reset_start_time();
+            let x = context.compile().await;
+            let return_val = OpaqueExecDoc::wrap(x);
+            CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.replace(context));
+            return return_val;
+        }
+    }
+
+    CACHED_COMPILER_ENTRY_PATH.with_borrow_mut(|x| *x = entry_path.clone());
+
     let root_resource = create_root_resource();
     let (allow_redirect, project_resource_result) = match entry_path.as_ref() {
         None => (
@@ -82,7 +134,6 @@ pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDo
         }
     };
     let setting = Setting::default();
-    // TODO #86 cache this
     let context =
         match celerc::prepare_compiler(&source_name, project_resource, setting, allow_redirect)
             .await
@@ -95,7 +146,10 @@ pub async fn compile_document(entry_path: Option<String>) -> Result<OpaqueExecDo
         };
 
     let x = context.compile().await;
-    OpaqueExecDoc::wrap(x)
+    let return_val = OpaqueExecDoc::wrap(x);
+    CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.replace(context));
+
+    return_val
 }
 
 /// Create a resource that corresponds to the project root

@@ -8,8 +8,10 @@ import {
     settingsSelector,
     viewActions,
 } from "core/store";
-import { console, Logger, isInDarkMode } from "low/utils";
+import { console, Logger, isInDarkMode, sleep } from "low/utils";
+import type { FileAccess, FileSys } from "low/fs";
 
+import type { CompilerKernel } from "./compiler";
 import type { EditorKernel } from "./editor";
 import { KeyMgr } from "./KeyMgr";
 
@@ -45,8 +47,11 @@ export class Kernel {
     private alertCallback: ((ok: boolean) => void) | undefined = undefined;
 
     // Editor API
-    // The editor is owned by the kernel because the toobar needs access
+    // The editor is owned by the kernel because the toolbar needs access
     private editor: EditorKernel | null = null;
+
+    // Compiler API
+    private compiler: CompilerKernel | null = null;
 
     constructor(initReact: InitUiFunction) {
         this.log = new Logger("ker");
@@ -79,10 +84,10 @@ export class Kernel {
         this.log.info("initializing stage...");
         const path = window.location.pathname;
         if (path === "/edit") {
-            const { initEditor } = await import("./editor");
-            const editor = initEditor(store);
-            await editor.init();
-            this.editor = editor;
+            const { initCompiler } = await import("./compiler");
+            const compiler = initCompiler(store);
+            this.compiler = compiler;
+
             store.dispatch(viewActions.setStageMode("edit"));
         } else {
             store.dispatch(viewActions.setStageMode("view"));
@@ -203,5 +208,43 @@ export class Kernel {
 
     public getEditor(): EditorKernel | null {
         return this.editor;
+    }
+
+    public getCompiler(): CompilerKernel | null {
+        return this.compiler;
+    }
+
+    public async setFileSys(fs: FileSys) {
+        // TODO #122: only need to init editor if not using external editor
+        const webEditor = true;
+        if (webEditor) {
+            if (!this.editor) {
+                if (!this.store) {
+                    throw new Error("store not initialized");
+                }
+                const { initEditor } = await import("./editor");
+                const editor = initEditor(this.store);
+                editor.init(() => {
+                    this.compiler?.compile();
+                });
+                this.editor = editor;
+            }
+            this.editor.reset(fs);
+            this.initCompilerWithRetry(this.editor.getFileAccess());
+        } else {
+            // TODO #122: bind FileSys directly to compiler
+        }
+    }
+    async initCompilerWithRetry(fileAccess: FileAccess) {
+        const MAX_TRIES = 10;
+        for (let i = 0; i < MAX_TRIES; i++) {
+            if (this.compiler) {
+                await this.compiler.init(fileAccess);
+                return;
+            }
+            console.warn("compiler not ready, retrying...");
+            await sleep(500);
+        }
+        console.error("compiler not ready after max retries");
     }
 }

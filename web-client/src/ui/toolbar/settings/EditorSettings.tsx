@@ -27,6 +27,7 @@ export const EditorSettings: React.FC = () => {
         autoLoadEnabled,
         deactivateAutoLoadAfterMinutes,
         compilerEntryPath,
+        compilerUseCachePack0,
     } = useSelector(settingsSelector);
     const {
         setShowFileTree,
@@ -34,6 +35,7 @@ export const EditorSettings: React.FC = () => {
         setAutoLoadEnabled,
         setDeactivateAutoLoadAfterMinutes,
         setCompilerEntryPath,
+        setCompilerUseCachePack0,
     } = useActions(settingsActions);
     const { setAutoLoadActive } = useActions(viewActions);
     const deactivateAutoLoadMinutesOptions = [5, 10, 15, 30, 60];
@@ -42,12 +44,12 @@ export const EditorSettings: React.FC = () => {
     const [entryPoints, setEntryPoints] = useState<EntryPointsSorted>([]);
     useEffect(() => {
         (async () => {
-            const editor = kernel.getEditor();
-            if (!editor) {
+            const compiler = kernel.getCompiler();
+            if (!compiler) {
                 setEntryPoints([]);
                 return;
             }
-            const result = await editor.getEntryPoints();
+            const result = await compiler.getEntryPoints();
             if (!result.isOk()) {
                 setEntryPoints([]);
                 return;
@@ -202,6 +204,17 @@ export const EditorSettings: React.FC = () => {
                             );
                         })}
                     </Dropdown>
+                </Field>
+                <Field
+                    label="Cache Config"
+                    hint="Allow the compiler to cache certain configurations such as presets and plugins to speed up compilation."
+                >
+                    <Switch
+                        checked={!!compilerUseCachePack0}
+                        onChange={(_, data) => {
+                            setCompilerUseCachePack0(data.checked);
+                        }}
+                    />
                 </Field>
             </SettingsSection>
         </>

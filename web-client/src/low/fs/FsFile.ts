@@ -22,8 +22,7 @@ export class FsFile {
     private content: string | undefined;
     /// If the content string is newer than the bytes
     private isContentNewer: boolean;
-
-    /// The last modified time of the file on fs when last checked
+    /// The last modified time of the file
     private lastModified: number | undefined;
 
     constructor(fs: FileSys, path: FsPath) {
@@ -45,13 +44,21 @@ export class FsFile {
         return this.isBufferDirty || this.isContentNewer;
     }
 
+    /// Get the last modified time. May load it from file system if needed
+    ///
+    /// If fails to load, returns 0
+    public async getLastModified(): Promise<number> {
+        if (this.lastModified === undefined) {
+            await this.loadIfNotDirty();
+        }
+        return this.lastModified ?? 0;
+    }
+
     /// Get the text content of the file
     ///
     /// If the file is not loaded, it will load it.
     ///
     /// If the file is not a text file, it will return InvalidEncoding
-    ///
-    /// If clearChangedSinceLastCompile is true, it will clear the flag.
     public async getText(): Promise<FsResult<string>> {
         if (this.buffer === undefined) {
             const result = await this.load();
@@ -86,6 +93,7 @@ export class FsFile {
         }
         this.content = content;
         this.isContentNewer = true;
+        this.lastModified = new Date().getTime();
     }
 
     /// Load the file's content if it's not newer than fs

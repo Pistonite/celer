@@ -8,26 +8,25 @@ import {
     viewActions,
     ViewState,
     SettingsState,
-    settingsActions,
 } from "core/store";
-import { EntryPointsSorted, get_entry_points } from "low/celerc";
-import { FileSys, FsResult } from "low/fs";
-import { Result, allocOk, isInDarkMode, sleep, wrapAsync } from "low/utils";
+import { FileAccess, FileSys, FsResult } from "low/fs";
+import { isInDarkMode } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
 import { EditorLog, toFsPath } from "./utils";
 import { IdleMgr } from "./IdleMgr";
 import { FileMgr } from "./FileMgr";
-import { CompMgr } from "./CompMgr";
 
-export class EditorKernelImpl implements EditorKernel {
+export class EditorKernelImpl implements EditorKernel, FileAccess {
     private store: AppStore;
 
     private idleMgr: IdleMgr;
     private fileMgr: FileMgr;
-    private compMgr: CompMgr;
 
     private shouldRecompile = false;
+    private compile: () => void = () => {
+        EditorLog.warn("compiler not binded");
+    };
 
     private cleanup: () => void;
 
@@ -50,8 +49,6 @@ export class EditorKernelImpl implements EditorKernel {
             this.idleMgr.notifyActivity();
         });
         this.fileMgr = new FileMgr(monacoDom, monacoEditor, store);
-
-        this.compMgr = new CompMgr(store);
 
         const resizeHandler = this.onResize.bind(this);
         window.addEventListener("resize", resizeHandler);
@@ -83,8 +80,8 @@ export class EditorKernelImpl implements EditorKernel {
         this.idleMgr.start();
     }
 
-    public async init(): Promise<void> {
-        await this.compMgr.init(this.fileMgr.getFileAsBytes.bind(this.fileMgr));
+    public init(compile: () => void): void {
+        this.compile = compile;
     }
 
     /// Reset the editor with a new file system. Unsaved changes will be lost
@@ -167,91 +164,28 @@ export class EditorKernelImpl implements EditorKernel {
         return result.makeOk(undefined);
     }
 
-    public async compile(): Promise<void> {
-        this.shouldRecompile = false;
-        if (!this.fileMgr.isFsLoaded()) {
-            return;
-        }
-        const entryPath = settingsSelector(
-            this.store.getState(),
-        ).compilerEntryPath;
-        // check if entry path is a valid file
-        if (
-            entryPath &&
-            !(await this.fileMgr.exists(toFsPath(entryPath.split("/"))))
-        ) {
-            EditorLog.warn("entry path is invalid, attempting correction...");
-            const newEntryPath = await this.correctEntryPath(entryPath);
-            if (newEntryPath !== entryPath) {
-                // update asynchronously to avoid infinite blocking loop
-                await sleep(0);
-                this.store.dispatch(
-                    settingsActions.setCompilerEntryPath(newEntryPath),
-                );
-                return;
-            }
-        }
-        this.compMgr.triggerCompile(entryPath);
+    // === FileAccess ===
+    public getFileAccess(): FileAccess {
+        return this;
     }
 
-    public getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>> {
-        if (!this.fileMgr.isFsLoaded()) {
-            return Promise.resolve(allocOk([]));
-        }
-        return wrapAsync(get_entry_points);
+    public async getFileContent(
+        path: string,
+        checkChanged: boolean,
+    ): Promise<FsResult<Uint8Array>> {
+        return await this.fileMgr.getFileAsBytes(path, checkChanged);
     }
 
-    /// Try to correct an invalid entry path
-    ///
-    /// The invalid entry path may be saved from a previous project.
-    /// The function will try to find a valid entry path from the current project.
-    /// However, if the same entry path is found in the current project, that will be returned
-    private async correctEntryPath(entryPath: string): Promise<string> {
-        const entryPointsResult = await this.getEntryPoints();
-        if (entryPointsResult.isErr()) {
-            return "";
-        }
-        const newEntryPoints = entryPointsResult.inner();
-        if (newEntryPoints.length === 0) {
-            return "";
-        }
-        // if entry point with the same path exists, don't correct it
-        for (const [_, path] of newEntryPoints) {
-            if (path === entryPath) {
-                return path;
-            }
-        }
-        // if entry point with "default" name exists, try that first
-        for (const [name, path] of newEntryPoints) {
-            if (name === "default") {
-                if (
-                    path &&
-                    (await this.fileMgr.exists(toFsPath(path.split("/"))))
-                ) {
-                    return path;
-                }
-                break;
-            }
-        }
-        // otherwise find the first valid entry point
-        for (const [_, path] of newEntryPoints) {
-            if (
-                path &&
-                (await this.fileMgr.exists(toFsPath(path.split("/"))))
-            ) {
-                return path;
-            }
-        }
-        return "";
+    public isAvailable(): boolean {
+        return this.fileMgr.isFsLoaded();
     }
 
-    private onSettingsUpdate(oldVal: SettingsState, newVal: SettingsState) {
+    public async exists(path: string): Promise<boolean> {
+        return await this.fileMgr.exists(toFsPath(path.split("/")));
+    }
+
+    private onSettingsUpdate(_oldVal: SettingsState, _newVal: SettingsState) {
         this.onResize();
-        if (this.fileMgr.isFsLoaded()) {
-            if (oldVal.compilerEntryPath !== newVal.compilerEntryPath) {
-                this.compile();
-            }
-        }
     }
 
     private onViewUpdate(oldVal: ViewState, newVal: ViewState) {

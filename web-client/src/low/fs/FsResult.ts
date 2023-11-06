@@ -13,7 +13,7 @@ export const FsResultCodes = {
     /// The operation does not apply to a file
     IsFile: 5,
     /// The file was not modified since the last check
-    // NotModified: 6,
+    NotModified: 6,
     /// Permission error
     PermissionDenied: 7,
 } as const;
