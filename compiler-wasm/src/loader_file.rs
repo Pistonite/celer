@@ -3,7 +3,7 @@ use std::cell::RefCell;
 
 use base64::engine::general_purpose;
 use base64::Engine;
-use js_sys::{Function, Uint8Array};
+use js_sys::{Function, Uint8Array, Array};
 use log::info;
 use wasm_bindgen::prelude::*;
 
@@ -17,14 +17,40 @@ use crate::logger;
 thread_local! {
     /// Callback function to ask JS to load a file
     ///
-    /// Takes in a string as argument.
-    /// Returns a promise that resolves to a Uint8Array that could throw
+    /// Arguments:
+    /// - path: string
+    /// - checkChanged: bool
+    /// Returns a promise that resolves to either:
+    /// - [true, Uint8Array] if the file was loaded
+    /// - [false] if the file was not modified
+    ///
+    /// The promise is rejected if the file could not be loaded.
     static LOAD_FILE: RefCell<Function> = RefCell::new(interop::stub_function());
+}
+
+pub enum LoadOutput {
+    Loaded(Vec<u8>),
+    NotModified,
 }
 
 /// Bind file loader to a `load_file` function
 pub fn bind(load_file: Function) {
     LOAD_FILE.replace(load_file);
+}
+
+pub async fn load_file_from_js(path: &str, check_changed: bool) -> Result<LoadOutput, JsValue> {
+    let result = LOAD_FILE
+        .with_borrow(|f| f.call2(&JsValue::UNDEFINED, &JsValue::from(path), &JsValue::from(check_changed)))?
+        .into_future()
+        .await?
+        .dyn_into::<Array>()?;
+
+    let modified = result.get(0).as_bool().unwrap_or_default();
+    if !modified {
+        return Ok(LoadOutput::NotModified);
+    }
+    let bytes = result.get(1).dyn_into::<Uint8Array>()?.to_vec();
+    Ok(LoadOutput::Loaded(bytes))
 }
 
 pub fn new_loader() -> MarcLoader {
@@ -38,21 +64,17 @@ pub struct FileLoader;
 impl ResourceLoader for FileLoader {
     async fn load_raw(&self, path: &str) -> PackerResult<Vec<u8>> {
         info!("loading {path}");
-        yield_budget(1).await;
 
-        let bytes = async {
-            LOAD_FILE
-                .with_borrow(|f| f.call1(&JsValue::UNDEFINED, &JsValue::from(path)))?
-                .into_future()
-                .await?
-                .dyn_into::<Uint8Array>()
+        match load_file_from_js(path, false).await {
+            Ok(LoadOutput::Loaded(bytes)) => Ok(bytes),
+            Ok(LoadOutput::NotModified) => {
+                Err(PackerError::LoadFile(format!("unreachable: file {path} not modified")))
+            }
+            Err(e) => {
+                logger::raw_error(&e);
+                Err(PackerError::LoadFile(format!("loading {path} from JS failed.")))
+            }
         }
-        .await
-        .map_err(|e| {
-            logger::raw_error(&e);
-            PackerError::LoadFile(format!("loading {path} from JS failed."))
-        })?;
-        Ok(bytes.to_vec())
     }
 
     async fn load_image_url(&self, path: &str) -> PackerResult<String> {

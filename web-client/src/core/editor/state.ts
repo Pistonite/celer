@@ -43,6 +43,7 @@ export type EditorSettingsState = {
     showFileTree: boolean;
     deactivateAutoLoadAfterMinutes: number;
     compilerEntryPath: string;
+    compilerUseCachePack0: boolean;
 };
 
 export const initialEditorSettingsState: EditorSettingsState = {
@@ -51,4 +52,5 @@ export const initialEditorSettingsState: EditorSettingsState = {
     showFileTree: true,
     deactivateAutoLoadAfterMinutes: 30,
     compilerEntryPath: "",
+    compilerUseCachePack0: true,
 };

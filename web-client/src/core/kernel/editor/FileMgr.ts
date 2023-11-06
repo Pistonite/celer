@@ -391,20 +391,11 @@ export class FileMgr {
         this.dispatcher.dispatch(viewActions.setUnsavedFiles(unsavedFiles));
     }
 
-    // public checkIfFileChangedSinceLastCompiled(path: string): boolean {
-    //     const fsFile = this.files[path];
-    //     if (!fsFile) {
-    //         // if file is not loaded in the editor then
-    //         // return true so it can be loaded
-    //         return true;
-    //     }
-    //     return fsFile.wasChangedSinceLastCompile();
-    // }
-
-    public async getFileAsBytes(path: string): Promise<Uint8Array> {
+    private modifiedTimeWhenLastAccessed: { [path: string]: number } = {};
+    public async getFileAsBytes(path: string, checkChanged: boolean): Promise<FsResult<Uint8Array>> {
         return await this.ensureLockedFs("getFileAsBytes", async () => {
             if (!this.fs) {
-                throw new Error("fs is not initialized");
+                return allocErr(FsResultCodes.Fail);
             }
             let fsFile = this.files[path];
             if (!fsFile) {
@@ -412,13 +403,17 @@ export class FileMgr {
                 fsFile = new FsFile(this.fs, fsPath);
                 this.files[fsPath.path] = fsFile;
             }
-            const result = await fsFile.getBytes();
-            if (result.isErr()) {
-                throw new Error(
-                    `getFileAsBytes failed with code ${result.inner()}`,
-                );
+            if (checkChanged) {
+                const modifiedTimeLast = this.modifiedTimeWhenLastAccessed[path];
+                const modifiedTimeCurrent = await fsFile.getLastModified();
+                this.modifiedTimeWhenLastAccessed[path] = modifiedTimeCurrent;
+                if (modifiedTimeLast && modifiedTimeLast >= modifiedTimeCurrent) {
+                    // 1. file was accessed before
+                    // 2. file was not modified since last access
+                    return allocErr(FsResultCodes.NotModified);
+                }
             }
-            return result.inner();
+            return await fsFile.getBytes();
         });
     }
 

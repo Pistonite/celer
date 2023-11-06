@@ -1,8 +1,6 @@
 //! Editor logic that wraps monaco editor
 
-import { EntryPointsSorted } from "low/celerc";
-import { FileSys, FsResult } from "low/fs";
-import { Result } from "low/utils";
+import { FileAccess, FileSys, FsResult } from "low/fs";
 
 /// Interface used to access editor API
 ///
@@ -11,7 +9,10 @@ import { Result } from "low/utils";
 /// without importing the editor module.
 export interface EditorKernel {
     /// Initialize
-    init(): Promise<void>;
+    /// 
+    /// Argument:
+    /// - compile: a function that triggers a compilation
+    init(compile: () => void): void;
 
     /// Delete the editor instance
     delete(): void;
@@ -43,12 +44,6 @@ export interface EditorKernel {
     /// Save changes to the file system for the opened files
     saveChangesToFs(isUserAction: boolean): Promise<FsResult<void>>;
 
-    /// Trigger a compiler run asynchrounously
-    ///
-    /// The entry point will be fetched from the state and validated.
-    /// If a compilation is running, there will be another run after it
-    compile(): Promise<void>;
-
-    /// Get compiler entry points
-    getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>>;
+    /// Get a FileAccess implementation
+    getFileAccess(): FileAccess;
 }

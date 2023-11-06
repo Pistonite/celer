@@ -9,11 +9,11 @@ async function __initWorker(HANDLERS) {
             (x) => self.postMessage(["info_fn", undefined, x]),
             (x) => self.postMessage(["warn_fn", undefined, x]),
             (x) => self.postMessage(["error_fn", undefined, x]),
-            (x) => {
+            (path, checkChanged) => {
                 return new Promise((resolve, reject) => {
                     setTimeout(() => {
-                        pendingFiles[x] = [resolve, reject];
-                        self.postMessage(["load_file", undefined, x]);
+                        pendingFiles[path] = [resolve, reject];
+                        self.postMessage(["load_file", undefined, [path, checkChanged]]);
                     }, 0);
                 });
             },
@@ -44,11 +44,15 @@ async function __initWorker(HANDLERS) {
             return;
         }
         if (msgId === "file") {
-            // ["file", 0, [path, data]]
-            // ["file", 1, [path, error]]
-            const handler = pendingFiles[args[0]][funcId];
+            // ["file", 0, path, [true, data]]
+            // ["file", 0, path, [false]]
+            // ["file", 1, path, error]
+            if (!pendingFiles[args]) {
+                return;
+            }
+            const handler = pendingFiles[args][funcId];
             delete pendingFiles[args];
-            setTimeout(() => handler(args[1]), 0);
+            setTimeout(() => handler(event.data[3]), 0);
             return;
         }
         try {

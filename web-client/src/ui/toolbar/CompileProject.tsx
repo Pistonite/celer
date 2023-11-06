@@ -40,12 +40,12 @@ const useCompileProjectControl = () => {
     const kernel = useKernel();
     const { rootPath, compileInProgress } = useSelector(viewSelector);
     const handler = useCallback(async () => {
-        const editor = kernel.getEditor();
-        if (!editor) {
+        const compiler = kernel.getCompiler();
+        if (!compiler) {
             return;
         }
 
-        editor.compile();
+        compiler.compile();
     }, [kernel]);
 
     const icon = <Box20Regular />;

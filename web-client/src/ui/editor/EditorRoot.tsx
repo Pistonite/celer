@@ -92,9 +92,7 @@ export const EditorRoot: React.FC = () => {
                 ) : (
                     <EditorDropZone
                         onFileSysCreate={(fileSys) => {
-                            tryWithEditorRef(kernel, 10, (editor) => {
-                                editor.reset(fileSys);
-                            });
+                            kernel.setFileSys(fileSys);
                         }}
                     />
                 )}
