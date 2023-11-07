@@ -1,11 +1,14 @@
-# Getting Started
-In this section, we will create a minimal working route in Celer using the [Web Editor](scheme://celer.placeholder.domain/edit)
+# Hello, World!
+In this section, we will create a minimal working route in Celer using the [Editor](scheme://celer.placeholder.domain/edit)
+:::tip
+"Hello, World!" is the computer equivalent of a baby's first words. When someone's learning how to tell a computer what to do, which is what programming is all about, the first step is often to get the computer to say "Hello, World!" It's a way to make sure that everything is set up correctly before diving into more complex stuff. *-- ChatGPT*
+:::
 
 ## Creating Files
 The Web Editor currently does not support creating files. So we need to do that ourselves:
 
 1. Create an empty folder on your PC.
-2. Create 2 empty files called `project.yaml` and `main.yaml`
+2. Create 2 empty files called `project.yaml` and `main.yaml` inside that folder.
 :::tip
 The file names are case-sensitive. The file should be named `project.yaml`,
 not `Project.yaml` or `project.yml`

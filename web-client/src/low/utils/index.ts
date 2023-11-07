@@ -2,8 +2,9 @@
 //!
 //! Low level utilities that all layers can use
 
-export * from "./Logger";
+export * from "./IdleMgr";
 export * from "./Debouncer";
+export * from "./Logger";
 export * from "./Pool";
 export * from "./FileSaver";
 export * from "./Result";

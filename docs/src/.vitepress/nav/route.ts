@@ -6,10 +6,18 @@ export const writingRoutesNav = {
 export const writingRoutesSidebar = {
     "/route/": [
         {
+            text: "Using the Editor",
+            items: [
+                { text: "Getting Started", link: "/route/editor/getting-started"},
+                { text: "Web Editor", link: "/route/editor/web"},
+                { text: "External Editor", link: "/route/editor/external"}
+            ]
+        },
+        {
             text: "Make a Route",
             items: [
                 { text: "YAML Basics", link: "/route/yaml-basics" },
-                { text: "Getting Started", link: "/route/getting-started" },
+                { text: "Hello, World!", link: "/route/hello-world" },
                 { text: "Configuration", link: "/route/configuration" },
                 { text: "File Structure", link: "/route/file-structure" },
                 { text: "Route Structure", link: "/route/route-structure" },

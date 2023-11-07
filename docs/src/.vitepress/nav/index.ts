@@ -9,7 +9,7 @@ export const homeNav = {
 export const homeSideBar = {
     "/": [
         {
-            text: "Web Viewer",
+            text: "Features",
             items: [
                 { text: "Layout", link: "/layout" },
                 { text: "Toolbar", link: "/toolbar" },
@@ -17,5 +17,11 @@ export const homeSideBar = {
                 { text: "Map", link: "/map" },
             ],
         },
+        {
+            text: "Misc",
+            items: [
+                { text: "Browser Support", link: "/browser-support" },
+            ]
+        }
     ],
 };

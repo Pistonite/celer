@@ -159,10 +159,10 @@ const ShowIfGroupOverflown: React.FC<
     PropsWithChildren<{ groupId: string }>
 > = ({ children, groupId }) => {
     const groupVisibleState = useIsOverflowGroupVisible(groupId);
-    if (groupVisibleState !== "visible") {
-        return <>{children}</>;
+    if (groupVisibleState === "visible") {
+        return null;
     }
-    return null;
+    return <>{children}</>;
 };
 
 /// Show children if the toolbar item is overflown

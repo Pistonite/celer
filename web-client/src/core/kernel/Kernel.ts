@@ -5,11 +5,12 @@ import {
     SettingsState,
     initStore,
     saveSettings,
+    settingsActions,
     settingsSelector,
     viewActions,
 } from "core/store";
 import { console, Logger, isInDarkMode, sleep } from "low/utils";
-import type { FileAccess, FileSys } from "low/fs";
+import type { FileAccess, FileSys, FsResult } from "low/fs";
 
 import type { CompilerKernel } from "./compiler";
 import type { EditorKernel } from "./editor";
@@ -214,10 +215,93 @@ export class Kernel {
         return this.compiler;
     }
 
-    public async setFileSys(fs: FileSys) {
+    /// Handle the result of opening a project
+    ///
+    /// This will show error message accordingly if the result is failure.
+    /// On success, it will initialize the file system and the editor.
+    ///
+    /// This function eats the error because alerts will be shown to the user
+    public async handleOpenFileSysResult(fileSysResult: FsResult<FileSys>): Promise<void> {
+        const { FsResultCodes, allocErr, allocOk } = await import("low/fs");
+        if (fileSysResult.isErr()) {
+            const code = fileSysResult.inner();
+            if (code === FsResultCodes.NotSupported) {
+                await this.showAlert(
+                    "Not Supported",
+                    "Your browser does not support this feature.",
+                    "Close",
+                    "",
+                );
+            } else if (code === FsResultCodes.IsFile) {
+                await this.showAlert(
+                    "Error",
+                    "You dropped a file. Make sure you are dropping the project folder and not individual files.",
+                    "Close",
+                    "",
+                );
+            } else {
+                await this.showAlert(
+                    "Error",
+                    `Cannot open the project. Make sure you have access to the folder or contact support. (Error code ${code}}`,
+                    "Close",
+                    "",
+                );
+            }
+            return;
+        }
+        const fileSys = fileSysResult.inner();
+        let result = await fileSys.init();
+        while (result.isErr()) {
+            let retry = false;
+            const code = result.inner();
+            if (code === FsResultCodes.PermissionDenied) {
+                retry = await this.showAlert(
+                    "Permission Denied",
+                    "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
+                    "Grant Permission",
+                    "Cancel",
+                );
+            } else {
+                retry = await this.showAlert(
+                    "Error",
+                    `Failed to initialize the project. Please try again. (Error code ${code})`,
+                    "Retry",
+                    "Cancel",
+                );
+            }
+            if (!retry) {
+                return;
+            }
+            result = await fileSys.init();
+        }
         // TODO #122: only need to init editor if not using external editor
         const webEditor = true;
         if (webEditor) {
+            // must be able to save to use web editor
+            if (!fileSys.isWritable()) {
+                const yes = await this.showAlert(
+                    "Save not supported",
+                    "The web editor cannot be used because your browser does not support saving changes to the file system. If you wish to edit the project, you can use the External Editor workflow and have Celer load changes directly from your file system.",
+                    "Use external editor",
+                    "Cancel",
+                );
+                if (yes) {
+                    if (!this.store) {
+                        this.showAlert(
+                            "Error",
+                            "Failed to change the settings. To use external editor. Please go to Settings > Editor.",
+                            "Close",
+                            "",
+                        );
+                    } else {
+                        this.store.dispatch(
+                            settingsActions.setEditorMode("external"),
+                        );
+                    }
+
+                }
+                return;
+            }
             if (!this.editor) {
                 if (!this.store) {
                     throw new Error("store not initialized");

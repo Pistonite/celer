@@ -37,6 +37,8 @@ export const initialEditorViewState: EditorViewState = {
     compileInProgress: false,
 };
 
+export type EditorMode = "external" | "web";
+
 export type EditorSettingsState = {
     autoSaveEnabled: boolean;
     autoLoadEnabled: boolean;
@@ -44,6 +46,7 @@ export type EditorSettingsState = {
     deactivateAutoLoadAfterMinutes: number;
     compilerEntryPath: string;
     compilerUseCachePack0: boolean;
+    editorMode: EditorMode;
 };
 
 export const initialEditorSettingsState: EditorSettingsState = {
@@ -53,4 +56,5 @@ export const initialEditorSettingsState: EditorSettingsState = {
     deactivateAutoLoadAfterMinutes: 30,
     compilerEntryPath: "",
     compilerUseCachePack0: true,
+    editorMode: "web",
 };

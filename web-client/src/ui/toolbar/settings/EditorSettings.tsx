@@ -28,6 +28,7 @@ export const EditorSettings: React.FC = () => {
         deactivateAutoLoadAfterMinutes,
         compilerEntryPath,
         compilerUseCachePack0,
+        editorMode,
     } = useSelector(settingsSelector);
     const {
         setShowFileTree,
@@ -36,6 +37,7 @@ export const EditorSettings: React.FC = () => {
         setDeactivateAutoLoadAfterMinutes,
         setCompilerEntryPath,
         setCompilerUseCachePack0,
+        setEditorMode,
     } = useActions(settingsActions);
     const { setAutoLoadActive } = useActions(viewActions);
     const deactivateAutoLoadMinutesOptions = [5, 10, 15, 30, 60];
@@ -83,15 +85,20 @@ export const EditorSettings: React.FC = () => {
 
     return (
         <>
-            <SettingsSection title="Appearance">
+            <SettingsSection title="General">
+                <Field
+                    label="Workflow"
+                    hint="Web editor lets you "
+                >
+                </Field>
+            </SettingsSection>
+            <SettingsSection title="Editor">
                 <Field label="Show file tree">
                     <Switch
                         checked={!!showFileTree}
                         onChange={(_, data) => setShowFileTree(data.checked)}
                     />
                 </Field>
-            </SettingsSection>
-            <SettingsSection title="Editor">
                 <Field
                     label="Enable auto-save"
                     hint="Automatically save changes made in the web editor to the file system on idle. May override changes made to the file in the file system while the file is opened in the web editor."

@@ -1,7 +1,7 @@
 //! Reducers for editor settings
 import { withPayload } from "low/store";
 
-import { EditorSettingsState } from "./state";
+import { EditorMode, EditorSettingsState } from "./state";
 
 export const setShowFileTree = withPayload<EditorSettingsState, boolean>(
     (state, showFileTree) => {
@@ -39,4 +39,11 @@ export const setCompilerUseCachePack0 = withPayload<
     boolean
 >((state, compilerUseCachePack0) => {
     state.compilerUseCachePack0 = compilerUseCachePack0;
+});
+
+export const setEditorMode = withPayload<
+    EditorSettingsState,
+    EditorMode
+>((state, editorMode) => {
+    state.editorMode = editorMode;
 });
