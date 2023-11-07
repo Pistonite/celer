@@ -19,6 +19,14 @@ import { SettingsSection } from "./SettingsSection";
 const DEFAULT_ENTRY_POINT = "default";
 const DEFAULT_ENTRY_PATH = "/project.yaml";
 
+const WORKFLOWS = {
+    "external": {
+    name: "External editor",
+    hint: "Celer will watch for changes in the file system and automatically reload and recompile the route. You can make changes to the route"
+    }
+    "web": "Web editor",
+} as const;
+
 export const EditorSettings: React.FC = () => {
     const { supportsSave } = useSelector(viewSelector);
     const {
@@ -90,6 +98,34 @@ export const EditorSettings: React.FC = () => {
                     label="Workflow"
                     hint="Web editor lets you "
                 >
+                    <Dropdown
+                        value={
+                            deactivateAutoLoadAfterMinutes > 0
+                                ? `${deactivateAutoLoadAfterMinutes} minutes`
+                                : "Never"
+                        }
+                        selectedOptions={[
+                            deactivateAutoLoadAfterMinutes.toString(),
+                        ]}
+                        onOptionSelect={(_, data) => {
+                            setDeactivateAutoLoadAfterMinutes(
+                                parseInt(data.optionValue ?? "-1") || -1,
+                            );
+                        }}
+                    >
+                        {deactivateAutoLoadMinutesOptions.map((minutes) => (
+                            <Option
+                                key={minutes}
+                                text={`${minutes} minutes`}
+                                value={`${minutes}`}
+                            >
+                                {minutes} minutes
+                            </Option>
+                        ))}
+                        <Option text="Never" value={"-1"}>
+                            Never
+                        </Option>
+                    </Dropdown>
                 </Field>
             </SettingsSection>
             <SettingsSection title="Editor">

@@ -22,17 +22,8 @@ These options are disabled until a document is loaded
 - <FluentIcon name="Layer20Regular"/> `May layer`: Change the current layer displayed. This is disabled if there are only 1 layer.
 - <FluentIcon name="ZoomIn20Regular"/> `Zoom in` and <FluentIcon name="ZoomOut20Regular"/> `Zoom out`: Change the zoom level. You can also scroll on the map to change it.
 
-## Editor Options
-:::tip
-These options are disabled until a document is loaded, and 
-most of these options are hidden unless you are using the Web Editor.
-:::
-
-- <FluentIcon name="DocumentError20Regular" /> `View diagnostics`: Quickly jump to a line where there is an error.
-- <FluentIcon name="Box20Regular" /> `Compile`: Trigger a manual compilation of the project.
-- <FluentIcon name="Save20Regular" /> `Save`: Save the changes in the Web Editor to the file system.
-- <FluentIcon name="ArrowSync20Regular" /> `Sync`: Load the changes from the file system to the Web Editor.
-- <FluentIcon name="Dismiss20Regular" /> `Close project`: Close the project.
+## Diagnostic Options
+- <FluentIcon name="DocumentError20Regular" /> `View diagnostics`: Quickly jump to a line where there is an error, warning, or info message.
 
 ## Other
 - <FluentIcon name="Settings20Regular" /> `Settings`: Open the setting dialog.

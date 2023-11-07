@@ -10,7 +10,8 @@ export const writingRoutesSidebar = {
             items: [
                 { text: "Getting Started", link: "/route/editor/getting-started"},
                 { text: "Web Editor", link: "/route/editor/web"},
-                { text: "External Editor", link: "/route/editor/external"}
+                { text: "External Editor", link: "/route/editor/external"},
+                { text: "Advanced", link: "/route/editor/advanced"}
             ]
         },
         {

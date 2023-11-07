@@ -73,6 +73,7 @@ The recommendation is to close the project (by clicking on <FluentIcon name="Dis
 , make the change from your operating system, then reopen the project.
 
 ## Compiling the route
-Whenever you stop typing, the route should automatically recompile. The <FluentIcon name="ArrowSync20Regular" /> icon will
+Whenever you stop typing, the route should automatically recompile. 
+The <FluentIcon name="ArrowSync20Regular" /> icon will
 spin when the compiler is running. You can also click on it to manually trigger a compilation.
 
