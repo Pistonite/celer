@@ -134,7 +134,10 @@ export class CompilerKernelImpl implements CompilerKernel {
     }
 
     public async getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>> {
-        await this.ensureReady();
+        if(!(await this.ensureReady())) {
+            CompilerLog.error("worker not ready after max waiting");
+            return allocOk([]);
+        }
         if (!this.fileAccess) {
             return allocOk([]);
         }
@@ -152,7 +155,10 @@ export class CompilerKernelImpl implements CompilerKernel {
             CompilerLog.warn("file access not available, skipping compile");
             return;
         }
-        await this.ensureReady();
+        if (!(await this.ensureReady())) {
+            CompilerLog.warn("worker not ready after max waiting, skipping compile");
+            return;
+        }
         // check if entry path is a valid file
         const { compilerEntryPath } = settingsSelector(this.store.getState());
         if (compilerEntryPath) {
@@ -183,11 +189,22 @@ export class CompilerKernelImpl implements CompilerKernel {
         this.compilerDebouncer.dispatch();
     }
 
-    private async ensureReady() {
-        while (!viewSelector(this.store.getState()).compilerReady) {
+    /// Try to wait for the compiler to be ready. Returns true if it becomes ready eventually.
+    ///
+    /// A timeout of 1 minute is implemented to prevent infinite wait.
+    private async ensureReady(): Promise<boolean> {
+        const INTERVAL = 500;
+        const MAX_WAIT = 60000;
+        let acc = 0;
+        while (acc < MAX_WAIT) {
+            if (viewSelector(this.store.getState()).compilerReady) {
+                return true;
+            }
             CompilerLog.info("worker not ready, waiting...");
-            await sleep(500);
+            await sleep(INTERVAL);
+            acc += INTERVAL;
         }
+        return false;
     }
 
     private async compileInternal() {

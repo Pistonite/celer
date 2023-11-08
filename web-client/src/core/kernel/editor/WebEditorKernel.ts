@@ -16,16 +16,15 @@ import {
     SettingsState,
 } from "core/store";
 import { FileAccess, FileSys, FsResult } from "low/fs";
-import { isInDarkMode } from "low/utils";
+import { isInDarkMode, IdleMgr } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
-import { EditorLog, toFsPath } from "./utils";
-import { IdleMgr } from "./IdleMgr";
+import { EditorLog, KernelAccess, toFsPath } from "./utils";
 import { FileMgr } from "./FileMgr";
 
 EditorLog.info("loading web editor kernel");
 
-export const initWebEditor = (store: AppStore): EditorKernel => {
+export const initWebEditor = (kernelAccess: KernelAccess, fileSys: FileSys, store: AppStore): EditorKernel => {
     EditorLog.info("creating web editor");
     window.MonacoEnvironment = {
         getWorker(_, label) {
@@ -38,26 +37,25 @@ export const initWebEditor = (store: AppStore): EditorKernel => {
             return new editorWorker();
         },
     };
-    return new WebEditorKernel(store);
+    return new WebEditorKernel(kernelAccess, fileSys, store);
 }
 
-class WebEditorKernel implements EditorKernel, FileAccess {
+class WebEditorKernel implements EditorKernel {
     private store: AppStore;
 
     private idleMgr: IdleMgr;
     private fileMgr: FileMgr;
 
     private shouldRecompile = false;
-    private compile: () => void = () => {
-        EditorLog.warn("compiler not binded");
-    };
+    private kernelAccess: KernelAccess;
 
     private cleanup: () => void;
 
-    constructor(store: AppStore) {
+    constructor(kernelAccess: KernelAccess, fileSys: FileSys, store: AppStore) {
         this.store = store;
+        this.kernelAccess = kernelAccess;
 
-        this.idleMgr = new IdleMgr(this.onIdle.bind(this));
+        this.idleMgr = new IdleMgr(5000, 1000, 2, 5, 20000, this.onIdle.bind(this));
 
         const monacoDom = document.createElement("div");
         monacoDom.id = "monaco-editor";
@@ -72,7 +70,7 @@ class WebEditorKernel implements EditorKernel, FileAccess {
         monacoEditor.onMouseDown(() => {
             this.idleMgr.notifyActivity();
         });
-        this.fileMgr = new FileMgr(monacoDom, monacoEditor, store);
+        this.fileMgr = new FileMgr(fileSys, monacoDom, monacoEditor, store);
 
         const resizeHandler = this.onResize.bind(this);
         window.addEventListener("resize", resizeHandler);
@@ -104,32 +102,24 @@ class WebEditorKernel implements EditorKernel, FileAccess {
         this.idleMgr.start();
     }
 
-    public init(compile: () => void): void {
-        this.compile = compile;
-    }
-
-    /// Reset the editor with a new file system. Unsaved changes will be lost
-    public async reset(fs?: FileSys): Promise<void> {
-        await this.idleMgr.pauseIdleScope(async () => {
-            await this.fileMgr.reset(fs);
-        });
-    }
-
     public delete() {
         EditorLog.info("deleting web editor");
         // @ts-expect-error setting to undefined to make sure the editor is not double-deleted
         window.__theEditorKernel = undefined;
-        this.reset();
         this.cleanup();
+    }
+
+    public notifyActivity(): void {
+        this.idleMgr.notifyActivity();
     }
 
     public async listDir(
         path: string[],
-        isUserAction: boolean,
+        // isUserAction: boolean,
     ): Promise<string[]> {
-        if (isUserAction) {
-            this.idleMgr.notifyActivity();
-        }
+        // if (isUserAction) {
+        //     this.idleMgr.notifyActivity();
+        // }
         // probably fine with not locking idle mgr here
         return await this.fileMgr.listDir(path);
     }
@@ -137,15 +127,15 @@ class WebEditorKernel implements EditorKernel, FileAccess {
     /// Open a file in the editor
     public async openFile(
         path: string[],
-        isUserAction: boolean,
+        // isUserAction: boolean,
     ): Promise<FsResult<void>> {
         const fsPath = toFsPath(path);
         const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.openFile(fsPath);
         });
-        if (isUserAction) {
-            this.idleMgr.notifyActivity();
-        }
+        // if (isUserAction) {
+        //     this.idleMgr.notifyActivity();
+        // }
         return result;
     }
 
@@ -160,24 +150,24 @@ class WebEditorKernel implements EditorKernel, FileAccess {
     }
 
     public async loadChangesFromFs(
-        isUserAction: boolean,
+        // isUserAction: boolean,
     ): Promise<FsResult<void>> {
-        if (isUserAction) {
-            this.idleMgr.notifyActivity();
-        }
+        // if (isUserAction) {
+        //     this.idleMgr.notifyActivity();
+        // }
         const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.loadChangesFromFs();
         });
-        this.compile();
+        this.kernelAccess.compile();
         return result;
     }
 
     public async saveChangesToFs(
-        isUserAction: boolean,
+        // isUserAction: boolean,
     ): Promise<FsResult<void>> {
-        if (isUserAction) {
-            this.idleMgr.notifyActivity();
-        }
+        // if (isUserAction) {
+        //     this.idleMgr.notifyActivity();
+        // }
         const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.saveChangesToFs();
         });
@@ -191,22 +181,7 @@ class WebEditorKernel implements EditorKernel, FileAccess {
 
     // === FileAccess ===
     public getFileAccess(): FileAccess {
-        return this;
-    }
-
-    public async getFileContent(
-        path: string,
-        checkChanged: boolean,
-    ): Promise<FsResult<Uint8Array>> {
-        return await this.fileMgr.getFileAsBytes(path, checkChanged);
-    }
-
-    public isAvailable(): boolean {
-        return this.fileMgr.isFsLoaded();
-    }
-
-    public async exists(path: string): Promise<boolean> {
-        return await this.fileMgr.exists(toFsPath(path.split("/")));
+        return this.fileMgr;
     }
 
     private onSettingsUpdate(_oldVal: SettingsState, _newVal: SettingsState) {
@@ -233,50 +208,45 @@ class WebEditorKernel implements EditorKernel, FileAccess {
     /// Long idle only:
     /// - If auto save is enabled, save changes to fs
     /// - If auto load is enabled, load changes from fs
-    private async onIdle(isLong: boolean, duration: number) {
-        if (!this.fileMgr.isFsLoaded()) {
-            return;
-        }
-        const { autoLoadActive, unsavedFiles } = viewSelector(
+    private async onIdle(isLong: boolean) {
+        const { unsavedFiles } = viewSelector(
             this.store.getState(),
         );
 
         // pull changes from monaco editor first to make sure current file is marked dirty if needed
         await this.fileMgr.syncEditorToCurrentFile();
 
-        let shouldRecompile = this.shouldRecompile;
+        // let shouldRecompile = this.shouldRecompile;
 
         if (isLong) {
             const {
                 autoSaveEnabled,
-                autoLoadEnabled,
-                deactivateAutoLoadAfterMinutes,
             } = settingsSelector(this.store.getState());
 
             let shouldRerenderFs = false;
 
-            if (autoLoadActive) {
-                if (autoLoadEnabled) {
-                    await this.loadChangesFromFs(false /* isUserAction */);
-                    // make sure file system view is rerendered in case there are directory updates
-                    shouldRerenderFs = true;
-                    // trigger a compile after reloading fs
-                    shouldRecompile = true;
-                }
-                if (deactivateAutoLoadAfterMinutes > 0) {
-                    if (duration > deactivateAutoLoadAfterMinutes * 60 * 1000) {
-                        EditorLog.info(
-                            "auto load deactivated due to inactivity",
-                        );
-                        this.store.dispatch(
-                            viewActions.setAutoLoadActive(false),
-                        );
-                    }
-                }
-            }
+            // if (autoLoadActive) {
+            //     if (autoLoadEnabled) {
+            //         await this.loadChangesFromFs(false /* isUserAction */);
+            //         // make sure file system view is rerendered in case there are directory updates
+            //         shouldRerenderFs = true;
+            //         // trigger a compile after reloading fs
+            //         shouldRecompile = true;
+            //     }
+            //     if (deactivateAutoLoadAfterMinutes > 0) {
+            //         if (duration > deactivateAutoLoadAfterMinutes * 60 * 1000) {
+            //             EditorLog.info(
+            //                 "auto load deactivated due to inactivity",
+            //             );
+            //             this.store.dispatch(
+            //                 viewActions.setAutoLoadActive(false),
+            //             );
+            //         }
+            //     }
+            // }
 
             if (autoSaveEnabled) {
-                await this.saveChangesToFs(false /* isUserAction */);
+                await this.saveChangesToFs();
                 // make sure file system view is rerendered in case there are directory updates
                 shouldRerenderFs = true;
             }
@@ -287,8 +257,9 @@ class WebEditorKernel implements EditorKernel, FileAccess {
 
         // do this last so we can get the latest save status after auto-save
         this.fileMgr.updateDirtyFileList(unsavedFiles);
-        if (shouldRecompile) {
-            this.compile();
+        if (this.shouldRecompile) {
+            this.kernelAccess.compile();
+            this.shouldRecompile = false;
         }
     }
 }

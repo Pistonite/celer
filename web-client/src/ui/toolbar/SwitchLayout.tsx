@@ -147,7 +147,7 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
 
                     <MenuItem
                         icon={<Copy20Regular />}
-                        onClick={() => duplicateLayout(stageMode)}
+                        onClick={() => duplicateLayout(stageMode === "edit" && settings.editorMode === "web")}
                     >
                         Duplicate
                     </MenuItem>

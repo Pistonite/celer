@@ -2,21 +2,19 @@ import { useState } from "react";
 import clsx from "clsx";
 import { Body2 } from "@fluentui/react-components";
 
-import { FsResultCodes, FileSys, createFsFromDataTransferItem } from "low/fs";
+import { createFsFromDataTransferItem } from "low/fs";
 import { useKernel } from "core/kernel";
 
-type EditorDropZoneProps = {
-    /// Callback when a FileSys is created from a project folder drop
-    onFileSysCreate: (fileSys: FileSys) => void;
-};
+// type EditorDropZoneProps = {
+//     /// Callback when a FileSys is created from a project folder drop
+//     onFileSysCreate: (fileSys: FileSys) => void;
+// };
 
 /// Shown when no project is loaded, for user to drag and drop a folder in
 ///
 /// This the only way to open a project. There's no "open" button because
 /// in Firefox, dialogs are not abled to use the File Entries API.
-export const EditorDropZone: React.FC<EditorDropZoneProps> = ({
-    onFileSysCreate,
-}) => {
+export const EditorDropZone: React.FC = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [isOpening, setIsOpening] = useState(false);
     const kernel = useKernel();
@@ -54,72 +52,8 @@ export const EditorDropZone: React.FC<EditorDropZoneProps> = ({
                     return;
                 }
                 const fileSysResult = await createFsFromDataTransferItem(item);
+                await kernel.handleOpenFileSysResult(fileSysResult);
                 setIsOpening(false);
-                if (fileSysResult.isErr()) {
-                    const code = fileSysResult.inner();
-                    if (code === FsResultCodes.NotSupported) {
-                        await kernel.showAlert(
-                            "Not Supported",
-                            "Your browser does not support this feature.",
-                            "Close",
-                            "",
-                        );
-                        return;
-                    } else if (code === FsResultCodes.IsFile) {
-                        await kernel.showAlert(
-                            "Error",
-                            "You dropped a file. Make sure you are dropping the project folder and not individual files.",
-                            "Close",
-                            "",
-                        );
-                        return;
-                    } else {
-                        await kernel.showAlert(
-                            "Error",
-                            "Cannot open the project. Make sure you have access to the folder or contact support.",
-                            "Close",
-                            "",
-                        );
-                        return;
-                    }
-                }
-                const fileSys = fileSysResult.inner();
-                let result = await fileSys.init();
-                while (result.isErr()) {
-                    let retry = false;
-                    if (result.inner() === FsResultCodes.PermissionDenied) {
-                        retry = await kernel.showAlert(
-                            "Permission Denied",
-                            "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
-                            "Grant Permission",
-                            "Cancel",
-                        );
-                    } else {
-                        retry = await kernel.showAlert(
-                            "Error",
-                            "Failed to initialize the project. Please try again.",
-                            "Retry",
-                            "Cancel",
-                        );
-                    }
-                    if (!retry) {
-                        return;
-                    }
-                    result = await fileSys.init();
-                }
-
-                if (!fileSys.isWritable()) {
-                    const yes = await kernel.showAlert(
-                        "Save not supported",
-                        "Your browser does not support saving changes to the file system. You will not be able to save changes made using the web editor. You can still open the project and use the auto-load feature.",
-                        "Continue",
-                        "Cancel",
-                    );
-                    if (!yes) {
-                        return;
-                    }
-                }
-                onFileSysCreate(fileSys);
             }}
         >
             <Body2 align="center">

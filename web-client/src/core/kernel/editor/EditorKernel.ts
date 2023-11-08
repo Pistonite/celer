@@ -1,6 +1,6 @@
 //! Editor logic that wraps monaco editor
 
-import { FileAccess, FileSys, FsResult } from "low/fs";
+import { FileAccess, FsResult } from "low/fs";
 
 /// Interface used to access editor API
 ///
@@ -15,7 +15,7 @@ export interface EditorKernel {
     // setFileSys(fs: FileSys): Promise<void>;
 
     /// Nofity the editor that the user is active
-    nofityActivity(): void;
+    notifyActivity(): void;
 
     /// Request directory listing
     ///

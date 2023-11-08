@@ -1,25 +1,17 @@
 //! Control for syncing file system changes to the editor
 //!
 //! Scenarios:
-//! | Project Opened | AutoLoad | Loading | Last Error | State    | Icon      |
-//! |----------------|----------|---------|
-//! | No                                  | No         | Disabled | ArrowSync |
-//! | Yes            | Disabled | No      | No         | Enabled  | ArrowSync |
-//! | Yes            | Disabled | Yes     |            | Disabled | ArrowSync | Rotating
-//! | Yes            | Enabled  | No      | No         | Enabled  | ArrowSyncCheckmark |
-//! | Yes            | Enabled  | Yes     |            | Disabled | ArrowSync | Rotating
-//! | Yes            | Inactive | No      | No         | Enabled  | ArrowSync |
-//! | Yes            | Inactive | Yes     |            | Disabled | ArrowSync | Rotating
-//! | Yes            |          | No      | Yes        |          | ArrowSyncDismiss |
+//! | Project Opened | Loading | Last Error | State    | Icon      |
+//! |----------------|---------|------------|----------|-----------|
+//! | No                       | No         | Disabled | FolderArrowUp |
+//! | Yes            | No      | No         | Enabled  | FolderArrowUp |
+//! | Yes            | Yes     |            | Disabled | FolderArrowUp |
+//! | Yes            | No      | Yes        | Enabled  | FolderArrowUp | Red
 
 import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
-import {
-    ArrowSync20Regular,
-    ArrowSyncCheckmark20Regular,
-    ArrowSyncDismiss20Filled,
-} from "@fluentui/react-icons";
+import { FolderArrowUp20Regular } from "@fluentui/react-icons";
 import clsx from "clsx";
 
 import { useKernel } from "core/kernel";
@@ -47,7 +39,7 @@ export const SyncProject: ToolbarControl = {
         return (
             <Tooltip content={tooltip} relationship="label">
                 <MenuItem icon={icon} disabled={!enabled} onClick={handler}>
-                    Reload file system
+                    Load from file system
                 </MenuItem>
             </Tooltip>
         );
@@ -56,26 +48,18 @@ export const SyncProject: ToolbarControl = {
 
 const useSyncProjectControl = () => {
     const kernel = useKernel();
-    const { rootPath, autoLoadActive, loadInProgress, lastLoadError } =
+    const { rootPath, loadInProgress, lastLoadError } =
         useSelector(viewSelector);
-    const { autoLoadEnabled } = useSelector(settingsSelector);
+    const { editorMode } = useSelector(settingsSelector);
     const { incFileSysSerial } = useActions(viewActions);
 
     const isOpened = rootPath !== undefined;
-    const enabled = isOpened && !loadInProgress;
-    const icon = getIcon(
-        isOpened,
-        loadInProgress,
-        lastLoadError,
-        autoLoadEnabled,
-        autoLoadActive,
-    );
+    const enabled = isOpened && !loadInProgress && editorMode === "web";
+    const icon = getIcon( lastLoadError);
     const tooltip = getTooltip(
         isOpened,
         loadInProgress,
         lastLoadError,
-        autoLoadEnabled,
-        autoLoadActive,
     );
 
     const handler = useCallback(async () => {
@@ -84,11 +68,11 @@ const useSyncProjectControl = () => {
             return;
         }
 
-        const result = await editor.loadChangesFromFs(true /* isUserAction */);
-        // const { FsResultCodes } = await import("low/fs");
+        editor.notifyActivity();
+        const result = await editor.loadChangesFromFs();
         if (result.isErr()) {
             // failure could be due to project structure change. try again
-            const result2 = await editor.loadChangesFromFs(false);
+            const result2 = await editor.loadChangesFromFs();
             if (result2.isErr()) {
                 await kernel.showAlert(
                     "Error",
@@ -105,40 +89,15 @@ const useSyncProjectControl = () => {
 };
 
 const getIcon = (
-    isOpened: boolean,
-    loadInProgress: boolean,
     lastLoadError: boolean,
-    autoLoadEnabled: boolean,
-    autoLoadActive: boolean,
 ) => {
-    if (!isOpened) {
-        return <ArrowSync20Regular />;
-    }
-    if (loadInProgress) {
-        return (
-            <ArrowSync20Regular
-                className={clsx(
-                    "spinning-infinite",
-                    autoLoadEnabled && autoLoadActive && "color-success",
-                )}
-            />
-        );
-    }
-    if (lastLoadError) {
-        return <ArrowSyncDismiss20Filled className="color-error" />;
-    }
-    if (autoLoadEnabled && autoLoadActive) {
-        return <ArrowSyncCheckmark20Regular className="color-success" />;
-    }
-    return <ArrowSync20Regular />;
+        return <FolderArrowUp20Regular className={clsx(lastLoadError && "color-error")} />;
 };
 
 const getTooltip = (
     isOpened: boolean,
     loadInProgress: boolean,
     lastLoadError: boolean,
-    autoLoadEnabled: boolean,
-    autoLoadActive: boolean,
 ) => {
     if (isOpened) {
         if (loadInProgress) {
@@ -147,12 +106,6 @@ const getTooltip = (
         if (lastLoadError) {
             return "There was an error loading from file system. Click to retry.";
         }
-        if (autoLoadEnabled) {
-            if (autoLoadActive) {
-                return "Auto-load is enabled and active. Any change you made in the file system will be loaded automatically after a while. (Click to manually reload)";
-            }
-            return "Auto-load has been deactivated due to inactivity. Click to activate.";
-        }
     }
-    return "Reload files from file system";
+    return "Load from file system";
 };

@@ -15,7 +15,7 @@ export class ReentrantLock {
     /// Acquires the lock and call f.
     ///
     /// If the lock is held by another token, this will wait for the lock to be released.
-    public async lockedScope(token: number | undefined, f: (token: number) => Promise<void>) {
+    public async lockedScope<T>(token: number | undefined, f: (token: number) => Promise<T>): Promise<T> {
         if (this.lockingToken !== undefined && token !== this.lockingToken) {
             if (token !== undefined) {
                 console.error(`invalid lock token passed to ${this.name} lock!`);
@@ -35,16 +35,18 @@ export class ReentrantLock {
             }
             // no one is holding the lock, acquire it
             this.lockingToken = ++this.nextToken;
+            let returnVal;
             try {
-                await f(this.lockingToken);
+                returnVal = await f(this.lockingToken);
             } finally {
                 this.lockingToken = undefined;
                 const waiters = this.waiters;
                 this.waiters = [];
                 waiters.forEach((w) => w(undefined));
             }
+            return returnVal;
         } else {
-            await f(this.lockingToken);
+            return await f(this.lockingToken);
             // do not release the lock afterwards
         }
     }

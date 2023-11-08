@@ -3,14 +3,15 @@ import reduxWatch from "redux-watch";
 import {
     AppStore,
     SettingsState,
+    documentActions,
     initStore,
     saveSettings,
     settingsActions,
     settingsSelector,
     viewActions,
 } from "core/store";
-import { console, Logger, isInDarkMode, sleep } from "low/utils";
-import type { FileAccess, FileSys, FsResult } from "low/fs";
+import { console, Logger, isInDarkMode } from "low/utils";
+import type { FileSys, FsResult } from "low/fs";
 
 import type { CompilerKernel } from "./compiler";
 import type { EditorKernel } from "./editor";
@@ -214,9 +215,14 @@ export class Kernel {
     ///
     /// This function eats the error because alerts will be shown to the user
     public async handleOpenFileSysResult(fileSysResult: FsResult<FileSys>): Promise<void> {
-        const { FsResultCodes, allocErr, allocOk } = await import("low/fs");
+        console.info("opening file system...");
+        const { FsResultCodes } = await import("low/fs");
         if (fileSysResult.isErr()) {
             const code = fileSysResult.inner();
+            if (code === FsResultCodes.UserAbort) {
+                console.info("opening file system aborted.");
+                return;
+            }
             if (code === FsResultCodes.NotSupported) {
                 await this.showAlert(
                     "Not Supported",
@@ -241,6 +247,7 @@ export class Kernel {
             }
             return;
         }
+        console.info("initializing new file system...");
         const fileSys = fileSysResult.inner();
         let result = await fileSys.init();
         while (result.isErr()) {
@@ -295,29 +302,42 @@ export class Kernel {
                 return;
             }
         }
-        else {
-        }
+
         const { initEditor } = await import("./editor");
-        const editor = await initEditor(this.store);
-        editor.init(() => {
-            this.compiler?.compile();
-        });
+        const editor = await initEditor(this, fileSys, this.store);
         this.editor = editor;
-        this.editor.reset(fileSys);
         this.updateRootPathInStore(fileSys);
         const compiler = await this.getCompiler();
         await compiler.init(this.editor.getFileAccess());
+
+        // trigger a first run when loading new project
+        compiler.compile();
+        console.info("project opened.");
+    }
+
+    public async compile() {
+        const compiler = await this.getCompiler();
+        compiler.compile();
+    }
+
+    public async closeFileSys() {
+        console.info("closing file system...");
+        this.store.dispatch(documentActions.setDocument(undefined));
+        this.updateRootPathInStore(undefined);
+        this.editor = null;
+        const { deleteEditor } = await import("./editor");
+        deleteEditor();
+        const compiler = await this.getCompiler();
+        compiler.uninit();
     }
     updateRootPathInStore(fileSys: FileSys | undefined) {
             if (fileSys) {
-                console.info("resetting file system...");
                 this.store.dispatch(
                     viewActions.updateFileSys(
                         fileSys.getRootName()
                     ),
                 );
             } else {
-                console.info("closing file system...");
                 this.store.dispatch(
                     viewActions.updateFileSys(undefined),
                 );

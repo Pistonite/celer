@@ -1,7 +1,8 @@
 
 import { AppStore, settingsSelector } from "core/store";
+import { FileSys } from "low/fs";
 
-import { EditorLog, KernelAccess } from "./utils";
+import { KernelAccess } from "./utils";
 import { EditorKernel } from "./EditorKernel";
 
 declare global {
@@ -10,15 +11,16 @@ declare global {
     }
 }
 
-export const initEditor = async (kernel: KernelAccess, store: AppStore): Promise<EditorKernel> => {
+export const initEditor = async (kernel: KernelAccess, fileSys: FileSys, store: AppStore): Promise<EditorKernel> => {
     deleteEditor();
     const { editorMode } = settingsSelector(store.getState());
     let editor;
     if (editorMode === "web") {
         const { initWebEditor } = await import("./WebEditorKernel");
-        editor = initWebEditor(store);
+        editor = initWebEditor(kernel, fileSys, store);
     } else {
-            // TODO #122: bind FileSys directly to compiler
+        const { initExternalEditor } = await import("./ExternalEditorKernel");
+        editor = initExternalEditor(kernel, fileSys);
     }
 
     window.__theEditorKernel = editor;

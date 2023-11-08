@@ -57,11 +57,7 @@ export const EditorSettings: React.FC = () => {
     const [entryPoints, setEntryPoints] = useState<EntryPointsSorted>([]);
     useEffect(() => {
         (async () => {
-            const compiler = kernel.getCompiler();
-            if (!compiler) {
-                setEntryPoints([]);
-                return;
-            }
+            const compiler = await kernel.getCompiler();
             const result = await compiler.getEntryPoints();
             if (!result.isOk()) {
                 setEntryPoints([]);

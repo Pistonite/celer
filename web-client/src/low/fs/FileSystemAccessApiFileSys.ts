@@ -30,6 +30,11 @@ export const isFileSystemAccessAPISupported = (): boolean => {
         return false;
     }
 
+    // @ts-expect-error window should have showDirectoryPicker
+    if (!window.showDirectoryPicker) {
+        return false;
+    }
+
     return true;
 };
 

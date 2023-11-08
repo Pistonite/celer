@@ -10,11 +10,13 @@ import { EditorKernel, Kernel, useKernel } from "core/kernel";
 import { EditorTree } from "./tree";
 import { EditorDropZone } from "./EditorDropZone";
 
+const EditorRootId = "editor-root";
+
 export const EditorRoot: React.FC = () => {
     const kernel = useKernel();
     const { serial, rootPath, openedFile, unsavedFiles, currentFileSupported } =
         useSelector(viewSelector);
-    const { showFileTree } = useSelector(settingsSelector);
+    const { showFileTree, editorMode } = useSelector(settingsSelector);
 
     // Disabling this rule as we are using serial to signal when to update
     // A new listDir reference will cause the tree to update
@@ -25,14 +27,27 @@ export const EditorRoot: React.FC = () => {
             if (!editor) {
                 return [];
             }
-            return editor.listDir(paths, false /* isUserAction */);
+            return editor.listDir(paths);
         },
         [serial],
     );
     /* eslint-enable react-hooks/exhaustive-deps*/
+
+    if (rootPath !== undefined && editorMode === "external") {
+        return (
+        <ErrorBoundary>
+                <div id={EditorRootId}>
+        <div className="blank-div-message">
+                        Web editor is not available because you are using the external editor workflow.
+                        Switch to the default layout or a layout without the editor to hide this widget.
+                    </div>;
+                </div>
+        </ErrorBoundary>
+        );
+    }
     return (
         <ErrorBoundary>
-            <div id="editor-root">
+            <div id={EditorRootId}>
                 {rootPath !== undefined ? (
                     <>
                         {showFileTree && (
@@ -47,9 +62,9 @@ export const EditorRoot: React.FC = () => {
                                             kernel,
                                             10,
                                             (editor) => {
+                                                editor.notifyActivity();
                                                 editor.openFile(
                                                     path,
-                                                    true /* isUserAction */,
                                                 );
                                             },
                                         );
@@ -90,11 +105,7 @@ export const EditorRoot: React.FC = () => {
                         </div>
                     </>
                 ) : (
-                    <EditorDropZone
-                        onFileSysCreate={(fileSys) => {
-                            kernel.setFileSys(fileSys);
-                        }}
-                    />
+                    <EditorDropZone />
                 )}
             </div>
         </ErrorBoundary>

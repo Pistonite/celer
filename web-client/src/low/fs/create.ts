@@ -13,6 +13,53 @@ import {
 } from "./FileSystemAccessApiFileSys";
 import { FsResult, FsResultCodes } from "./FsResult";
 
+export const showDirectoryPicker = async (): Promise<FsResult<FileSys>> => {
+    if (isFileSystemAccessAPISupported()) {
+            try {
+                // @ts-expect-error showDirectoryPicker is not in the TS lib
+                const handle = await window.showDirectoryPicker({ mode: "readwrite" });
+                if (!handle) {
+                    console.error("Failed to get handle from showDirectoryPicker");
+                    return allocErr(FsResultCodes.Fail);
+                }
+                return await createFsFromFileSystemHandle(handle);
+            } catch (e) {
+                console.error(e);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if ((e as any).name === "AbortError") {
+                    return allocErr(FsResultCodes.UserAbort);
+                }
+                return allocErr(FsResultCodes.Fail);
+
+            }
+    }
+    // Fallback to input type = file
+    const inputElement = document.createElement("input");
+    inputElement.id = "temp";
+    inputElement.style.display = "none";
+    document.body.appendChild(inputElement);
+    inputElement.type = "file";
+    inputElement.multiple = true;
+    // inputElement.webkitdirectory = true;
+    return await new Promise((resolve) => {
+        // function cancel() {
+        //     window.console.log(inputElement.files);
+        //     window.console.log(inputElement.webkitEntries.length);
+        //     document.body.onfocus = null;
+        //     // resolve(
+        //     //     allocErr(FsResultCodes.UserAbort));
+        // }
+        // document.body.onfocus = cancel;
+        inputElement.addEventListener("change", (event) => {
+            window.console.log((event.target as HTMLInputElement).webkitEntries);
+            resolve(
+                allocErr(FsResultCodes.NotSupported));
+        });
+        inputElement.click();
+        console.info("clicked");
+    });
+}
+
 export const createFsFromDataTransferItem = async (
     item: DataTransferItem,
 ): Promise<FsResult<FileSys>> => {

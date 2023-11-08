@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import ReactGridLayout from "react-grid-layout";
 import { Header } from "ui/toolbar";
 import { LoadScreen, useWindowSize } from "ui/shared";
-import { settingsActions, viewSelector } from "core/store";
+import { settingsActions, settingsSelector, viewSelector } from "core/store";
 import {
     GridFull,
     Layout,
@@ -98,18 +98,27 @@ export const AppRoot: React.FC = () => {
 const useReactGridLayout = (windowWidth: number, windowHeight: number) => {
     const userLayout = useCurrentUserLayout();
     const { setCurrentLayout } = useActions(settingsActions);
-    const { stageMode } = useSelector(viewSelector);
+    const { rootPath, stageMode } = useSelector(viewSelector);
+    const { editorMode } = useSelector(settingsSelector);
+
+    // show editor layout if:
+    // - in edit mode, and
+    // - one of:
+    //   - using web editor
+    //   - using external editor, but no project opened yet
+    //     (this is because in Firefox, only drag and drop can create a DirectoryEntry
+    const isDefaultLayoutEditor = stageMode === "edit" && (editorMode === "web" || rootPath === undefined);
 
     // convert layout to ReactGridLayout
     const [layout, widgets] = useMemo(() => {
         const layout =
             userLayout ||
-            getDefaultLayout(windowWidth, windowHeight, stageMode);
+            getDefaultLayout(windowWidth, windowHeight, isDefaultLayoutEditor);
         const widgets = WidgetTypes.map((type) => {
             return layout[type] && { i: type, ...layout[type] };
         }).filter(Boolean) as ReactGridLayout.Layout[];
         return [layout, widgets];
-    }, [userLayout, windowWidth, windowHeight, stageMode]);
+    }, [userLayout, windowWidth, windowHeight, isDefaultLayoutEditor]);
 
     const { toolbar, toolbarAnchor } = layout;
 

@@ -1,30 +1,30 @@
-import { FileAccess, FileSys, FsResult, FsResultCodes } from "low/fs";
+//! Logic for external editor workflow
+
+import { FileAccess, FileSys, FsPath, FsResult, FsResultCodes, fsRootPath } from "low/fs";
+import { IdleMgr, Yielder, createYielder, allocOk } from "low/utils";
+
 import { EditorKernel } from "./EditorKernel";
 import { EditorLog, KernelAccess, toFsPath } from "./utils";
-import { AppStore } from "core/store";
-import { IdleMgr, ReentrantLock, allocErr, allocOk } from "low/utils";
 
 EditorLog.info("loading external editor kernel");
 
-export const initExternalEditor = (): EditorKernel => {
+export const initExternalEditor = (kernelAccess: KernelAccess, fileSys: FileSys): EditorKernel => {
+    EditorLog.info("creating external editor");
+    return new ExternalEditorKernel(kernelAccess, fileSys);
 }
 
 class ExternalEditorKernel implements EditorKernel, FileAccess {
-    private store: AppStore;
-
     private idleMgr: IdleMgr;
     private fs: FileSys;
-    private fsLock: ReentrantLock;
+    private lastCompiledTime = 0;
 
-    private shouldRecompile = false;
     private kernelAccess: KernelAccess;
 
-    constructor(store: AppStore, kernelAccess: KernelAccess, fileSys: FileSys) {
-        this.store = store;
+    constructor(kernelAccess: KernelAccess, fileSys: FileSys) {
         this.kernelAccess = kernelAccess;
         this.fs = fileSys;
         this.idleMgr = new IdleMgr(0, 1000, 2, 20, 8000, this.recompileIfChanged.bind(this));
-        this.fsLock = new ReentrantLock("fs");
+        this.idleMgr.start();
     }
 
     public delete(): void {
@@ -34,11 +34,51 @@ class ExternalEditorKernel implements EditorKernel, FileAccess {
         this.idleMgr.stop();
     }
 
-    public nofityActivity(): void {
+    public notifyActivity(): void {
         this.idleMgr.notifyActivity();
     }
 
     private async recompileIfChanged() {
+        const yielder = createYielder(64);
+        const changed = await this.checkDirectoryChanged(yielder, fsRootPath);
+        if (changed) {
+            this.lastCompiledTime = Date.now();
+            this.notifyActivity();
+            this.kernelAccess.compile();
+        }
+    }
+
+    private async checkDirectoryChanged(yielder: Yielder, fsPath: FsPath): Promise<boolean> {
+        const fsDirResult = await this.fs.listDir(fsPath);
+        if (fsDirResult.isErr()) {
+            return false;
+        }
+        const dirContent = fsDirResult.inner();
+        for (const entry of dirContent) {
+            const subPath = fsPath.resolve(entry);
+            if (entry.endsWith("/")) {
+                const subDirChanged = await this.checkDirectoryChanged(yielder, subPath);
+                if (subDirChanged) {
+                    return true;
+                }
+            } else {
+                const fileChanged = await this.checkFileChanged(subPath);
+                if (fileChanged) {
+                    return true;
+                }
+            }
+            await yielder();
+        }
+        return false;
+    }
+
+    private async checkFileChanged(fsPath: FsPath): Promise<boolean> {
+        const fsFileResult = await this.fs.readFile(fsPath);
+        if (fsFileResult.isErr()) {
+            return false;
+        }
+        const modifiedTime = fsFileResult.inner().lastModified;
+        return modifiedTime > this.lastCompiledTime;
     }
     
     // === FileAccess ===
@@ -74,17 +114,6 @@ class ExternalEditorKernel implements EditorKernel, FileAccess {
         const bytes = new Uint8Array(await file.arrayBuffer());
         this.cachedFileContent[path] = bytes;
         return fsFileResult.makeOk(bytes);
-    }
-
-    public async exists(path: string): Promise<boolean> {
-        const result = await this.getFileContent(path, true);
-        if (result.isOk()) {
-            return true;
-        }
-        if (result.inner() === FsResultCodes.NotModified) {
-            return true;
-        }
-        return false;
     }
 
     // === Stub implementations ===
