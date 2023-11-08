@@ -164,6 +164,7 @@ export class Kernel {
         message: string,
         okButton: string,
         cancelButton: string,
+        learnMore?: string,
     ): Promise<boolean> {
         return new Promise((resolve) => {
             this.alertCallback = (ok) => {
@@ -181,6 +182,7 @@ export class Kernel {
                 viewActions.setAlert({
                     title,
                     text: message,
+                    learnMore: learnMore || "",
                     okButton,
                     cancelButton,
                 }),
@@ -229,6 +231,7 @@ export class Kernel {
                     "Your browser does not support this feature.",
                     "Close",
                     "",
+                    "/docs/route/editor/web#browser-os-support"
                 );
             } else if (code === FsResultCodes.IsFile) {
                 await this.showAlert(
@@ -283,22 +286,27 @@ export class Kernel {
                     "The web editor cannot be used because your browser does not support saving changes to the file system. If you wish to edit the project, you can use the External Editor workflow and have Celer load changes directly from your file system.",
                     "Use external editor",
                     "Cancel",
+                    "/docs/route/editor/web#browser-os-support",
                 );
-                if (yes) {
-                    if (!this.store) {
-                        this.showAlert(
-                            "Error",
-                            "Failed to change the settings. To use external editor. Please go to Settings > Editor.",
-                            "Close",
-                            "",
-                        );
-                    } else {
+            if (!yes) {
+                return;
+            }
                         this.store.dispatch(
                             settingsActions.setEditorMode("external"),
                         );
-                    }
 
-                }
+            }
+        }
+
+        if (fileSys.isStale()) {
+            const yes = await this.showAlert(
+                "Heads up!",
+                "Your browser has limited support for file system access when opening a project from a dialog. Certain operations may not work! Please see the learn more link below for more information.",
+                "Continue anyway",
+                "Cancel",
+                "/docs/route/editor/external#open-a-project"
+                );
+            if (!yes) {
                 return;
             }
         }

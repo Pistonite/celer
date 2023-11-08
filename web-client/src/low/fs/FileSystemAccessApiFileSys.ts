@@ -71,6 +71,10 @@ export class FileSystemAccessAPIFileSys implements FileSys {
         );
     }
 
+    public isStale(): boolean {
+        return false;
+    }
+
     public getRootName() {
         return this.rootPath;
     }

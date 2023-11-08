@@ -18,14 +18,13 @@ You can choose any folder if you are just testing. Or, skip ahead to [this secti
 where step-by-step instructions are given for creating a minimal project folder.
 :::
 
-1. Find the project folder in the file manager of your operating system
-:::warning
-Due to limitation of the browser API used to file system access, if your OS does not have a graphical file manager, you cannot use the web editor workflow.
+1. Click on <FluentIcon name="FolderOpen20Regular" /> `Open project` on the Toolbar and select the project folder.
+:::tip
+Alternatively, drag and drop the folder into the "Drag and drop a project folder here to open it" box.
 :::
-2. Drag and drop the folder into the "Drag and drop a project folder here to open it" box in Celer.
-3. If asked for permissions to read and write to the file system, grant the permission.
-4. If you see any error, follow the instruction in the error message.
-5. You should be able to see the content of the folder listed if everything worked.
+2. If asked for permissions to read and write to the file system, grant the permission.
+3. If you see any error, follow the instruction in the error message.
+4. You should be able to see the content of the folder listed if everything worked.
 
 :::tip
 If you didn't open an actual Celer project, you will see the route fails to compile. This is expected and it's OK!

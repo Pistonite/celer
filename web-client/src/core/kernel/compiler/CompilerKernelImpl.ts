@@ -237,7 +237,7 @@ export class CompilerKernelImpl implements CompilerKernel {
                 CompilerLog.error(result.inner());
             } else {
                 const doc = result.inner();
-                if (doc !== undefined) {
+                if (this.fileAccess && doc !== undefined) {
                     this.store.dispatch(documentActions.setDocument(doc));
                 }
             }

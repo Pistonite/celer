@@ -59,6 +59,11 @@ export class FileEntriesAPIFileSys implements FileSys {
         return false;
     }
 
+    public isStale(): boolean {
+        // Entries API can scan directories
+        return false;
+    }
+
     public getRootName() {
         return this.rootPath;
     }

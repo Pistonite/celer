@@ -10,13 +10,15 @@ import {
     DialogSurface,
     DialogTitle,
     DialogTrigger,
+    Link,
+    Text,
 } from "@fluentui/react-components";
 
 import { useKernel } from "core/kernel";
 import { viewSelector } from "core/store";
 
 export const AppAlert: React.FC = () => {
-    const { alertTitle, alertText, alertOkButton, alertCancelButton } =
+    const { alertTitle, alertText, alertLearnMoreLink, alertOkButton, alertCancelButton } =
         useSelector(viewSelector);
     const kernel = useKernel();
     const okRef = useRef<HTMLButtonElement>(null);
@@ -38,7 +40,14 @@ export const AppAlert: React.FC = () => {
             <DialogSurface>
                 <DialogBody>
                     <DialogTitle>{alertTitle}</DialogTitle>
-                    <DialogContent>{alertText}</DialogContent>
+                    <DialogContent>
+                        <Text block>{alertText}</Text>
+                        {alertLearnMoreLink && (
+                            <Link href={alertLearnMoreLink} target="_blank">
+                                Click here to learn more
+                            </Link>
+                        )}
+                    </DialogContent>
                     <DialogActions>
                         {alertCancelButton && (
                             <DialogTrigger disableButtonEnhancement>
