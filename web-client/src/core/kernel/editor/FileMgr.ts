@@ -59,23 +59,6 @@ export class FileMgr {
             this.files = {};
             await this.updateEditor(undefined, undefined, undefined);
             this.dispatcher.dispatch(viewActions.setUnsavedFiles([]));
-            if (fs) {
-                EditorLog.info("resetting file system...");
-                this.dispatcher.dispatch(
-                    viewActions.updateFileSys({
-                        rootPath: fs.getRootName(),
-                        supportsSave: fs.isWritable(),
-                    }),
-                );
-            } else {
-                EditorLog.info("closing file system...");
-                this.dispatcher.dispatch(
-                    viewActions.updateFileSys({
-                        rootPath: undefined,
-                        supportsSave: true,
-                    }),
-                );
-            }
         });
     }
 

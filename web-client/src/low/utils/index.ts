@@ -7,9 +7,10 @@ export * from "./Debouncer";
 export * from "./Logger";
 export * from "./Pool";
 export * from "./FileSaver";
+export * from "./ReentrantLock";
 export * from "./Result";
 export * from "./WorkerHost";
-export * from "./yielder";
+export * from "./Yielder";
 
 export const isInDarkMode = () =>
     !!(

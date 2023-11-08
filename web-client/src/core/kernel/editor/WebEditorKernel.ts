@@ -1,4 +1,10 @@
 import * as monaco from "monaco-editor";
+// eslint-disable-next-line import/no-internal-modules
+import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
+// eslint-disable-next-line import/no-internal-modules
+import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
+// eslint-disable-next-line import/no-internal-modules
+import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import reduxWatch from "redux-watch";
 
 import {
@@ -17,7 +23,25 @@ import { EditorLog, toFsPath } from "./utils";
 import { IdleMgr } from "./IdleMgr";
 import { FileMgr } from "./FileMgr";
 
-export class EditorKernelImpl implements EditorKernel, FileAccess {
+EditorLog.info("loading web editor kernel");
+
+export const initWebEditor = (store: AppStore): EditorKernel => {
+    EditorLog.info("creating web editor");
+    window.MonacoEnvironment = {
+        getWorker(_, label) {
+            if (label === "json") {
+                return new jsonWorker();
+            }
+            if (label === "typescript" || label === "javascript") {
+                return new tsWorker();
+            }
+            return new editorWorker();
+        },
+    };
+    return new WebEditorKernel(store);
+}
+
+class WebEditorKernel implements EditorKernel, FileAccess {
     private store: AppStore;
 
     private idleMgr: IdleMgr;
@@ -88,12 +112,13 @@ export class EditorKernelImpl implements EditorKernel, FileAccess {
     public async reset(fs?: FileSys): Promise<void> {
         await this.idleMgr.pauseIdleScope(async () => {
             await this.fileMgr.reset(fs);
-            this.compile();
         });
     }
 
     public delete() {
-        EditorLog.info("deleting editor");
+        EditorLog.info("deleting web editor");
+        // @ts-expect-error setting to undefined to make sure the editor is not double-deleted
+        window.__theEditorKernel = undefined;
         this.reset();
         this.cleanup();
     }

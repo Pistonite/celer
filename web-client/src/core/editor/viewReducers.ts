@@ -3,13 +3,10 @@ import { EditorViewState } from "./state";
 
 export const updateFileSys: ReducerDeclWithPayload<
     EditorViewState,
-    {
-        rootPath: string | undefined;
-        supportsSave: boolean;
-    }
-> = withPayload((state: EditorViewState, { rootPath, supportsSave }) => {
+    string | undefined
+> = withPayload((state: EditorViewState, rootPath) => {
     state.rootPath = rootPath;
-    state.supportsSave = supportsSave;
+    // state.supportsSave = supportsSave;
     state.serial++;
 });
 
@@ -54,13 +51,6 @@ export const endFileSysSave: ReducerDeclWithPayload<EditorViewState, boolean> =
         state.lastSaveError = !success;
     });
 
-export const setAutoLoadActive: ReducerDeclWithPayload<
-    EditorViewState,
-    boolean
-> = withPayload((state: EditorViewState, active: boolean) => {
-    state.autoLoadActive = active;
-});
-
 export const setUnsavedFiles: ReducerDeclWithPayload<
     EditorViewState,
     string[]
@@ -78,4 +68,11 @@ export const setCompileInProgress: ReducerDeclWithPayload<
     boolean
 > = withPayload((state: EditorViewState, compileInProgress: boolean) => {
     state.compileInProgress = compileInProgress;
+});
+
+export const setCompilerReady: ReducerDeclWithPayload<
+    EditorViewState,
+    boolean
+> = withPayload((state: EditorViewState, compilerReady: boolean) => {
+    state.compilerReady = compilerReady;
 });

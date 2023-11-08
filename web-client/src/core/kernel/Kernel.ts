@@ -34,9 +34,7 @@ export class Kernel {
     ///
     /// The kernel owns the store. The store is shared
     /// between app boots (i.e. when switching routes)
-    private store: AppStore | null = null;
-    /// The store cleanup function
-    private cleanupStore: (() => void) | null = null;
+    private store: AppStore;
     /// The link tag that loads the theme css
     private themeLinkTag: HTMLLinkElement | null = null;
     /// The function to initialize react
@@ -57,51 +55,13 @@ export class Kernel {
     constructor(initReact: InitUiFunction) {
         this.log = new Logger("ker");
         this.initReact = initReact;
-    }
-
-    /// Start the application. Cleans up previous application if needed
-    public init() {
         this.log.info("starting application");
-        let store = this.store;
-        if (!store) {
-            store = this.initStore();
-            this.store = store;
-        }
-
-        this.initStage(store);
-        this.initUi(store);
-
-        window.addEventListener("beforeunload", (e) => {
-            if (this.editor && this.editor.hasUnsavedChangesSync()) {
-                e.preventDefault();
-                return (e.returnValue =
-                    "There are unsaved changes in the editor which will be lost. Are you sure you want to leave?");
-            }
-        });
-    }
-
-    /// Initialize stage info based on window.location
-    private async initStage(store: AppStore) {
-        this.log.info("initializing stage...");
-        const path = window.location.pathname;
-        if (path === "/edit") {
-            const { initCompiler } = await import("./compiler");
-            const compiler = initCompiler(store);
-            this.compiler = compiler;
-
-            store.dispatch(viewActions.setStageMode("edit"));
-        } else {
-            store.dispatch(viewActions.setStageMode("view"));
-        }
+        this.store = this.initStore();
     }
 
     /// Initialize the store
     private initStore(): AppStore {
         this.log.info("initializing store...");
-        if (this.cleanupStore) {
-            this.log.info("cleaning up previous store");
-            this.cleanupStore();
-        }
         const store = initStore();
         // switch theme base on store settings
         this.switchTheme(settingsSelector(store.getState()).theme);
@@ -109,8 +69,8 @@ export class Kernel {
         const watchSettings = reduxWatch(() =>
             settingsSelector(store.getState()),
         );
-        // persist settings to local storage TODO
-        const unwatchSettings = store.subscribe(
+
+        store.subscribe(
             watchSettings((newVal: SettingsState, oldVal: SettingsState) => {
                 // save settings to local storage
                 saveSettings(newVal);
@@ -122,24 +82,50 @@ export class Kernel {
             }),
         );
 
-        this.cleanupStore = () => {
-            unwatchSettings();
-        };
         return store;
     }
 
+    /// Start the application. Cleans up previous application if needed
+    public init() {
+        this.initStage();
+        this.initUi();
+
+        window.addEventListener("beforeunload", (e) => {
+            if (this.editor && this.editor.hasUnsavedChangesSync()) {
+                e.preventDefault();
+                return (e.returnValue =
+                    "There are unsaved changes in the editor which will be lost. Are you sure you want to leave?");
+            }
+        });
+    }
+
+    /// Initialize stage info based on window.location
+    private async initStage() {
+        this.log.info("initializing stage...");
+        const path = window.location.pathname;
+        if (path === "/edit") {
+            const { initCompiler } = await import("./compiler");
+            const compiler = initCompiler(this.store);
+            this.compiler = compiler;
+
+            this.store.dispatch(viewActions.setStageMode("edit"));
+        } else {
+            this.store.dispatch(viewActions.setStageMode("view"));
+        }
+    }
+
     /// Initialize UI related stuff
-    private initUi(store: AppStore) {
+    private initUi() {
         this.log.info("initializing ui...");
         if (this.cleanupUi) {
             this.log.info("unmounting previous ui");
             this.cleanupUi();
         }
         const isDarkMode = isInDarkMode();
-        const unmountReact = this.initReact(this, store, isDarkMode);
+        const unmountReact = this.initReact(this, this.store, isDarkMode);
 
         // key binding handler
-        const keyMgr = new KeyMgr(store);
+        const keyMgr = new KeyMgr(this.store);
         const unlistenKeyMgr = keyMgr.listen();
 
         this.cleanupUi = () => {
@@ -211,7 +197,13 @@ export class Kernel {
         return this.editor;
     }
 
-    public getCompiler(): CompilerKernel | null {
+    /// Get or load the compiler
+    public async getCompiler(): Promise<CompilerKernel> {
+        if (!this.compiler) {
+            const { initCompiler } = await import("./compiler");
+            const compiler = initCompiler(this.store);
+            this.compiler = compiler;
+        }
         return this.compiler;
     }
 
@@ -274,9 +266,9 @@ export class Kernel {
             }
             result = await fileSys.init();
         }
-        // TODO #122: only need to init editor if not using external editor
-        const webEditor = true;
-        if (webEditor) {
+
+        const { editorMode } = settingsSelector(this.store.getState());
+        if (editorMode === "web") {
             // must be able to save to use web editor
             if (!fileSys.isWritable()) {
                 const yes = await this.showAlert(
@@ -302,33 +294,33 @@ export class Kernel {
                 }
                 return;
             }
-            if (!this.editor) {
-                if (!this.store) {
-                    throw new Error("store not initialized");
-                }
-                const { initEditor } = await import("./editor");
-                const editor = initEditor(this.store);
-                editor.init(() => {
-                    this.compiler?.compile();
-                });
-                this.editor = editor;
-            }
-            this.editor.reset(fs);
-            this.initCompilerWithRetry(this.editor.getFileAccess());
-        } else {
-            // TODO #122: bind FileSys directly to compiler
         }
+        else {
+        }
+        const { initEditor } = await import("./editor");
+        const editor = await initEditor(this.store);
+        editor.init(() => {
+            this.compiler?.compile();
+        });
+        this.editor = editor;
+        this.editor.reset(fileSys);
+        this.updateRootPathInStore(fileSys);
+        const compiler = await this.getCompiler();
+        await compiler.init(this.editor.getFileAccess());
     }
-    async initCompilerWithRetry(fileAccess: FileAccess) {
-        const MAX_TRIES = 10;
-        for (let i = 0; i < MAX_TRIES; i++) {
-            if (this.compiler) {
-                await this.compiler.init(fileAccess);
-                return;
+    updateRootPathInStore(fileSys: FileSys | undefined) {
+            if (fileSys) {
+                console.info("resetting file system...");
+                this.store.dispatch(
+                    viewActions.updateFileSys(
+                        fileSys.getRootName()
+                    ),
+                );
+            } else {
+                console.info("closing file system...");
+                this.store.dispatch(
+                    viewActions.updateFileSys(undefined),
+                );
             }
-            console.warn("compiler not ready, retrying...");
-            await sleep(500);
-        }
-        console.error("compiler not ready after max retries");
     }
 }

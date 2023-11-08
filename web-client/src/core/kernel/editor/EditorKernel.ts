@@ -8,26 +8,23 @@ import { FileAccess, FileSys, FsResult } from "low/fs";
 /// The interface provides a way for TypeScript to know about the editor
 /// without importing the editor module.
 export interface EditorKernel {
-    /// Initialize
-    ///
-    /// Argument:
-    /// - compile: a function that triggers a compilation
-    init(compile: () => void): void;
-
     /// Delete the editor instance
     delete(): void;
 
-    /// Reset the editor with a new file system. Unsaved changes will be lost
-    reset(fs?: FileSys): Promise<void>;
+    // /// Reset the editor with a new file system. Unsaved changes will be lost
+    // setFileSys(fs: FileSys): Promise<void>;
+
+    /// Nofity the editor that the user is active
+    nofityActivity(): void;
 
     /// Request directory listing
     ///
     /// See EditorTree for input/output format
     /// On failure this returns empty array. This function will not throw
-    listDir(path: string[], isUserAction: boolean): Promise<string[]>;
+    listDir(path: string[]): Promise<string[]>;
 
     /// Open a file in the editor
-    openFile(path: string[], isUserAction: boolean): Promise<FsResult<void>>;
+    openFile(path: string[]): Promise<FsResult<void>>;
 
     /// Check if there are unsaved changes
     hasUnsavedChanges(): Promise<boolean>;
@@ -39,10 +36,10 @@ export interface EditorKernel {
     hasUnsavedChangesSync(): boolean;
 
     /// Load changes from the file system for the opened files
-    loadChangesFromFs(isUserAction: boolean): Promise<FsResult<void>>;
+    loadChangesFromFs(): Promise<FsResult<void>>;
 
     /// Save changes to the file system for the opened files
-    saveChangesToFs(isUserAction: boolean): Promise<FsResult<void>>;
+    saveChangesToFs(): Promise<FsResult<void>>;
 
     /// Get a FileAccess implementation
     getFileAccess(): FileAccess;

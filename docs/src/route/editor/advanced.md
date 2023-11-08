@@ -2,6 +2,26 @@
 This section will cover additional configurations you can do with the editor and compiler.
 Feel free to skip this first and come back once you have gone through the rest of the tutorial.
 
+## Idle Cycles
+Events like compile and auto-save are scheduled to run automatically on idle.
+Celer uses a smart idle system that progressively makes the idle interval longer if
+the app is inactive for a long time, to save resources.
+
+### Web editor workflow
+When using the web editor, the idle cycle could get to as long as 120 seconds.
+This means if the app is left inactive for long enough, it will auto-save or recompile (if needed)
+every 2 minutes.
+
+Any actions, such as typing in the editor or clicking on <FluentIcon name="ArrowSync20Regular" /> `Compile project`
+would reset the idle cycle to the shortest.
+
+### External editor workflow
+When using an external editor, the app could potentially be left without user interactions
+in a long time. The app determines if the user is active by detecting changes in the files.
+If the files are left unchanged for a while, the idle cycle could get to as long as 8 seconds.
+
+Clicking on <FluentIcon name="ArrowSync20Regular" /> `Compile project` would reset the idle cycle to the shortest.
+
 ## Errors and Warnings
 The compiler generates errors and warnings when something goes wrong.
 You will see these errors attached to the line in the document where that error was originated from.

@@ -12,3 +12,4 @@ export const createYielder = (budget: number) => {
         return Promise.resolve();
     };
 };
+export type Yielder = ReturnType<typeof createYielder>;

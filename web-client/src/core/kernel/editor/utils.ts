@@ -25,3 +25,9 @@ export const detectLanguageByFileName = (fileName: string): string => {
     }
     return "text";
 };
+
+/// Interface for editor to access kernel functions
+export interface KernelAccess {
+    /// Trigger the compiler
+    compile(): Promise<void>;
+}

@@ -3,7 +3,8 @@ import { Logger } from "./Logger";
 let worker: Worker;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const specialHandlers: { [key: string]: (data: any) => any } = {};
-const workerHandlers: { [key: number]: [(x: any) => void, (x: any) => void] } =
+// map of [resolve, reject, timeoutHandle]
+const workerHandlers: { [key: number]: [(x: any) => void, (x: any) => void, any] } =
     {};
 let nextId = 0;
 
@@ -36,7 +37,8 @@ export function setWorker(w: Worker, logger: Logger) {
             }
         } else {
             // Event handler
-            const [resolve, reject] = workerHandlers[handleId];
+            const [resolve, reject, timeoutHandle] = workerHandlers[handleId];
+            clearTimeout(timeoutHandle);
             delete workerHandlers[handleId];
             if (ok) {
                 resolve(result);
@@ -58,7 +60,7 @@ export function setWorker(w: Worker, logger: Logger) {
             logger.info("waiting for worker to be ready...");
             worker.postMessage(["ready"]);
             clearTimeout(handle);
-            handle = setTimeout(postReady, 100);
+            handle = setTimeout(postReady, 500);
         }
         postReady();
     });
@@ -67,7 +69,10 @@ export function setWorker(w: Worker, logger: Logger) {
 /// Call a worker function
 export function callWorker<T>(funcId: number, args: any[]): Promise<T> {
     return new Promise((resolve, reject) => {
-        workerHandlers[nextId] = [resolve, reject];
+        // To prevent memory leak from infinitely stuck promises
+        // we set a timeout of 5 minutes.
+        const timeoutHandle = setTimeout(() => reject(`worker call timed out (msg=${nextId}, func=${funcId})`), 300000);
+        workerHandlers[nextId] = [resolve, reject, timeoutHandle];
         worker.postMessage([nextId++, funcId, args]);
     });
 }

@@ -9,11 +9,11 @@ export const setShowFileTree = withPayload<EditorSettingsState, boolean>(
     },
 );
 
-export const setAutoLoadEnabled = withPayload<EditorSettingsState, boolean>(
-    (state, autoLoadEnabled) => {
-        state.autoLoadEnabled = autoLoadEnabled;
-    },
-);
+// export const setAutoLoadEnabled = withPayload<EditorSettingsState, boolean>(
+//     (state, autoLoadEnabled) => {
+//         state.autoLoadEnabled = autoLoadEnabled;
+//     },
+// );
 
 export const setAutoSaveEnabled = withPayload<EditorSettingsState, boolean>(
     (state, autoSaveEnabled) => {
@@ -21,12 +21,12 @@ export const setAutoSaveEnabled = withPayload<EditorSettingsState, boolean>(
     },
 );
 
-export const setDeactivateAutoLoadAfterMinutes = withPayload<
-    EditorSettingsState,
-    number
->((state, deactivateAutoLoadAfterMinutes) => {
-    state.deactivateAutoLoadAfterMinutes = deactivateAutoLoadAfterMinutes;
-});
+// export const setDeactivateAutoLoadAfterMinutes = withPayload<
+//     EditorSettingsState,
+//     number
+// >((state, deactivateAutoLoadAfterMinutes) => {
+//     state.deactivateAutoLoadAfterMinutes = deactivateAutoLoadAfterMinutes;
+// });
 
 export const setCompilerEntryPath = withPayload<EditorSettingsState, string>(
     (state, compilerEntryPath) => {
