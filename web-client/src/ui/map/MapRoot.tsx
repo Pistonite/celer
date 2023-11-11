@@ -13,7 +13,7 @@ import { RootContainerId } from "./MapContainerMgr";
 /// Map root container that the leaflet map instance binds to
 export const MapRoot: React.FC = () => {
     const { serial, document } = useSelector(documentSelector);
-    const { rootPath, stageMode, compileInProgress } = useSelector(viewSelector);
+    const { stageMode, compileInProgress } = useSelector(viewSelector);
     const store = useStore();
     const mapState = useRef<MapState | null>(null);
     /* eslint-disable react-hooks/exhaustive-deps*/
@@ -29,14 +29,14 @@ export const MapRoot: React.FC = () => {
     }, [serial, store]);
     /* eslint-enable react-hooks/exhaustive-deps*/
 
-    if (stageMode === "edit" && !compileInProgress && (!document || !rootPath)) {
-        return (
-            <div className="blank-div-message">
-                Map will be shown here once a project is opened
-            </div>
-        );
-    }
     if (!document) {
+        if (stageMode === "edit" && !compileInProgress) {
+            return (
+                <div className="blank-div-message">
+                    Map will be shown here once a project is opened
+                </div>
+            );
+        }
         return <LoadScreen color="green" />;
     }
 

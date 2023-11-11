@@ -1,17 +1,6 @@
 /// Callback to execute an idle event
 export type IdleFunction = (isLong: boolean, duration: number) => Promise<void>;
 
-// /// Interval threshold for an idle to be considered long
-// const LONG_IDLE_TIME = 1000 * 5; /* ms */
-// /// Initial interval
-// const INITIAL_INTERVAL = 1000;
-// /// Every time an idle event is fired X times, the interval is multiplied by this factor
-// const INTERVAL_MULTIPLIER = 2;
-// /// The X times for the interval multiplier
-// const EVENTS_COUNT_FOR_NEXT_INTERVAL = 5;
-// /// Maximum interval
-// const MAX_INTERVAL = 1000 * 20; /* ms */
-
 /// Idle manager
 ///
 /// The idle manager runs callbacks when the application is idle.

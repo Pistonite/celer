@@ -57,6 +57,10 @@ export const EditorSettings: React.FC = () => {
     const [entryPoints, setEntryPoints] = useState<EntryPointsSorted>([]);
     useEffect(() => {
         (async () => {
+            if (!rootPath) {
+                setEntryPoints([]);
+                return;
+            }
             const compiler = await kernel.getCompiler();
             const result = await compiler.getEntryPoints();
             if (!result.isOk()) {
@@ -65,7 +69,7 @@ export const EditorSettings: React.FC = () => {
             }
             setEntryPoints(result.inner());
         })();
-    }, [kernel]);
+    }, [kernel, rootPath]);
 
     const selectedEntryPoint = useMemo(() => {
         if (!compilerEntryPath) {
