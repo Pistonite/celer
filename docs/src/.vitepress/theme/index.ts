@@ -4,6 +4,7 @@ import Theme from "vitepress/theme";
 import "./style.css";
 import SourceLink from "./SourceLink.vue";
 import FluentIcon from "./FluentIcon.vue";
+import HardLink from "./HardLink.vue";
 
 export default {
     ...Theme,
@@ -15,5 +16,6 @@ export default {
     enhanceApp({ app, router, siteData }) {
         app.component("SourceLink", SourceLink);
         app.component("FluentIcon", FluentIcon);
+        app.component("HardLink", HardLink);
     },
 };

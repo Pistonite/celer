@@ -1,5 +1,5 @@
 # Hello, World!
-In this section, we will create a minimal working route in Celer using the [Editor](scheme://celer.placeholder.domain/edit)
+In this section, we will create a minimal working route in Celer using the <HardLink text="Editor" link="/edit" />.
 :::tip
 "Hello, World!" is the computer equivalent of a baby's first words. When someone's learning how to tell a computer what to do, which is what programming is all about, the first step is often to get the computer to say "Hello, World!" It's a way to make sure that everything is set up correctly before diving into more complex stuff. *-- ChatGPT*
 :::
@@ -21,7 +21,7 @@ you currently cannot use the Web Editor. This issue is tracked by [#122](https:/
 :::
 To open the project in the Web Editor:
 
-1. Go to [Web Editor](scheme://celer.placeholder.domain/edit)
+1. Go to <HardLink text="Web Editor" link="/edit" />
 2. Drag and drop the folder from your PC to the drop box in the Web Editor
 
 The project will compile with an error. Don't worry. That's because we haven't added any content yet!
