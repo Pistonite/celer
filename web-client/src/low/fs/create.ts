@@ -1,20 +1,20 @@
 //! Utils for creating FileSys
-
 import { console, allocErr, allocOk } from "low/utils";
 
 import {
-    FileEntriesAPIFileSys,
-    isFileEntriesAPISupported,
-} from "./FileEntriesAPIFileSys";
+    FileEntriesApiFileSys,
+    isFileEntriesApiSupported,
+} from "./FileEntriesApiFileSys";
 import { FileSys } from "./FileSys";
 import {
-    FileSystemAccessAPIFileSys,
-    isFileSystemAccessAPISupported,
+    FileSystemAccessApiFileSys,
+    isFileSystemAccessApiSupported,
 } from "./FileSystemAccessApiFileSys";
 import { FsResult, FsResultCodes } from "./FsResult";
+import { FileApiFileSys } from "./FileApiFileSys";
 
 export const showDirectoryPicker = async (): Promise<FsResult<FileSys>> => {
-    if (isFileSystemAccessAPISupported()) {
+    if (isFileSystemAccessApiSupported()) {
             try {
                 // @ts-expect-error showDirectoryPicker is not in the TS lib
                 const handle = await window.showDirectoryPicker({ mode: "readwrite" });
@@ -22,41 +22,33 @@ export const showDirectoryPicker = async (): Promise<FsResult<FileSys>> => {
                     console.error("Failed to get handle from showDirectoryPicker");
                     return allocErr(FsResultCodes.Fail);
                 }
-                return await createFsFromFileSystemHandle(handle);
+                return createFsFromFileSystemHandle(handle);
             } catch (e) {
                 console.error(e);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if ((e as any).name === "AbortError") {
+                if (e && (e as any).name === "AbortError") {
                     return allocErr(FsResultCodes.UserAbort);
                 }
                 return allocErr(FsResultCodes.Fail);
-
             }
     }
-    // Fallback to input type = file
+    // Fallback to File API
     const inputElement = document.createElement("input");
     inputElement.id = "temp";
     inputElement.style.display = "none";
     document.body.appendChild(inputElement);
     inputElement.type = "file";
-    inputElement.multiple = true;
-    // inputElement.webkitdirectory = true;
+    inputElement.webkitdirectory = true;
     return await new Promise((resolve) => {
-        // function cancel() {
-        //     window.console.log(inputElement.files);
-        //     window.console.log(inputElement.webkitEntries.length);
-        //     document.body.onfocus = null;
-        //     // resolve(
-        //     //     allocErr(FsResultCodes.UserAbort));
-        // }
-        // document.body.onfocus = cancel;
         inputElement.addEventListener("change", (event) => {
-            window.console.log((event.target as HTMLInputElement).webkitEntries);
-            resolve(
-                allocErr(FsResultCodes.NotSupported));
+            const files = (event.target as HTMLInputElement).files;
+            if (!files) {
+                resolve(allocErr(FsResultCodes.Fail));
+                return;
+            }
+            resolve(createFsFromFileList(files));
         });
         inputElement.click();
-        console.info("clicked");
     });
 }
 
@@ -65,7 +57,7 @@ export const createFsFromDataTransferItem = async (
 ): Promise<FsResult<FileSys>> => {
     // Prefer File System Access API since it supports writing
     if ("getAsFileSystemHandle" in item) {
-        if (isFileSystemAccessAPISupported()) {
+        if (isFileSystemAccessApiSupported()) {
             try {
                 // @ts-expect-error getAsFileSystemHandle is not in the TS lib
                 const handle = await item.getAsFileSystemHandle();
@@ -73,7 +65,7 @@ export const createFsFromDataTransferItem = async (
                     console.error("Failed to get handle from DataTransferItem");
                     return allocErr(FsResultCodes.Fail);
                 }
-                return await createFsFromFileSystemHandle(handle);
+                return createFsFromFileSystemHandle(handle);
             } catch (e) {
                 console.error(e);
             }
@@ -83,14 +75,14 @@ export const createFsFromDataTransferItem = async (
         "Failed to create FileSys with FileSystemAccessAPI. Trying FileEntriesAPI",
     );
     if ("webkitGetAsEntry" in item) {
-        if (isFileEntriesAPISupported()) {
+        if (isFileEntriesApiSupported()) {
             try {
                 const entry = item.webkitGetAsEntry();
                 if (!entry) {
                     console.error("Failed to get entry from DataTransferItem");
                     return allocErr(FsResultCodes.Fail);
                 }
-                return await createFsFromFileSystemEntry(entry);
+                return createFsFromFileSystemEntry(entry);
             } catch (e) {
                 console.error(e);
             }
@@ -102,14 +94,14 @@ export const createFsFromDataTransferItem = async (
     return allocErr(FsResultCodes.NotSupported);
 };
 
-const createFsFromFileSystemHandle = async (
+const createFsFromFileSystemHandle = (
     handle: FileSystemHandle,
-): Promise<FsResult<FileSys>> => {
+): FsResult<FileSys> => {
     if (handle.kind !== "directory") {
         return allocErr(FsResultCodes.IsFile);
     }
 
-    const fs = new FileSystemAccessAPIFileSys(
+    const fs = new FileSystemAccessApiFileSys(
         handle.name,
         handle as FileSystemDirectoryHandle,
     );
@@ -117,15 +109,31 @@ const createFsFromFileSystemHandle = async (
     return allocOk(fs);
 };
 
-const createFsFromFileSystemEntry = async (
+const createFsFromFileSystemEntry = (
     entry: FileSystemEntry,
-): Promise<FsResult<FileSys>> => {
+): FsResult<FileSys> => {
     if (entry.isFile || !entry.isDirectory) {
         return allocErr(FsResultCodes.IsFile);
     }
-    const fs = new FileEntriesAPIFileSys(
+    const fs = new FileEntriesApiFileSys(
         entry.name,
         entry as FileSystemDirectoryEntry,
     );
     return allocOk(fs);
 };
+
+const createFsFromFileList = (files: FileList): FsResult<FileSys> => {
+    if (!files.length) {
+        return allocErr(FsResultCodes.Fail);
+    }
+    const rootName = files[0].webkitRelativePath.split("/", 1)[0];
+    const fileMap: Record<string, File> = {};
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // remove "<root>/"
+        const path = file.webkitRelativePath.slice(rootName.length+1);
+        fileMap[path] = file;
+    }
+    const fs = new FileApiFileSys(rootName, fileMap);
+    return allocOk(fs);
+}

@@ -7,7 +7,7 @@ get familiar with the tools.
 After that, you can starting looking into how to set up a project:
 - Start with [YAML Basics](./yaml-basics.md) if you are not familiar with
 the YAML language. 
-- Otherwise, start with [Getting Started](./getting-started.md).
+- Otherwise, start with the ["Hello, World!"](./hello-world.md) example.
 
 :::tip
 If you have used the old Celer, you may find a lot of the syntax/format the same.

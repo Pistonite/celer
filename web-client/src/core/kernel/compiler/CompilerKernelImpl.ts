@@ -50,6 +50,7 @@ export class CompilerKernelImpl implements CompilerKernel {
     private compilerDebouncer: Debouncer;
     private needCompile: boolean;
     private compiling: boolean;
+    private setCompilingStateHandle: number | undefined = undefined;
 
     private validatedEntryPath: string | undefined = undefined;
 
@@ -88,6 +89,11 @@ export class CompilerKernelImpl implements CompilerKernel {
         CompilerLog.info("uninitializing compiler...");
         this.fileAccess = undefined;
         this.store.dispatch(viewActions.setCompilerReady(false));
+        if (this.setCompilingStateHandle) {
+            window.clearTimeout(this.setCompilingStateHandle);
+            this.setCompilingStateHandle = undefined;
+        }
+        this.store.dispatch(viewActions.setCompileInProgress(false));
     }
 
     public async init(fileAccess: FileAccess) {
@@ -214,7 +220,10 @@ export class CompilerKernelImpl implements CompilerKernel {
             CompilerLog.warn("compilation already in progress, skipping");
             return;
         }
-        const handle = window.setTimeout(() => {
+        if (this.setCompilingStateHandle !== undefined) {
+            window.clearTimeout(this.setCompilingStateHandle);
+        }
+        this.setCompilingStateHandle = window.setTimeout(() => {
             this.store.dispatch(viewActions.setCompileInProgress(true));
         }, 200);
         this.compiling = true;
@@ -244,7 +253,8 @@ export class CompilerKernelImpl implements CompilerKernel {
         }
         CompilerLog.info("finished compiling");
 
-        window.clearTimeout(handle);
+        window.clearTimeout(this.setCompilingStateHandle);
+        this.setCompilingStateHandle = undefined;
         this.store.dispatch(viewActions.setCompileInProgress(false));
         this.compiling = false;
     }

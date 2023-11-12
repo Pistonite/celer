@@ -3,7 +3,7 @@ import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
 import { FsResult, FsResultCodes } from "./FsResult";
 
-export const isFileSystemAccessAPISupported = (): boolean => {
+export const isFileSystemAccessApiSupported = (): boolean => {
     if (!window) {
         return false;
     }
@@ -42,7 +42,7 @@ type PermissionStatus = "granted" | "denied" | "prompt";
 
 /// FileSys implementation that uses FileSystem Access API
 /// This is only supported in Chrome/Edge
-export class FileSystemAccessAPIFileSys implements FileSys {
+export class FileSystemAccessApiFileSys implements FileSys {
     private rootPath: string;
     private rootHandle: FileSystemDirectoryHandle;
     private permissionStatus: PermissionStatus;
@@ -66,7 +66,7 @@ export class FileSystemAccessAPIFileSys implements FileSys {
 
     public isWritable(): boolean {
         return (
-            isFileSystemAccessAPISupported() &&
+            isFileSystemAccessApiSupported() &&
             this.permissionStatus === "granted"
         );
     }

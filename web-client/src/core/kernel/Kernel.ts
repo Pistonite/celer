@@ -167,26 +167,29 @@ export class Kernel {
         learnMore?: string,
     ): Promise<boolean> {
         return new Promise((resolve) => {
-            this.alertCallback = (ok) => {
-                this.store?.dispatch(viewActions.clearAlert());
-                resolve(ok);
-                this.alertCallback = undefined;
-            };
-            const store = this.store;
-            if (!store) {
-                console.error("store not initialized");
-                resolve(false);
-                return;
-            }
-            store.dispatch(
-                viewActions.setAlert({
-                    title,
-                    text: message,
-                    learnMore: learnMore || "",
-                    okButton,
-                    cancelButton,
-                }),
-            );
+            // Run new alert asynchronously so that the previous alert has time to disappear first
+            setTimeout(() => {
+                this.alertCallback = (ok) => {
+                    this.store?.dispatch(viewActions.clearAlert());
+                    resolve(ok);
+                    this.alertCallback = undefined;
+                };
+                const store = this.store;
+                if (!store) {
+                    console.error("store not initialized");
+                    resolve(false);
+                    return;
+                }
+                store.dispatch(
+                    viewActions.setAlert({
+                        title,
+                        text: message,
+                        learnMore: learnMore || "",
+                        okButton,
+                        cancelButton,
+                    }),
+                );
+            }, 50);
         });
     }
 
@@ -291,10 +294,10 @@ export class Kernel {
             if (!yes) {
                 return;
             }
-                        this.store.dispatch(
-                            settingsActions.setEditorMode("external"),
-                        );
-
+                this.store.dispatch(
+                    settingsActions.setEditorMode("external"),
+                );
+                // make sure store is updated for the next check
             }
         }
 

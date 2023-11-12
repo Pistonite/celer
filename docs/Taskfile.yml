@@ -18,7 +18,7 @@ tasks:
     desc: Build docs assets
     deps: [txtpp]
     cmds:
-    - npx vitepress build src > /dev/null 2> /dev/null
+    - npx vitepress build src
 
   check:
     desc: Check for issues in the docs

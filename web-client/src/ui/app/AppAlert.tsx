@@ -1,4 +1,5 @@
 //! Global alert component
+import "./AppAlert.css";
 import { useRef } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -43,12 +44,19 @@ export const AppAlert: React.FC = () => {
                     <DialogContent>
                         <Text block>{alertText}</Text>
                         {alertLearnMoreLink && (
-                            <Link href={alertLearnMoreLink} target="_blank">
-                                Click here to learn more
-                            </Link>
+                            <div className="alert-link">
+                                <Link href={alertLearnMoreLink} target="_blank">
+                                    Learn more
+                                </Link>
+                            </div>
                         )}
                     </DialogContent>
                     <DialogActions>
+                        <DialogTrigger disableButtonEnhancement>
+                            <Button ref={okRef} appearance="primary">
+                                {alertOkButton}
+                            </Button>
+                        </DialogTrigger>
                         {alertCancelButton && (
                             <DialogTrigger disableButtonEnhancement>
                                 <Button appearance="secondary">
@@ -56,11 +64,6 @@ export const AppAlert: React.FC = () => {
                                 </Button>
                             </DialogTrigger>
                         )}
-                        <DialogTrigger disableButtonEnhancement>
-                            <Button ref={okRef} appearance="primary">
-                                {alertOkButton}
-                            </Button>
-                        </DialogTrigger>
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>
