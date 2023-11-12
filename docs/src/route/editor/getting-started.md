@@ -1,5 +1,5 @@
 # Getting Started
-Celer comes with an <HardLink text="Editor" link="/edit" /> that runs in the browser and lets you preview the project that you are making changes to.
+Celer comes with an [Editor](scheme://celer.placeholder.domain/edit) that runs in the browser and lets you preview the project that you are making changes to.
 
 ## Workflows
 The editor supports 2 workflows:
