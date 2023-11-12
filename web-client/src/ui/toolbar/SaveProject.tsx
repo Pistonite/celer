@@ -46,7 +46,7 @@ export const SaveProject: ToolbarControl = {
         return (
             <Tooltip content={tooltip} relationship="label">
                 <MenuItem icon={icon} disabled={!enabled} onClick={handler}>
-                    Save
+                    Save to file system
                 </MenuItem>
             </Tooltip>
         );
@@ -55,22 +55,20 @@ export const SaveProject: ToolbarControl = {
 
 const useSaveProjectControl = () => {
     const kernel = useKernel();
-    const { rootPath, supportsSave, saveInProgress, lastSaveError } =
+    const { rootPath, saveInProgress, lastSaveError } =
         useSelector(viewSelector);
-    const { autoSaveEnabled } = useSelector(settingsSelector);
+    const { autoSaveEnabled, editorMode } = useSelector(settingsSelector);
 
     const isOpened = rootPath !== undefined;
-    const enabled = isOpened && supportsSave && !saveInProgress;
+    const enabled = isOpened && editorMode === "web" && !saveInProgress;
     const icon = getIcon(
         isOpened,
-        supportsSave,
         saveInProgress,
         lastSaveError,
         autoSaveEnabled,
     );
     const tooltip = getTooltip(
         isOpened,
-        supportsSave,
         saveInProgress,
         lastSaveError,
         autoSaveEnabled,
@@ -82,7 +80,8 @@ const useSaveProjectControl = () => {
             return;
         }
 
-        const result = await editor.saveChangesToFs(true /* isUserAction */);
+        editor.notifyActivity();
+        const result = await editor.saveChangesToFs();
         if (result.isErr()) {
             await kernel.showAlert(
                 "Error",
@@ -111,16 +110,12 @@ const useSaveProjectControl = () => {
 
 const getIcon = (
     isOpened: boolean,
-    supportsSave: boolean,
     saveInProgress: boolean,
     lastSaveError: boolean,
     autoSaveEnabled: boolean,
 ) => {
     if (!isOpened) {
         return <Save20Regular />;
-    }
-    if (!supportsSave) {
-        return <Save20Regular className="color-error" />;
     }
     if (saveInProgress) {
         return (
@@ -140,14 +135,10 @@ const getIcon = (
 
 const getTooltip = (
     isOpened: boolean,
-    supportsSave: boolean,
     saveInProgress: boolean,
     lastSaveError: boolean,
     autoSaveEnabled: boolean,
 ) => {
-    if (!supportsSave) {
-        return "Save is not supported by your browser";
-    }
     if (isOpened) {
         if (saveInProgress) {
             return "Saving changes to file system...";

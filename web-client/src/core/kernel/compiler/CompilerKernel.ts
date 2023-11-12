@@ -12,11 +12,11 @@ export interface CompilerKernel {
     /// Initialize the compiler and bind it to a FileAccess implementation
     init(fileAccess: FileAccess): Promise<void>;
 
-    /// Cleanup the compiler.
+    /// Unbind the compiler.
     ///
-    /// Note that this may not stop the worker,
-    /// which is automatically stopped if there is a new worker
-    delete(): void;
+    /// Note that this does not terminate the worker. The worker will be
+    /// terminated when a new one is created.
+    uninit(): void;
 
     /// Trigger a compiler run asynchrounously
     ///

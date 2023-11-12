@@ -1,15 +1,8 @@
-// eslint-disable-next-line import/no-internal-modules
-import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-// eslint-disable-next-line import/no-internal-modules
-import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
-// eslint-disable-next-line import/no-internal-modules
-import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
+import { AppStore, settingsSelector } from "core/store";
+import { FileSys } from "low/fs";
 
-import { AppStore } from "core/store";
-
-import { EditorLog } from "./utils";
+import { KernelAccess } from "./utils";
 import { EditorKernel } from "./EditorKernel";
-import { EditorKernelImpl } from "./EditorKernelImpl";
 
 declare global {
     interface Window {
@@ -17,24 +10,28 @@ declare global {
     }
 }
 
-export const initEditor = (store: AppStore): EditorKernel => {
+export const initEditor = async (
+    kernel: KernelAccess,
+    fileSys: FileSys,
+    store: AppStore,
+): Promise<EditorKernel> => {
+    deleteEditor();
+    const { editorMode } = settingsSelector(store.getState());
+    let editor;
+    if (editorMode === "web") {
+        const { initWebEditor } = await import("./WebEditorKernel");
+        editor = initWebEditor(kernel, fileSys, store);
+    } else {
+        const { initExternalEditor } = await import("./ExternalEditorKernel");
+        editor = initExternalEditor(kernel, fileSys);
+    }
+
+    window.__theEditorKernel = editor;
+    return editor;
+};
+
+export const deleteEditor = (): void => {
     if (window.__theEditorKernel) {
         window.__theEditorKernel.delete();
     }
-    EditorLog.info("creating editor");
-    window.MonacoEnvironment = {
-        getWorker(_, label) {
-            if (label === "json") {
-                return new jsonWorker();
-            }
-            if (label === "typescript" || label === "javascript") {
-                return new tsWorker();
-            }
-            return new editorWorker();
-        },
-    };
-
-    const editor = new EditorKernelImpl(store);
-    window.__theEditorKernel = editor;
-    return editor;
 };

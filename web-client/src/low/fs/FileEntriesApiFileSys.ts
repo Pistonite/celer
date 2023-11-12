@@ -3,7 +3,7 @@ import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
 import { FsResult, FsResultCodes } from "./FsResult";
 
-export const isFileEntriesAPISupported = (): boolean => {
+export const isFileEntriesApiSupported = (): boolean => {
     if (!window) {
         return false;
     }
@@ -41,7 +41,7 @@ export const isFileEntriesAPISupported = (): boolean => {
 
 /// FileSys implementation that uses File Entries API
 /// This is not supported in Chrome/Edge, but in Firefox
-export class FileEntriesAPIFileSys implements FileSys {
+export class FileEntriesApiFileSys implements FileSys {
     private rootPath: string;
     private rootEntry: FileSystemDirectoryEntry;
 
@@ -56,6 +56,11 @@ export class FileEntriesAPIFileSys implements FileSys {
 
     public isWritable(): boolean {
         // Entries API does not support writing
+        return false;
+    }
+
+    public isStale(): boolean {
+        // Entries API can scan directories
         return false;
     }
 
@@ -89,59 +94,6 @@ export class FileEntriesAPIFileSys implements FileSys {
         }
     }
 
-    // public async readFile(path: FsPath): Promise<FsResult<string>> {
-    //     const result = await this.readFileAndModifiedTime(path);
-    //     if (result.code !== FsResultCodes.Ok) {
-    //         return result;
-    //     }
-    //     return setOkValue(result, result.value[0]);
-    // }
-    //
-    // public async readFileAndModifiedTime(
-    //     path: FsPath,
-    // ): Promise<FsResult<[string, number]>> {
-    //     const fileResult = await this.readFileInternal(path);
-    //     if (fileResult.code !== FsResultCodes.Ok) {
-    //         return fileResult;
-    //     }
-    //     const file = fileResult.value;
-    //     const result = await decodeFile(file);
-    //     if (result.code !== FsResultCodes.Ok) {
-    //         return result;
-    //     }
-    //     return setOkValue(result, [result.value, file.lastModified]);
-    // }
-    //
-    // public async readIfModified(
-    //     path: FsPath,
-    //     lastModified?: number,
-    // ): Promise<FsResult<[string, number]>> {
-    //     const fileResult = await this.readFileInternal(path);
-    //     if (fileResult.code !== FsResultCodes.Ok) {
-    //         return fileResult;
-    //     }
-    //     const file = fileResult.value;
-    //     if (lastModified && file.lastModified <= lastModified) {
-    //         return setErrValue(fileResult, FsResultCodes.NotModified);
-    //     }
-    //     const result = await decodeFile(file);
-    //     if (result.code !== FsResultCodes.Ok) {
-    //         return result;
-    //     }
-    //     return setOkValue(result, [result.value, file.lastModified]);
-    // }
-    //
-    // public async readModifiedTime(path: FsPath): Promise<FsResult<number>> {
-    //     const fileResult = await this.readFileInternal(path);
-    //     if (fileResult.code !== FsResultCodes.Ok) {
-    //         return fileResult;
-    //     }
-    //     return {
-    //         code: FsResultCodes.Ok,
-    //         value: fileResult.value.lastModified,
-    //     };
-    // }
-
     public async readFile(path: FsPath): Promise<FsResult<File>> {
         const parentResult = path.parent;
         if (parentResult.isErr()) {
@@ -173,10 +125,7 @@ export class FileEntriesAPIFileSys implements FileSys {
         }
     }
 
-    public async writeFile(
-        _path: FsPath,
-        _content: string | Uint8Array,
-    ): Promise<FsResult<void>> {
+    public async writeFile(): Promise<FsResult<void>> {
         // Entries API does not support writing
         return allocErr(FsResultCodes.NotSupported);
     }

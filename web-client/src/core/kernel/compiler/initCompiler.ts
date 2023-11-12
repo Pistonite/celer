@@ -6,7 +6,7 @@ import { CompilerLog } from "./utils";
 
 declare global {
     interface Window {
-        __theCompilerKernel: CompilerKernel;
+        __theCompilerKernel: CompilerKernelImpl;
     }
 }
 

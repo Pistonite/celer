@@ -30,7 +30,7 @@ import clsx from "clsx";
 import React, { PropsWithChildren, useMemo } from "react";
 import { useSelector } from "react-redux";
 
-import { documentSelector, viewSelector } from "core/store";
+import { documentSelector, settingsSelector, viewSelector } from "core/store";
 import { getHeaderControls } from "./getHeaderControls";
 import { HeaderControlList } from "./util";
 
@@ -44,13 +44,14 @@ type HeaderProps = {
 export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
     const { document } = useSelector(documentSelector);
     const { stageMode } = useSelector(viewSelector);
+    const { editorMode } = useSelector(settingsSelector);
     const title =
         document?.project.title ??
         (stageMode === "edit" ? "Celer Editor" : "Loading...");
 
     const headerControls = useMemo(() => {
-        return getHeaderControls(stageMode);
-    }, [stageMode]);
+        return getHeaderControls(stageMode, editorMode);
+    }, [stageMode, editorMode]);
 
     return (
         <header className={clsx("celer-header", toolbarAnchor)}>
@@ -159,10 +160,10 @@ const ShowIfGroupOverflown: React.FC<
     PropsWithChildren<{ groupId: string }>
 > = ({ children, groupId }) => {
     const groupVisibleState = useIsOverflowGroupVisible(groupId);
-    if (groupVisibleState !== "visible") {
-        return <>{children}</>;
+    if (groupVisibleState === "visible") {
+        return null;
     }
-    return null;
+    return <>{children}</>;
 };
 
 /// Show children if the toolbar item is overflown

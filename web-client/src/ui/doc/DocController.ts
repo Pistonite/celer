@@ -86,19 +86,18 @@ export class DocController {
                 const newView = viewSelector(newState);
                 const oldView = viewSelector(oldState);
                 if (newDocSerial !== oldDocSerial) {
-                    // If document changed, reset the view
-                    // TODO: can load from local storage to pick up from where you left
-                    // store.dispatch(
-                    //     viewActions.setDocLocation({ section: 0, line: 0 }),
-                    // );
-                    // also update the current line and note positions, and trigger a scroll update
-                    // to layout the initial view
-                    setTimeout(() => {
-                        this.updateViewAsync(true);
-                    }, 0);
-
                     // Also update the rich text styles
                     if (newDoc.document) {
+                        // If document changed, reset the view
+                        // TODO: can load from local storage to pick up from where you left
+                        // store.dispatch(
+                        //     viewActions.setDocLocation({ section: 0, line: 0 }),
+                        // );
+                        // also update the current line and note positions, and trigger a scroll update
+                        // to layout the initial view
+                        setTimeout(() => {
+                            this.updateViewAsync(true);
+                        }, 0);
                         updateDocTagsStyle(newDoc.document.project.tags);
                     }
                     return;

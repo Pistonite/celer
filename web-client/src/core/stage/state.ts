@@ -5,6 +5,7 @@ export type StageViewState = {
     stageMode: StageMode;
     alertTitle: string;
     alertText: string;
+    alertLearnMoreLink: string;
     alertOkButton: string;
     alertCancelButton: string;
     settingsTab: SettingsTab;
@@ -18,6 +19,7 @@ export const initialStageViewState: StageViewState = {
     stageMode: window.location.pathname.startsWith("/edit") ? "edit" : "view",
     alertTitle: "",
     alertText: "",
+    alertLearnMoreLink: "",
     alertOkButton: "",
     alertCancelButton: "",
     settingsTab: "doc",

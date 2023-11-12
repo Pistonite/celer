@@ -1,4 +1,5 @@
 //! Global alert component
+import "./AppAlert.css";
 import { useRef } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -10,14 +11,21 @@ import {
     DialogSurface,
     DialogTitle,
     DialogTrigger,
+    Link,
+    Text,
 } from "@fluentui/react-components";
 
 import { useKernel } from "core/kernel";
 import { viewSelector } from "core/store";
 
 export const AppAlert: React.FC = () => {
-    const { alertTitle, alertText, alertOkButton, alertCancelButton } =
-        useSelector(viewSelector);
+    const {
+        alertTitle,
+        alertText,
+        alertLearnMoreLink,
+        alertOkButton,
+        alertCancelButton,
+    } = useSelector(viewSelector);
     const kernel = useKernel();
     const okRef = useRef<HTMLButtonElement>(null);
     if (!alertText) {
@@ -38,8 +46,22 @@ export const AppAlert: React.FC = () => {
             <DialogSurface>
                 <DialogBody>
                     <DialogTitle>{alertTitle}</DialogTitle>
-                    <DialogContent>{alertText}</DialogContent>
+                    <DialogContent>
+                        <Text block>{alertText}</Text>
+                        {alertLearnMoreLink && (
+                            <div className="alert-link">
+                                <Link href={alertLearnMoreLink} target="_blank">
+                                    Learn more
+                                </Link>
+                            </div>
+                        )}
+                    </DialogContent>
                     <DialogActions>
+                        <DialogTrigger disableButtonEnhancement>
+                            <Button ref={okRef} appearance="primary">
+                                {alertOkButton}
+                            </Button>
+                        </DialogTrigger>
                         {alertCancelButton && (
                             <DialogTrigger disableButtonEnhancement>
                                 <Button appearance="secondary">
@@ -47,11 +69,6 @@ export const AppAlert: React.FC = () => {
                                 </Button>
                             </DialogTrigger>
                         )}
-                        <DialogTrigger disableButtonEnhancement>
-                            <Button ref={okRef} appearance="primary">
-                                {alertOkButton}
-                            </Button>
-                        </DialogTrigger>
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>

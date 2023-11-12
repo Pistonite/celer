@@ -1,8 +1,21 @@
 import * as monaco from "monaco-editor";
 
 import { AppDispatcher, viewActions } from "core/store";
-import { FileSys, FsFile, FsPath, FsResult, FsResultCodes } from "low/fs";
-import { allocErr, allocOk, createYielder, sleep } from "low/utils";
+import {
+    FileAccess,
+    FileSys,
+    FsFile,
+    FsPath,
+    FsResult,
+    FsResultCodes,
+} from "low/fs";
+import {
+    ReentrantLock,
+    allocErr,
+    allocOk,
+    createYielder,
+    sleep,
+} from "low/utils";
 
 import {
     EditorContainerId,
@@ -16,15 +29,15 @@ type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
 /// File manager
 ///
 /// This manages the opened files in the editor
-export class FileMgr {
-    private fs: FileSys | undefined;
+export class FileMgr implements FileAccess {
+    private fs: FileSys;
 
     /// Some operations need to block other operations,
     /// like saving and loading at the same time is probably bad
     ///
     /// Anything that changes files or currentFile or the monaco editor
     /// should lock the fs
-    private fsLock = false;
+    private fsLock: ReentrantLock;
     /// Opened files
     private files: Record<string, FsFile> = {};
 
@@ -37,50 +50,32 @@ export class FileMgr {
     private dispatcher: AppDispatcher;
 
     constructor(
+        fileSys: FileSys,
         monacoDom: HTMLDivElement,
         monacoEditor: IStandaloneCodeEditor,
         dispatcher: AppDispatcher,
     ) {
+        this.fs = fileSys;
         this.dispatcher = dispatcher;
         this.monacoDom = monacoDom;
         this.monacoEditor = monacoEditor;
+        this.fsLock = new ReentrantLock("file mgr");
     }
 
-    public isFsLoaded(): boolean {
-        return this.fs !== undefined;
-    }
-
-    public async reset(fs?: FileSys) {
-        await this.lockedFsScope("reset", async () => {
+    public async setFileSys(fs: FileSys) {
+        await this.fsLock.lockedScope(undefined, async (token) => {
             if (this.fs === fs) {
                 return;
             }
             this.fs = fs;
             this.files = {};
-            await this.updateEditor(undefined, undefined, undefined);
+            await this.updateEditor(undefined, undefined, undefined, token);
             this.dispatcher.dispatch(viewActions.setUnsavedFiles([]));
-            if (fs) {
-                EditorLog.info("resetting file system...");
-                this.dispatcher.dispatch(
-                    viewActions.updateFileSys({
-                        rootPath: fs.getRootName(),
-                        supportsSave: fs.isWritable(),
-                    }),
-                );
-            } else {
-                EditorLog.info("closing file system...");
-                this.dispatcher.dispatch(
-                    viewActions.updateFileSys({
-                        rootPath: undefined,
-                        supportsSave: true,
-                    }),
-                );
-            }
         });
     }
 
     public delete() {
-        this.lockedFsScope("delete", async () => {
+        this.fsLock.lockedScope(undefined, async () => {
             this.monacoEditor.dispose();
         });
     }
@@ -94,8 +89,11 @@ export class FileMgr {
         }, 0);
     }
 
-    public async listDir(path: string[]): Promise<string[]> {
-        return await this.ensureLockedFs("listDir", async () => {
+    public async listDir(
+        path: string[],
+        lockToken?: number,
+    ): Promise<string[]> {
+        return await this.fsLock.lockedScope(lockToken, async () => {
             if (!this.fs) {
                 return [];
             }
@@ -109,14 +107,13 @@ export class FileMgr {
         });
     }
 
-    public async openFile(path: FsPath): Promise<FsResult<void>> {
+    public async openFile(
+        path: FsPath,
+        lockToken?: number,
+    ): Promise<FsResult<void>> {
         const idPath = path.path;
         EditorLog.info(`opening ${idPath}`);
-        return await this.lockedFsScope("openFile", async () => {
-            if (!this.fs) {
-                EditorLog.error("openFile failed: fs is not initialized");
-                return allocErr(FsResultCodes.Fail);
-            }
+        return await this.fsLock.lockedScope(lockToken, async (token) => {
             let fsFile = this.files[idPath];
             if (!fsFile) {
                 fsFile = new FsFile(this.fs, path);
@@ -125,36 +122,27 @@ export class FileMgr {
             const result = await fsFile.getText();
             if (result.isErr()) {
                 EditorLog.error(`openFile failed with code ${result.inner()}`);
-                await this.updateEditor(fsFile, idPath, undefined);
+                await this.updateEditor(fsFile, idPath, undefined, token);
             } else {
-                await this.updateEditor(fsFile, idPath, result.inner());
+                await this.updateEditor(fsFile, idPath, result.inner(), token);
             }
             return result.makeOk(undefined);
         });
     }
 
-    /// Check if a file exists and can be opened as text
-    public async exists(path: FsPath): Promise<boolean> {
-        if (!this.fs) {
-            return false;
-        }
-        const fsFile = new FsFile(this.fs, path);
-        const result = await fsFile.getText();
-        return result.isOk();
-    }
-
-    public async loadChangesFromFs(): Promise<FsResult<void>> {
+    public async loadChangesFromFs(
+        lockToken?: number,
+    ): Promise<FsResult<void>> {
         EditorLog.info("loading changes from file system...");
-        this.dispatcher.dispatch(viewActions.setAutoLoadActive(true));
         const handle = window.setTimeout(() => {
             this.dispatcher.dispatch(viewActions.startFileSysLoad());
         }, 200);
-        const success = await this.lockedFsScope(
-            "loadChangesFromFs",
-            async () => {
+        const success = await this.fsLock.lockedScope(
+            lockToken,
+            async (token) => {
                 // ensure editor changes is synced first,
                 // so the current file is marked dirty
-                await this.syncEditorToCurrentFile();
+                await this.syncEditorToCurrentFile(token);
                 let success = true;
                 const _yield = createYielder(64);
                 for (const id in this.files) {
@@ -162,6 +150,7 @@ export class FileMgr {
                     const result = await this.loadChangesFromFsForFsFile(
                         id,
                         fsFile,
+                        token,
                     );
                     if (result.isErr()) {
                         success = false;
@@ -180,68 +169,63 @@ export class FileMgr {
     private async loadChangesFromFsForFsFile(
         idPath: string,
         fsFile: FsFile,
+        lockToken?: number,
     ): Promise<FsResult<void>> {
-        return await this.ensureLockedFs(
-            "loadChangesFromFsForFsFile",
-            async () => {
-                const isCurrentFile = this.currentFile === fsFile;
-                let content: string | undefined = undefined;
+        return await this.fsLock.lockedScope(lockToken, async (token) => {
+            const isCurrentFile = this.currentFile === fsFile;
+            let content: string | undefined = undefined;
 
-                let result = await fsFile.loadIfNotDirty();
+            let result = await fsFile.loadIfNotDirty();
 
-                if (result.isOk()) {
-                    if (isCurrentFile) {
-                        const contentResult = await fsFile.getText();
-                        if (contentResult.isOk()) {
-                            content = contentResult.inner();
-                        } else {
-                            result = contentResult;
-                        }
+            if (result.isOk()) {
+                if (isCurrentFile) {
+                    const contentResult = await fsFile.getText();
+                    if (contentResult.isOk()) {
+                        content = contentResult.inner();
+                    } else {
+                        result = contentResult;
                     }
                 }
-                if (result.isErr()) {
-                    EditorLog.error(`sync failed with code ${result}`);
-                    if (!fsFile.isNewerThanFs()) {
-                        EditorLog.info(`closing ${idPath}`);
-                        if (isCurrentFile) {
-                            await this.updateEditor(
-                                undefined,
-                                undefined,
-                                undefined,
-                            );
-                        }
-                        delete this.files[idPath];
-                    }
-                } else {
+            }
+            if (result.isErr()) {
+                EditorLog.error(`sync failed with code ${result}`);
+                if (!fsFile.isNewerThanFs()) {
+                    EditorLog.info(`closing ${idPath}`);
                     if (isCurrentFile) {
-                        await this.updateEditor(fsFile, idPath, content);
+                        await this.updateEditor(
+                            undefined,
+                            undefined,
+                            undefined,
+                            token,
+                        );
                     }
+                    delete this.files[idPath];
                 }
-                return result;
-            },
-        );
+            } else {
+                if (isCurrentFile) {
+                    await this.updateEditor(fsFile, idPath, content, token);
+                }
+            }
+            return result;
+        });
     }
 
-    public async hasUnsavedChanges(): Promise<boolean> {
-        return await this.ensureLockedFs("hasUnsavedChanges", async () => {
-            if (!this.isFsLoaded()) {
-                return false;
-            }
-            await this.syncEditorToCurrentFile();
+    public async hasUnsavedChanges(lockToken?: number): Promise<boolean> {
+        return await this.fsLock.lockedScope(lockToken, async (token) => {
+            await this.syncEditorToCurrentFile(token);
+            const yielder = createYielder(64);
             for (const id in this.files) {
                 const fsFile = this.files[id];
                 if (fsFile.isNewerThanFs()) {
                     return true;
                 }
+                await yielder();
             }
             return false;
         });
     }
 
     public hasUnsavedChangesSync(): boolean {
-        if (!this.isFsLoaded()) {
-            return false;
-        }
         if (this.currentFile) {
             this.currentFile.setContent(this.monacoEditor.getValue());
         }
@@ -254,20 +238,20 @@ export class FileMgr {
         return false;
     }
 
-    public async saveChangesToFs(): Promise<FsResult<void>> {
-        if (!this.fs?.isWritable()) {
+    public async saveChangesToFs(lockToken?: number): Promise<FsResult<void>> {
+        if (!this.fs.isWritable()) {
             return allocErr(FsResultCodes.NotSupported);
         }
         EditorLog.info("saving changes to file system...");
         const handle = window.setTimeout(() => {
             this.dispatcher.dispatch(viewActions.startFileSysSave());
         }, 200);
-        const success = await this.lockedFsScope(
-            "saveChangesToFs",
-            async () => {
+        const success = await this.fsLock.lockedScope(
+            lockToken,
+            async (token) => {
                 // ensure editor changes is synced first,
                 // so the current file is marked dirty
-                await this.syncEditorToCurrentFile();
+                await this.syncEditorToCurrentFile(token);
                 let success = true;
                 const _yield = createYielder(64);
                 for (const id in this.files) {
@@ -275,6 +259,7 @@ export class FileMgr {
                     const result = await this.saveChangesToFsForFsFile(
                         id,
                         fsFile,
+                        token,
                     );
                     if (result.isErr()) {
                         success = false;
@@ -293,30 +278,29 @@ export class FileMgr {
     private async saveChangesToFsForFsFile(
         idPath: string,
         fsFile: FsFile,
+        lockToken?: number,
     ): Promise<FsResult<void>> {
-        return await this.ensureLockedFs(
-            "saveChangesToFsForFsFile",
-            async () => {
-                const result = await fsFile.writeIfNewer();
-                if (result.isErr()) {
-                    EditorLog.error(
-                        `save ${idPath} failed with code ${result.inner()}`,
-                    );
-                }
-                return result;
-            },
-        );
+        return await this.fsLock.lockedScope(lockToken, async () => {
+            const result = await fsFile.writeIfNewer();
+            if (result.isErr()) {
+                EditorLog.error(
+                    `save ${idPath} failed with code ${result.inner()}`,
+                );
+            }
+            return result;
+        });
     }
 
     private async updateEditor(
         file: FsFile | undefined,
         path: string | undefined,
         content: string | undefined,
+        lockToken?: number,
     ) {
-        await this.ensureLockedFs("updateEditor", async () => {
+        await this.fsLock.lockedScope(lockToken, async (token) => {
             // in case we are switching files, sync the current file first
             if (this.currentFile !== file) {
-                await this.syncEditorToCurrentFile();
+                await this.syncEditorToCurrentFile(token);
                 this.currentFile = file;
             }
             const success = content !== undefined;
@@ -357,8 +341,8 @@ export class FileMgr {
         }
     }
 
-    public async syncEditorToCurrentFile() {
-        await this.ensureLockedFs("syncEditorToCurrentFile", async () => {
+    public async syncEditorToCurrentFile(lockToken?: number) {
+        await this.fsLock.lockedScope(lockToken, async () => {
             if (this.currentFile && this.isEditorOpen) {
                 this.currentFile.setContent(this.monacoEditor.getValue());
             }
@@ -392,11 +376,11 @@ export class FileMgr {
     }
 
     private modifiedTimeWhenLastAccessed: { [path: string]: number } = {};
-    public async getFileAsBytes(
+    public async getFileContent(
         path: string,
         checkChanged: boolean,
     ): Promise<FsResult<Uint8Array>> {
-        return await this.ensureLockedFs("getFileAsBytes", async () => {
+        return await this.fsLock.lockedScope(undefined, async () => {
             if (!this.fs) {
                 return allocErr(FsResultCodes.Fail);
             }
@@ -444,42 +428,5 @@ export class FileMgr {
             this.resizeEditor();
             EditorLog.info("editor attached");
         }
-    }
-
-    /// WARNING: f must not call lockedFsScope again - otherwise it will dead lock
-    private async lockedFsScope<T>(
-        reason: string,
-        f: () => Promise<T>,
-    ): Promise<T> {
-        let cycles = 0;
-        while (this.fsLock) {
-            cycles++;
-            if (cycles % 100 === 0) {
-                EditorLog.warn(
-                    `${reason} has been waiting for fs lock for ${
-                        cycles / 10
-                    } seconds!`,
-                );
-                cycles = 0;
-            }
-            await sleep(100);
-        }
-        try {
-            this.fsLock = true;
-            return await f();
-        } finally {
-            this.fsLock = false;
-        }
-    }
-
-    /// Like withLockedFs but will not block if fs is already locked
-    private async ensureLockedFs<T>(
-        reason: string,
-        f: () => Promise<T>,
-    ): Promise<T> {
-        if (this.fsLock) {
-            return await f();
-        }
-        return await this.lockedFsScope(reason, f);
     }
 }

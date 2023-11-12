@@ -1,9 +1,10 @@
 //! Control for compiling the project
 
+import clsx from "clsx";
 import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
-import { Box20Regular } from "@fluentui/react-icons";
+import { ArrowSync20Regular } from "@fluentui/react-icons";
 
 import { useKernel } from "core/kernel";
 
@@ -38,22 +39,22 @@ export const CompileProject: ToolbarControl = {
 
 const useCompileProjectControl = () => {
     const kernel = useKernel();
-    const { rootPath, compileInProgress } = useSelector(viewSelector);
-    const handler = useCallback(async () => {
-        const compiler = kernel.getCompiler();
-        if (!compiler) {
-            return;
-        }
-
-        compiler.compile();
+    const { rootPath, compileInProgress, compilerReady } =
+        useSelector(viewSelector);
+    const handler = useCallback(() => {
+        kernel.compile();
     }, [kernel]);
 
-    const icon = <Box20Regular />;
+    const icon = (
+        <ArrowSync20Regular
+            className={clsx(compileInProgress && "spinning-infinite")}
+        />
+    );
     const tooltip = getTooltip(!!rootPath, compileInProgress);
 
     return {
         handler,
-        disabled: !rootPath || compileInProgress,
+        disabled: !rootPath || compileInProgress || !compilerReady,
         icon,
         tooltip,
     };

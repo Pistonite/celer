@@ -31,6 +31,9 @@ export interface FileSys {
     /// Returns if this implementation supports writing to a file
     isWritable: () => boolean;
 
+    /// Returns if this implementation only keeps a static snapshot of the directory structure
+    isStale: () => boolean;
+
     /// Write content to a file
     ///
     /// Writes the content to the path specified.

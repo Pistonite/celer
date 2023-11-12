@@ -1,5 +1,4 @@
 //! Layout store reducers
-import { StageMode } from "core/stage";
 import { ReducerDecl, withPayload } from "low/store";
 
 import { LayoutSettingsState, Layout, WidgetType } from "./state";
@@ -49,13 +48,13 @@ export const switchLayout = withPayload<LayoutSettingsState, number>(
 ///
 /// If the current layout is the default layout, the actual
 /// current layout will be duplicated and switched to.
-export const duplicateLayout = withPayload<LayoutSettingsState, StageMode>(
-    (state, mode) => {
+export const duplicateLayout = withPayload<LayoutSettingsState, boolean>(
+    (state, isEditor) => {
         if (isCurrentLayoutDefault(state)) {
             const layout = getDefaultLayout(
                 window.innerWidth,
                 window.innerHeight,
-                mode,
+                isEditor,
             );
             state.savedLayouts.push(layout);
         } else {

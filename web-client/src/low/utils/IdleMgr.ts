@@ -1,17 +1,6 @@
 /// Callback to execute an idle event
 export type IdleFunction = (isLong: boolean, duration: number) => Promise<void>;
 
-/// Interval threshold for an idle to be considered long
-const LONG_IDLE_TIME = 1000 * 5; /* ms */
-/// Initial interval
-const INITIAL_INTERVAL = 1000;
-/// Every time an idle event is fired X times, the interval is multiplied by this factor
-const INTERVAL_MULTIPLIER = 2;
-/// The X times for the interval multiplier
-const EVENTS_COUNT_FOR_NEXT_INTERVAL = 5;
-/// Maximum interval
-const MAX_INTERVAL = 1000 * 20; /* ms */
-
 /// Idle manager
 ///
 /// The idle manager runs callbacks when the application is idle.
@@ -24,6 +13,19 @@ const MAX_INTERVAL = 1000 * 20; /* ms */
 ///
 /// When the manager decides the application is in long idle, it only fires long events and not short events.
 export class IdleMgr {
+    // === config values ===
+    /// Interval threshold for an idle to be considered long
+    private longIdleTime: number;
+    /// Initial interval
+    private initialInterval: number;
+    /// Every time an idle event is fired X times, the interval is multiplied by this factor
+    private intervalMultiplier: number;
+    /// The X times for the interval multiplier
+    private eventsCountForNextInterval: number;
+    /// Maximum interval
+    private maxInterval: number;
+
+    // === state values ===
     private callback: IdleFunction;
     private handle: number | undefined;
 
@@ -33,10 +35,22 @@ export class IdleMgr {
     /// Like a semaphore. Will only fire events if this is 0
     private pauseCount: number;
 
-    constructor(callback: IdleFunction) {
+    constructor(
+        longIdleTime: number,
+        initialInterval: number,
+        intervalMultiplier: number,
+        eventsCountForNextInterval: number,
+        maxInterval: number,
+        callback: IdleFunction,
+    ) {
+        this.longIdleTime = longIdleTime;
+        this.initialInterval = initialInterval;
+        this.intervalMultiplier = intervalMultiplier;
+        this.eventsCountForNextInterval = eventsCountForNextInterval;
+        this.maxInterval = maxInterval;
         this.callback = callback;
         this.pauseCount = 1;
-        this.currentInterval = INITIAL_INTERVAL;
+        this.currentInterval = this.initialInterval;
         this.eventsFiredInCurrentInterval = 0;
         this.idleDuration = 0;
     }
@@ -63,7 +77,7 @@ export class IdleMgr {
 
     /// Notify the idle manager that an activity has occurred and the application is not idling
     public notifyActivity() {
-        this.currentInterval = INITIAL_INTERVAL;
+        this.currentInterval = this.initialInterval;
         this.eventsFiredInCurrentInterval = 0;
         this.idleDuration = 0;
         this.restartIdleTimer();
@@ -86,20 +100,20 @@ export class IdleMgr {
                 return;
             }
             // update interval time.
-            if (this.currentInterval < MAX_INTERVAL) {
+            if (this.currentInterval < this.maxInterval) {
                 this.eventsFiredInCurrentInterval++;
                 if (
                     this.eventsFiredInCurrentInterval >=
-                    EVENTS_COUNT_FOR_NEXT_INTERVAL
+                    this.eventsCountForNextInterval
                 ) {
-                    this.currentInterval *= INTERVAL_MULTIPLIER;
+                    this.currentInterval *= this.intervalMultiplier;
                     this.eventsFiredInCurrentInterval = 0;
                 }
             }
             // update duration
             this.idleDuration += this.currentInterval;
             this.callback(
-                this.idleDuration >= LONG_IDLE_TIME,
+                this.idleDuration >= this.longIdleTime,
                 this.idleDuration,
             )
                 .catch(console.error)

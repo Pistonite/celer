@@ -157,7 +157,7 @@ export class MapState {
         // update document initially
         const { document } = documentSelector(store.getState());
         if (document) {
-            this.onDocumentUpdate(document);
+            this.onDocumentUpdate(document, undefined);
         }
     }
 
@@ -190,7 +190,13 @@ export class MapState {
     /// Called when the document is updated
     ///
     /// This will update the map layers if needed, and will always redraw the map visuals
-    private onDocumentUpdate(newDoc: ExecDoc, oldDoc?: ExecDoc) {
+    private onDocumentUpdate(
+        newDoc: ExecDoc | undefined,
+        oldDoc: ExecDoc | undefined,
+    ) {
+        if (!newDoc) {
+            return;
+        }
         // TODO #82: this needs to be changed. Otherwise changing the map in web editor will not take effect
         // until version is changed, which is weird
         //

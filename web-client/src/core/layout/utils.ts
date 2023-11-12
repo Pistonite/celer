@@ -202,9 +202,8 @@ const MobileWidthThreshold = 400;
 export const getDefaultLayout = (
     windowWidth: number,
     windowHeight: number,
-    stage: "view" | "edit",
+    isEditor: boolean,
 ): Layout => {
-    const isEditor = stage === "edit";
     if (isEditor) {
         if (windowWidth > windowHeight) {
             return getDefaultLandscapeEditorLayout();

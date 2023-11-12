@@ -21,13 +21,18 @@ export const setAlert: ReducerDeclWithPayload<
     {
         title: string;
         text: string;
+        learnMore: string;
         okButton: string;
         cancelButton: string;
     }
 > = withPayload(
-    (state: StageViewState, { title, text, okButton, cancelButton }) => {
+    (
+        state: StageViewState,
+        { title, text, learnMore: link, okButton, cancelButton },
+    ) => {
         state.alertTitle = title;
         state.alertText = text;
+        state.alertLearnMoreLink = link;
         state.alertOkButton = okButton;
         state.alertCancelButton = cancelButton;
     },

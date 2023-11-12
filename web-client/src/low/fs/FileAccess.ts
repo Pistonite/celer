@@ -11,10 +11,4 @@ export interface FileAccess {
         path: string,
         checkChanged: boolean,
     ): Promise<FsResult<Uint8Array>>;
-
-    /// If the file system can be accessed
-    isAvailable(): boolean;
-
-    /// If a file can be accessed
-    exists(path: string): Promise<boolean>;
 }

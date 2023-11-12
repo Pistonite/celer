@@ -16,6 +16,10 @@ export const FsResultCodes = {
     NotModified: 6,
     /// Permission error
     PermissionDenied: 7,
+    /// User abort
+    UserAbort: 8,
+    /// Not found
+    NotFound: 9,
 } as const;
 
 export type FsResultCode = (typeof FsResultCodes)[keyof typeof FsResultCodes];

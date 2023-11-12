@@ -7,6 +7,7 @@ import {
     settingsActions,
     settingsSelector,
     viewActions,
+    viewSelector,
 } from "core/store";
 import {
     EntryPointsSorted,
@@ -16,7 +17,6 @@ import {
 import {
     Debouncer,
     wrapAsync,
-    console,
     setWorker,
     registerWorkerHandler,
     allocOk,
@@ -28,8 +28,18 @@ import { FileAccess, FsResultCodes } from "low/fs";
 import { CompilerKernel } from "./CompilerKernel";
 import { CompilerLog } from "./utils";
 
-function isFileAccessAvailable(fa: FileAccess | undefined): fa is FileAccess {
-    return fa !== undefined && fa.isAvailable();
+async function checkFileExists(
+    fileAccess: FileAccess,
+    path: string,
+): Promise<boolean> {
+    const result = await fileAccess.getFileContent(path, true);
+    if (result.isOk()) {
+        return true;
+    }
+    if (result.inner() === FsResultCodes.NotModified) {
+        return true;
+    }
+    return false;
 }
 
 /// The compilation kernel
@@ -38,12 +48,12 @@ function isFileAccessAvailable(fa: FileAccess | undefined): fa is FileAccess {
 /// It uses FileAccess interface to send files to the worker.
 export class CompilerKernelImpl implements CompilerKernel {
     private store: AppStore;
-    private workerReady = false;
     private fileAccess: FileAccess | undefined = undefined;
 
     private compilerDebouncer: Debouncer;
     private needCompile: boolean;
     private compiling: boolean;
+    private setCompilingStateHandle: number | undefined = undefined;
 
     private validatedEntryPath: string | undefined = undefined;
 
@@ -66,6 +76,7 @@ export class CompilerKernelImpl implements CompilerKernel {
                 this.onSettingsUpdate(newVal, oldVal);
             }),
         );
+
         this.cleanup = () => {
             unwatchSettings();
         };
@@ -73,18 +84,30 @@ export class CompilerKernelImpl implements CompilerKernel {
 
     public delete() {
         CompilerLog.info("deleting compiler");
+        this.uninit();
         this.cleanup();
     }
 
+    public uninit() {
+        CompilerLog.info("uninitializing compiler...");
+        this.fileAccess = undefined;
+        this.store.dispatch(viewActions.setCompilerReady(false));
+        if (this.setCompilingStateHandle) {
+            window.clearTimeout(this.setCompilingStateHandle);
+            this.setCompilingStateHandle = undefined;
+        }
+        this.store.dispatch(viewActions.setCompileInProgress(false));
+    }
+
     public async init(fileAccess: FileAccess) {
-        this.workerReady = false;
+        this.store.dispatch(viewActions.setCompilerReady(false));
         CompilerLog.info("initializing compiler worker...");
         this.fileAccess = fileAccess;
         const worker = new Worker("/celerc/worker.js");
         registerWorkerHandler(
             "load_file",
             async ([path, checkChanged]: [string, boolean]) => {
-                if (!isFileAccessAvailable(this.fileAccess)) {
+                if (!this.fileAccess) {
                     worker.postMessage([
                         "file",
                         1,
@@ -116,14 +139,18 @@ export class CompilerKernelImpl implements CompilerKernel {
         );
 
         await setWorker(worker, CompilerLog);
-        this.workerReady = true;
+        this.store.dispatch(viewActions.setCompilerReady(true));
     }
 
-    public getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>> {
-        if (!isFileAccessAvailable(this.fileAccess)) {
-            return Promise.resolve(allocOk([]));
+    public async getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>> {
+        if (!(await this.ensureReady())) {
+            CompilerLog.error("worker not ready after max waiting");
+            return allocOk([]);
         }
-        return wrapAsync(get_entry_points);
+        if (!this.fileAccess) {
+            return allocOk([]);
+        }
+        return await wrapAsync(get_entry_points);
     }
 
     /// Trigger compilation of the document
@@ -133,13 +160,15 @@ export class CompilerKernelImpl implements CompilerKernel {
     ///
     /// After compilation is done, the document will automatically be updated
     public async compile() {
-        if (!isFileAccessAvailable(this.fileAccess)) {
+        if (!this.fileAccess) {
             CompilerLog.warn("file access not available, skipping compile");
             return;
         }
-        while (!this.workerReady) {
-            CompilerLog.info("worker not ready, waiting...");
-            await sleep(500);
+        if (!(await this.ensureReady())) {
+            CompilerLog.warn(
+                "worker not ready after max waiting, skipping compile",
+            );
+            return;
         }
         // check if entry path is a valid file
         const { compilerEntryPath } = settingsSelector(this.store.getState());
@@ -147,7 +176,7 @@ export class CompilerKernelImpl implements CompilerKernel {
             const filePath = compilerEntryPath.startsWith("/")
                 ? compilerEntryPath.substring(1)
                 : compilerEntryPath;
-            if (!(await this.fileAccess.exists(filePath))) {
+            if (!(await checkFileExists(this.fileAccess, filePath))) {
                 CompilerLog.warn(
                     "entry path is invalid, attempting correction...",
                 );
@@ -171,6 +200,24 @@ export class CompilerKernelImpl implements CompilerKernel {
         this.compilerDebouncer.dispatch();
     }
 
+    /// Try to wait for the compiler to be ready. Returns true if it becomes ready eventually.
+    ///
+    /// A timeout of 1 minute is implemented to prevent infinite wait.
+    private async ensureReady(): Promise<boolean> {
+        const INTERVAL = 500;
+        const MAX_WAIT = 60000;
+        let acc = 0;
+        while (acc < MAX_WAIT) {
+            if (viewSelector(this.store.getState()).compilerReady) {
+                return true;
+            }
+            CompilerLog.info("worker not ready, waiting...");
+            await sleep(INTERVAL);
+            acc += INTERVAL;
+        }
+        return false;
+    }
+
     private async compileInternal() {
         // check if another compilation is running
         // this is safe because there's no await between checking and setting (no other code can run)
@@ -178,7 +225,10 @@ export class CompilerKernelImpl implements CompilerKernel {
             CompilerLog.warn("compilation already in progress, skipping");
             return;
         }
-        const handle = window.setTimeout(() => {
+        if (this.setCompilingStateHandle !== undefined) {
+            window.clearTimeout(this.setCompilingStateHandle);
+        }
+        this.setCompilingStateHandle = window.setTimeout(() => {
             this.store.dispatch(viewActions.setCompileInProgress(true));
         }, 200);
         this.compiling = true;
@@ -198,17 +248,18 @@ export class CompilerKernelImpl implements CompilerKernel {
                 );
             });
             if (result.isErr()) {
-                console.error(result.inner());
+                CompilerLog.error(result.inner());
             } else {
                 const doc = result.inner();
-                if (doc !== undefined) {
+                if (this.fileAccess && doc !== undefined) {
                     this.store.dispatch(documentActions.setDocument(doc));
                 }
             }
         }
         CompilerLog.info("finished compiling");
 
-        window.clearTimeout(handle);
+        window.clearTimeout(this.setCompilingStateHandle);
+        this.setCompilingStateHandle = undefined;
         this.store.dispatch(viewActions.setCompileInProgress(false));
         this.compiling = false;
     }
@@ -237,13 +288,13 @@ export class CompilerKernelImpl implements CompilerKernel {
         // if entry point with "default" name exists, try that first
         for (const [name, path] of newEntryPoints) {
             if (name === "default" && path) {
-                if (!isFileAccessAvailable(this.fileAccess)) {
+                if (!this.fileAccess) {
                     return "";
                 }
                 const filePath = path.startsWith("/")
                     ? path.substring(1)
                     : path;
-                if (await this.fileAccess.exists(filePath)) {
+                if (await checkFileExists(this.fileAccess, filePath)) {
                     return path;
                 }
                 break;
@@ -252,13 +303,13 @@ export class CompilerKernelImpl implements CompilerKernel {
         // otherwise find the first valid entry point
         for (const [_, path] of newEntryPoints) {
             if (path) {
-                if (!isFileAccessAvailable(this.fileAccess)) {
+                if (!this.fileAccess) {
                     return "";
                 }
                 const filePath = path.startsWith("/")
                     ? path.substring(1)
                     : path;
-                if (await this.fileAccess.exists(filePath)) {
+                if (await checkFileExists(this.fileAccess, filePath)) {
                     return path;
                 }
             }
@@ -267,7 +318,7 @@ export class CompilerKernelImpl implements CompilerKernel {
     }
 
     private onSettingsUpdate(oldVal: SettingsState, newVal: SettingsState) {
-        if (isFileAccessAvailable(this.fileAccess)) {
+        if (this.fileAccess) {
             if (oldVal.compilerEntryPath !== newVal.compilerEntryPath) {
                 CompilerLog.info("entry path changed, triggering compile");
                 this.compile();

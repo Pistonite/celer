@@ -5,12 +5,8 @@ import { Dropdown, Field, Switch, Option } from "@fluentui/react-components";
 import { useSelector } from "react-redux";
 
 import { useKernel } from "core/kernel";
-import {
-    settingsActions,
-    settingsSelector,
-    viewActions,
-    viewSelector,
-} from "core/store";
+import { EditorMode } from "core/editor";
+import { settingsActions, settingsSelector, viewSelector } from "core/store";
 import { EntryPointsSorted } from "low/celerc";
 import { useActions } from "low/store";
 
@@ -19,36 +15,43 @@ import { SettingsSection } from "./SettingsSection";
 const DEFAULT_ENTRY_POINT = "default";
 const DEFAULT_ENTRY_PATH = "/project.yaml";
 
+const WORKFLOWS = {
+    external: {
+        name: "External editor",
+        hint: "Make changes to the route files using an external program. The browser will watch for changes in the file system and automatically reload and recompile the route.",
+    },
+    web: {
+        name: "Web editor",
+        hint: "Make changes to the route files using an editor in the browser. The changes can be automatically saved to the file system.",
+    },
+} as const;
+
 export const EditorSettings: React.FC = () => {
-    const { supportsSave } = useSelector(viewSelector);
+    const { rootPath } = useSelector(viewSelector);
     const {
         showFileTree,
         autoSaveEnabled,
-        autoLoadEnabled,
-        deactivateAutoLoadAfterMinutes,
         compilerEntryPath,
         compilerUseCachePack0,
+        editorMode,
     } = useSelector(settingsSelector);
     const {
         setShowFileTree,
         setAutoSaveEnabled,
-        setAutoLoadEnabled,
-        setDeactivateAutoLoadAfterMinutes,
         setCompilerEntryPath,
         setCompilerUseCachePack0,
+        setEditorMode,
     } = useActions(settingsActions);
-    const { setAutoLoadActive } = useActions(viewActions);
-    const deactivateAutoLoadMinutesOptions = [5, 10, 15, 30, 60];
 
     const kernel = useKernel();
     const [entryPoints, setEntryPoints] = useState<EntryPointsSorted>([]);
     useEffect(() => {
         (async () => {
-            const compiler = kernel.getCompiler();
-            if (!compiler) {
+            if (!rootPath) {
                 setEntryPoints([]);
                 return;
             }
+            const compiler = await kernel.getCompiler();
             const result = await compiler.getEntryPoints();
             if (!result.isOk()) {
                 setEntryPoints([]);
@@ -56,7 +59,7 @@ export const EditorSettings: React.FC = () => {
             }
             setEntryPoints(result.inner());
         })();
-    }, [kernel]);
+    }, [kernel, rootPath]);
 
     const selectedEntryPoint = useMemo(() => {
         if (!compilerEntryPath) {
@@ -83,79 +86,73 @@ export const EditorSettings: React.FC = () => {
 
     return (
         <>
-            <SettingsSection title="Appearance">
-                <Field label="Show file tree">
+            <SettingsSection title="General">
+                <Field
+                    label="Workflow"
+                    validationState={
+                        rootPath !== undefined ? "warning" : undefined
+                    }
+                    validationMessage={
+                        rootPath !== undefined
+                            ? "Cannot change workflow while a project is open"
+                            : undefined
+                    }
+                    hint={WORKFLOWS[editorMode].hint}
+                >
+                    <Dropdown
+                        disabled={rootPath !== undefined}
+                        value={WORKFLOWS[editorMode].name}
+                        selectedOptions={[editorMode]}
+                        onOptionSelect={(_, data) => {
+                            setEditorMode(
+                                data.selectedOptions[0] as EditorMode,
+                            );
+                        }}
+                    >
+                        <Option text="External Editor" value="external">
+                            External Editor
+                        </Option>
+                        <Option text="Web Editor" value="web">
+                            Web Editor
+                        </Option>
+                    </Dropdown>
+                </Field>
+            </SettingsSection>
+            <SettingsSection title="Web editor">
+                <Field
+                    label="Show file tree"
+                    validationState={
+                        editorMode !== "web" ? "warning" : undefined
+                    }
+                    validationMessage={
+                        editorMode !== "web"
+                            ? "Only available in web editor workflow"
+                            : undefined
+                    }
+                >
                     <Switch
+                        disabled={editorMode !== "web"}
                         checked={!!showFileTree}
                         onChange={(_, data) => setShowFileTree(data.checked)}
                     />
                 </Field>
-            </SettingsSection>
-            <SettingsSection title="Editor">
                 <Field
                     label="Enable auto-save"
-                    hint="Automatically save changes made in the web editor to the file system on idle. May override changes made to the file in the file system while the file is opened in the web editor."
-                    validationState={supportsSave ? undefined : "error"}
-                    validationMessage={
-                        supportsSave
-                            ? undefined
-                            : "Saving is not supported by your browser."
+                    validationState={
+                        editorMode !== "web" ? "warning" : undefined
                     }
+                    validationMessage={
+                        editorMode !== "web"
+                            ? "Only available in web editor workflow"
+                            : undefined
+                    }
+                    hint="Automatically save changes made in the web editor to the file system on idle. May override changes made to the file in the file system while the file is opened in the web editor."
                 >
                     <Switch
-                        disabled={!supportsSave}
+                        disabled={editorMode !== "web"}
                         checked={!!autoSaveEnabled}
                         onChange={(_, data) => setAutoSaveEnabled(data.checked)}
                     />
-                </Field>
-                <Field
-                    label="Enable auto-load"
-                    hint="Automatically load changes made in the file system to the web editor. Will not load a file if the file is opened in the web editor and has unsaved changes. If auto-save is also enabled, changes are always saved first, then loaded."
-                >
-                    <Switch
-                        checked={!!autoLoadEnabled}
-                        onChange={(_, data) => {
-                            const enabled = data.checked;
-                            setAutoLoadEnabled(enabled);
-                            if (enabled) {
-                                setAutoLoadActive(true);
-                            }
-                        }}
-                    />
-                </Field>
-                <Field
-                    label="Deactivate auto-load after:"
-                    hint="Automatically turn off auto-load after a certain time of inactivity to save resources. It will reactivate after manually pressing the load button from the toolbar."
-                >
-                    <Dropdown
-                        disabled={!autoLoadEnabled}
-                        value={
-                            deactivateAutoLoadAfterMinutes > 0
-                                ? `${deactivateAutoLoadAfterMinutes} minutes`
-                                : "Never"
-                        }
-                        selectedOptions={[
-                            deactivateAutoLoadAfterMinutes.toString(),
-                        ]}
-                        onOptionSelect={(_, data) => {
-                            setDeactivateAutoLoadAfterMinutes(
-                                parseInt(data.optionValue ?? "-1") || -1,
-                            );
-                        }}
-                    >
-                        {deactivateAutoLoadMinutesOptions.map((minutes) => (
-                            <Option
-                                key={minutes}
-                                text={`${minutes} minutes`}
-                                value={`${minutes}`}
-                            >
-                                {minutes} minutes
-                            </Option>
-                        ))}
-                        <Option text="Never" value={"-1"}>
-                            Never
-                        </Option>
-                    </Dropdown>
                 </Field>
             </SettingsSection>
             <SettingsSection title="Compiler">
