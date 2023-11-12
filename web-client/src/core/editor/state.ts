@@ -42,9 +42,7 @@ export type EditorMode = "external" | "web";
 
 export type EditorSettingsState = {
     autoSaveEnabled: boolean;
-    // autoLoadEnabled: boolean;
     showFileTree: boolean;
-    // deactivateAutoLoadAfterMinutes: number;
     compilerEntryPath: string;
     compilerUseCachePack0: boolean;
     editorMode: EditorMode;
@@ -52,9 +50,7 @@ export type EditorSettingsState = {
 
 export const initialEditorSettingsState: EditorSettingsState = {
     autoSaveEnabled: true,
-    // autoLoadEnabled: false,
     showFileTree: true,
-    // deactivateAutoLoadAfterMinutes: 30,
     compilerEntryPath: "",
     compilerUseCachePack0: true,
     editorMode: "web",

@@ -124,29 +124,17 @@ class WebEditorKernel implements EditorKernel {
         this.idleMgr.notifyActivity();
     }
 
-    public async listDir(
-        path: string[],
-        // isUserAction: boolean,
-    ): Promise<string[]> {
-        // if (isUserAction) {
-        //     this.idleMgr.notifyActivity();
-        // }
+    public async listDir(path: string[]): Promise<string[]> {
         // probably fine with not locking idle mgr here
         return await this.fileMgr.listDir(path);
     }
 
     /// Open a file in the editor
-    public async openFile(
-        path: string[],
-        // isUserAction: boolean,
-    ): Promise<FsResult<void>> {
+    public async openFile(path: string[]): Promise<FsResult<void>> {
         const fsPath = toFsPath(path);
         const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.openFile(fsPath);
         });
-        // if (isUserAction) {
-        //     this.idleMgr.notifyActivity();
-        // }
         return result;
     }
 
@@ -160,11 +148,7 @@ class WebEditorKernel implements EditorKernel {
         return this.fileMgr.hasUnsavedChangesSync();
     }
 
-    public async loadChangesFromFs() // isUserAction: boolean,
-    : Promise<FsResult<void>> {
-        // if (isUserAction) {
-        //     this.idleMgr.notifyActivity();
-        // }
+    public async loadChangesFromFs(): Promise<FsResult<void>> {
         const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.loadChangesFromFs();
         });
@@ -172,11 +156,7 @@ class WebEditorKernel implements EditorKernel {
         return result;
     }
 
-    public async saveChangesToFs() // isUserAction: boolean,
-    : Promise<FsResult<void>> {
-        // if (isUserAction) {
-        //     this.idleMgr.notifyActivity();
-        // }
+    public async saveChangesToFs(): Promise<FsResult<void>> {
         const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.saveChangesToFs();
         });
@@ -222,33 +202,10 @@ class WebEditorKernel implements EditorKernel {
 
         // pull changes from monaco editor first to make sure current file is marked dirty if needed
         await this.fileMgr.syncEditorToCurrentFile();
-
-        // let shouldRecompile = this.shouldRecompile;
-
         if (isLong) {
             const { autoSaveEnabled } = settingsSelector(this.store.getState());
 
             let shouldRerenderFs = false;
-
-            // if (autoLoadActive) {
-            //     if (autoLoadEnabled) {
-            //         await this.loadChangesFromFs(false /* isUserAction */);
-            //         // make sure file system view is rerendered in case there are directory updates
-            //         shouldRerenderFs = true;
-            //         // trigger a compile after reloading fs
-            //         shouldRecompile = true;
-            //     }
-            //     if (deactivateAutoLoadAfterMinutes > 0) {
-            //         if (duration > deactivateAutoLoadAfterMinutes * 60 * 1000) {
-            //             EditorLog.info(
-            //                 "auto load deactivated due to inactivity",
-            //             );
-            //             this.store.dispatch(
-            //                 viewActions.setAutoLoadActive(false),
-            //             );
-            //         }
-            //     }
-            // }
 
             if (autoSaveEnabled) {
                 await this.saveChangesToFs();

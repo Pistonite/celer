@@ -76,7 +76,7 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
     const { duplicateLayout, deleteCurrentLayout, switchLayout } =
         useActions(settingsActions);
     // view store
-    const { isEditingLayout, stageMode } = useSelector(viewSelector);
+    const { rootPath, isEditingLayout, stageMode } = useSelector(viewSelector);
     const { setIsEditingLayout } = useActions(viewActions);
 
     // compute which menu items should show as checked
@@ -150,7 +150,8 @@ const SwitchLayoutInternal: React.FC<ControlComponentProps> = ({
                         onClick={() =>
                             duplicateLayout(
                                 stageMode === "edit" &&
-                                    settings.editorMode === "web",
+                                    (settings.editorMode === "web" ||
+                                        !rootPath),
                             )
                         }
                     >

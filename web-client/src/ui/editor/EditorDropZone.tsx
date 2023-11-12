@@ -5,11 +5,6 @@ import { Body2 } from "@fluentui/react-components";
 import { createFsFromDataTransferItem } from "low/fs";
 import { useKernel } from "core/kernel";
 
-// type EditorDropZoneProps = {
-//     /// Callback when a FileSys is created from a project folder drop
-//     onFileSysCreate: (fileSys: FileSys) => void;
-// };
-
 /// Shown when no project is loaded, for user to drag and drop a folder in
 ///
 /// This the only way to open a project. There's no "open" button because

@@ -130,21 +130,10 @@ export class FileMgr implements FileAccess {
         });
     }
 
-    // /// Check if a file exists and can be opened as text
-    // public async exists(path: FsPath): Promise<boolean> {
-    //     if (!this.fs) {
-    //         return false;
-    //     }
-    //     const fsFile = new FsFile(this.fs, path);
-    //     const result = await fsFile.getText();
-    //     return result.isOk();
-    // }
-
     public async loadChangesFromFs(
         lockToken?: number,
     ): Promise<FsResult<void>> {
         EditorLog.info("loading changes from file system...");
-        // this.dispatcher.dispatch(viewActions.setAutoLoadActive(true));
         const handle = window.setTimeout(() => {
             this.dispatcher.dispatch(viewActions.startFileSysLoad());
         }, 200);
@@ -440,41 +429,4 @@ export class FileMgr implements FileAccess {
             EditorLog.info("editor attached");
         }
     }
-
-    // /// WARNING: f must not call lockedFsScope again - otherwise it will dead lock
-    // private async lockedFsScope<T>(
-    //     reason: string,
-    //     f: () => Promise<T>,
-    // ): Promise<T> {
-    //     let cycles = 0;
-    //     while (this.fsLock) {
-    //         cycles++;
-    //         if (cycles % 100 === 0) {
-    //             EditorLog.warn(
-    //                 `${reason} has been waiting for fs lock for ${
-    //                     cycles / 10
-    //                 } seconds!`,
-    //             );
-    //             cycles = 0;
-    //         }
-    //         await sleep(100);
-    //     }
-    //     try {
-    //         this.fsLock = true;
-    //         return await f();
-    //     } finally {
-    //         this.fsLock = false;
-    //     }
-    // }
-    //
-    // /// Like withLockedFs but will not block if fs is already locked
-    // private async ensureLockedFs<T>(
-    //     reason: string,
-    //     f: () => Promise<T>,
-    // ): Promise<T> {
-    //     if (this.fsLock) {
-    //         return await f();
-    //     }
-    //     return await this.lockedFsScope(reason, f);
-    // }
 }

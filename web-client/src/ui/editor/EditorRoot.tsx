@@ -38,11 +38,15 @@ export const EditorRoot: React.FC = () => {
             <ErrorBoundary>
                 <div id={EditorRootId}>
                     <div className="blank-div-message">
-                        Web editor is not available because you are using the
-                        external editor workflow. Switch to the default layout
-                        or a layout without the editor to hide this widget.
+                        <p>
+                            Web editor is not available because you are using
+                            the external editor workflow.
+                        </p>
+                        <p>
+                            Switch to the default layout or a layout without the
+                            editor to hide this widget.
+                        </p>
                     </div>
-                    ;
                 </div>
             </ErrorBoundary>
         );

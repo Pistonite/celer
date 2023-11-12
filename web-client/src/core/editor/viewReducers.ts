@@ -6,7 +6,6 @@ export const updateFileSys: ReducerDeclWithPayload<
     string | undefined
 > = withPayload((state: EditorViewState, rootPath) => {
     state.rootPath = rootPath;
-    // state.supportsSave = supportsSave;
     state.serial++;
 });
 

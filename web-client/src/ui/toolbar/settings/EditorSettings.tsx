@@ -31,8 +31,6 @@ export const EditorSettings: React.FC = () => {
     const {
         showFileTree,
         autoSaveEnabled,
-        // autoLoadEnabled,
-        // deactivateAutoLoadAfterMinutes,
         compilerEntryPath,
         compilerUseCachePack0,
         editorMode,
@@ -40,14 +38,10 @@ export const EditorSettings: React.FC = () => {
     const {
         setShowFileTree,
         setAutoSaveEnabled,
-        // setAutoLoadEnabled,
-        // setDeactivateAutoLoadAfterMinutes,
         setCompilerEntryPath,
         setCompilerUseCachePack0,
         setEditorMode,
     } = useActions(settingsActions);
-    // const { setAutoLoadActive } = useActions(viewActions);
-    // const deactivateAutoLoadMinutesOptions = [5, 10, 15, 30, 60];
 
     const kernel = useKernel();
     const [entryPoints, setEntryPoints] = useState<EntryPointsSorted>([]);

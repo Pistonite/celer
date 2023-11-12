@@ -341,7 +341,8 @@ export class Kernel {
         const compiler = await this.getCompiler();
         compiler.uninit();
     }
-    updateRootPathInStore(fileSys: FileSys | undefined) {
+
+    private updateRootPathInStore(fileSys: FileSys | undefined) {
         if (fileSys) {
             this.store.dispatch(
                 viewActions.updateFileSys(fileSys.getRootName()),
