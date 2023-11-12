@@ -44,7 +44,11 @@ async fn process_site_origin_for_path(
         for result in future::join_all(futures).await {
             result?;
         }
-    } else if path.extension().map(|ext| ext == "html").unwrap_or(false) {
+    } else if path
+        .extension()
+        .map(|ext| ext == "html" || ext == "js" || ext == "css")
+        .unwrap_or(false)
+    {
         process_site_origin_in_file(path.as_ref(), origin, domain).await?;
     }
     Ok(())
