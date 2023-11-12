@@ -14,7 +14,7 @@ function checkFile(file, content) {
     const errors = [];
     const lines = content.split("\n");
     lines.forEach((line, index) => {
-        if (containsConsole(include, line)) {
+        if (containsConsole(line)) {
             errors.push(`${index}: ${line}`);
         }
     });
@@ -22,11 +22,13 @@ function checkFile(file, content) {
         return [];
     }
     for (const line of lines) {
-        if (isImportConsoleFromLowUtils(line)) {
+        if (isImportConsoleFromLowUtils(include, line)) {
             return [];
         }
     }
-    errors.push(`Please import { console } from "${include}";`);
+    errors.push(
+        `Please import { console } from "${include}"; or remove the console statement.`,
+    );
     return errors;
 }
 
@@ -49,6 +51,9 @@ function isImportConsoleFromLowUtils(include, line) {
 }
 
 function getLowUtilsImportLocationFrom(file) {
+    if (!file.replace(/^src\/low\/utils\//, "").includes("/")) {
+        return "./Logger";
+    }
     return file.replace(/^src\/low\//, "").includes("/")
         ? "low/utils"
         : "./utils";

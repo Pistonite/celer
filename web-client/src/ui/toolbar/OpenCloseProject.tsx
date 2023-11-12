@@ -11,31 +11,23 @@ import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { Dismiss20Regular, FolderOpen20Regular } from "@fluentui/react-icons";
 
 import { useKernel } from "core/kernel";
-import { settingsActions, settingsSelector, viewSelector } from "core/store";
-import { useActions } from "low/store";
+import { viewSelector } from "core/store";
 
 import { ToolbarControl } from "./util";
 
 export const OpenCloseProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
-        const { icon, text, handler} = useOpenCloseProjectControl();
+        const { icon, text, handler } = useOpenCloseProjectControl();
         return (
             <Tooltip content={text} relationship="label">
-                <ToolbarButton
-                    ref={ref}
-                    icon={icon}
-                    onClick={handler}
-                />
+                <ToolbarButton ref={ref} icon={icon} onClick={handler} />
             </Tooltip>
         );
     }),
     MenuItem: () => {
-        const { icon, text, handler} = useOpenCloseProjectControl();
+        const { icon, text, handler } = useOpenCloseProjectControl();
         return (
-            <MenuItem
-                icon={icon}
-                onClick={handler}
-            >
+            <MenuItem icon={icon} onClick={handler}>
                 {text}
             </MenuItem>
         );
@@ -45,8 +37,6 @@ export const OpenCloseProject: ToolbarControl = {
 const useOpenCloseProjectControl = () => {
     const kernel = useKernel();
     const { rootPath } = useSelector(viewSelector);
-    const { editorMode } = useSelector(settingsSelector);
-    const { setEditorMode } = useActions(settingsActions);
     const handler = useCallback(async () => {
         if (rootPath) {
             // close
@@ -69,30 +59,15 @@ const useOpenCloseProjectControl = () => {
 
             await kernel.closeFileSys();
         } else {
-            // open
-            // if (editorMode === "web") {
-            //     const yes = await kernel.showAlert(
-            //         "Heads up!",
-            //         "You are using the web editor workflow. Due to browser limitations, saving will only work if you open the project by drag and dropping. Or you can switch to the external editor workflow and edit the files with an external program.",
-            //         "Use external editor",
-            //         "Cancel",
-            //     );
-            //     if (yes) {
-            //         setEditorMode("external");
-            //     }
-            //     return;
-            // }
-            const { showDirectoryPicker } = await import ("low/fs");
+            const { showDirectoryPicker } = await import("low/fs");
             const result = await showDirectoryPicker();
             await kernel.handleOpenFileSysResult(result);
-            
         }
-
-    }, [kernel, rootPath, editorMode, setEditorMode]);
+    }, [kernel, rootPath]);
 
     return {
         icon: rootPath ? <Dismiss20Regular /> : <FolderOpen20Regular />,
         text: rootPath ? "Close project" : "Open Project",
         handler,
-    }
+    };
 };

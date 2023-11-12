@@ -8,7 +8,7 @@ import { FileSys } from "./FileSys";
 /// It's used for Firefox when the File Entries API is not available
 /// i.e. opened from <input type="file">
 export class FileApiFileSys implements FileSys {
-    private rootPath: string
+    private rootPath: string;
     private files: Record<string, File>;
 
     constructor(rootPath: string, files: Record<string, File>) {
@@ -16,7 +16,7 @@ export class FileApiFileSys implements FileSys {
         this.files = files;
     }
 
-    public async init():Promise<FsResult<void>> {
+    public async init(): Promise<FsResult<void>> {
         return allocOk();
     }
 

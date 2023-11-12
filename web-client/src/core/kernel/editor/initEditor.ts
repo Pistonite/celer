@@ -1,4 +1,3 @@
-
 import { AppStore, settingsSelector } from "core/store";
 import { FileSys } from "low/fs";
 
@@ -11,7 +10,11 @@ declare global {
     }
 }
 
-export const initEditor = async (kernel: KernelAccess, fileSys: FileSys, store: AppStore): Promise<EditorKernel> => {
+export const initEditor = async (
+    kernel: KernelAccess,
+    fileSys: FileSys,
+    store: AppStore,
+): Promise<EditorKernel> => {
     deleteEditor();
     const { editorMode } = settingsSelector(store.getState());
     let editor;
@@ -31,4 +34,4 @@ export const deleteEditor = (): void => {
     if (window.__theEditorKernel) {
         window.__theEditorKernel.delete();
     }
-}
+};

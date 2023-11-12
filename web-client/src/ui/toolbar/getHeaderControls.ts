@@ -19,7 +19,10 @@ import { OpenDocs } from "./OpenDocs";
 ///
 /// The controls are defined in groups.
 /// Each control is a ToolbarControl that defines its apperances in the toolbar and in the overflow menu
-export const getHeaderControls = (mode: StageMode, editorMode: EditorMode): HeaderControlList => {
+export const getHeaderControls = (
+    mode: StageMode,
+    editorMode: EditorMode,
+): HeaderControlList => {
     return [
         // UI Controls
         {
@@ -42,9 +45,7 @@ export const getHeaderControls = (mode: StageMode, editorMode: EditorMode): Head
             priority: mode === "edit" ? 89 : 39,
             controls: [
                 ViewDiagnostics,
-                ...(mode === "edit"
-                    ? getEditorControls(editorMode)
-                    : []),
+                ...(mode === "edit" ? getEditorControls(editorMode) : []),
             ],
         },
         // Misc

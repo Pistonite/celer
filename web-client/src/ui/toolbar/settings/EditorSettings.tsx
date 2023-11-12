@@ -6,11 +6,7 @@ import { useSelector } from "react-redux";
 
 import { useKernel } from "core/kernel";
 import { EditorMode } from "core/editor";
-import {
-    settingsActions,
-    settingsSelector,
-    viewSelector,
-} from "core/store";
+import { settingsActions, settingsSelector, viewSelector } from "core/store";
 import { EntryPointsSorted } from "low/celerc";
 import { useActions } from "low/store";
 
@@ -20,14 +16,14 @@ const DEFAULT_ENTRY_POINT = "default";
 const DEFAULT_ENTRY_PATH = "/project.yaml";
 
 const WORKFLOWS = {
-    "external": {
-    name: "External editor",
-    hint: "Make changes to the route files using an external program. The browser will watch for changes in the file system and automatically reload and recompile the route."
+    external: {
+        name: "External editor",
+        hint: "Make changes to the route files using an external program. The browser will watch for changes in the file system and automatically reload and recompile the route.",
     },
-    "web": {
+    web: {
         name: "Web editor",
-        hint: "Make changes to the route files using an editor in the browser. The changes can be automatically saved to the file system."
-    }
+        hint: "Make changes to the route files using an editor in the browser. The changes can be automatically saved to the file system.",
+    },
 } as const;
 
 export const EditorSettings: React.FC = () => {
@@ -99,8 +95,14 @@ export const EditorSettings: React.FC = () => {
             <SettingsSection title="General">
                 <Field
                     label="Workflow"
-                    validationState={rootPath !== undefined ? "warning" : undefined}
-                    validationMessage={rootPath !== undefined ? "Cannot change workflow while a project is open" : undefined}
+                    validationState={
+                        rootPath !== undefined ? "warning" : undefined
+                    }
+                    validationMessage={
+                        rootPath !== undefined
+                            ? "Cannot change workflow while a project is open"
+                            : undefined
+                    }
                     hint={WORKFLOWS[editorMode].hint}
                 >
                     <Dropdown
@@ -108,7 +110,9 @@ export const EditorSettings: React.FC = () => {
                         value={WORKFLOWS[editorMode].name}
                         selectedOptions={[editorMode]}
                         onOptionSelect={(_, data) => {
-                            setEditorMode(data.selectedOptions[0] as EditorMode);
+                            setEditorMode(
+                                data.selectedOptions[0] as EditorMode,
+                            );
                         }}
                     >
                         <Option text="External Editor" value="external">
@@ -121,10 +125,16 @@ export const EditorSettings: React.FC = () => {
                 </Field>
             </SettingsSection>
             <SettingsSection title="Web editor">
-                <Field 
+                <Field
                     label="Show file tree"
-                    validationState={editorMode !== "web" ? "warning" : undefined}
-                    validationMessage={editorMode !== "web" ? "Only available in web editor workflow" : undefined}
+                    validationState={
+                        editorMode !== "web" ? "warning" : undefined
+                    }
+                    validationMessage={
+                        editorMode !== "web"
+                            ? "Only available in web editor workflow"
+                            : undefined
+                    }
                 >
                     <Switch
                         disabled={editorMode !== "web"}
@@ -134,8 +144,14 @@ export const EditorSettings: React.FC = () => {
                 </Field>
                 <Field
                     label="Enable auto-save"
-                    validationState={editorMode !== "web" ? "warning" : undefined}
-                    validationMessage={editorMode !== "web" ? "Only available in web editor workflow" : undefined}
+                    validationState={
+                        editorMode !== "web" ? "warning" : undefined
+                    }
+                    validationMessage={
+                        editorMode !== "web"
+                            ? "Only available in web editor workflow"
+                            : undefined
+                    }
                     hint="Automatically save changes made in the web editor to the file system on idle. May override changes made to the file in the file system while the file is opened in the web editor."
                 >
                     <Switch

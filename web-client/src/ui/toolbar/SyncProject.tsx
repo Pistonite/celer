@@ -55,12 +55,8 @@ const useSyncProjectControl = () => {
 
     const isOpened = rootPath !== undefined;
     const enabled = isOpened && !loadInProgress && editorMode === "web";
-    const icon = getIcon( lastLoadError);
-    const tooltip = getTooltip(
-        isOpened,
-        loadInProgress,
-        lastLoadError,
-    );
+    const icon = getIcon(lastLoadError);
+    const tooltip = getTooltip(isOpened, loadInProgress, lastLoadError);
 
     const handler = useCallback(async () => {
         const editor = kernel.getEditor();
@@ -88,10 +84,12 @@ const useSyncProjectControl = () => {
     return { tooltip, enabled, icon, handler };
 };
 
-const getIcon = (
-    lastLoadError: boolean,
-) => {
-        return <FolderArrowUp20Regular className={clsx(lastLoadError && "color-error")} />;
+const getIcon = (lastLoadError: boolean) => {
+    return (
+        <FolderArrowUp20Regular
+            className={clsx(lastLoadError && "color-error")}
+        />
+    );
 };
 
 const getTooltip = (

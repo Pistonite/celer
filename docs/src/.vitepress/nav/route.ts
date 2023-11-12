@@ -8,11 +8,14 @@ export const writingRoutesSidebar = {
         {
             text: "Using the Editor",
             items: [
-                { text: "Getting Started", link: "/route/editor/getting-started"},
-                { text: "Web Editor", link: "/route/editor/web"},
-                { text: "External Editor", link: "/route/editor/external"},
-                { text: "Advanced", link: "/route/editor/advanced"}
-            ]
+                {
+                    text: "Getting Started",
+                    link: "/route/editor/getting-started",
+                },
+                { text: "Web Editor", link: "/route/editor/web" },
+                { text: "External Editor", link: "/route/editor/external" },
+                { text: "Advanced", link: "/route/editor/advanced" },
+            ],
         },
         {
             text: "Make a Route",

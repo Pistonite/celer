@@ -219,7 +219,9 @@ export class Kernel {
     /// On success, it will initialize the file system and the editor.
     ///
     /// This function eats the error because alerts will be shown to the user
-    public async handleOpenFileSysResult(fileSysResult: FsResult<FileSys>): Promise<void> {
+    public async handleOpenFileSysResult(
+        fileSysResult: FsResult<FileSys>,
+    ): Promise<void> {
         console.info("opening file system...");
         const { FsResultCodes } = await import("low/fs");
         if (fileSysResult.isErr()) {
@@ -234,7 +236,7 @@ export class Kernel {
                     "Your browser does not support this feature.",
                     "Close",
                     "",
-                    "/docs/route/editor/web#browser-os-support"
+                    "/docs/route/editor/web#browser-os-support",
                 );
             } else if (code === FsResultCodes.IsFile) {
                 await this.showAlert(
@@ -291,12 +293,10 @@ export class Kernel {
                     "Cancel",
                     "/docs/route/editor/web#browser-os-support",
                 );
-            if (!yes) {
-                return;
-            }
-                this.store.dispatch(
-                    settingsActions.setEditorMode("external"),
-                );
+                if (!yes) {
+                    return;
+                }
+                this.store.dispatch(settingsActions.setEditorMode("external"));
                 // make sure store is updated for the next check
             }
         }
@@ -307,8 +307,8 @@ export class Kernel {
                 "Your browser has limited support for file system access when opening a project from a dialog. Certain operations may not work! Please see the learn more link below for more information.",
                 "Continue anyway",
                 "Cancel",
-                "/docs/route/editor/external#open-a-project"
-                );
+                "/docs/route/editor/external#open-a-project",
+            );
             if (!yes) {
                 return;
             }
@@ -342,16 +342,12 @@ export class Kernel {
         compiler.uninit();
     }
     updateRootPathInStore(fileSys: FileSys | undefined) {
-            if (fileSys) {
-                this.store.dispatch(
-                    viewActions.updateFileSys(
-                        fileSys.getRootName()
-                    ),
-                );
-            } else {
-                this.store.dispatch(
-                    viewActions.updateFileSys(undefined),
-                );
-            }
+        if (fileSys) {
+            this.store.dispatch(
+                viewActions.updateFileSys(fileSys.getRootName()),
+            );
+        } else {
+            this.store.dispatch(viewActions.updateFileSys(undefined));
+        }
     }
 }

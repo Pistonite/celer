@@ -39,12 +39,17 @@ export const CompileProject: ToolbarControl = {
 
 const useCompileProjectControl = () => {
     const kernel = useKernel();
-    const { rootPath, compileInProgress, compilerReady } = useSelector(viewSelector);
+    const { rootPath, compileInProgress, compilerReady } =
+        useSelector(viewSelector);
     const handler = useCallback(() => {
         kernel.compile();
     }, [kernel]);
 
-    const icon = <ArrowSync20Regular className={clsx(compileInProgress && "spinning-infinite")}/>;
+    const icon = (
+        <ArrowSync20Regular
+            className={clsx(compileInProgress && "spinning-infinite")}
+        />
+    );
     const tooltip = getTooltip(!!rootPath, compileInProgress);
 
     return {

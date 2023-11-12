@@ -86,7 +86,6 @@ export class DocController {
                 const newView = viewSelector(newState);
                 const oldView = viewSelector(oldState);
                 if (newDocSerial !== oldDocSerial) {
-
                     // Also update the rich text styles
                     if (newDoc.document) {
                         // If document changed, reset the view

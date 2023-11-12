@@ -107,7 +107,9 @@ const useReactGridLayout = (windowWidth: number, windowHeight: number) => {
     //   - using web editor
     //   - using external editor, but no project opened yet
     //     (this is because in Firefox, only drag and drop can create a DirectoryEntry
-    const isDefaultLayoutEditor = stageMode === "edit" && (editorMode === "web" || rootPath === undefined);
+    const isDefaultLayoutEditor =
+        stageMode === "edit" &&
+        (editorMode === "web" || rootPath === undefined);
 
     // convert layout to ReactGridLayout
     const [layout, widgets] = useMemo(() => {

@@ -1,8 +1,21 @@
 import * as monaco from "monaco-editor";
 
 import { AppDispatcher, viewActions } from "core/store";
-import { FileAccess, FileSys, FsFile, FsPath, FsResult, FsResultCodes } from "low/fs";
-import { ReentrantLock, allocErr, allocOk, createYielder, sleep } from "low/utils";
+import {
+    FileAccess,
+    FileSys,
+    FsFile,
+    FsPath,
+    FsResult,
+    FsResultCodes,
+} from "low/fs";
+import {
+    ReentrantLock,
+    allocErr,
+    allocOk,
+    createYielder,
+    sleep,
+} from "low/utils";
 
 import {
     EditorContainerId,
@@ -76,7 +89,10 @@ export class FileMgr implements FileAccess {
         }, 0);
     }
 
-    public async listDir(path: string[], lockToken?: number): Promise<string[]> {
+    public async listDir(
+        path: string[],
+        lockToken?: number,
+    ): Promise<string[]> {
         return await this.fsLock.lockedScope(lockToken, async () => {
             if (!this.fs) {
                 return [];
@@ -91,7 +107,10 @@ export class FileMgr implements FileAccess {
         });
     }
 
-    public async openFile(path: FsPath, lockToken?: number): Promise<FsResult<void>> {
+    public async openFile(
+        path: FsPath,
+        lockToken?: number,
+    ): Promise<FsResult<void>> {
         const idPath = path.path;
         EditorLog.info(`opening ${idPath}`);
         return await this.fsLock.lockedScope(lockToken, async (token) => {
@@ -121,14 +140,16 @@ export class FileMgr implements FileAccess {
     //     return result.isOk();
     // }
 
-    public async loadChangesFromFs(lockToken?: number): Promise<FsResult<void>> {
+    public async loadChangesFromFs(
+        lockToken?: number,
+    ): Promise<FsResult<void>> {
         EditorLog.info("loading changes from file system...");
         // this.dispatcher.dispatch(viewActions.setAutoLoadActive(true));
         const handle = window.setTimeout(() => {
             this.dispatcher.dispatch(viewActions.startFileSysLoad());
         }, 200);
         const success = await this.fsLock.lockedScope(
-lockToken,
+            lockToken,
             async (token) => {
                 // ensure editor changes is synced first,
                 // so the current file is marked dirty
@@ -161,46 +182,43 @@ lockToken,
         fsFile: FsFile,
         lockToken?: number,
     ): Promise<FsResult<void>> {
-        return await this.fsLock.lockedScope(
-lockToken,
-            async (token) => {
-                const isCurrentFile = this.currentFile === fsFile;
-                let content: string | undefined = undefined;
+        return await this.fsLock.lockedScope(lockToken, async (token) => {
+            const isCurrentFile = this.currentFile === fsFile;
+            let content: string | undefined = undefined;
 
-                let result = await fsFile.loadIfNotDirty();
+            let result = await fsFile.loadIfNotDirty();
 
-                if (result.isOk()) {
-                    if (isCurrentFile) {
-                        const contentResult = await fsFile.getText();
-                        if (contentResult.isOk()) {
-                            content = contentResult.inner();
-                        } else {
-                            result = contentResult;
-                        }
+            if (result.isOk()) {
+                if (isCurrentFile) {
+                    const contentResult = await fsFile.getText();
+                    if (contentResult.isOk()) {
+                        content = contentResult.inner();
+                    } else {
+                        result = contentResult;
                     }
                 }
-                if (result.isErr()) {
-                    EditorLog.error(`sync failed with code ${result}`);
-                    if (!fsFile.isNewerThanFs()) {
-                        EditorLog.info(`closing ${idPath}`);
-                        if (isCurrentFile) {
-                            await this.updateEditor(
-                                undefined,
-                                undefined,
-                                undefined,
-                                token,
-                            );
-                        }
-                        delete this.files[idPath];
-                    }
-                } else {
+            }
+            if (result.isErr()) {
+                EditorLog.error(`sync failed with code ${result}`);
+                if (!fsFile.isNewerThanFs()) {
+                    EditorLog.info(`closing ${idPath}`);
                     if (isCurrentFile) {
-                        await this.updateEditor(fsFile, idPath, content, token);
+                        await this.updateEditor(
+                            undefined,
+                            undefined,
+                            undefined,
+                            token,
+                        );
                     }
+                    delete this.files[idPath];
                 }
-                return result;
-            },
-        );
+            } else {
+                if (isCurrentFile) {
+                    await this.updateEditor(fsFile, idPath, content, token);
+                }
+            }
+            return result;
+        });
     }
 
     public async hasUnsavedChanges(lockToken?: number): Promise<boolean> {
@@ -240,7 +258,7 @@ lockToken,
             this.dispatcher.dispatch(viewActions.startFileSysSave());
         }, 200);
         const success = await this.fsLock.lockedScope(
-lockToken,
+            lockToken,
             async (token) => {
                 // ensure editor changes is synced first,
                 // so the current file is marked dirty
@@ -273,18 +291,15 @@ lockToken,
         fsFile: FsFile,
         lockToken?: number,
     ): Promise<FsResult<void>> {
-        return await this.fsLock.lockedScope(
-lockToken,
-            async () => {
-                const result = await fsFile.writeIfNewer();
-                if (result.isErr()) {
-                    EditorLog.error(
-                        `save ${idPath} failed with code ${result.inner()}`,
-                    );
-                }
-                return result;
-            },
-        );
+        return await this.fsLock.lockedScope(lockToken, async () => {
+            const result = await fsFile.writeIfNewer();
+            if (result.isErr()) {
+                EditorLog.error(
+                    `save ${idPath} failed with code ${result.inner()}`,
+                );
+            }
+            return result;
+        });
     }
 
     private async updateEditor(

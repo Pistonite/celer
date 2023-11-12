@@ -19,8 +19,13 @@ import { useKernel } from "core/kernel";
 import { viewSelector } from "core/store";
 
 export const AppAlert: React.FC = () => {
-    const { alertTitle, alertText, alertLearnMoreLink, alertOkButton, alertCancelButton } =
-        useSelector(viewSelector);
+    const {
+        alertTitle,
+        alertText,
+        alertLearnMoreLink,
+        alertOkButton,
+        alertCancelButton,
+    } = useSelector(viewSelector);
     const kernel = useKernel();
     const okRef = useRef<HTMLButtonElement>(null);
     if (!alertText) {

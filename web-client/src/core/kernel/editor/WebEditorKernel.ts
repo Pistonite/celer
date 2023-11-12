@@ -24,7 +24,11 @@ import { FileMgr } from "./FileMgr";
 
 EditorLog.info("loading web editor kernel");
 
-export const initWebEditor = (kernelAccess: KernelAccess, fileSys: FileSys, store: AppStore): EditorKernel => {
+export const initWebEditor = (
+    kernelAccess: KernelAccess,
+    fileSys: FileSys,
+    store: AppStore,
+): EditorKernel => {
     EditorLog.info("creating web editor");
     window.MonacoEnvironment = {
         getWorker(_, label) {
@@ -38,7 +42,7 @@ export const initWebEditor = (kernelAccess: KernelAccess, fileSys: FileSys, stor
         },
     };
     return new WebEditorKernel(kernelAccess, fileSys, store);
-}
+};
 
 class WebEditorKernel implements EditorKernel {
     private store: AppStore;
@@ -55,7 +59,14 @@ class WebEditorKernel implements EditorKernel {
         this.store = store;
         this.kernelAccess = kernelAccess;
 
-        this.idleMgr = new IdleMgr(5000, 1000, 2, 5, 20000, this.onIdle.bind(this));
+        this.idleMgr = new IdleMgr(
+            5000,
+            1000,
+            2,
+            5,
+            20000,
+            this.onIdle.bind(this),
+        );
 
         const monacoDom = document.createElement("div");
         monacoDom.id = "monaco-editor";
@@ -149,9 +160,8 @@ class WebEditorKernel implements EditorKernel {
         return this.fileMgr.hasUnsavedChangesSync();
     }
 
-    public async loadChangesFromFs(
-        // isUserAction: boolean,
-    ): Promise<FsResult<void>> {
+    public async loadChangesFromFs() // isUserAction: boolean,
+    : Promise<FsResult<void>> {
         // if (isUserAction) {
         //     this.idleMgr.notifyActivity();
         // }
@@ -162,9 +172,8 @@ class WebEditorKernel implements EditorKernel {
         return result;
     }
 
-    public async saveChangesToFs(
-        // isUserAction: boolean,
-    ): Promise<FsResult<void>> {
+    public async saveChangesToFs() // isUserAction: boolean,
+    : Promise<FsResult<void>> {
         // if (isUserAction) {
         //     this.idleMgr.notifyActivity();
         // }
@@ -209,9 +218,7 @@ class WebEditorKernel implements EditorKernel {
     /// - If auto save is enabled, save changes to fs
     /// - If auto load is enabled, load changes from fs
     private async onIdle(isLong: boolean) {
-        const { unsavedFiles } = viewSelector(
-            this.store.getState(),
-        );
+        const { unsavedFiles } = viewSelector(this.store.getState());
 
         // pull changes from monaco editor first to make sure current file is marked dirty if needed
         await this.fileMgr.syncEditorToCurrentFile();
@@ -219,9 +226,7 @@ class WebEditorKernel implements EditorKernel {
         // let shouldRecompile = this.shouldRecompile;
 
         if (isLong) {
-            const {
-                autoSaveEnabled,
-            } = settingsSelector(this.store.getState());
+            const { autoSaveEnabled } = settingsSelector(this.store.getState());
 
             let shouldRerenderFs = false;
 

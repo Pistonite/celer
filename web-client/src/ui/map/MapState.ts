@@ -190,7 +190,10 @@ export class MapState {
     /// Called when the document is updated
     ///
     /// This will update the map layers if needed, and will always redraw the map visuals
-    private onDocumentUpdate(newDoc: ExecDoc | undefined, oldDoc: ExecDoc | undefined) {
+    private onDocumentUpdate(
+        newDoc: ExecDoc | undefined,
+        oldDoc: ExecDoc | undefined,
+    ) {
         if (!newDoc) {
             return;
         }

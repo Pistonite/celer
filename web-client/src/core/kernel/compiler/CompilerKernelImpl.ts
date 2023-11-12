@@ -28,7 +28,10 @@ import { FileAccess, FsResultCodes } from "low/fs";
 import { CompilerKernel } from "./CompilerKernel";
 import { CompilerLog } from "./utils";
 
-async function checkFileExists(fileAccess: FileAccess, path: string): Promise<boolean> {
+async function checkFileExists(
+    fileAccess: FileAccess,
+    path: string,
+): Promise<boolean> {
     const result = await fileAccess.getFileContent(path, true);
     if (result.isOk()) {
         return true;
@@ -140,7 +143,7 @@ export class CompilerKernelImpl implements CompilerKernel {
     }
 
     public async getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>> {
-        if(!(await this.ensureReady())) {
+        if (!(await this.ensureReady())) {
             CompilerLog.error("worker not ready after max waiting");
             return allocOk([]);
         }
@@ -162,7 +165,9 @@ export class CompilerKernelImpl implements CompilerKernel {
             return;
         }
         if (!(await this.ensureReady())) {
-            CompilerLog.warn("worker not ready after max waiting, skipping compile");
+            CompilerLog.warn(
+                "worker not ready after max waiting, skipping compile",
+            );
             return;
         }
         // check if entry path is a valid file
@@ -321,4 +326,3 @@ export class CompilerKernelImpl implements CompilerKernel {
         }
     }
 }
-

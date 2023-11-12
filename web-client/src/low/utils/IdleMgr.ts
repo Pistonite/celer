@@ -41,7 +41,8 @@ export class IdleMgr {
         intervalMultiplier: number,
         eventsCountForNextInterval: number,
         maxInterval: number,
-        callback: IdleFunction) {
+        callback: IdleFunction,
+    ) {
         this.longIdleTime = longIdleTime;
         this.initialInterval = initialInterval;
         this.intervalMultiplier = intervalMultiplier;
@@ -102,7 +103,8 @@ export class IdleMgr {
             if (this.currentInterval < this.maxInterval) {
                 this.eventsFiredInCurrentInterval++;
                 if (
-                    this.eventsFiredInCurrentInterval >= this.eventsCountForNextInterval
+                    this.eventsFiredInCurrentInterval >=
+                    this.eventsCountForNextInterval
                 ) {
                     this.currentInterval *= this.intervalMultiplier;
                     this.eventsFiredInCurrentInterval = 0;

@@ -1,11 +1,12 @@
-import { Logger } from "./Logger";
+import { Logger, console } from "./Logger";
 
 let worker: Worker;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const specialHandlers: { [key: string]: (data: any) => any } = {};
 // map of [resolve, reject, timeoutHandle]
-const workerHandlers: { [key: number]: [(x: any) => void, (x: any) => void, any] } =
-    {};
+const workerHandlers: {
+    [key: number]: [(x: any) => void, (x: any) => void, any];
+} = {};
 let nextId = 0;
 
 export type LoadFileFn = (path: string) => Promise<Uint8Array>;
@@ -71,7 +72,11 @@ export function callWorker<T>(funcId: number, args: any[]): Promise<T> {
     return new Promise((resolve, reject) => {
         // To prevent memory leak from infinitely stuck promises
         // we set a timeout of 5 minutes.
-        const timeoutHandle = setTimeout(() => reject(`worker call timed out (msg=${nextId}, func=${funcId})`), 300000);
+        const timeoutHandle = setTimeout(
+            () =>
+                reject(`worker call timed out (msg=${nextId}, func=${funcId})`),
+            300000,
+        );
         workerHandlers[nextId] = [resolve, reject, timeoutHandle];
         worker.postMessage([nextId++, funcId, args]);
     });

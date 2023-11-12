@@ -35,14 +35,16 @@ export const EditorRoot: React.FC = () => {
 
     if (rootPath !== undefined && editorMode === "external") {
         return (
-        <ErrorBoundary>
+            <ErrorBoundary>
                 <div id={EditorRootId}>
-        <div className="blank-div-message">
-                        Web editor is not available because you are using the external editor workflow.
-                        Switch to the default layout or a layout without the editor to hide this widget.
-                    </div>;
+                    <div className="blank-div-message">
+                        Web editor is not available because you are using the
+                        external editor workflow. Switch to the default layout
+                        or a layout without the editor to hide this widget.
+                    </div>
+                    ;
                 </div>
-        </ErrorBoundary>
+            </ErrorBoundary>
         );
     }
     return (
@@ -63,9 +65,7 @@ export const EditorRoot: React.FC = () => {
                                             10,
                                             (editor) => {
                                                 editor.notifyActivity();
-                                                editor.openFile(
-                                                    path,
-                                                );
+                                                editor.openFile(path);
                                             },
                                         );
                                     }}

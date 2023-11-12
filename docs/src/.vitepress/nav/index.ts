@@ -19,9 +19,7 @@ export const homeSideBar = {
         },
         {
             text: "Misc",
-            items: [
-                { text: "Browser Support", link: "/browser-support" },
-            ]
-        }
+            items: [{ text: "Browser Support", link: "/browser-support" }],
+        },
     ],
 };

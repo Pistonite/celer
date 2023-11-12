@@ -41,9 +41,8 @@ export const setCompilerUseCachePack0 = withPayload<
     state.compilerUseCachePack0 = compilerUseCachePack0;
 });
 
-export const setEditorMode = withPayload<
-    EditorSettingsState,
-    EditorMode
->((state, editorMode) => {
-    state.editorMode = editorMode;
-});
+export const setEditorMode = withPayload<EditorSettingsState, EditorMode>(
+    (state, editorMode) => {
+        state.editorMode = editorMode;
+    },
+);
