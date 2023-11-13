@@ -7,7 +7,7 @@ use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
 use crate::prop;
-use crate::types::{DocDiagnostic, DocNote, DocRichText, GameCoord};
+use crate::types::{DocDiagnostic, DocNote, DocRichText, GameCoord, DocRichTextBlock};
 
 use super::{
     validate_not_array_or_object, CompError, CompMarker, CompMovement, Compiler, CompilerResult,
@@ -17,7 +17,7 @@ use super::{
 #[serde(rename_all = "camelCase")]
 pub struct CompLine {
     /// Primary text content of the line
-    pub text: Vec<DocRichText>,
+    pub text: DocRichText,
     /// Main line color
     pub line_color: String,
     /// Main movements of this line
@@ -37,15 +37,15 @@ pub struct CompLine {
     /// Map markers
     pub markers: Vec<CompMarker>,
     /// Secondary text to show below the primary text
-    pub secondary_text: Vec<DocRichText>,
+    pub secondary_text: DocRichText,
     /// Counter text to display
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub counter_text: Option<DocRichText>,
+    pub counter_text: Option<DocRichTextBlock>,
     /// The notes
     pub notes: Vec<DocNote>,
     /// The split name, if different from text
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub split_name: Option<Vec<DocRichText>>,
+    pub split_name: Option<DocRichText>,
     /// The rest of the properties as json blobs
     ///
     /// These are ignored by ExecDoc, but the plugins can use them
@@ -327,7 +327,7 @@ mod test {
             &mut compiler,
             json!(true),
             CompLine {
-                text: vec![DocRichText::text("true")],
+                text: lang::parse_rich("true"),
                 ..Default::default()
             },
         );
@@ -336,7 +336,7 @@ mod test {
             &mut compiler,
             json!(false),
             CompLine {
-                text: vec![DocRichText::text("false")],
+                text: lang::parse_rich("false"),
                 ..Default::default()
             },
         );
@@ -345,7 +345,7 @@ mod test {
             &mut compiler,
             json!(0),
             CompLine {
-                text: vec![DocRichText::text("0")],
+                text: lang::parse_rich("0"),
                 ..Default::default()
             },
         );
@@ -354,7 +354,7 @@ mod test {
             &mut compiler,
             json!(-123),
             CompLine {
-                text: vec![DocRichText::text("-123")],
+                text: lang::parse_rich("-123"),
                 ..Default::default()
             },
         );
@@ -363,7 +363,7 @@ mod test {
             &mut compiler,
             json!(456),
             CompLine {
-                text: vec![DocRichText::text("456")],
+                text: lang::parse_rich("456"),
                 ..Default::default()
             },
         );
@@ -372,7 +372,7 @@ mod test {
             &mut compiler,
             json!("hello world"),
             CompLine {
-                text: vec![DocRichText::text("hello world")],
+                text: lang::parse_rich("hello world"),
                 ..Default::default()
             },
         );
@@ -381,10 +381,7 @@ mod test {
             &mut compiler,
             json!(".tag(foo) world"),
             CompLine {
-                text: vec![
-                    DocRichText::with_tag("tag", "foo"),
-                    DocRichText::text(" world"),
-                ],
+                text: lang::parse_rich(".tag(foo) world"),
                 ..Default::default()
             },
         );
@@ -398,7 +395,7 @@ mod test {
             &mut compiler,
             json!([]),
             CompLine {
-                text: vec![DocRichText::text("[object array]")],
+                text: DocRichText::text("[object array]"),
                 ..Default::default()
             },
             vec![CompError::ArrayCannotBeLine],
@@ -408,7 +405,7 @@ mod test {
             &mut compiler,
             json!({}),
             CompLine {
-                text: vec![DocRichText::text("[object object]")],
+                text: DocRichText::text("[object object]"),
                 ..Default::default()
             },
             vec![CompError::EmptyObjectCannotBeLine],
@@ -421,7 +418,7 @@ mod test {
                 "two": {},
             }),
             CompLine {
-                text: vec![DocRichText::text("[object object]")],
+                text: DocRichText::text("[object object]"),
                 ..Default::default()
             },
             vec![CompError::TooManyKeysInObjectLine],
@@ -433,7 +430,7 @@ mod test {
                 "one": "not an object",
             }),
             CompLine {
-                text: vec![DocRichText::text("[object object]")],
+                text: DocRichText::text("[object object]"),
                 ..Default::default()
             },
             vec![CompError::LinePropertiesMustBeObject],
@@ -452,7 +449,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("hello world")],
+                text: DocRichText::text("hello world"),
                 ..Default::default()
             },
         );
@@ -465,7 +462,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("[object array]")],
+                text: DocRichText::text("[object array]"),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("text".to_string())],
@@ -479,8 +476,8 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
-                secondary_text: vec![DocRichText::text("hello world")],
+                text: DocRichText::text("foo"),
+                secondary_text: DocRichText::text("hello world"),
                 ..Default::default()
             },
         );
@@ -493,8 +490,8 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
-                secondary_text: vec![DocRichText::text("[object array]")],
+                text: DocRichText::text("foo"),
+                secondary_text: DocRichText::text("[object array]"),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("comment".to_string())],
@@ -508,9 +505,9 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
+                text: DocRichText::text("foo"),
                 notes: vec![DocNote::Text {
-                    content: vec![DocRichText::text("hello world")],
+                    content: DocRichText::text("hello world"),
                 }],
                 ..Default::default()
             },
@@ -524,13 +521,13 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
+                text: DocRichText::text("foo"),
                 notes: vec![
                     DocNote::Text {
-                        content: vec![DocRichText::text("hello world")],
+                        content: DocRichText::text("hello world"),
                     },
                     DocNote::Text {
-                        content: vec![DocRichText::text("foo bar")],
+                        content: DocRichText::text("foo bar"),
                     },
                 ],
                 ..Default::default()
@@ -545,7 +542,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
+                text: DocRichText::text("foo"),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("notes".to_string())],
@@ -560,16 +557,16 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
+                text: DocRichText::text("foo"),
                 notes: vec![
                     DocNote::Text {
-                        content: vec![DocRichText::text("hello")],
+                        content: DocRichText::text("hello"),
                     },
                     DocNote::Text {
-                        content: vec![DocRichText::text("[object object]")],
+                        content: DocRichText::text("[object object]"),
                     },
                 ],
-                secondary_text: vec![DocRichText::text("[object object]")],
+                secondary_text: DocRichText::text("[object object]"),
                 ..Default::default()
             },
             vec![
@@ -586,11 +583,11 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
-                split_name: Some(vec![
-                    DocRichText::text("test "),
-                    DocRichText::with_tag("v", "boo"),
-                ]),
+                text: DocRichText::text("foo"),
+                split_name: Some(DocRichText(vec![
+                    DocRichTextBlock::text("test "),
+                    DocRichTextBlock::with_tag("v", "boo"),
+                ])),
                 ..Default::default()
             },
         );
@@ -603,7 +600,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
+                text: DocRichText::text("foo"),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("split-name".to_string())],
@@ -617,7 +614,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo")],
+                text: DocRichText::text("foo"),
                 split_name: Some(vec![]),
                 ..Default::default()
             },
@@ -649,8 +646,8 @@ mod test {
             &mut compiler,
             json!("_preset"),
             CompLine {
-                text: vec![DocRichText::text("hello world")],
-                secondary_text: vec![DocRichText::text("foo bar")],
+                text: DocRichText::text("hello world"),
+                secondary_text: DocRichText::text("foo bar"),
                 ..Default::default()
             },
         );
@@ -663,8 +660,8 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("hello world")],
-                secondary_text: vec![DocRichText::text("foo bar 2")],
+                text: DocRichText::text("hello world"),
+                secondary_text: DocRichText::text("foo bar 2"),
                 ..Default::default()
             },
         );
@@ -677,8 +674,8 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("_notext")],
-                secondary_text: vec![DocRichText::text("foo bar 2")],
+                text: DocRichText::text("_notext"),
+                secondary_text: DocRichText::text("foo bar 2"),
                 ..Default::default()
             },
         );
@@ -691,8 +688,8 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("foo bar 2")],
-                secondary_text: vec![DocRichText::text("foo bar")],
+                text: DocRichText::text("foo bar 2"),
+                secondary_text: DocRichText::text("foo bar"),
                 ..Default::default()
             },
         );
@@ -705,8 +702,8 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("_invalid")],
-                secondary_text: vec![DocRichText::text("foo bar 2")],
+                text: DocRichText::text("_invalid"),
+                secondary_text: DocRichText::text("foo bar 2"),
                 ..Default::default()
             },
         );
@@ -719,7 +716,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("_preset")],
+                text: DocRichText::text("_preset"),
                 ..Default::default()
             },
         );
@@ -777,8 +774,8 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("preset two text")],
-                secondary_text: vec![DocRichText::text("preset one")],
+                text: DocRichText::text("preset two text"),
+                secondary_text: DocRichText::text("preset one"),
                 ..Default::default()
             },
         );
@@ -791,7 +788,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("test")],
+                text: DocRichText::text("test"),
                 ..Default::default()
             },
             vec![CompError::InvalidPresetString("foo".to_string())],
@@ -805,7 +802,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("test")],
+                text: DocRichText::text("test"),
                 ..Default::default()
             },
             vec![
@@ -825,8 +822,8 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("preset three")],
-                secondary_text: vec![DocRichText::text("preset two")],
+                text: DocRichText::text("preset three"),
+                secondary_text: DocRichText::text("preset two"),
                 ..Default::default()
             },
         );

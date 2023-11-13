@@ -1,26 +1,26 @@
 //! Poor string parsing
 
-use crate::types::DocPoorText;
+use crate::types::{DocPoorText, DocPoorTextBlock};
 
-pub fn parse_poor(s: &str) -> Vec<DocPoorText> {
+pub fn parse_poor(s: &str) -> DocPoorText {
     let mut output = vec![];
     if s.is_empty() {
-        return output;
+        return DocPoorText(output);
     }
     let mut current = String::new();
     for part in s.split(' ') {
         if is_part_link(part) {
             if !current.is_empty() {
-                output.push(DocPoorText::Text(current));
+                output.push(DocPoorTextBlock::Text(current));
                 current = String::new();
             }
             if part.ends_with('.') {
                 let mut link = part.to_string();
                 link.pop();
-                output.push(DocPoorText::Link(link));
+                output.push(DocPoorTextBlock::Link(link));
                 current.push_str(". ");
             } else {
-                output.push(DocPoorText::Link(part.to_string()));
+                output.push(DocPoorTextBlock::Link(part.to_string()));
                 current.push(' ');
             }
         } else {
@@ -30,9 +30,9 @@ pub fn parse_poor(s: &str) -> Vec<DocPoorText> {
     }
     let current = current.trim_end().to_string();
     if !current.is_empty() {
-        output.push(DocPoorText::Text(current));
+        output.push(DocPoorTextBlock::Text(current));
     }
-    output
+    DocPoorText(output)
 }
 
 fn is_part_link(part: &str) -> bool {
@@ -51,18 +51,18 @@ mod test {
 
     #[test]
     fn test_empty() {
-        assert_eq!(parse_poor(""), vec![]);
+        assert_eq!(parse_poor(""), DocPoorText(vec![]));
     }
 
     #[test]
     fn test_text_only() {
         assert_eq!(
             parse_poor("hello world"),
-            vec![DocPoorText::Text("hello world".to_string())]
+            DocPoorText(vec![DocPoorTextBlock::Text("hello world".to_string())])
         );
         assert_eq!(
             parse_poor("hello world https"),
-            vec![DocPoorText::Text("hello world https".to_string())]
+            DocPoorText(vec![DocPoorTextBlock::Text("hello world https".to_string())])
         );
     }
 
@@ -70,10 +70,10 @@ mod test {
     fn test_text_ends_with_link() {
         assert_eq!(
             parse_poor("hello world https://www.example.com"),
-            vec![
-                DocPoorText::Text("hello world ".to_string()),
-                DocPoorText::Link("https://www.example.com".to_string()),
-            ]
+            DocPoorText(vec![
+                DocPoorTextBlock::Text("hello world ".to_string()),
+                DocPoorTextBlock::Link("https://www.example.com".to_string()),
+            ])
         );
     }
 
@@ -81,10 +81,10 @@ mod test {
     fn test_text_starts_with_link() {
         assert_eq!(
             parse_poor("https://www.example.com boo"),
-            vec![
-                DocPoorText::Link("https://www.example.com".to_string()),
-                DocPoorText::Text(" boo".to_string()),
-            ]
+            DocPoorText(vec![
+                DocPoorTextBlock::Link("https://www.example.com".to_string()),
+                DocPoorTextBlock::Text(" boo".to_string()),
+            ])
         );
     }
 
@@ -92,13 +92,13 @@ mod test {
     fn test_multiple_links() {
         assert_eq!(
             parse_poor("hello world https://www.example.com and http://example2.com and more"),
-            vec![
-                DocPoorText::Text("hello world ".to_string()),
-                DocPoorText::Link("https://www.example.com".to_string()),
-                DocPoorText::Text(" and ".to_string()),
-                DocPoorText::Link("http://example2.com".to_string()),
-                DocPoorText::Text(" and more".to_string()),
-            ]
+            DocPoorText(vec![
+                DocPoorTextBlock::Text("hello world ".to_string()),
+                DocPoorTextBlock::Link("https://www.example.com".to_string()),
+                DocPoorTextBlock::Text(" and ".to_string()),
+                DocPoorTextBlock::Link("http://example2.com".to_string()),
+                DocPoorTextBlock::Text(" and more".to_string()),
+            ])
         );
     }
 
@@ -106,19 +106,19 @@ mod test {
     fn test_ends_with_dot() {
         assert_eq!(
             parse_poor("hello world https://www.example.com."),
-            vec![
-                DocPoorText::Text("hello world ".to_string()),
-                DocPoorText::Link("https://www.example.com".to_string()),
-                DocPoorText::Text(".".to_string()),
-            ]
+            DocPoorText(vec![
+                DocPoorTextBlock::Text("hello world ".to_string()),
+                DocPoorTextBlock::Link("https://www.example.com".to_string()),
+                DocPoorTextBlock::Text(".".to_string()),
+            ])
         );
         assert_eq!(
             parse_poor("hello  world https://www.example.com. boo"),
-            vec![
-                DocPoorText::Text("hello  world ".to_string()),
-                DocPoorText::Link("https://www.example.com".to_string()),
-                DocPoorText::Text(". boo".to_string()),
-            ]
+            DocPoorText(vec![
+                DocPoorTextBlock::Text("hello  world ".to_string()),
+                DocPoorTextBlock::Link("https://www.example.com".to_string()),
+                DocPoorTextBlock::Text(". boo".to_string()),
+            ])
         );
     }
 
@@ -126,7 +126,7 @@ mod test {
     fn test_just_http() {
         assert_eq!(
             parse_poor("hello world https://"),
-            vec![DocPoorText::Text("hello world https://".to_string()),]
+            DocPoorText(vec![DocPoorTextBlock::Text("hello world https://".to_string()),])
         );
     }
 }

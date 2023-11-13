@@ -86,6 +86,7 @@ impl CompLine {
             .split_name
             .map(|v| v.into_iter().map(|v| v.text).collect::<Vec<_>>().join(""));
         ExecLine {
+            is_banner: false, //self.text.starts_with("(==)"),
             section: section_number,
             index: line_number,
             text: self.text,

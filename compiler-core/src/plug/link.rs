@@ -7,7 +7,7 @@ use crate::comp::CompDoc;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::types::{DocColor, DocRichText, DocTag};
+use crate::types::{DocColor, DocRichText, DocTag, DocRichTextBlock};
 
 use super::{operation, PlugResult, PluginRuntime};
 
@@ -55,7 +55,7 @@ impl PluginRuntime for LinkPlugin {
     }
 }
 
-fn transform_link_tag(rich_text: &mut DocRichText) {
+fn transform_link_tag(rich_text: &mut DocRichTextBlock) {
     if rich_text
         .tag
         .as_ref()
