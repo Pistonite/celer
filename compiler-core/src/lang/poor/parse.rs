@@ -62,7 +62,9 @@ mod test {
         );
         assert_eq!(
             parse_poor("hello world https"),
-            DocPoorText(vec![DocPoorTextBlock::Text("hello world https".to_string())])
+            DocPoorText(vec![DocPoorTextBlock::Text(
+                "hello world https".to_string()
+            )])
         );
     }
 
@@ -126,7 +128,9 @@ mod test {
     fn test_just_http() {
         assert_eq!(
             parse_poor("hello world https://"),
-            DocPoorText(vec![DocPoorTextBlock::Text("hello world https://".to_string()),])
+            DocPoorText(vec![DocPoorTextBlock::Text(
+                "hello world https://".to_string()
+            ),])
         );
     }
 }

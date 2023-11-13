@@ -237,28 +237,6 @@ pub struct DocDiagnostic {
 #[derive_wasm(feature = "wasm")]
 pub struct DocRichText(pub Vec<DocRichTextBlock>);
 
-impl DocRichText {
-    #[inline]
-    pub fn text(text: &str) -> Self {
-        Self(vec![DocRichTextBlock::text(text)])
-    }
-
-    #[inline]
-    pub fn iter(&self) -> impl Iterator<Item=&DocRichTextBlock> {
-        self.0.iter()
-    }
-}
-
-impl IntoIterator for DocRichText {
-    type Item = DocRichTextBlock;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
-
 /// Document rich text block
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm(feature = "wasm")]
@@ -302,23 +280,6 @@ impl DocRichTextBlock {
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm(feature = "wasm")]
 pub struct DocPoorText(pub Vec<DocPoorTextBlock>);
-
-impl DocPoorText {
-    #[inline]
-    pub fn iter(&self) -> impl Iterator<Item=&DocPoorTextBlock> {
-        self.0.iter()
-    }
-}
-
-impl IntoIterator for DocPoorText {
-    type Item = DocPoorTextBlock;
-    type IntoIter = std::vec::IntoIter<Self::Item>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
 
 /// Document poor text block. Just text or link
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]

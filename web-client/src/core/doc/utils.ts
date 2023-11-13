@@ -1,6 +1,6 @@
 //! Utilities for document
 
-import { DocPoorText, DocRichText, ExecDoc } from "low/celerc";
+import { DocPoorText, DocRichTextBlock, ExecDoc } from "low/celerc";
 
 import {
     DocSettingsState,
@@ -54,15 +54,15 @@ export const getRelativeLocation = (
 };
 
 /// Function to remove the tag from the text and return the just text content
-export const removeTags = (text: Omit<DocRichText, "tag">[]): string => {
+export const removeTags = (text: Omit<DocRichTextBlock, "tag">[]): string => {
     return text.map(removeTag).join("");
 };
 
-export const removeTag = (text: Omit<DocRichText, "tag">): string => {
+export const removeTag = (text: Omit<DocRichTextBlock, "tag">): string => {
     return text.text;
 };
 
 /// Return just the text content of poor texts
-export const removeLinks = (text: DocPoorText[]): string => {
+export const removeLinks = (text: DocPoorText): string => {
     return text.map((t) => t.data).join("");
 };

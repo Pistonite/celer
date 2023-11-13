@@ -12,7 +12,7 @@ use crate::lang;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::types::{DocColor, DocDiagnostic, DocRichText, DocTag};
+use crate::types::{DocColor, DocDiagnostic, DocRichTextBlock, DocTag};
 use crate::util::yield_budget;
 
 use super::{operation, PlugResult, PluginRuntime};
@@ -152,7 +152,7 @@ impl VariablesPlugin {
     pub fn transform_text(
         &self,
         diagnostics: &mut Vec<DocDiagnostic>,
-        text: &mut DocRichText,
+        text: &mut DocRichTextBlock,
         new_tag: &str,
     ) {
         if let Err(e) = self.transform_text_with_tag(text, new_tag) {
@@ -164,7 +164,11 @@ impl VariablesPlugin {
         }
     }
 
-    fn transform_text_with_tag(&self, text: &mut DocRichText, new_tag: &str) -> Result<(), String> {
+    fn transform_text_with_tag(
+        &self,
+        text: &mut DocRichTextBlock,
+        new_tag: &str,
+    ) -> Result<(), String> {
         let text_ref = &text.text;
         let get_fn = |t: &str| self.get(t);
         text.text = match text.tag.as_ref().map(String::as_ref) {

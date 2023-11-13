@@ -82,9 +82,7 @@ impl CompLine {
             }
         }
 
-        let split_name = self
-            .split_name
-            .map(|v| v.into_iter().map(|v| v.text).collect::<Vec<_>>().join(""));
+        let split_name = self.split_name.map(|x| x.to_string());
         ExecLine {
             is_banner: false, //self.text.starts_with("(==)"),
             section: section_number,
@@ -105,7 +103,10 @@ impl CompLine {
 #[cfg(test)]
 mod test {
     use crate::comp::{CompMarker, CompMovement};
-    use crate::types::{DocDiagnostic, DocNote, DocPoorText, DocRichText, GameCoord, MapLine};
+    use crate::types::{
+        DocDiagnostic, DocNote, DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock,
+        GameCoord, MapLine,
+    };
 
     use super::*;
 
@@ -158,59 +159,59 @@ mod test {
     #[test]
     fn test_copy() {
         let mut map_section = Default::default();
-        let test_text = vec![
-            DocRichText {
+        let test_text = DocRichText(vec![
+            DocRichTextBlock {
                 tag: None,
                 text: "test1".to_string(),
                 link: None,
             },
-            DocRichText {
+            DocRichTextBlock {
                 tag: Some("test tag".to_string()),
                 text: "test2".to_string(),
                 link: Some("test link".to_string()),
             },
-        ];
+        ]);
         let test_color = "test color".to_string();
         let test_diagnostics = vec![DocDiagnostic {
-            msg: vec![
-                DocPoorText::Text("test msg1".to_string()),
-                DocPoorText::Link("test link".to_string()),
-            ],
+            msg: DocPoorText(vec![
+                DocPoorTextBlock::Text("test msg1".to_string()),
+                DocPoorTextBlock::Link("test link".to_string()),
+            ]),
             msg_type: "test msg type".to_string(),
             source: "test msg source".to_string(),
         }];
         let test_doc_icon = Some("test-icon".to_string());
-        let test_secondary_text = vec![
-            DocRichText {
+        let test_secondary_text = DocRichText(vec![
+            DocRichTextBlock {
                 tag: None,
                 text: "secondary test1".to_string(),
                 link: None,
             },
-            DocRichText {
+            DocRichTextBlock {
                 tag: Some("secondary test tag".to_string()),
                 text: "secondary test2".to_string(),
                 link: Some("secondary test link".to_string()),
             },
-        ];
-        let test_counter_text = Some(DocRichText {
+        ]);
+        let test_counter_text = Some(DocRichTextBlock {
             tag: Some("counter test tag".to_string()),
             text: "counter test".to_string(),
             link: None,
         });
         let test_notes = vec![
             DocNote::Text {
-                content: vec![
-                    DocRichText {
+                content: DocRichText(vec![
+                    DocRichTextBlock {
                         tag: None,
                         text: "note test1".to_string(),
                         link: None,
                     },
-                    DocRichText {
+                    DocRichTextBlock {
                         tag: Some("note test tag".to_string()),
                         text: "note test2".to_string(),
                         link: Some("note test link".to_string()),
                     },
-                ],
+                ]),
             },
             DocNote::Image {
                 link: "note test src image".to_string(),
@@ -413,23 +414,23 @@ mod test {
 
     #[test]
     fn test_split_name() {
-        let test_split_name = vec![
-            DocRichText {
+        let test_split_name = DocRichText(vec![
+            DocRichTextBlock {
                 tag: None,
                 text: "test1".to_string(),
                 link: None,
             },
-            DocRichText {
+            DocRichTextBlock {
                 tag: Some("something".to_string()),
                 text: " test ".to_string(),
                 link: None,
             },
-            DocRichText {
+            DocRichTextBlock {
                 tag: None,
                 text: "test3".to_string(),
                 link: None,
             },
-        ];
+        ]);
 
         let test_line = CompLine {
             split_name: Some(test_split_name.clone()),

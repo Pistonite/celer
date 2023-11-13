@@ -7,7 +7,7 @@ use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
 use crate::prop;
-use crate::types::{DocDiagnostic, DocNote, DocRichText, GameCoord, DocRichTextBlock};
+use crate::types::{DocDiagnostic, DocNote, DocRichText, DocRichTextBlock, GameCoord};
 
 use super::{
     validate_not_array_or_object, CompError, CompMarker, CompMovement, Compiler, CompilerResult,
@@ -615,7 +615,7 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("foo"),
-                split_name: Some(vec![]),
+                split_name: Some(DocRichText(vec![])),
                 ..Default::default()
             },
         );
@@ -832,8 +832,8 @@ mod test {
             &mut compiler,
             json!("_preset::four< abcde >"),
             CompLine {
-                text: vec![DocRichText::text("preset four: arg is  abcde ")],
-                secondary_text: vec![DocRichText::text("preset two")],
+                text: DocRichText::text("preset four: arg is  abcde "),
+                secondary_text: DocRichText::text("preset two"),
                 ..Default::default()
             },
         );
@@ -842,7 +842,7 @@ mod test {
             &mut compiler,
             json!("_preset::overflow"),
             CompLine {
-                text: vec![DocRichText::text("_preset::overflow")],
+                text: DocRichText::text("_preset::overflow"),
                 ..Default::default()
             },
             vec![CompError::MaxPresetDepthExceeded(
@@ -863,7 +863,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("icon is string")],
+                text: DocRichText::text("icon is string"),
                 doc_icon: Some("my-icon".to_string()),
                 map_icon: Some("my-icon".to_string()),
                 ..Default::default()
@@ -878,7 +878,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("icon is string")],
+                text: DocRichText::text("icon is string"),
                 ..Default::default()
             },
             vec![
@@ -895,7 +895,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("icon is array")],
+                text: DocRichText::text("icon is array"),
                 ..Default::default()
             },
             vec![
@@ -912,7 +912,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("icon is empty object")],
+                text: DocRichText::text("icon is empty object"),
                 ..Default::default()
             },
             vec![
@@ -931,7 +931,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("icon all 3")],
+                text: DocRichText::text("icon all 3"),
                 doc_icon: Some("my-doc-icon".to_string()),
                 map_icon: Some("my-map-icon".to_string()),
                 map_icon_priority: 1,
@@ -950,7 +950,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("icon is object")],
+                text: DocRichText::text("icon is object"),
                 properties: btree_map! {
                     "icon-boo".to_string() => json!("foo"),
                 },
@@ -978,7 +978,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("icon is partial")],
+                text: DocRichText::text("icon is partial"),
                 doc_icon: None,
                 map_icon: Some("my-map-icon".to_string()),
                 map_icon_priority: 10,
@@ -1008,7 +1008,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("_Example")],
+                text: DocRichText::text("_Example"),
                 map_icon: None,
                 doc_icon: Some("my-doc-icon".to_string()),
                 ..Default::default()
@@ -1023,7 +1023,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("_Example")],
+                text: DocRichText::text("_Example"),
                 doc_icon: None,
                 map_icon: Some("my-map-icon".to_string()),
                 ..Default::default()
@@ -1043,8 +1043,8 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("counter is string")],
-                counter_text: Some(DocRichText::text("hello")),
+                text: DocRichText::text("counter is string"),
+                counter_text: Some(DocRichTextBlock::text("hello")),
                 ..Default::default()
             },
         );
@@ -1057,8 +1057,8 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("counter is tagged string")],
-                counter_text: Some(DocRichText::with_tag("test", "hello")),
+                text: DocRichText::text("counter is tagged string"),
+                counter_text: Some(DocRichTextBlock::with_tag("test", "hello")),
                 ..Default::default()
             },
         );
@@ -1071,8 +1071,8 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("counter is empty tagged string")],
-                counter_text: Some(DocRichText::with_tag("test", "")),
+                text: DocRichText::text("counter is empty tagged string"),
+                counter_text: Some(DocRichTextBlock::with_tag("test", "")),
                 ..Default::default()
             },
         );
@@ -1085,7 +1085,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("counter is empty string")],
+                text: DocRichText::text("counter is empty string"),
                 counter_text: None,
                 ..Default::default()
             },
@@ -1099,7 +1099,7 @@ mod test {
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("counter is invalid")],
+                text: DocRichText::text("counter is invalid"),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("counter".to_string())],
@@ -1109,12 +1109,12 @@ mod test {
             &mut compiler,
             json!({
                 "counter is more than one text block": {
-                    "counter": ".v(hello) ",
+                    "counter": ".v(hello) foo",
                 },
             }),
             CompLine {
-                text: vec![DocRichText::text("counter is more than one text block")],
-                counter_text: Some(DocRichText::with_tag("v", "hello")),
+                text: DocRichText::text("counter is more than one text block"),
+                counter_text: Some(DocRichTextBlock::with_tag("v", "hello")),
                 ..Default::default()
             },
             vec![CompError::TooManyTagsInCounter],
@@ -1134,7 +1134,7 @@ mod test {
             &mut compiler,
             json!("no color or coord"),
             CompLine {
-                text: vec![DocRichText::text("no color or coord")],
+                text: DocRichText::text("no color or coord"),
                 line_color: "color".to_string(),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
@@ -1159,7 +1159,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("change color")],
+                text: DocRichText::text("change color"),
                 line_color: "new-color".to_string(),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
@@ -1174,7 +1174,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("change color 2")],
+                text: DocRichText::text("change color 2"),
                 line_color: "new-color".to_string(),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
@@ -1209,7 +1209,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("change coord")],
+                text: DocRichText::text("change coord"),
                 map_coord: GameCoord(4.0, 5.0, 6.0),
                 movements: vec![CompMovement::to(GameCoord(4.0, 5.0, 6.0))],
                 ..Default::default()
@@ -1230,7 +1230,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("push pop")],
+                text: DocRichText::text("push pop"),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 movements: vec![
                     CompMovement::Push,
@@ -1250,7 +1250,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("invalid")],
+                text: DocRichText::text("invalid"),
                 map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
@@ -1297,7 +1297,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("preset")],
+                text: DocRichText::text("preset"),
                 map_coord: GameCoord(7.0, 8.0, 9.0),
                 movements: vec![
                     CompMovement::to(GameCoord(3.0, 4.0, 5.0)),
@@ -1324,7 +1324,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("test markers")],
+                text: DocRichText::text("test markers"),
                 markers: vec![
                     CompMarker {
                         at: GameCoord(1.0, 2.0, 4.0),
@@ -1344,7 +1344,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("test markers invalid type")],
+                text: DocRichText::text("test markers invalid type"),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("markers".to_string())],
@@ -1360,7 +1360,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("test markers invalid marker type")],
+                text: DocRichText::text("test markers invalid marker type"),
                 ..Default::default()
             },
             vec![CompError::InvalidMarkerType],
@@ -1379,7 +1379,7 @@ mod test {
                 }
             }),
             CompLine {
-                text: vec![DocRichText::text("test")],
+                text: DocRichText::text("test"),
                 properties: [("unused".to_string(), json!("property"))]
                     .into_iter()
                     .collect(),

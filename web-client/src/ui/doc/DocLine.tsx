@@ -5,7 +5,7 @@ import React from "react";
 import { Text } from "@fluentui/react-components";
 
 import { viewActions } from "core/store";
-import { DocDiagnostic, DocRichText } from "low/celerc";
+import { DocDiagnostic, DocRichText, DocRichTextBlock } from "low/celerc";
 import { useActions } from "low/store";
 
 import { Rich } from "./Rich";
@@ -26,13 +26,13 @@ type DocLineProps = {
     /// Color of the line
     lineColor: string;
     /// The text to display
-    text: DocRichText[];
+    text: DocRichText;
     /// Url of the icon to display
     iconUrl?: string;
     /// Secondary text
-    secondaryText: DocRichText[];
+    secondaryText: DocRichText;
     /// Counter properties
-    counterText?: DocRichText;
+    counterText?: DocRichTextBlock;
     /// Counter type if any
     counterType?: string;
     /// Diagnostic messages

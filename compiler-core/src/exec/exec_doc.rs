@@ -44,7 +44,7 @@ mod test {
             ..Default::default()
         };
 
-        let test_preface = vec![vec![DocRichText::text("test")]];
+        let test_preface = vec![DocRichText::text("test")];
 
         let test_diagnostics = vec![DocDiagnostic {
             msg: parse_poor("test msg"),
