@@ -7,7 +7,7 @@ use crate::comp::CompDoc;
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::types::{DocColor, DocRichText, DocTag};
+use crate::types::{DocColor, DocRichTextBlock, DocTag};
 
 use super::{operation, PlugResult, PluginRuntime};
 
@@ -55,7 +55,7 @@ impl PluginRuntime for LinkPlugin {
     }
 }
 
-fn transform_link_tag(rich_text: &mut DocRichText) {
+fn transform_link_tag(rich_text: &mut DocRichTextBlock) {
     if rich_text
         .tag
         .as_ref()
@@ -89,7 +89,7 @@ mod test {
 
     #[test]
     fn test_ignore_no_tag() {
-        let mut text = DocRichText::text("hello world");
+        let mut text = DocRichTextBlock::text("hello world");
         let expected = text.clone();
         transform_link_tag(&mut text);
         assert_eq!(expected, text);
@@ -97,7 +97,7 @@ mod test {
 
     #[test]
     fn test_ignore_link() {
-        let mut text = DocRichText {
+        let mut text = DocRichTextBlock {
             tag: Some("link".to_string()),
             text: "hello world".to_string(),
             link: Some("https://example.com".to_string()),
@@ -109,7 +109,7 @@ mod test {
 
     #[test]
     fn test_ignore_non_link_tag() {
-        let mut text = DocRichText {
+        let mut text = DocRichTextBlock {
             tag: Some("test".to_string()),
             text: "hello world".to_string(),
             link: None,
@@ -121,7 +121,7 @@ mod test {
 
     #[test]
     fn test_transform_link_tag() {
-        let mut text = DocRichText {
+        let mut text = DocRichTextBlock {
             tag: Some(prop::LINK.to_string()),
             text: "hello world".to_string(),
             link: None,
@@ -129,7 +129,7 @@ mod test {
         transform_link_tag(&mut text);
         assert_eq!(
             text,
-            DocRichText {
+            DocRichTextBlock {
                 tag: Some(prop::LINK.to_string()),
                 text: "hello world".to_string(),
                 link: Some("hello world".to_string()),
@@ -139,7 +139,7 @@ mod test {
 
     #[test]
     fn test_transform_link_tag_with_text() {
-        let mut text = DocRichText {
+        let mut text = DocRichTextBlock {
             tag: Some(prop::LINK.to_string()),
             text: "[hello world] i am link".to_string(),
             link: None,
@@ -147,7 +147,7 @@ mod test {
         transform_link_tag(&mut text);
         assert_eq!(
             text,
-            DocRichText {
+            DocRichTextBlock {
                 tag: Some(prop::LINK.to_string()),
                 text: "hello world".to_string(),
                 // link should be trimmed
@@ -158,7 +158,7 @@ mod test {
 
     #[test]
     fn test_transform_partial_bracket() {
-        let mut text = DocRichText {
+        let mut text = DocRichTextBlock {
             tag: Some(prop::LINK.to_string()),
             text: "[hello world i am link".to_string(),
             link: None,
@@ -166,14 +166,14 @@ mod test {
         transform_link_tag(&mut text);
         assert_eq!(
             text,
-            DocRichText {
+            DocRichTextBlock {
                 tag: Some(prop::LINK.to_string()),
                 text: "[hello world i am link".to_string(),
                 link: Some("[hello world i am link".to_string()),
             }
         );
 
-        let mut text = DocRichText {
+        let mut text = DocRichTextBlock {
             tag: Some(prop::LINK.to_string()),
             text: "abc[hello world] i am link".to_string(),
             link: None,
@@ -181,14 +181,14 @@ mod test {
         transform_link_tag(&mut text);
         assert_eq!(
             text,
-            DocRichText {
+            DocRichTextBlock {
                 tag: Some(prop::LINK.to_string()),
                 text: "abc[hello world] i am link".to_string(),
                 link: Some("abc[hello world] i am link".to_string()),
             }
         );
 
-        let mut text = DocRichText {
+        let mut text = DocRichTextBlock {
             tag: Some(prop::LINK.to_string()),
             text: "abchello world] i am link".to_string(),
             link: None,
@@ -196,7 +196,7 @@ mod test {
         transform_link_tag(&mut text);
         assert_eq!(
             text,
-            DocRichText {
+            DocRichTextBlock {
                 tag: Some(prop::LINK.to_string()),
                 text: "abchello world] i am link".to_string(),
                 link: Some("abchello world] i am link".to_string()),

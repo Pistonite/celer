@@ -46,7 +46,7 @@ pub struct ExecDoc<'a> {
     /// Project metadata
     pub project: Cow<'a, RouteMetadata>,
     /// The preface
-    pub preface: Vec<Vec<DocRichText>>,
+    pub preface: Vec<DocRichText>,
     /// The route
     pub route: Vec<ExecSection>,
     /// Overall diagnostics (that don't apply to any line)
@@ -187,7 +187,7 @@ pub struct ExecLine {
     /// Line index in section
     pub index: usize,
     /// Primary text content of the line
-    pub text: Vec<DocRichText>,
+    pub text: DocRichText,
     /// Line color
     pub line_color: String,
     /// Corresponding map coordinates
@@ -198,15 +198,17 @@ pub struct ExecLine {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
     /// Secondary text to show below the primary text
-    pub secondary_text: Vec<DocRichText>,
+    pub secondary_text: DocRichText,
     /// Counter text to display
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub counter_text: Option<DocRichText>,
+    pub counter_text: Option<DocRichTextBlock>,
     /// The notes
     pub notes: Vec<DocNote>,
     /// The split name, if different from text
     #[serde(skip_serializing_if = "Option::is_none")]
     pub split_name: Option<String>,
+    /// If the line text is a banner
+    pub is_banner: bool,
 }
 
 /// Diagnostic message
@@ -215,7 +217,7 @@ pub struct ExecLine {
 #[serde(rename_all = "camelCase")]
 pub struct DocDiagnostic {
     /// The diagnostic message
-    pub msg: Vec<DocPoorText>,
+    pub msg: DocPoorText,
     /// Type of the diagnostic
     ///
     /// The builtin ones are "error" and "warn", but this can be any value.
@@ -228,11 +230,18 @@ pub struct DocDiagnostic {
     pub source: String,
 }
 
-/// Document rich text type
+/// Document rich text
+///
+/// This is a collection of [`DocRichTextBlock`]s
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm(feature = "wasm")]
+pub struct DocRichText(pub Vec<DocRichTextBlock>);
+
+/// Document rich text block
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm(feature = "wasm")]
 #[serde(rename_all = "camelCase")]
-pub struct DocRichText {
+pub struct DocRichTextBlock {
     /// The tag name of the text
     ///
     /// Each block only contains one tag
@@ -245,7 +254,7 @@ pub struct DocRichText {
     pub link: Option<String>,
 }
 
-impl DocRichText {
+impl DocRichTextBlock {
     /// Create a rich text block with no tag
     pub fn text(text: &str) -> Self {
         Self {
@@ -265,11 +274,18 @@ impl DocRichText {
     }
 }
 
-/// Document poor text type. Just text or link
+/// Document poor text
+///
+/// This is a collection of [`DocPoorTextBlock`]s
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm(feature = "wasm")]
+pub struct DocPoorText(pub Vec<DocPoorTextBlock>);
+
+/// Document poor text block. Just text or link
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm(feature = "wasm")]
 #[serde(tag = "type", content = "data", rename_all = "camelCase")]
-pub enum DocPoorText {
+pub enum DocPoorTextBlock {
     Text(String),
     Link(String),
 }
@@ -279,7 +295,7 @@ pub enum DocPoorText {
 #[derive_wasm(feature = "wasm")]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum DocNote {
-    Text { content: Vec<DocRichText> },
+    Text { content: DocRichText },
     Image { link: String },
     Video { link: String },
 }

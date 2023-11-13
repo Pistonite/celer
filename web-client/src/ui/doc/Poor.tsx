@@ -2,12 +2,12 @@
 
 import { Text, TextProps } from "@fluentui/react-components";
 
-import { DocPoorText } from "low/celerc";
+import { DocPoorText, DocPoorTextBlock } from "low/celerc";
 
 /// Poor text display component
 type PoorProps = {
     /// The text to display
-    content: DocPoorText[];
+    content: DocPoorText;
     /// Size of the text
     textProps: TextProps;
 };
@@ -26,7 +26,7 @@ export const Poor: React.FC<PoorProps> = ({ content, textProps }) => {
 };
 
 /// Internal rich text display component
-type PoorBlockProps = DocPoorText & {
+type PoorBlockProps = DocPoorTextBlock & {
     textProps: TextProps;
 };
 

@@ -15,7 +15,7 @@ use super::{CompError, CompLine, CompSection, Compiler};
 #[serde(rename_all = "camelCase")]
 pub struct CompDoc {
     /// The preface
-    pub preface: Vec<Vec<DocRichText>>,
+    pub preface: Vec<DocRichText>,
     /// The route
     pub route: Vec<CompSection>,
     /// Overall diagnostics (that don't apply to any line)
@@ -58,7 +58,7 @@ impl<'a> Compiler<'a> {
 
     async fn add_section_or_preface(
         &mut self,
-        preface: &mut Vec<Vec<DocRichText>>,
+        preface: &mut Vec<DocRichText>,
         route: &mut Vec<CompSection>,
         value: PackerValue,
     ) -> Result<(), CompError> {

@@ -1,10 +1,10 @@
 use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
-use crate::types::DocRichText;
+use crate::types::{DocRichText, DocRichTextBlock};
 
 use super::grammar::{self, pt};
 
-pub fn parse_rich(s: &str) -> Vec<DocRichText> {
+pub fn parse_rich(s: &str) -> DocRichText {
     let lex_output = grammar::tokenize(s);
     let mut ts = TokenStream::new(&lex_output.tokens, 16);
     let asts = match grammar::Parser.parse_ast_all(&mut ts) {
@@ -20,15 +20,15 @@ pub fn parse_rich(s: &str) -> Vec<DocRichText> {
             }
         })
         .collect::<Vec<_>>();
-    from_pts(&pts)
+    DocRichText(from_pts(&pts))
 }
 
-fn from_pts(pt: &[pt::Block]) -> Vec<DocRichText> {
+fn from_pts(pt: &[pt::Block]) -> Vec<DocRichTextBlock> {
     let mut out = vec![];
     for pt in pt {
         match pt {
             pt::Block::Text(pt_text) => match out.last_mut() {
-                Some(DocRichText {
+                Some(DocRichTextBlock {
                     tag: None,
                     ref mut text,
                     ..
@@ -42,7 +42,7 @@ fn from_pts(pt: &[pt::Block]) -> Vec<DocRichText> {
                     for pt_unit in pt_text.m_t.iter() {
                         append_unit_to_string(pt_unit, &mut text);
                     }
-                    out.push(DocRichText {
+                    out.push(DocRichTextBlock {
                         tag: None,
                         text,
                         link: None,
@@ -53,13 +53,13 @@ fn from_pts(pt: &[pt::Block]) -> Vec<DocRichText> {
                 out.push(parse_tagexp(pt_tagexp));
             }
             pt::Block::Symbol(pt_symbol) => match out.last_mut() {
-                Some(DocRichText {
+                Some(DocRichTextBlock {
                     tag: None, text, ..
                 }) => {
                     text.push_str(&pt_symbol.m_t);
                 }
                 _ => {
-                    out.push(DocRichText {
+                    out.push(DocRichTextBlock {
                         tag: None,
                         text: pt_symbol.m_t.to_string(),
                         link: None,
@@ -67,13 +67,13 @@ fn from_pts(pt: &[pt::Block]) -> Vec<DocRichText> {
                 }
             },
             pt::Block::Space(pt_space) => match out.last_mut() {
-                Some(DocRichText {
+                Some(DocRichTextBlock {
                     tag: None, text, ..
                 }) => {
                     text.push_str(&pt_space.m_t);
                 }
                 _ => {
-                    out.push(DocRichText {
+                    out.push(DocRichTextBlock {
                         tag: None,
                         text: pt_space.m_t.to_string(),
                         link: None,
@@ -86,7 +86,7 @@ fn from_pts(pt: &[pt::Block]) -> Vec<DocRichText> {
 }
 
 /// Parse tree hook for TagExp
-fn parse_tagexp(pt: &pt::TagExp) -> DocRichText {
+fn parse_tagexp(pt: &pt::TagExp) -> DocRichTextBlock {
     let tag = pt.m_tag.to_string();
     let mut arg = String::new();
     if let Some(str) = &pt.m_space {
@@ -95,7 +95,7 @@ fn parse_tagexp(pt: &pt::TagExp) -> DocRichText {
     for pt_unit in pt.m_arg.iter() {
         append_unit_inside_tag_to_string(pt_unit, &mut arg);
     }
-    DocRichText {
+    DocRichTextBlock {
         tag: Some(tag),
         text: arg,
         link: None,
@@ -144,26 +144,26 @@ mod test {
 
     #[test]
     fn test_empty() {
-        assert_eq!(parse_rich(""), vec![]);
+        assert_eq!(parse_rich(""), DocRichText(vec![]));
     }
 
     #[test]
     fn test_words() {
         assert_eq!(
             parse_rich("hello"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: None,
                 text: "hello".to_string(),
                 link: None,
-            }]
+            }])
         );
         assert_eq!(
             parse_rich("hello world"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: None,
                 text: "hello world".to_string(),
                 link: None,
-            }]
+            }])
         );
     }
 
@@ -171,26 +171,26 @@ mod test {
     fn test_tags() {
         assert_eq!(
             parse_rich(".tag(hello)"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: Some("tag".to_string()),
                 text: "hello".to_string(),
                 link: None,
-            },]
+            }])
         );
         assert_eq!(
             parse_rich(".tag(hello).tag2-zzz(world foo bar)"),
-            vec![
-                DocRichText {
+            DocRichText(vec![
+                DocRichTextBlock {
                     tag: Some("tag".to_string()),
                     text: "hello".to_string(),
                     link: None,
                 },
-                DocRichText {
+                DocRichTextBlock {
                     tag: Some("tag2-zzz".to_string()),
                     text: "world foo bar".to_string(),
                     link: None,
                 }
-            ]
+            ])
         );
     }
 
@@ -198,18 +198,18 @@ mod test {
     fn test_empty_tagged_string() {
         assert_eq!(
             parse_rich("something.tag()"),
-            vec![
-                DocRichText {
+            DocRichText(vec![
+                DocRichTextBlock {
                     tag: None,
                     text: "something".to_string(),
                     link: None
                 },
-                DocRichText {
+                DocRichTextBlock {
                     tag: Some("tag".to_string()),
                     text: "".to_string(),
                     link: None
                 }
-            ]
+            ])
         );
     }
 
@@ -217,19 +217,19 @@ mod test {
     fn test_non_tags() {
         assert_eq!(
             parse_rich("this is a normal sentence. this is normal"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: None,
                 text: "this is a normal sentence. this is normal".to_string(),
                 link: None
-            }]
+            }])
         );
         assert_eq!(
             parse_rich("this is a (normal sentence). this (is) normal"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: None,
                 text: "this is a (normal sentence). this (is) normal".to_string(),
                 link: None
-            }]
+            }])
         );
     }
 
@@ -237,35 +237,35 @@ mod test {
     fn test_escape() {
         assert_eq!(
             parse_rich("\\.tag(hello)"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: None,
                 text: ".tag(hello)".to_string(),
                 link: None
-            }]
+            }])
         );
         assert_eq!(
             parse_rich(".tag(hello\\) continue)"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: Some("tag".to_string()),
                 text: "hello) continue".to_string(),
                 link: None
-            }]
+            }])
         );
         assert_eq!(
             parse_rich(".tag(hello\\continue)"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: Some("tag".to_string()),
                 text: "hello\\continue".to_string(),
                 link: None
-            }]
+            }])
         );
         assert_eq!(
             parse_rich(".\\\\tag(hellocontinue)"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: None,
                 text: ".\\tag(hellocontinue)".to_string(),
                 link: None
-            }]
+            }])
         );
     }
 
@@ -273,11 +273,11 @@ mod test {
     fn test_dot_in_text() {
         assert_eq!(
             parse_rich(".tag([hello]continue.me)"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: Some("tag".to_string()),
                 text: "[hello]continue.me".to_string(),
                 link: None
-            }]
+            }])
         );
     }
 
@@ -285,11 +285,11 @@ mod test {
     fn test_open_paren_in_text() {
         assert_eq!(
             parse_rich(".tag([hello]co(ntinue.me)"),
-            vec![DocRichText {
+            DocRichText(vec![DocRichTextBlock {
                 tag: Some("tag".to_string()),
                 text: "[hello]co(ntinue.me".to_string(),
                 link: None
-            }]
+            }])
         );
     }
 }
