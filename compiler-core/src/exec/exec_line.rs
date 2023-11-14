@@ -84,7 +84,7 @@ impl CompLine {
 
         let split_name = self.split_name.map(|x| x.to_string());
         ExecLine {
-            is_banner: false, //self.text.starts_with("(==)"),
+            is_banner: self.text.starts_with("(==)"),
             section: section_number,
             index: line_number,
             text: self.text,

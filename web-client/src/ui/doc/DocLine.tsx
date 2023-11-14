@@ -16,6 +16,7 @@ import {
 } from "./utils";
 import { Poor } from "./Poor";
 import { updateNotePositions } from "./updateNotePositions";
+import { BannerTextWidthClass, BannerWidthClass } from "./updateBannerWidths";
 
 /// One line in the document
 type DocLineProps = {
@@ -37,6 +38,8 @@ type DocLineProps = {
     counterType?: string;
     /// Diagnostic messages
     diagnostics: DocDiagnostic[];
+    /// If the line is a banner
+    isBanner: boolean;
 };
 
 export const DocLine: React.FC<DocLineProps> = ({
@@ -49,6 +52,7 @@ export const DocLine: React.FC<DocLineProps> = ({
     counterText,
     counterType,
     diagnostics,
+    isBanner,
 }) => {
     const { setDocLocation } = useActions(viewActions);
     return (
@@ -59,7 +63,10 @@ export const DocLine: React.FC<DocLineProps> = ({
         >
             <div className="docline-main">
                 <div
-                    className={clsx("docline-head")}
+                                        className={clsx(
+                                            "docline-head",
+                                            iconUrl && "docline-icon-text",
+                                        )}
                     style={{
                         borderColor: lineColor,
                     }}
@@ -88,38 +95,43 @@ export const DocLine: React.FC<DocLineProps> = ({
                         </div>
                     )}
                 </div>
-                <div
-                    className={clsx(
-                        "docline-body",
-                        counterType && `docline-body-${counterType}`,
-                    )}
-                >
-                    {iconUrl && (
-                        <div className="docline-icon-container">
-                            <img src={iconUrl} alt="icon" />
-                        </div>
-                    )}
-                    <div className="docline-text-container">
-                        <div
-                            className={clsx(
-                                "docline-primary-text",
-                                iconUrl && "docline-icon-text",
-                            )}
-                        >
-                            <Rich size={500} content={text} />
-                        </div>
-                        {secondaryText.length > 0 && (
+                {
                             <div
                                 className={clsx(
-                                    "docline-secondary-text",
-                                    iconUrl && "docline-icon-text",
+                                    "docline-body",
+                                    counterType && `docline-body-${counterType}`,
+                            isBanner && BannerWidthClass,
                                 )}
                             >
-                                <Rich size={400} content={secondaryText} />
+                                {iconUrl && (
+                                    <div className="docline-icon-container">
+                                        <img src={iconUrl} alt="icon" />
+                                    </div>
+                                )}
+                                {
+                                    <div className={clsx("docline-text-container", isBanner && BannerTextWidthClass)}>
+                                        <div
+                                            className={clsx(
+                                                "docline-primary-text",
+                                                iconUrl && "docline-icon-text",
+                                            )}
+                                        >
+                                            <Rich size={500} content={text} />
+                                        </div>
+                                        {secondaryText.length > 0 && (
+                                            <div
+                                                className={clsx(
+                                                    "docline-secondary-text",
+                                                    iconUrl && "docline-icon-text",
+                                                )}
+                                            >
+                                                <Rich size={400} content={secondaryText} />
+                                            </div>
+                                        )}
+                                    </div>
+                                }
                             </div>
-                        )}
-                    </div>
-                </div>
+                }
             </div>
             {diagnostics.map(({ msg, type, source }, i) => (
                 <div className="docline-diagnostic" key={i}>

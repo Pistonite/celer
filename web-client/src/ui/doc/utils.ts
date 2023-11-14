@@ -12,7 +12,7 @@ export const DocScrollId = "doc-scroll";
 /// The id of the container of doc view
 export const DocContainerId = "doc-container";
 /// The id of the container of main doc content (excluding preface)
-export const DocContentContainerId = "doc-content-container";
+export const DocContentContainerId = "doccontent-container";
 /// Class for the doc line container
 export const DocLineContainerClass = "docline-container";
 
@@ -101,19 +101,8 @@ export const RichTextClassName = "rich-text";
 
 /// Update the styles/classes for rich tags
 export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
-    let styleTag = document.querySelector('style[data-inject="rich-text"');
-    if (!styleTag) {
-        DocLog.info("creating rich text css...");
-        styleTag = document.createElement("style");
-        styleTag.setAttribute("data-inject", "rich-text");
-        const head = document.querySelector("head");
-        if (!head) {
-            DocLog.error("cannot find `head`");
-            return;
-        }
-        head.appendChild(styleTag);
-    }
-    (styleTag as HTMLStyleElement).innerText = Object.entries(tags)
+    const styleTag = getInjectedStyleTag("rich-text");
+    styleTag.innerText = Object.entries(tags)
         .map(([tag, data]) => {
             let css = `.${getTagClassName(tag)}{`;
             if (data.bold) {
@@ -143,6 +132,23 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
         .join("");
     DocLog.info("rich test css updated.");
 };
+
+/// Get or inject a style tag with the id. The id sets the "data-inject" attribute
+export const getInjectedStyleTag = (id: string): HTMLStyleElement => {
+    let styleTag = document.querySelector(`style[data-inject="${id}"`);
+    if (!styleTag) {
+        DocLog.info(`creating injected ${id} tag...`);
+        styleTag = document.createElement("style");
+        styleTag.setAttribute("data-inject", id);
+        const head = document.querySelector("head");
+        if (!head) {
+            DocLog.error("cannot find `head`");
+        } else {
+            head.appendChild(styleTag);
+        }
+    }
+    return styleTag as HTMLStyleElement;
+}
 
 const createCssStringForColor = (color: DocColor, type: "fg" | "bg") => {
     if (typeof color === "string") {

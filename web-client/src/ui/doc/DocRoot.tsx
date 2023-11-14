@@ -128,6 +128,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                         counterType={
                                             line.counterText?.tag || undefined
                                         }
+                                        isBanner={line.isBanner}
                                     />
                                 ))}
                             </DocSection>

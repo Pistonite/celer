@@ -30,6 +30,7 @@ import {
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
 import { updateNotePositions } from "./updateNotePositions";
+import { updateBannerWidths } from "./updateBannerWidths";
 
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
@@ -137,6 +138,7 @@ export class DocController {
 
     /// Update the view after scrolling
     private onScrollUpdate() {
+        updateBannerWidths();
         const view = viewSelector(this.store.getState());
         const scrollView = getScrollView();
         if (!scrollView) {
