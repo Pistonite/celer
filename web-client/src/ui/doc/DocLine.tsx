@@ -16,7 +16,7 @@ import {
 } from "./utils";
 import { Poor } from "./Poor";
 import { updateNotePositions } from "./updateNotePositions";
-import { BannerTextWidthClass, BannerWidthClass } from "./updateBannerWidths";
+import { BannerTextWidthClass, BannerTextWithIconWidthClass, BannerWidthClass, SectionBannerWidthClass } from "./updateBannerWidths";
 
 /// One line in the document
 type DocLineProps = {
@@ -101,6 +101,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                                     "docline-body",
                                     counterType && `docline-body-${counterType}`,
                             isBanner && BannerWidthClass,
+                            isBanner && "docline-banner"
                                 )}
                             >
                                 {iconUrl && (
@@ -109,7 +110,12 @@ export const DocLine: React.FC<DocLineProps> = ({
                                     </div>
                                 )}
                                 {
-                                    <div className={clsx("docline-text-container", isBanner && BannerTextWidthClass)}>
+                                    <div className={clsx(
+                                "docline-text-container", 
+                                isBanner && !iconUrl && BannerTextWidthClass,
+                                isBanner && iconUrl && BannerTextWithIconWidthClass
+                            )
+                            }>
                                         <div
                                             className={clsx(
                                                 "docline-primary-text",
@@ -134,7 +140,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                 }
             </div>
             {diagnostics.map(({ msg, type, source }, i) => (
-                <div className="docline-diagnostic" key={i}>
+                <div className={clsx("docline-diagnostic", SectionBannerWidthClass)} key={i}>
                     <div
                         className={clsx(
                             "docline-diagnostic-head",

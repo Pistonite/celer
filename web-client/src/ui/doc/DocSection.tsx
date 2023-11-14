@@ -1,5 +1,8 @@
+import clsx from "clsx";
 import { PropsWithChildren } from "react";
 import { Text } from "@fluentui/react-components";
+
+import { SectionBannerWidthClass } from "./updateBannerWidths";
 
 /// Component for one section in the document
 type DocSectionProps = {
@@ -16,7 +19,7 @@ export const DocSection: React.FC<PropsWithChildren<DocSectionProps>> = ({
 }) => {
     return (
         <div className="docsection-container" data-section={index}>
-            <div className="docsection-head">
+            <div className={clsx("docsection-head", SectionBannerWidthClass)}>
                 <Text size={700}>{name || "\u00a0"}</Text>
             </div>
             <div className="docsection-body">{children}</div>
