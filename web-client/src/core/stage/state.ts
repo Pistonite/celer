@@ -9,6 +9,7 @@ export type StageViewState = {
     alertOkButton: string;
     alertCancelButton: string;
     settingsTab: SettingsTab;
+    isResizingWindow: boolean;
 };
 
 export type StageMode = "view" | "edit";
@@ -23,4 +24,5 @@ export const initialStageViewState: StageViewState = {
     alertOkButton: "",
     alertCancelButton: "",
     settingsTab: "doc",
+    isResizingWindow: false,
 };

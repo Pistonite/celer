@@ -148,7 +148,7 @@ export const getInjectedStyleTag = (id: string): HTMLStyleElement => {
         }
     }
     return styleTag as HTMLStyleElement;
-}
+};
 
 const createCssStringForColor = (color: DocColor, type: "fg" | "bg") => {
     if (typeof color === "string") {

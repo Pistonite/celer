@@ -1,35 +1,31 @@
 //! Reducers for stage view state
 
-import { ReducerDecl, ReducerDeclWithPayload, withPayload } from "low/store";
+import { ReducerDecl, withPayload } from "low/store";
 
 import { SettingsTab, StageMode, StageViewState } from "./state";
 
-export const setStageMode: ReducerDeclWithPayload<StageViewState, StageMode> =
-    withPayload((state: StageViewState, mode: "view" | "edit") => {
+export const setStageMode = withPayload<StageViewState, StageMode>(
+    (state, mode) => {
         state.stageMode = mode;
-    });
+    },
+);
 
-export const setSettingsTab: ReducerDeclWithPayload<
-    StageViewState,
-    SettingsTab
-> = withPayload((state: StageViewState, tab: SettingsTab) => {
-    state.settingsTab = tab;
-});
+export const setSettingsTab = withPayload<StageViewState, SettingsTab>(
+    (state, tab) => {
+        state.settingsTab = tab;
+    },
+);
 
-export const setAlert: ReducerDeclWithPayload<
-    StageViewState,
-    {
-        title: string;
-        text: string;
-        learnMore: string;
-        okButton: string;
-        cancelButton: string;
-    }
-> = withPayload(
-    (
-        state: StageViewState,
-        { title, text, learnMore: link, okButton, cancelButton },
-    ) => {
+export type AlertPayload = {
+    title: string;
+    text: string;
+    learnMore: string;
+    okButton: string;
+    cancelButton: string;
+};
+
+export const setAlert = withPayload<StageViewState, AlertPayload>(
+    (state, { title, text, learnMore: link, okButton, cancelButton }) => {
         state.alertTitle = title;
         state.alertText = text;
         state.alertLearnMoreLink = link;
@@ -38,10 +34,14 @@ export const setAlert: ReducerDeclWithPayload<
     },
 );
 
-export const clearAlert: ReducerDecl<StageViewState> = (
-    state: StageViewState,
-) => {
+export const clearAlert: ReducerDecl<StageViewState> = (state) => {
     state.alertText = "";
     state.alertOkButton = "";
     state.alertCancelButton = "";
 };
+
+export const setIsResizingWindow = withPayload<StageViewState, boolean>(
+    (state, isResizingWindow) => {
+        state.isResizingWindow = isResizingWindow;
+    },
+);

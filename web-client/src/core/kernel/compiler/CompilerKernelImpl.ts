@@ -234,7 +234,9 @@ export class CompilerKernelImpl implements CompilerKernel {
     ///
     /// Returns OK with the entry path if it is valid (or empty). Otherwise,
     /// attempts to fix the entry path and returns Err to skip the compilation
-    private async validateEntryPath(): Promise<Result<string | undefined, undefined>> {
+    private async validateEntryPath(): Promise<
+        Result<string | undefined, undefined>
+    > {
         if (!this.fileAccess) {
             return allocErr(undefined);
         }

@@ -8,14 +8,12 @@ export type DocBannerBlockProps = {
     lineIndex: number;
     /// The note blocks to display
     content: DocRichText;
-}
+};
 
-export const DocBannerBlock: React.FC<DocBannerBlockProps> = ({
-    content
-}) => {
+export const DocBannerBlock: React.FC<DocBannerBlockProps> = ({ content }) => {
     return (
         <div className="docbanner-container">
             <Rich size={500} content={content} />
         </div>
     );
-}
+};

@@ -24,10 +24,15 @@ export type DocSettingsState = {
     theme: string;
     /// Set map view to fit doc when scrolled
     syncMapToDoc: boolean;
+
+    /// Hide the document when resizing UI
+    hideDocWhenResizing: boolean;
+
     /// Remember doc position on close
     rememberDocPosition: boolean;
     /// Always display notes as popup
     forcePopupNotes: boolean;
+
     /// Per-doc settings
     ///
     /// The key is the name of the document
@@ -66,6 +71,7 @@ export type PerDocSettings = {
 export const initialDocSettingsState: DocSettingsState = {
     theme: "default",
     syncMapToDoc: true,
+    hideDocWhenResizing: true,
     rememberDocPosition: true,
     forcePopupNotes: false,
     prevLineKey: ["Alt", "ArrowUp"],

@@ -16,6 +16,7 @@ import type { FileSys, FsResult } from "low/fs";
 import type { CompilerKernel } from "./compiler";
 import type { EditorKernel } from "./editor";
 import { KeyMgr } from "./KeyMgr";
+import { WindowMgr } from "./WindowMgr";
 
 type InitUiFunction = (
     kernel: Kernel,
@@ -129,9 +130,14 @@ export class Kernel {
         const keyMgr = new KeyMgr(this.store);
         const unlistenKeyMgr = keyMgr.listen();
 
+        // window handlers
+        const windowMgr = new WindowMgr(this.store);
+        const unlistenWindowMgr = windowMgr.listen();
+
         this.cleanupUi = () => {
             unmountReact();
             unlistenKeyMgr();
+            unlistenWindowMgr();
         };
     }
 
