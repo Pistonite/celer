@@ -34,15 +34,6 @@ export const updateNotePositions = async (
     }
 
     const baseIndex = findBaseNoteIndex(noteContainer.children, baseLine);
-
-    // if (baseIndex >= 0 && baseIndex < noteContainer.children.length) {
-    //     // no notes to layout
-    //     return;
-    // }
-
-    // // Cancel the previous async updates
-    // updateNotesSerial += 1;
-    
     const containerOffsetY = getScrollContainerOffsetY(DocContentContainerId);
 
     // Layout the base note
@@ -67,19 +58,15 @@ export const updateNotePositions = async (
             for (let i = baseIndex - 1; i >= 0; i--) {
                 const noteBlock = noteContainer.children[i] as HTMLElement;
                 if (!noteBlock) {
-                    // index out of bound
-                    DocLog.warn(`update note position called with invalid index ${i}`);
                     return;
                 }
 
                 // preferably, anchor the note to the line it is at if possible:
-                const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
-                const lineElement = findLineByIndex(sectionIndex, lineIndex);
-                if (!lineElement) {
-                    DocLog.warn(`cannot find line when updating note position: ${sectionIndex}-${lineIndex}`);
+                const preferredTop = getPreferredTop(noteBlock, containerOffsetY);
+                if (!preferredTop) {
                     return;
                 }
-                const preferredTop = lineElement.getBoundingClientRect().y - containerOffsetY;
+
                 const [top, splitIndex] = takeSpaceInIntervals(intervalsBefore, preferredTop, noteBlock.clientHeight);
                 setNotePosition(noteBlock, top);
                 const didYield = await yielder();
@@ -101,21 +88,15 @@ export const updateNotePositions = async (
             for (let i = baseIndex + 1; i < noteContainer.children.length; i++) {
                 const noteBlock = noteContainer.children[i] as HTMLElement;
                 if (!noteBlock) {
-                    DocLog.warn(`update note position called with invalid index ${i}`);
                     return;
                 }
                 // preferably, anchor the note to the line it is at if possible:
-                const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
-                const lineElement = findLineByIndex(sectionIndex, lineIndex);
-                if (!lineElement) {
-                    DocLog.warn(`cannot find line when updating note position: ${sectionIndex}-${lineIndex}`);
+                const preferredTop = getPreferredTop(noteBlock, containerOffsetY);
+                if (!preferredTop) {
                     return;
                 }
 
-                    const preferredTop =
-                        lineElement.getBoundingClientRect().y - containerOffsetY;
                 const [top, splitIndex] = takeSpaceInIntervals(intervalsAfter, preferredTop, noteBlock.clientHeight);
-
                 setNotePosition(noteBlock, top);
                 const didYield = await yielder();
                 if (didYield) {
@@ -135,6 +116,52 @@ export const updateNotePositions = async (
 
     DocLog.info("finished updating note positions");
 };
+
+/// Layout notes always anchored to the line element they are for
+export const updateNotePositionsAnchored = async (
+    // Callback to check if the update should be cancelled
+    shouldCancel: () => boolean,
+): Promise<void> => {
+    DocLog.info("updating note positions (anchored)...");
+    const noteContainer = document.getElementById(DocNoteContainerId);
+    if (!noteContainer || noteContainer.children.length === 0) {
+        // no notes to layout
+        return;
+    }
+    const containerOffsetY = getScrollContainerOffsetY(DocContentContainerId);
+    const yielder = createYielder(64);
+    for (let i = 0; i < noteContainer.children.length; i++) {
+        const noteBlock = noteContainer.children[i] as HTMLElement;
+        if (!noteBlock) {
+            return;
+        }
+        const top = getPreferredTop(noteBlock, containerOffsetY);
+        if (!top) {
+            return;
+        }
+        setNotePosition(noteBlock, top);
+        const didYield = await yielder();
+        if (didYield) {
+            if (shouldCancel()) {
+                return;
+            }
+        }
+    }
+};
+
+/// Get the preferred top position of the note block
+///
+/// The preferred top is where the line is at in the main panel
+const getPreferredTop = (noteBlock: HTMLElement, containerOffsetY: number): number | undefined => {
+    // preferably, anchor the note to the line it is at if possible:
+    const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
+    const lineElement = findLineByIndex(sectionIndex, lineIndex);
+    if (!lineElement) {
+        DocLog.warn(`cannot find line when updating note position: ${sectionIndex}-${lineIndex}`);
+        return undefined;
+    }
+    return lineElement.getBoundingClientRect().y - containerOffsetY;
+}
 
 /// Helper for setting the position of a note block
 ///

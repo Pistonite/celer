@@ -33,9 +33,9 @@ export const setRememberDocPosition = withPayload<DocSettingsState, boolean>(
     },
 );
 
-export const setForcePopupNotes = withPayload<DocSettingsState, boolean>(
+export const setForceAnchorNotes = withPayload<DocSettingsState, boolean>(
     (state, value) => {
-        state.forcePopupNotes = value;
+        state.forceAnchorNotes = value;
     },
 );
 

@@ -28,10 +28,12 @@ export type DocSettingsState = {
     /// Hide the document when resizing UI
     hideDocWhenResizing: boolean;
 
+    /// Always anchor the notes to the line it is at
+    /// instead of letting it shift around
+    forceAnchorNotes: boolean;
+
     /// Remember doc position on close
     rememberDocPosition: boolean;
-    /// Always display notes as popup
-    forcePopupNotes: boolean;
 
     /// Per-doc settings
     ///
@@ -71,9 +73,9 @@ export type PerDocSettings = {
 export const initialDocSettingsState: DocSettingsState = {
     theme: "default",
     syncMapToDoc: true,
-    hideDocWhenResizing: true,
+    hideDocWhenResizing: false,
     rememberDocPosition: true,
-    forcePopupNotes: false,
+    forceAnchorNotes: false,
     prevLineKey: ["Alt", "ArrowUp"],
     nextLineKey: ["Alt", "ArrowDown"],
     prevSplitKey: ["PageUp"],

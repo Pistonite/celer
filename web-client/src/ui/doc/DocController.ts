@@ -31,7 +31,7 @@ import {
     updateDocTagsStyle,
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
-import { updateNotePositions } from "./updateNotePositions";
+import { updateNotePositions, updateNotePositionsAnchored } from "./updateNotePositions";
 import { updateBannerWidths } from "./updateBannerWidths";
 
 /// Storing doc state as window global because HMR will cause the doc to be recreated
@@ -357,10 +357,16 @@ export class DocController {
             scrollUpdated = setScrollView(currentLineTop);
         }
 
-        await updateNotePositions(newCurrentLine, () => {
+        const shouldCancel = () => {
             return this.isEventObsolete(eventId);
-        });
+        };
 
+        const { forceAnchorNotes } = settingsSelector(this.store.getState());
+        if (forceAnchorNotes) {
+            await updateNotePositionsAnchored(shouldCancel);
+        } else {
+            await updateNotePositions(newCurrentLine, shouldCancel);
+        }
         return scrollUpdated;
     }
 }
