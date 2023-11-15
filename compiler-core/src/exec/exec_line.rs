@@ -84,7 +84,7 @@ impl CompLine {
 
         let split_name = self.split_name.map(|x| x.to_string());
         ExecLine {
-            is_banner: self.text.starts_with("(==)"),
+            is_banner: self.is_banner,
             section: section_number,
             index: line_number,
             text: self.text,
@@ -229,6 +229,7 @@ mod test {
             secondary_text: test_secondary_text.clone(),
             counter_text: test_counter_text.clone(),
             notes: test_notes.clone(),
+            is_banner: true,
             ..Default::default()
         };
         let project = RouteMetadata {
@@ -247,6 +248,7 @@ mod test {
         assert_eq!(exec_line.secondary_text, test_secondary_text);
         assert_eq!(exec_line.counter_text, test_counter_text);
         assert_eq!(exec_line.notes, test_notes);
+        assert!(exec_line.is_banner);
     }
 
     #[test]

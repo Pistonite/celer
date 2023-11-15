@@ -24,6 +24,7 @@ export const initExternalEditor = (
 };
 
 class ExternalEditorKernel implements EditorKernel, FileAccess {
+    private deleted = false;
     private idleMgr: IdleMgr;
     private fs: FileSys;
     private lastCompiledTime = 0;
@@ -46,8 +47,11 @@ class ExternalEditorKernel implements EditorKernel, FileAccess {
 
     public delete(): void {
         EditorLog.info("deleting external editor");
-        // @ts-expect-error setting to undefined to make sure the editor is not double-deleted
-        window.__theEditorKernel = undefined;
+        if (this.deleted) {
+            EditorLog.warn("editor already deleted");
+            return;
+        }
+        this.deleted = true;
         this.idleMgr.stop();
     }
 

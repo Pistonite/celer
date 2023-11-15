@@ -4,6 +4,7 @@
 
 pub const AT: &str = "at";
 pub const ATTRIBUTION: &str = "attribution";
+pub const BANNER: &str = "banner";
 pub const COLOR: &str = "color";
 pub const COMMENT: &str = "comment";
 pub const CONFIG: &str = "config";

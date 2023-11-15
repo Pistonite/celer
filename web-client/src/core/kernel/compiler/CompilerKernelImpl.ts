@@ -152,26 +152,16 @@ export class CompilerKernelImpl implements CompilerKernel {
         // setting the needCompile flag to ensure this request is handled eventually
         this.needCompile = true;
 
-        // check if another compilation is running
-        // this is safe because there's no await between checking and setting (no other code can run)
-        if (this.compiling) {
-            CompilerLog.warn("compilation already in progress, skipping");
-            return;
-        }
-        this.compiling = true;
-
         if (!(await this.ensureReady())) {
             CompilerLog.warn(
                 "worker not ready after max waiting, skipping compile",
             );
-            this.compiling = false;
             return;
         }
 
         const validatedEntryPathResult = await this.validateEntryPath();
         if (validatedEntryPathResult.isErr()) {
             CompilerLog.warn("entry path is invalid, skipping compile");
-            this.compiling = false;
             return;
         }
         const validatedEntryPath = validatedEntryPathResult.inner();
@@ -180,6 +170,13 @@ export class CompilerKernelImpl implements CompilerKernel {
 
         // wait to let the UI update first
         await sleep(0);
+        // check if another compilation is running
+        // this is safe because there's no await between checking and setting (no other code can run)
+        if (this.compiling) {
+            CompilerLog.warn("compilation already in progress, skipping");
+            return;
+        }
+        this.compiling = true;
         while (this.needCompile) {
             // turn off the flag before compiling.
             // if anyone calls triggerCompile during compilation, it will be turned on again
@@ -257,6 +254,7 @@ export class CompilerKernelImpl implements CompilerKernel {
                 // update asynchronously to avoid infinite blocking loop
                 // updating the entry path will trigger another compile
                 await sleep(0);
+                CompilerLog.info(`set entry path to ${newEntryPath}`);
                 this.store.dispatch(
                     settingsActions.setCompilerEntryPath(newEntryPath),
                 );

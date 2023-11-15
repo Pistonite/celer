@@ -17,8 +17,12 @@ On the left of the main column is the "head" of the line. The head can have 3 fu
 
 ## Note Positions
 Each note block is meant for a specific line. Celer tries its best to display note blocks
-right next to the line it is supposed to be for. However, some note blocks are too long to make this possible.
-In this case, Celer will anchor the note block of the "current line" to the line in the main column. Any note blocks around it may be pushed up or down so they don't overlap.
+aligned to the line it is supposed to be for. When this causes overlap with other elements like
+other notes or section headers, the notes are free to shift around so they don't overlap.
+:::tip
+If this behavior is undesirable, you can make the notes always aligned to the main column lines
+in the document settings.
+:::
 
 If the window size is too small, the notes may be ellipsisized. You can hover on it (tap it for touch screen) to expand the notes.
 
