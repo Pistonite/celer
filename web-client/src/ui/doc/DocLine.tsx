@@ -11,16 +11,13 @@ import { useActions } from "low/store";
 import { Rich } from "./Rich";
 import {
     DocLineContainerClass,
-    findLineByIndex,
     getTagClassName,
 } from "./utils";
 import { Poor } from "./Poor";
-import { updateNotePositions } from "./updateNotePositions";
 import {
     BannerTextWidthClass,
     BannerTextWithIconWidthClass,
     BannerWidthClass,
-    SectionBannerWidthClass,
 } from "./updateBannerWidths";
 
 /// One line in the document
@@ -150,10 +147,7 @@ export const DocLine: React.FC<DocLineProps> = ({
             </div>
             {diagnostics.map(({ msg, type, source }, i) => (
                 <div
-                    className={clsx(
-                        "docline-diagnostic",
-                        SectionBannerWidthClass,
-                    )}
+                    className="docline-diagnostic"
                     key={i}
                 >
                     <div

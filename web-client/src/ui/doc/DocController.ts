@@ -5,6 +5,7 @@
 //! rerender when the view updates.
 
 import reduxWatch from "redux-watch";
+import isEqual from "is-equal";
 
 import {
     AppStore,
@@ -21,6 +22,7 @@ import {
     DocLog,
     DocScrollId,
     findLineByIndex,
+    findNoteByIndex,
     findSectionByIndex,
     getLineLocationFromElement,
     getLineScrollView,
@@ -31,7 +33,6 @@ import {
 import { findVisibleLines } from "./findVisibleLines";
 import { updateNotePositions } from "./updateNotePositions";
 import { updateBannerWidths } from "./updateBannerWidths";
-import isEqual from "is-equal";
 
 /// Storing doc state as window global because HMR will cause the doc to be recreated
 declare global {
@@ -58,6 +59,8 @@ export const initDocController = (store: AppStore): DocController => {
 
     return controller;
 };
+
+let nextNoteZIndex = 100;
 
 /// Controller class
 ///
@@ -259,6 +262,10 @@ export class DocController {
         if (lineElement) {
             lineElement.classList.remove(DocCurrentLineClass);
         }
+        const noteElement = findNoteByIndex(section, line);
+        if (noteElement) {
+            noteElement.classList.remove(DocCurrentLineClass);
+        }
     }
 
     /// Update after current line change
@@ -302,6 +309,11 @@ export class DocController {
                     retryCount++;
                 }
             }
+        }
+        const newCurrentNote = findNoteByIndex(newView.currentSection, newView.currentLine);
+        if (newCurrentNote) {
+            newCurrentNote.classList.add(DocCurrentLineClass);
+            newCurrentNote.style.zIndex = `${++nextNoteZIndex}`;
         }
 
         const scrollView = getScrollView();
