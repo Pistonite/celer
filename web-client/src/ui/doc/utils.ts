@@ -75,6 +75,15 @@ export const findLineByIndex = (
     return (e as HTMLElement) ?? undefined;
 };
 
+/// Find a note container element by its section and line indices
+export const findNoteByIndex = (
+    sectionIndex: number,
+    lineIndex: number,
+): HTMLElement | undefined => {
+    const e = document.querySelector(`.docnote-container[data-section="${sectionIndex}"][data-line="${lineIndex}"]`);
+    return (e as HTMLElement) ?? undefined;
+};
+
 /// Find a section container element by its section index
 export const findSectionByIndex = (
     sectionIndex: number,
@@ -130,7 +139,7 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
             return css + "}";
         })
         .join("");
-    DocLog.info("rich test css updated.");
+    DocLog.info("rich text css updated.");
 };
 
 /// Get or inject a style tag with the id. The id sets the "data-inject" attribute

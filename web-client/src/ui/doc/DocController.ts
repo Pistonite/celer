@@ -31,6 +31,7 @@ import {
 import { findVisibleLines } from "./findVisibleLines";
 import { updateNotePositions } from "./updateNotePositions";
 import { updateBannerWidths } from "./updateBannerWidths";
+import isEqual from "is-equal";
 
 /// Storing doc state as window global because HMR will cause the doc to be recreated
 declare global {
@@ -87,6 +88,8 @@ export class DocController {
                 const oldDocSerial = documentSelector(oldState).serial;
                 const newView = viewSelector(newState);
                 const oldView = viewSelector(oldState);
+                const newSettings = settingsSelector(newState);
+                const oldSettings = settingsSelector(oldState);
 
                 let needFullUpdate = false;
                 if (newDocSerial !== oldDocSerial) {
@@ -94,9 +97,6 @@ export class DocController {
                     if (newDoc.document) {
                         updateDocTagsStyle(newDoc.document.project.tags);
                         needFullUpdate = true;
-                        // setTimeout(() => {
-                        //     this.updateViewAsync(true);
-                        // }, 0);
                     }
                 }
                 if (!newView.isEditingLayout && newView.isEditingLayout !== oldView.isEditingLayout) {
@@ -104,6 +104,9 @@ export class DocController {
                     needFullUpdate = true;
                 } else if (!newView.isResizingWindow && newView.isResizingWindow !== oldView.isResizingWindow) {
                     // window is resized
+                    needFullUpdate = true;
+                } else if (!isEqual(newSettings, oldSettings)) {
+                    // settings has changed
                     needFullUpdate = true;
                 }
                 if (needFullUpdate) {
@@ -148,6 +151,7 @@ export class DocController {
     ///
     /// Triggered after layout or document change
     private async onFullUpdate() {
+        DocLog.info("fully updating document view...");
         const eventId = ++this.currentUpdateEventId;
         updateBannerWidths();
         await sleep(0);
@@ -341,7 +345,7 @@ export class DocController {
             scrollUpdated = setScrollView(currentLineTop);
         }
 
-        await updateNotePositions(newCurrentLine, [] /*TODO avoid banners*/, () => {
+        await updateNotePositions(newCurrentLine, () => {
             return this.isEventObsolete(eventId);
         });
 
