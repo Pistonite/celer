@@ -80,10 +80,6 @@ export const DocLine: React.FC<DocLineProps> = ({
                             section: sectionIndex,
                             line: lineIndex,
                         });
-                        const line = findLineByIndex(sectionIndex, lineIndex);
-                        if (line) {
-                            updateNotePositions(line);
-                        }
                     }}
                 >
                     {counterText && (

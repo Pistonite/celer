@@ -4,6 +4,7 @@
 //! is anchored to the line, while the above and below note blocks are attempted to be
 //! anchored to their corresponding lines, and pushed up/down if needed.
 
+import { createYielder } from "low/utils";
 import {
     DocLog,
     getLineLocationFromElement,
@@ -15,30 +16,34 @@ import {
 /// The id of the note panel
 export const DocNoteContainerId = "doc-side";
 
-/// Async note update position event serial
-///
-/// Used to cancel previous events
-let updateNotesSerial = 0;
-
-/// Async notes update speed (ms per note block)
-const NoteUpdateDelay = 10;
-
 /// Layout notes based on the given position
 ///
 /// If position not given, layout from the first note
-export const updateNotePositions = (baseLine: HTMLElement): void => {
+export const updateNotePositions = async (
+    // The base line element to layout the notes from
+    baseLine: HTMLElement,
+    // Position intervals the note blocks should avoid overlapping with
+    _avoidIntervals: number[][],
+    // Callback to check if the update should be cancelled
+    shouldCancel: () => boolean,
+): Promise<void> => {
+    DocLog.info("updating note positions...");
     const noteContainer = document.getElementById(DocNoteContainerId);
-    if (!noteContainer) {
+    if (!noteContainer || noteContainer.children.length === 0) {
+        // no notes to layout
         return;
     }
 
     const baseIndex = findBaseNoteIndex(noteContainer.children, baseLine);
-    if (baseIndex >= noteContainer.children.length) {
-        // no notes to layout
-        return;
-    }
-    // Cancel the previous async updates
-    updateNotesSerial += 1;
+
+    // if (baseIndex >= 0 && baseIndex < noteContainer.children.length) {
+    //     // no notes to layout
+    //     return;
+    // }
+
+    // // Cancel the previous async updates
+    // updateNotesSerial += 1;
+    
     const containerOffsetY = getScrollContainerOffsetY(DocContentContainerId);
 
     // Layout the base note
@@ -49,95 +54,89 @@ export const updateNotePositions = (baseLine: HTMLElement): void => {
         return;
     }
     const baseTop = lineElement.getBoundingClientRect().y - containerOffsetY;
-    setNotePostion(baseNoteBlock, baseTop);
+    setNotePosition(baseNoteBlock, baseTop);
 
-    // Layout block before it asynchronously with delay
-    const layoutNoteBeforeAsync = (
-        serial: number,
-        i: number,
-        top: number,
-    ): void => {
-        if (serial !== updateNotesSerial) {
-            // cancelled
-            return;
-        }
-        const noteBlock = noteContainer.children[i] as HTMLElement;
-        if (!noteBlock) {
-            DocLog.warn(`update note position called with invalid index ${i}`);
-            // index out of bound
-            return;
-        }
-        // The minimum top
-        top -= noteBlock.clientHeight;
-        // Get the line position so we can anchor the note to it
-        const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
-        const lineElement = findLineByIndex(sectionIndex, lineIndex);
-        if (lineElement) {
-            const lineTop =
-                lineElement.getBoundingClientRect().y - containerOffsetY;
-            top = Math.min(top, lineTop);
-        }
-        const changed = setNotePostion(noteBlock, top);
-        if (changed && i > 0) {
-            window.setTimeout(() => {
-                layoutNoteBeforeAsync(serial, i - 1, top);
-            }, NoteUpdateDelay);
-        } else {
-            DocLog.info(`finished updating note positions at ${i}`);
-        }
-    };
+    const yielder = createYielder(64);
+    const promises = [];
     if (baseIndex > 0) {
-        layoutNoteBeforeAsync(updateNotesSerial, baseIndex - 1, baseTop);
+        const update = async () => {
+            // Layout blocks before base note
+            let top = baseTop;
+            for (let i = baseIndex - 1; i >= 0; i--) {
+                const noteBlock = noteContainer.children[i] as HTMLElement;
+                if (!noteBlock) {
+                    // index out of bound
+                    DocLog.warn(`update note position called with invalid index ${i}`);
+                    return;
+                }
+                // The max. top this note can be at
+                top -= noteBlock.clientHeight;
+                // Get the line position so we can anchor the note to it
+                const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
+                const lineElement = findLineByIndex(sectionIndex, lineIndex);
+                if (lineElement) {
+                    const lineTop =
+                        lineElement.getBoundingClientRect().y - containerOffsetY;
+                    top = Math.min(top, lineTop);
+                }
+                const changed = setNotePosition(noteBlock, top);
+                if (!changed) {
+                    // If the note is not changed, then notes before it doesn't need to change either
+                    // (no longer true because of overlapping intervals may change)
+                    break;
+                }
+                const didYield = await yielder();
+                if (didYield) {
+                    if (shouldCancel()) {
+                        return;
+                    }
+                }
+            }
+        };
+        promises.push(update());
     }
 
-    // Layout block after it
-    const layoutNoteAfterAsync = (
-        serial: number,
-        i: number,
-        top: number,
-    ): void => {
-        if (serial !== updateNotesSerial) {
-            // cancelled
-            return;
-        }
-        const noteBlock = noteContainer.children[i] as HTMLElement;
-        if (!noteBlock) {
-            DocLog.warn(`update note position called with invalid index ${i}`);
-            return;
-        }
-        const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
-        const lineElement = findLineByIndex(sectionIndex, lineIndex);
-        if (lineElement) {
-            const lineTop =
-                lineElement.getBoundingClientRect().y - containerOffsetY;
-            top = Math.max(top, lineTop);
-        }
-        const changed = setNotePostion(noteBlock, top);
-        if (changed && i < noteContainer.children.length - 1) {
-            window.setTimeout(() => {
-                layoutNoteAfterAsync(
-                    serial,
-                    i + 1,
-                    top + noteBlock.clientHeight,
-                );
-            }, NoteUpdateDelay);
-        } else {
-            DocLog.info(`finished updating note positions at ${i}`);
-        }
-    };
     if (baseIndex < noteContainer.children.length - 1) {
-        layoutNoteAfterAsync(
-            updateNotesSerial,
-            baseIndex + 1,
-            baseTop + baseNoteBlock.clientHeight,
-        );
+        const update = async () => {
+            let top = baseTop + baseNoteBlock.clientHeight;
+            for (let i = baseIndex + 1; i < noteContainer.children.length; i++) {
+                const noteBlock = noteContainer.children[i] as HTMLElement;
+                if (!noteBlock) {
+                    DocLog.warn(`update note position called with invalid index ${i}`);
+                    return;
+                }
+                const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
+                const lineElement = findLineByIndex(sectionIndex, lineIndex);
+                if (lineElement) {
+                    const lineTop =
+                        lineElement.getBoundingClientRect().y - containerOffsetY;
+                    top = Math.max(top, lineTop);
+                }
+                const changed = setNotePosition(noteBlock, top);
+                if (!changed) {
+                    break;
+                } 
+                const didYield = await yielder();
+                if (didYield) {
+                    if (shouldCancel()) {
+                        return;
+                    }
+                }
+            }
+        };
+        promises.push(update());
     }
+
+    // Run updates above and below concurrently
+    await Promise.all(promises);
+
+    DocLog.info("finished updating note positions");
 };
 
 /// Helper for setting the position of a note block
 ///
 /// Return if the position is changed
-const setNotePostion = (noteBlock: HTMLElement, top: number): boolean => {
+const setNotePosition = (noteBlock: HTMLElement, top: number): boolean => {
     const newTop = `${top}px`;
     if (noteBlock.style.top === newTop) {
         return false;
@@ -156,6 +155,7 @@ const findBaseNoteIndex = (
 ): number => {
     // binary search for the note corresponding to the line
     // if the line doesn't have the note, return the next note
+    // if there's no next note, return the last note
     let lo = 0;
     let hi = noteBlocks.length - 1;
     const [baseSectionIndex, baseLineIndex] =
@@ -178,5 +178,5 @@ const findBaseNoteIndex = (
             break;
         }
     }
-    return lo;
+    return Math.min(lo, noteBlocks.length - 1);
 };

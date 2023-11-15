@@ -23,12 +23,21 @@ import { ThemeIds } from "low/themes.g";
 import { SettingsSection } from "./SettingsSection";
 
 export const DocSettings: React.FC = () => {
-    const { syncMapToDoc } = useSelector(settingsSelector);
-    const { setSyncMapToDoc } = useActions(settingsActions);
+    const { syncMapToDoc, hideDocWhenResizing } = useSelector(settingsSelector);
+    const { setSyncMapToDoc, setHideDocWhenResizing } = useActions(settingsActions);
     return (
         <>
             <SettingsSection title="Appearance">
                 <ThemeSelector />
+                <Field
+                    label="Hide document when resizing"
+                    hint="Automatically hide the document when resizing the window or editing layout, which reduces lag."
+                >
+                    <Switch
+                        checked={!!hideDocWhenResizing}
+                        onChange={(_, data) => setHideDocWhenResizing(data.checked)}
+                    />
+                </Field>
             </SettingsSection>
             <SettingsSection title="Keyboard control">
                 <Body1 block>

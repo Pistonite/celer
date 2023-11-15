@@ -37,12 +37,3 @@
         fill: #ffcc88;
     }
 }
-.blank-div-message {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    justify-content: center;
-    color: #888888;
-    width: 100%;
-    height: 100%;
-}

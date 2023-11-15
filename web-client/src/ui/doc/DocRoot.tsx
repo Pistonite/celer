@@ -32,9 +32,9 @@ export const DocRoot: React.FC = () => {
     if (!document) {
         if (stageMode === "edit" && !compileInProgress) {
             return (
-                <div className="blank-div-message">
-                    Doc will be shown here once a project is opened
-                </div>
+                <HintScreen>
+                    Document will be shown here once a project is opened
+                </HintScreen>
             );
         }
         return <LoadScreen color="yellow" />;
@@ -42,7 +42,7 @@ export const DocRoot: React.FC = () => {
 
     if (isEditingLayout) {
         // DOM resizing is expensive, so we don't want to do it while editing
-        return <HintScreen message="Document hidden while editing layout" />;
+        return <HintScreen> Document is hidden while editing layout</HintScreen>;
     }
     return (
         <ErrorBoundary>

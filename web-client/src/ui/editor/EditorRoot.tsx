@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { useSelector } from "react-redux";
 import { Body1 } from "@fluentui/react-components";
 
-import { ErrorBoundary } from "ui/shared";
+import { ErrorBoundary, HintScreen } from "ui/shared";
 import { settingsSelector, viewSelector } from "core/store";
 import { EditorKernel, Kernel, useKernel } from "core/kernel";
 
@@ -37,7 +37,7 @@ export const EditorRoot: React.FC = () => {
         return (
             <ErrorBoundary>
                 <div id={EditorRootId}>
-                    <div className="blank-div-message">
+                    <HintScreen>
                         <p>
                             Web editor is not available because you are using
                             the external editor workflow.
@@ -46,7 +46,7 @@ export const EditorRoot: React.FC = () => {
                             Switch to the default layout or a layout without the
                             editor to hide this widget.
                         </p>
-                    </div>
+                    </HintScreen>
                 </div>
             </ErrorBoundary>
         );
