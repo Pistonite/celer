@@ -286,16 +286,12 @@ impl<'a> Compiler<'a> {
                     prop::MARKERS.to_string(),
                 )),
             },
-            prop::BANNER => {
-                match value.try_coerce_to_bool() {
-                    Some(value) => output.is_banner = value,
-                    None => {
-                        errors.push(CompError::InvalidLinePropertyType(
-                            prop::BANNER.to_string(),
-                        ));
-                    }
+            prop::BANNER => match value.try_coerce_to_bool() {
+                Some(value) => output.is_banner = value,
+                None => {
+                    errors.push(CompError::InvalidLinePropertyType(prop::BANNER.to_string()));
                 }
-            }
+            },
             _ => {
                 output.properties.insert(key.to_string(), value);
             }

@@ -41,14 +41,6 @@
     container-type: size;
 }
 
-#docbanner-panel {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-}
-
 .docsection-head {
     box-sizing: border-box;
     padding: 16px 0px 16px 64px;
