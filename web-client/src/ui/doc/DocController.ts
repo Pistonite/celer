@@ -5,6 +5,7 @@
 //! rerender when the view updates.
 
 import reduxWatch from "redux-watch";
+import isEqual from "is-equal";
 
 import {
     AppStore,
@@ -13,7 +14,7 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { Debouncer } from "low/utils";
+import { Debouncer, sleep } from "low/utils";
 import { GameCoord } from "low/celerc";
 
 import {
@@ -21,6 +22,7 @@ import {
     DocLog,
     DocScrollId,
     findLineByIndex,
+    findNoteByIndex,
     findSectionByIndex,
     getLineLocationFromElement,
     getLineScrollView,
@@ -29,9 +31,13 @@ import {
     updateDocTagsStyle,
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
-import { updateNotePositions } from "./updateNotePositions";
+import {
+    updateNotePositions,
+    updateNotePositionsAnchored,
+} from "./updateNotePositions";
+import { updateBannerWidths } from "./updateBannerWidths";
 
-/// Storing map state as window global because HMR will cause the map to be recreated
+/// Storing doc state as window global because HMR will cause the doc to be recreated
 declare global {
     interface Window {
         __theDocController: DocController | null;
@@ -57,14 +63,17 @@ export const initDocController = (store: AppStore): DocController => {
     return controller;
 };
 
+let nextNoteZIndex = 100;
+
 /// Controller class
 ///
 /// The document DOM can call the controller to update the view.
 export class DocController {
     /// Reference to the app store
     private store: AppStore;
-    /// The update handle
-    private updateHandle: number | null = null;
+
+    /// The current update event id. Used for canceling previous async updates
+    private currentUpdateEventId = 0;
     /// Debouncer for updating the view
     private scrollUpdateDebouncer: Debouncer;
     /// Clean up function
@@ -79,27 +88,43 @@ export class DocController {
         // Subscribe to store updates
         const watchStore = reduxWatch(store.getState);
         const unwatchStore = store.subscribe(
-            watchStore((newState, oldState) => {
+            watchStore(async (newState, oldState) => {
                 const newDoc = documentSelector(newState);
                 const newDocSerial = newDoc.serial;
                 const oldDocSerial = documentSelector(oldState).serial;
                 const newView = viewSelector(newState);
                 const oldView = viewSelector(oldState);
+                const newSettings = settingsSelector(newState);
+                const oldSettings = settingsSelector(oldState);
+
+                let needFullUpdate = false;
                 if (newDocSerial !== oldDocSerial) {
-                    // Also update the rich text styles
+                    // Document update
                     if (newDoc.document) {
-                        // If document changed, reset the view
-                        // TODO: can load from local storage to pick up from where you left
-                        // store.dispatch(
-                        //     viewActions.setDocLocation({ section: 0, line: 0 }),
-                        // );
-                        // also update the current line and note positions, and trigger a scroll update
-                        // to layout the initial view
-                        setTimeout(() => {
-                            this.updateViewAsync(true);
-                        }, 0);
                         updateDocTagsStyle(newDoc.document.project.tags);
+                        needFullUpdate = true;
                     }
+                }
+                if (
+                    !newView.isEditingLayout &&
+                    newView.isEditingLayout !== oldView.isEditingLayout
+                ) {
+                    // layout has changed
+                    needFullUpdate = true;
+                } else if (
+                    !newView.isResizingWindow &&
+                    newView.isResizingWindow !== oldView.isResizingWindow
+                ) {
+                    // window is resized
+                    needFullUpdate = true;
+                } else if (!isEqual(newSettings, oldSettings)) {
+                    // settings has changed
+                    needFullUpdate = true;
+                }
+                if (needFullUpdate) {
+                    // Make sure UI finishes updating
+                    await sleep(0);
+                    await this.onFullUpdate();
                     return;
                 }
                 if (
@@ -113,9 +138,7 @@ export class DocController {
                     oldView.currentSection,
                     oldView.currentLine,
                 );
-                setTimeout(() => {
-                    this.updateViewAsync(false);
-                }, 0);
+                await this.onLocationUpdate();
             }),
         );
 
@@ -129,18 +152,59 @@ export class DocController {
         this.cleanup();
     }
 
-    /// Update after scrolling
+    /// Check if there is a newer update event and the current event should be cancelled.
+    ///
+    /// This should be checked after each async operation in an update
+    private isEventObsolete(eventId: number): boolean {
+        return eventId !== this.currentUpdateEventId;
+    }
+
+    /// Completely update the document view
+    ///
+    /// Triggered after layout or document change
+    private async onFullUpdate() {
+        DocLog.info("fully updating document view...");
+        const eventId = ++this.currentUpdateEventId;
+        updateBannerWidths();
+        await sleep(0);
+        if (this.isEventObsolete(eventId)) {
+            return;
+        }
+        const scrollUpdated = await this.onLocationUpdateInternal(eventId);
+        if (this.isEventObsolete(eventId)) {
+            return;
+        }
+        if (!scrollUpdated) {
+            // for full update, if the scroll wasn't updated, manually updated it
+            await this.onScrollUpdateInternal(eventId);
+        }
+    }
+
+    /// Called when the scroll changes, which handles the event through a debouncer
     public onScroll() {
-        // if the current line is not visible, re-get the current line
         this.scrollUpdateDebouncer.dispatch();
     }
 
-    /// Update the view after scrolling
     private onScrollUpdate() {
+        return this.onScrollUpdateInternal(++this.currentUpdateEventId);
+    }
+
+    private onLocationUpdate() {
+        return this.onLocationUpdateInternal(++this.currentUpdateEventId);
+    }
+
+    /// Handle scroll change
+    ///
+    /// This updates the current line if it's no longer visible,
+    /// and also updates the map view if needed.
+    ///
+    /// Returns if current line was updated
+    private async onScrollUpdateInternal(_eventId: number): Promise<boolean> {
+        DocLog.info("updating document view after scroll...");
         const view = viewSelector(this.store.getState());
         const scrollView = getScrollView();
         if (!scrollView) {
-            return;
+            return false;
         }
 
         // see if we need to update the current line
@@ -170,17 +234,16 @@ export class DocController {
             visibleLines = findVisibleLines();
             if (visibleLines.length === 0) {
                 DocLog.warn("cannot find any visible lines");
-                return;
+                return false;
             }
             // make center line current
             const centerLine =
                 visibleLines[Math.floor(visibleLines.length / 2)];
             const [section, line] = getLineLocationFromElement(centerLine);
+            DocLog.info(
+                `current line not visible, updating to ${section}-${line}...`,
+            );
             this.store.dispatch(viewActions.setDocLocation({ section, line }));
-            updateNotePositions(centerLine);
-        } else {
-            // Update notes based on current line
-            updateNotePositions(currentLine as HTMLElement);
         }
 
         const { syncMapToDoc } = settingsSelector(this.store.getState());
@@ -201,6 +264,8 @@ export class DocController {
                 this.store.dispatch(viewActions.setMapView(coords));
             }
         }
+
+        return needUpdateCurrentLine;
     }
 
     private removeCurrentLineIndicator(section: number, line: number) {
@@ -208,47 +273,61 @@ export class DocController {
         if (lineElement) {
             lineElement.classList.remove(DocCurrentLineClass);
         }
+        const noteElement = findNoteByIndex(section, line);
+        if (noteElement) {
+            noteElement.classList.remove(DocCurrentLineClass);
+        }
     }
 
-    /// Update wrapper that retries until the view is updated
-    private updateViewAsync(forceScrollUpdate: boolean) {
-        if (this.updateHandle) {
-            // already trying
-            return;
-        }
-        if (this.onViewUpdate(forceScrollUpdate)) {
-            return;
-        }
-        DocLog.warn("Fail to update document view. Will retry in 1s");
-        this.updateHandle = window.setTimeout(() => {
-            this.updateHandle = null;
-            this.updateViewAsync(forceScrollUpdate);
-        }, 1000);
-    }
-
-    /// Update after store change
+    /// Update after current line change
     ///
-    /// For example, when current line position changes.
-    /// If forceScrollUpdate, will also call scroll update even if scroll didn't change.
-    private onViewUpdate(forceScrollUpdate: boolean): boolean {
+    /// This also updates the note positions.
+    /// Returns if the scroll was updated
+    private async onLocationUpdateInternal(eventId: number): Promise<boolean> {
         const newView = viewSelector(this.store.getState());
-        // update current line indicator
-        let newCurrentLine = findLineByIndex(
+        DocLog.info(
+            `updating document view to ${newView.currentSection}-${newView.currentLine}...`,
+        );
+
+        // find the current line element and update current line indicator
+        let newCurrentLine: HTMLElement | undefined = undefined;
+        let retryCount = 0;
+        const maxRetryCount = 10;
+        while (!newCurrentLine) {
+            newCurrentLine = findLineByIndex(
+                newView.currentSection,
+                newView.currentLine,
+            );
+            if (newCurrentLine) {
+                newCurrentLine.classList.add(DocCurrentLineClass);
+            } else {
+                // Try to scroll to the section instead if the line is not found
+                newCurrentLine = findSectionByIndex(newView.currentSection);
+                if (!newCurrentLine) {
+                    if (retryCount < maxRetryCount) {
+                        DocLog.warn(
+                            `cannot find current section: section=${newView.currentSection}. Will retry in 1s.`,
+                        );
+                    } else if (retryCount === maxRetryCount) {
+                        DocLog.warn(
+                            `cannot find current line after max retries. Further warnings will be suppressed.`,
+                        );
+                    }
+                    await sleep(1000);
+                    if (this.isEventObsolete(eventId)) {
+                        return false;
+                    }
+                    retryCount++;
+                }
+            }
+        }
+        const newCurrentNote = findNoteByIndex(
             newView.currentSection,
             newView.currentLine,
         );
-        if (newCurrentLine) {
-            newCurrentLine.classList.add(DocCurrentLineClass);
-        }
-        if (!newCurrentLine) {
-            // Try to scroll to the section instead if the line is not found
-            newCurrentLine = findSectionByIndex(newView.currentSection);
-            if (!newCurrentLine) {
-                DocLog.warn(
-                    `cannot find current line: section=${newView.currentSection}, line=${newView.currentLine}`,
-                );
-                return false;
-            }
+        if (newCurrentNote) {
+            newCurrentNote.classList.add(DocCurrentLineClass);
+            newCurrentNote.style.zIndex = `${++nextNoteZIndex}`;
         }
 
         const scrollView = getScrollView();
@@ -265,45 +344,58 @@ export class DocController {
         const scrollViewHeight = scrollBottom - scrollTop;
         const currentLineHeight = currentLineBottom - currentLineTop;
         const scrollEdgeSize = getScrollEdgeSize();
+
         // There are 3 modes:
         // 1. current height < scroll view height - edge size: scroll edge if needed
         // 2. current height < scroll view height: scroll to middle
         // 3. current height >= scroll view height: scroll to top
+
+        let scrollUpdated = false;
         if (currentLineHeight < scrollViewHeight - scrollEdgeSize) {
             if (currentLineTop < scrollTop + scrollEdgeSize) {
                 const newScrollTop = currentLineTop - scrollEdgeSize;
-                setScrollView(newScrollTop);
+                scrollUpdated = setScrollView(newScrollTop);
             } else if (
                 currentLineTop + currentLineHeight >
                 scrollBottom - scrollEdgeSize
             ) {
                 const newScrollTop =
                     currentLineBottom + scrollEdgeSize - scrollViewHeight;
-                setScrollView(newScrollTop);
+                scrollUpdated = setScrollView(newScrollTop);
             }
         } else if (currentLineHeight < scrollViewHeight) {
             const edge = (scrollViewHeight - currentLineHeight) / 2;
             const newScrollTop = currentLineTop - edge;
-            setScrollView(newScrollTop);
+            scrollUpdated = setScrollView(newScrollTop);
         } else {
-            setScrollView(currentLineTop);
+            scrollUpdated = setScrollView(currentLineTop);
         }
 
-        if (forceScrollUpdate) {
-            this.scrollUpdateDebouncer.dispatch();
-        }
+        const shouldCancel = () => {
+            return this.isEventObsolete(eventId);
+        };
 
-        return true;
+        const { forceAnchorNotes } = settingsSelector(this.store.getState());
+        if (forceAnchorNotes) {
+            await updateNotePositionsAnchored(shouldCancel);
+        } else {
+            await updateNotePositions(newCurrentLine, shouldCancel);
+        }
+        return scrollUpdated;
     }
 }
 
 /// Set the scroll
-const setScrollView = (scrollTop: number) => {
+const setScrollView = (scrollTop: number): boolean => {
     const scrollElement = document.getElementById(DocScrollId);
     if (!scrollElement) {
-        return;
+        return false;
     }
-    scrollElement.scrollTop = scrollTop;
+    if (scrollElement.scrollTop !== scrollTop) {
+        scrollElement.scrollTop = scrollTop;
+        return true;
+    }
+    return false;
 };
 
 /// Get the scroll edge size

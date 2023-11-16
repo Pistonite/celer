@@ -1,10 +1,11 @@
 # Customizing Lines
 You can add extra properties to the line by specifying it in the following format:
 ```yaml
-- Get the weapon:
-    comment: In a chest
-    icon: chest
-    notes: Under the rock
+- Example Section:
+  - Get the weapon:
+      comment: In a chest
+      icon: chest
+      notes: Under the rock
 ```
 Here, `Get the weapon` is the primary text of the line. The mapping under it
 contains the customization for `comment`, `icon` and `notes`.
@@ -20,9 +21,11 @@ The following properties are used for text customization:
 
 Example:
 ```yaml
-- Do the thing:
-    comment: .!!(be fast)
+- Example Section:
+  - Do the thing:
+      comment: be fast
 ```
+![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174487919004766228/image.png?ex=6567c61c&is=6555511c&hm=1bbc08280e7609f8ca2d0d942bd60d67256b0530954dc15c00e3a13c6fa12ac1&)
 
 ## Notes
 The `notes` property can be used for adding notes that appear on the side.
@@ -34,13 +37,48 @@ You can also specify an array instead of a single note.
 
 Example:
 ```yaml
-- One Note:
-    notes: bala bala
-- Many Notes:
-    notes:
-    - if you can't do it you can do the backup
-    - if you fail the backup you can do the other backup
+- Example Section:
+  - One Note:
+      notes: bala bala
+  - Many Notes:
+      notes:
+      - if you can't do it you can do the backup
+      - if you fail the backup you can do the other backup
 ```
+![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174488604505034822/image.png?ex=6567c6c0&is=655551c0&hm=d584cd5bb6a5fafbf1546361b4cd05169ecffd6e53e59584dfa88f4ca8ab569b&)
+
+## Banner
+You can use the `banner` property to make a line extend to cover the notes panel
+|Property|Type|Description|
+|-|-|-|
+|`banner`|`true` or `false`|Make a line a banner|
+
+Example:
+```yaml
+- Example Section:
+  - This is a normal line
+  - This is a banner line:
+      banner: true
+
+  # if the banner text is really long, you can
+  # specify the content with the `text` property
+  # so you can break it up in to multiple lines without escaping
+
+  - banner: # "banner" here is a placeholder text
+      text: Once there was a young artist who struggled
+            to find inspiration in her small town. One 
+            day, she discovered a hidden garden filled 
+            with vibrant flowers and singing birds.
+            Inspired, she began painting the garden, 
+            capturing its beauty and essence. As she shared 
+            her art, it brought joy and color to the lives
+            of people in her town. This recognition
+            encouraged her to pursue her dreams, reminding
+            her that inspiration can be found in the simplest of places.
+      banner: true
+```
+![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174493787196756038/image.png?ex=6567cb93&is=65555693&hm=f1ca333826bacffe7a823b77086618208e451ca19242bca4ccf025c4abdbe47e&)
+
 
 ## Counter
 This property can be used to customize the counter block.
@@ -119,11 +157,13 @@ You can temporarily override the color on the map by using the `color` property 
 
 Examples:
 ```yaml
-- Change to red:
-    color: red
-- Change to orange:
-    color: "#ff8800"
+- Example Section:
+  - Change to red:
+      color: red
+  - Change to orange:
+      color: "#ff8800"
 ```
+![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174490425344675871/image.png?ex=6567c872&is=65555372&hm=8d8f58a26b518217d28d2df46b1bee57af95a8bf19688afb7d0fd6b8315d4cb6&)
 
 ## Markers
 Use the `markers` property to add circular markers.

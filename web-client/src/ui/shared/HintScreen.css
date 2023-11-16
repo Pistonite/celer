@@ -1,8 +1,14 @@
 div.hint-container {
-    background-color: #555;
+    color: #888888;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100%;
+    width: 100%;
+    text-align: center;
+}
+
+div.hint-container span {
+    text-align: center;
 }

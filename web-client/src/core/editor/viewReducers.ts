@@ -1,77 +1,72 @@
-import { ReducerDecl, ReducerDeclWithPayload, withPayload } from "low/store";
+import { ReducerDecl, withPayload } from "low/store";
 import { EditorViewState } from "./state";
 
-export const updateFileSys: ReducerDeclWithPayload<
-    EditorViewState,
-    string | undefined
-> = withPayload((state: EditorViewState, rootPath) => {
-    state.rootPath = rootPath;
-    state.serial++;
-});
+export const updateFileSys = withPayload<EditorViewState, string | undefined>(
+    (state, rootPath) => {
+        state.rootPath = rootPath;
+        state.serial++;
+    },
+);
 
-export const incFileSysSerial: ReducerDecl<EditorViewState> = (
-    state: EditorViewState,
-) => {
+export const incFileSysSerial: ReducerDecl<EditorViewState> = (state) => {
     state.serial++;
 };
 
-export const updateOpenedFile: ReducerDeclWithPayload<
+export const updateOpenedFile = withPayload<
     EditorViewState,
     {
         openedFile: string | undefined;
         currentFileSupported: boolean;
     }
-> = withPayload(
-    (state: EditorViewState, { openedFile, currentFileSupported }) => {
-        state.openedFile = openedFile;
-        state.currentFileSupported = currentFileSupported;
-    },
-);
+>((state, { openedFile, currentFileSupported }) => {
+    state.openedFile = openedFile;
+    state.currentFileSupported = currentFileSupported;
+});
 
 export const startFileSysLoad: ReducerDecl<EditorViewState> = (state) => {
     state.loadInProgress = true;
     state.lastLoadError = false;
 };
 
-export const endFileSysLoad: ReducerDeclWithPayload<EditorViewState, boolean> =
-    withPayload((state: EditorViewState, success: boolean) => {
+export const endFileSysLoad = withPayload<EditorViewState, boolean>(
+    (state, success) => {
         state.loadInProgress = false;
         state.lastLoadError = !success;
-    });
+    },
+);
 
 export const startFileSysSave: ReducerDecl<EditorViewState> = (state) => {
     state.saveInProgress = true;
     state.lastSaveError = false;
 };
 
-export const endFileSysSave: ReducerDeclWithPayload<EditorViewState, boolean> =
-    withPayload((state: EditorViewState, success: boolean) => {
+export const endFileSysSave = withPayload<EditorViewState, boolean>(
+    (state, success) => {
         state.saveInProgress = false;
         state.lastSaveError = !success;
-    });
+    },
+);
 
-export const setUnsavedFiles: ReducerDeclWithPayload<
-    EditorViewState,
-    string[]
-> = withPayload((state: EditorViewState, unsavedFiles: string[]) => {
-    state.unsavedFiles = unsavedFiles;
-});
+export const setUnsavedFiles = withPayload<EditorViewState, string[]>(
+    (state, unsavedFiles) => {
+        state.unsavedFiles = unsavedFiles;
+    },
+);
 
-export const addUnsavedFile: ReducerDeclWithPayload<EditorViewState, string> =
-    withPayload((state: EditorViewState, unsavedFile: string) => {
+export const addUnsavedFile = withPayload<EditorViewState, string>(
+    (state, unsavedFile) => {
         state.unsavedFiles.push(unsavedFile);
-    });
+    },
+);
 
-export const setCompileInProgress: ReducerDeclWithPayload<
-    EditorViewState,
-    boolean
-> = withPayload((state: EditorViewState, compileInProgress: boolean) => {
-    state.compileInProgress = compileInProgress;
-});
+export const setCompileInProgress = withPayload<EditorViewState, boolean>(
+    (state, compileInProgress) => {
+        state.compileInProgress = compileInProgress;
+    },
+);
 
-export const setCompilerReady: ReducerDeclWithPayload<
-    EditorViewState,
-    boolean
-> = withPayload((state: EditorViewState, compilerReady: boolean) => {
-    state.compilerReady = compilerReady;
-});
+export const setCompilerReady = withPayload<EditorViewState, boolean>(
+    (state, compilerReady) => {
+        state.compilerReady = compilerReady;
+    },
+);

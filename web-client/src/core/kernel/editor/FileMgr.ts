@@ -75,7 +75,8 @@ export class FileMgr implements FileAccess {
     }
 
     public delete() {
-        this.fsLock.lockedScope(undefined, async () => {
+        this.fsLock.lockedScope(undefined, async (token) => {
+            this.updateEditor(undefined, undefined, undefined, token);
             this.monacoEditor.dispose();
         });
     }

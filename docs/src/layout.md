@@ -34,6 +34,12 @@ You cannot edit the default layout! Duplicate it first to edit the layout.
 You should now be in the layout editing mode. In this mode, each panel
 becomes a draggable and resizable widget. You can drag a widget to move it, or 
 drag on the lower-right resize handle to resize it.
+:::tip
+When a large document is loaded, editing the layout could be laggy.
+You can reduce the lag by hiding the document during editing. This option is in the <FluentIcon name="Document20Regular" />
+`Document` settings category.
+:::
+
 
 When finished editing, Click on <FluentIcon name="DataTreemap20Regular" /> `Layout` > <FluentIcon name="Save20Regular"/> `Finish`.
 

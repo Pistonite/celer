@@ -9,31 +9,33 @@ import {
     initialPerDocSettings,
 } from "./state";
 
-/// Set the document viewer theme
 export const setDocTheme = withPayload<DocSettingsState, string>(
     (state, theme) => {
         state.theme = theme;
     },
 );
 
-/// Set whether to sync map view to doc
 export const setSyncMapToDoc = withPayload<DocSettingsState, boolean>(
     (state, syncMapToDoc) => {
         state.syncMapToDoc = syncMapToDoc;
     },
 );
 
-/// Set whether position should be remembered on close
+export const setHideDocWhenResizing = withPayload<DocSettingsState, boolean>(
+    (state, value) => {
+        state.hideDocWhenResizing = value;
+    },
+);
+
 export const setRememberDocPosition = withPayload<DocSettingsState, boolean>(
     (state, value) => {
         state.rememberDocPosition = value;
     },
 );
 
-/// Set whether to force notes to be popups
-export const setForcePopupNotes = withPayload<DocSettingsState, boolean>(
+export const setForceAnchorNotes = withPayload<DocSettingsState, boolean>(
     (state, value) => {
-        state.forcePopupNotes = value;
+        state.forceAnchorNotes = value;
     },
 );
 

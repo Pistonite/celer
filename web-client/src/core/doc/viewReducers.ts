@@ -1,11 +1,11 @@
 //! Reducers for doc view state
 
-import { ReducerDeclWithPayload, withPayload } from "low/store";
+import { withPayload } from "low/store";
 
 import { DocViewState, KeyBindingName } from "./state";
 
 /// Set the current document location
-export const setDocLocation: ReducerDeclWithPayload<
+export const setDocLocation = withPayload<
     DocViewState,
     {
         /// Section index
@@ -13,17 +13,15 @@ export const setDocLocation: ReducerDeclWithPayload<
         /// Line index in the section
         line: number;
     }
-> = withPayload((state: DocViewState, { section, line }) => {
+>((state, { section, line }) => {
     state.currentSection = section;
     state.currentLine = line;
 });
 
 /// Set the current editing keybinding
-export const setEditingKeyBinding: ReducerDeclWithPayload<
+export const setEditingKeyBinding = withPayload<
     DocViewState,
     KeyBindingName | undefined
-> = withPayload(
-    (state: DocViewState, editingKeyBinding: KeyBindingName | undefined) => {
-        state.editingKeyBinding = editingKeyBinding;
-    },
-);
+>((state, editingKeyBinding) => {
+    state.editingKeyBinding = editingKeyBinding;
+});

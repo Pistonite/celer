@@ -5,7 +5,7 @@
     --note-min-width: 48px;
 }
 
-#doc-content-container {
+#doccontent-container {
     display: flex;
 }
 
@@ -13,6 +13,8 @@
     height: 100%;
     /* make document scrollable */
     overflow-y: auto;
+    /* Hide the horizontal scrollbar which could show during layout operations*/
+    overflow-x: hidden;
     /* smooth */
     scroll-behavior: smooth;
 }
@@ -41,9 +43,11 @@
 
 .docsection-head {
     box-sizing: border-box;
-    /* padding for section title */
     padding: 16px 0px 16px 64px;
-    height: 68px;
+}
+
+.docsection-head span {
+    word-wrap: break-word;
 }
 
 .docline-container {
@@ -89,25 +93,21 @@
     padding: 4px;
     flex-grow: 1;
     display: flex;
+    width: min(calc(100% - var(--note-min-width)) - 64px, 316px);
+}
+
+.docline-text-container {
+    width: 100%;
+}
+.docline-text-container.docline-icon-text {
+    width: calc(100% - 50px);
 }
 
 .docline-primary-text span {
     word-wrap: break-word;
 }
-.docline-primary-text {
-    width: 308px;
-}
-.docline-primary-text.docline-icon-text {
-    width: 258px;
-}
 .docline-secondary-text span {
     word-wrap: break-word;
-}
-.docline-secondary-text {
-    width: 308px;
-}
-.docline-secondary-text.docline-icon-text {
-    width: 258px;
 }
 
 .docline-icon-container {
@@ -129,6 +129,7 @@
     transition-duration: 0.1s;
     left: 0px;
     right: 0px;
+    box-sizing: border-box;
 }
 
 .docnote-container-expanded {

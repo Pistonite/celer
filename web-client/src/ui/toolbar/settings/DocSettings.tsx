@@ -23,12 +23,36 @@ import { ThemeIds } from "low/themes.g";
 import { SettingsSection } from "./SettingsSection";
 
 export const DocSettings: React.FC = () => {
-    const { syncMapToDoc } = useSelector(settingsSelector);
-    const { setSyncMapToDoc } = useActions(settingsActions);
+    const { syncMapToDoc, forceAnchorNotes, hideDocWhenResizing } =
+        useSelector(settingsSelector);
+    const { setSyncMapToDoc, setForceAnchorNotes, setHideDocWhenResizing } =
+        useActions(settingsActions);
     return (
         <>
             <SettingsSection title="Appearance">
                 <ThemeSelector />
+                <Field
+                    label="Hide document when editing layout"
+                    hint="Automatically hide the document when the layout is being edited, which reduces lag when moving things around."
+                >
+                    <Switch
+                        checked={!!hideDocWhenResizing}
+                        onChange={(_, data) =>
+                            setHideDocWhenResizing(data.checked)
+                        }
+                    />
+                </Field>
+                <Field
+                    label="Always anchor notes to corresponding line"
+                    hint="When disabled, notes are allowed to shift around to avoid overlapping. The note of the current line will always be brought to top when navigating the document."
+                >
+                    <Switch
+                        checked={!!forceAnchorNotes}
+                        onChange={(_, data) =>
+                            setForceAnchorNotes(data.checked)
+                        }
+                    />
+                </Field>
             </SettingsSection>
             <SettingsSection title="Keyboard control">
                 <Body1 block>

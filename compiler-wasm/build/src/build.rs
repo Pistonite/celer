@@ -91,7 +91,7 @@ fn build_wasm_pack_command(extra_args: &[&str]) -> Command {
 fn process_typescript() -> io::Result<()> {
     println!("generating typescript definitions");
     let path = Path::new(TEMP_OUTPUT_DIR).join("celercwasm.d.ts");
-    let d_ts = fs::read_to_string(&path)?;
+    let d_ts = fs::read_to_string(path)?;
     let d_ts = patch_d_ts(d_ts);
     let mut lines = d_ts.lines();
     let mut gen_lines = vec![];

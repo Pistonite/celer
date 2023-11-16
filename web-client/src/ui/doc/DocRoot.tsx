@@ -5,7 +5,12 @@ import React, { memo, useMemo } from "react";
 import { useSelector, useStore } from "react-redux";
 import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";
 import { ExecDoc } from "low/celerc";
-import { AppStore, documentSelector, viewSelector } from "core/store";
+import {
+    AppStore,
+    documentSelector,
+    settingsSelector,
+    viewSelector,
+} from "core/store";
 
 import { DocLine } from "./DocLine";
 import { DocSection } from "./DocSection";
@@ -28,21 +33,30 @@ export const DocRoot: React.FC = () => {
     const controller = useMemo(() => {
         return initDocController(store as AppStore);
     }, [store]);
+    const { hideDocWhenResizing } = useSelector(settingsSelector);
 
     if (!document) {
         if (stageMode === "edit" && !compileInProgress) {
             return (
-                <div className="blank-div-message">
-                    Doc will be shown here once a project is opened
-                </div>
+                <HintScreen>
+                    Document will be shown here once a project is opened
+                </HintScreen>
             );
         }
         return <LoadScreen color="yellow" />;
     }
 
-    if (isEditingLayout) {
+    if (isEditingLayout && hideDocWhenResizing) {
         // DOM resizing is expensive, so we don't want to do it while editing
-        return <HintScreen message="Document hidden while editing layout" />;
+        return (
+            <HintScreen>
+                <p>
+                    Document is set to be hidden while the layout is being
+                    edited.
+                </p>
+                <p>You can change this in the settings.</p>
+            </HintScreen>
+        );
     }
     return (
         <ErrorBoundary>
@@ -128,6 +142,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                         counterType={
                                             line.counterText?.tag || undefined
                                         }
+                                        isBanner={line.isBanner}
                                     />
                                 ))}
                             </DocSection>

@@ -45,6 +45,7 @@ export const initWebEditor = (
 };
 
 class WebEditorKernel implements EditorKernel {
+    private deleted = false;
     private store: AppStore;
 
     private idleMgr: IdleMgr;
@@ -115,9 +116,12 @@ class WebEditorKernel implements EditorKernel {
 
     public delete() {
         EditorLog.info("deleting web editor");
-        // @ts-expect-error setting to undefined to make sure the editor is not double-deleted
-        window.__theEditorKernel = undefined;
+        if (this.deleted) {
+            EditorLog.warn("editor already deleted");
+            return;
+        }
         this.cleanup();
+        this.deleted = true;
     }
 
     public notifyActivity(): void {

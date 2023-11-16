@@ -4,7 +4,7 @@ import "./Map.css";
 
 import { useEffect, useRef } from "react";
 import { useSelector, useStore } from "react-redux";
-import { ErrorBoundary, LoadScreen } from "ui/shared";
+import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";
 import { AppStore, documentSelector, viewSelector } from "core/store";
 
 import { MapState, initMap } from "./MapState";
@@ -32,16 +32,16 @@ export const MapRoot: React.FC = () => {
     if (!document) {
         if (stageMode === "edit" && !compileInProgress) {
             return (
-                <div className="blank-div-message">
+                <HintScreen>
                     Map will be shown here once a project is opened
-                </div>
+                </HintScreen>
             );
         }
         return <LoadScreen color="green" />;
     }
 
     if (document.project.map.layers.length <= 0) {
-        return <div className="blank-div-message">This map has no layers</div>;
+        return <HintScreen>This map has no layers</HintScreen>;
     }
 
     return (

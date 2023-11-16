@@ -46,6 +46,8 @@ pub struct CompLine {
     /// The split name, if different from text
     #[serde(skip_serializing_if = "Option::is_none")]
     pub split_name: Option<DocRichText>,
+    /// If the line is a banner
+    pub is_banner: bool,
     /// The rest of the properties as json blobs
     ///
     /// These are ignored by ExecDoc, but the plugins can use them
@@ -283,6 +285,12 @@ impl<'a> Compiler<'a> {
                 _ => errors.push(CompError::InvalidLinePropertyType(
                     prop::MARKERS.to_string(),
                 )),
+            },
+            prop::BANNER => match value.try_coerce_to_bool() {
+                Some(value) => output.is_banner = value,
+                None => {
+                    errors.push(CompError::InvalidLinePropertyType(prop::BANNER.to_string()));
+                }
             },
             _ => {
                 output.properties.insert(key.to_string(), value);
@@ -1383,6 +1391,53 @@ mod test {
                 properties: [("unused".to_string(), json!("property"))]
                     .into_iter()
                     .collect(),
+                ..Default::default()
+            },
+        );
+    }
+
+    #[test]
+    fn test_banner() {
+        let mut compiler = Compiler::default();
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "test": {
+                    "banner": "true"
+                }
+            }),
+            CompLine {
+                text: DocRichText::text("test"),
+                is_banner: true,
+                ..Default::default()
+            },
+        );
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "test": {
+                    "banner": true
+                }
+            }),
+            CompLine {
+                text: DocRichText::text("test"),
+                is_banner: true,
+                ..Default::default()
+            },
+        );
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "test": {
+                    "banner": false
+                }
+            }),
+            CompLine {
+                text: DocRichText::text("test"),
+                is_banner: false,
                 ..Default::default()
             },
         );
