@@ -9,10 +9,7 @@ import { DocDiagnostic, DocRichText, DocRichTextBlock } from "low/celerc";
 import { useActions } from "low/store";
 
 import { Rich } from "./Rich";
-import {
-    DocLineContainerClass,
-    getTagClassName,
-} from "./utils";
+import { DocLineContainerClass, getTagClassName } from "./utils";
 import { Poor } from "./Poor";
 import {
     BannerTextWidthClass,
@@ -146,10 +143,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                 }
             </div>
             {diagnostics.map(({ msg, type, source }, i) => (
-                <div
-                    className="docline-diagnostic"
-                    key={i}
-                >
+                <div className="docline-diagnostic" key={i}>
                     <div
                         className={clsx(
                             "docline-diagnostic-head",

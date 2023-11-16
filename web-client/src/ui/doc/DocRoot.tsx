@@ -5,7 +5,12 @@ import React, { memo, useMemo } from "react";
 import { useSelector, useStore } from "react-redux";
 import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";
 import { ExecDoc } from "low/celerc";
-import { AppStore, documentSelector, settingsSelector, viewSelector } from "core/store";
+import {
+    AppStore,
+    documentSelector,
+    settingsSelector,
+    viewSelector,
+} from "core/store";
 
 import { DocLine } from "./DocLine";
 import { DocSection } from "./DocSection";
@@ -46,11 +51,10 @@ export const DocRoot: React.FC = () => {
         return (
             <HintScreen>
                 <p>
-                    Document is set to be hidden while the layout is being edited.
+                    Document is set to be hidden while the layout is being
+                    edited.
                 </p>
-                <p>
-                    You can change this in the settings.
-                </p>
+                <p>You can change this in the settings.</p>
             </HintScreen>
         );
     }

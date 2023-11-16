@@ -31,7 +31,10 @@ import {
     updateDocTagsStyle,
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
-import { updateNotePositions, updateNotePositionsAnchored } from "./updateNotePositions";
+import {
+    updateNotePositions,
+    updateNotePositionsAnchored,
+} from "./updateNotePositions";
 import { updateBannerWidths } from "./updateBannerWidths";
 
 /// Storing doc state as window global because HMR will cause the doc to be recreated
@@ -68,7 +71,7 @@ let nextNoteZIndex = 100;
 export class DocController {
     /// Reference to the app store
     private store: AppStore;
-    
+
     /// The current update event id. Used for canceling previous async updates
     private currentUpdateEventId = 0;
     /// Debouncer for updating the view
@@ -102,10 +105,16 @@ export class DocController {
                         needFullUpdate = true;
                     }
                 }
-                if (!newView.isEditingLayout && newView.isEditingLayout !== oldView.isEditingLayout) {
+                if (
+                    !newView.isEditingLayout &&
+                    newView.isEditingLayout !== oldView.isEditingLayout
+                ) {
                     // layout has changed
                     needFullUpdate = true;
-                } else if (!newView.isResizingWindow && newView.isResizingWindow !== oldView.isResizingWindow) {
+                } else if (
+                    !newView.isResizingWindow &&
+                    newView.isResizingWindow !== oldView.isResizingWindow
+                ) {
                     // window is resized
                     needFullUpdate = true;
                 } else if (!isEqual(newSettings, oldSettings)) {
@@ -231,7 +240,9 @@ export class DocController {
             const centerLine =
                 visibleLines[Math.floor(visibleLines.length / 2)];
             const [section, line] = getLineLocationFromElement(centerLine);
-            DocLog.info(`current line not visible, updating to ${section}-${line}...`);
+            DocLog.info(
+                `current line not visible, updating to ${section}-${line}...`,
+            );
             this.store.dispatch(viewActions.setDocLocation({ section, line }));
         }
 
@@ -275,7 +286,7 @@ export class DocController {
     private async onLocationUpdateInternal(eventId: number): Promise<boolean> {
         const newView = viewSelector(this.store.getState());
         DocLog.info(
-            `updating document view to ${newView.currentSection}-${newView.currentLine}...`
+            `updating document view to ${newView.currentSection}-${newView.currentLine}...`,
         );
 
         // find the current line element and update current line indicator
@@ -310,7 +321,10 @@ export class DocController {
                 }
             }
         }
-        const newCurrentNote = findNoteByIndex(newView.currentSection, newView.currentLine);
+        const newCurrentNote = findNoteByIndex(
+            newView.currentSection,
+            newView.currentLine,
+        );
         if (newCurrentNote) {
             newCurrentNote.classList.add(DocCurrentLineClass);
             newCurrentNote.style.zIndex = `${++nextNoteZIndex}`;

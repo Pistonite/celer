@@ -80,7 +80,9 @@ export const findNoteByIndex = (
     sectionIndex: number,
     lineIndex: number,
 ): HTMLElement | undefined => {
-    const e = document.querySelector(`.docnote-container[data-section="${sectionIndex}"][data-line="${lineIndex}"]`);
+    const e = document.querySelector(
+        `.docnote-container[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
+    );
     return (e as HTMLElement) ?? undefined;
 };
 

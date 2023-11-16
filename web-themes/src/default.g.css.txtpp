@@ -94,8 +94,6 @@
 .docnote-container.doc-current-line {
     background-color: #a2c4c4;
 }
-#docpreface-container {
-}
 /* Use light colors for notes */
 .docnote-container span.rich-text, .docnote-container span.rich-text * {
 /*TXTPP#include shared/rich-text-light.css

@@ -43,9 +43,14 @@ export const updateNotePositions = async (
     if (!lineElement) {
         return;
     }
-    const basePreferredTop = lineElement.getBoundingClientRect().y - containerOffsetY;
+    const basePreferredTop =
+        lineElement.getBoundingClientRect().y - containerOffsetY;
     const baseHeight = baseNoteBlock.getBoundingClientRect().height;
-    const [baseTop, baseSplitIndex] = takeSpaceInIntervals(intervals, basePreferredTop, baseHeight);
+    const [baseTop, baseSplitIndex] = takeSpaceInIntervals(
+        intervals,
+        basePreferredTop,
+        baseHeight,
+    );
 
     setNotePosition(baseNoteBlock, baseTop);
 
@@ -62,12 +67,19 @@ export const updateNotePositions = async (
                 }
 
                 // preferably, anchor the note to the line it is at if possible:
-                const preferredTop = getPreferredTop(noteBlock, containerOffsetY);
+                const preferredTop = getPreferredTop(
+                    noteBlock,
+                    containerOffsetY,
+                );
                 if (!preferredTop) {
                     return;
                 }
 
-                const [top, splitIndex] = takeSpaceInIntervals(intervalsBefore, preferredTop, noteBlock.clientHeight);
+                const [top, splitIndex] = takeSpaceInIntervals(
+                    intervalsBefore,
+                    preferredTop,
+                    noteBlock.clientHeight,
+                );
                 setNotePosition(noteBlock, top);
                 const didYield = await yielder();
                 if (didYield) {
@@ -76,7 +88,10 @@ export const updateNotePositions = async (
                     }
                 }
                 // Remove the spaces after the note, since the next note must be above this note
-                intervalsBefore.splice(splitIndex, intervalsBefore.length - splitIndex);
+                intervalsBefore.splice(
+                    splitIndex,
+                    intervalsBefore.length - splitIndex,
+                );
             }
         };
         promises.push(update());
@@ -85,18 +100,29 @@ export const updateNotePositions = async (
     if (baseIndex < noteContainer.children.length - 1) {
         const update = async () => {
             const intervalsAfter = intervals.slice(baseSplitIndex);
-            for (let i = baseIndex + 1; i < noteContainer.children.length; i++) {
+            for (
+                let i = baseIndex + 1;
+                i < noteContainer.children.length;
+                i++
+            ) {
                 const noteBlock = noteContainer.children[i] as HTMLElement;
                 if (!noteBlock) {
                     return;
                 }
                 // preferably, anchor the note to the line it is at if possible:
-                const preferredTop = getPreferredTop(noteBlock, containerOffsetY);
+                const preferredTop = getPreferredTop(
+                    noteBlock,
+                    containerOffsetY,
+                );
                 if (!preferredTop) {
                     return;
                 }
 
-                const [top, splitIndex] = takeSpaceInIntervals(intervalsAfter, preferredTop, noteBlock.clientHeight);
+                const [top, splitIndex] = takeSpaceInIntervals(
+                    intervalsAfter,
+                    preferredTop,
+                    noteBlock.clientHeight,
+                );
                 setNotePosition(noteBlock, top);
                 const didYield = await yielder();
                 if (didYield) {
@@ -152,16 +178,21 @@ export const updateNotePositionsAnchored = async (
 /// Get the preferred top position of the note block
 ///
 /// The preferred top is where the line is at in the main panel
-const getPreferredTop = (noteBlock: HTMLElement, containerOffsetY: number): number | undefined => {
+const getPreferredTop = (
+    noteBlock: HTMLElement,
+    containerOffsetY: number,
+): number | undefined => {
     // preferably, anchor the note to the line it is at if possible:
     const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
     const lineElement = findLineByIndex(sectionIndex, lineIndex);
     if (!lineElement) {
-        DocLog.warn(`cannot find line when updating note position: ${sectionIndex}-${lineIndex}`);
+        DocLog.warn(
+            `cannot find line when updating note position: ${sectionIndex}-${lineIndex}`,
+        );
         return undefined;
     }
     return lineElement.getBoundingClientRect().y - containerOffsetY;
-}
+};
 
 /// Helper for setting the position of a note block
 ///
@@ -224,7 +255,7 @@ const findAvailableIntervals = (): Intervals => {
     document.querySelectorAll(".docline-banner").forEach(add);
 
     const end = document.getElementById(DocContentContainerId);
-    if(!end) {
+    if (!end) {
         return [];
     }
     const endRect = end.getBoundingClientRect();
@@ -250,9 +281,9 @@ const findAvailableIntervals = (): Intervals => {
     } else {
         intervals.push(endRect.height);
     }
-    
+
     return intervals;
-}
+};
 
 /// Find an available space in the intervals starting from preferredTop
 ///
@@ -262,7 +293,11 @@ const findAvailableIntervals = (): Intervals => {
 /// before the taken space and intervals[i..] are the intervals after the taken space. End indices are exclusive
 ///
 /// If there are not enough space in the intervals, space at preferredTop will be taken anyway
-const takeSpaceInIntervals = (intervals: Intervals, preferredTop: number, height: number): [number, number] => {
+const takeSpaceInIntervals = (
+    intervals: Intervals,
+    preferredTop: number,
+    height: number,
+): [number, number] => {
     const i = findInIntervals(preferredTop, intervals);
     const startIndex = i * 2;
     const endIndex = startIndex + 1;
@@ -277,9 +312,15 @@ const takeSpaceInIntervals = (intervals: Intervals, preferredTop: number, height
         spliceStartI = startIndex;
     } else {
         const nextAvailableStart = findNextAvailableSpaceBelow(
-            intervals, startFits?startIndex+2: startIndex, height);
+            intervals,
+            startFits ? startIndex + 2 : startIndex,
+            height,
+        );
         const previousAvailableEnd = findNextAvailableSpaceAbove(
-            intervals, startFits?startIndex + 1:startIndex-1, height);
+            intervals,
+            startFits ? startIndex + 1 : startIndex - 1,
+            height,
+        );
         if (nextAvailableStart === undefined) {
             if (previousAvailableEnd === undefined) {
                 // no available space, use preferred
@@ -297,9 +338,10 @@ const takeSpaceInIntervals = (intervals: Intervals, preferredTop: number, height
                 spliceStartI = nextAvailableStart;
             } else {
                 // both available space above and below, find the one with the least difference
-                const diffAbove = preferredTop - (intervals[previousAvailableEnd] - height);
+                const diffAbove =
+                    preferredTop - (intervals[previousAvailableEnd] - height);
                 const diffBelow = intervals[nextAvailableStart] - preferredTop;
-                if( diffAbove > diffBelow) {
+                if (diffAbove > diffBelow) {
                     top = intervals[nextAvailableStart];
                     spliceStartI = nextAvailableStart;
                 } else {
@@ -327,8 +369,11 @@ const takeSpaceInIntervals = (intervals: Intervals, preferredTop: number, height
         spliceStartI += 2;
     }
 
-    let spliceEndJ = spliceStartI+ 1;
-    while(spliceEndJ < intervals.length && intervals[spliceEndJ] <= top + remainingHeight) {
+    let spliceEndJ = spliceStartI + 1;
+    while (
+        spliceEndJ < intervals.length &&
+        intervals[spliceEndJ] <= top + remainingHeight
+    ) {
         spliceEndJ += 2;
     }
 
@@ -338,15 +383,14 @@ const takeSpaceInIntervals = (intervals: Intervals, preferredTop: number, height
         if (top + remainingHeight > intervals[spliceEndJ - 1]) {
             intervals[spliceEndJ - 1] = top + remainingHeight;
         }
-        intervals.splice(spliceStartI, spliceEndJ - 1- spliceStartI);
+        intervals.splice(spliceStartI, spliceEndJ - 1 - spliceStartI);
     }
 
     return [returnTop, spliceStartI];
-
-}
+};
 
 /// Find the index of the interval that contains y.
-/// 
+///
 /// If no intervals contain y, return the index of the interval after y
 ///
 /// For return value i, 2i is the start of the interval and 2i+1 is the end
@@ -359,40 +403,48 @@ const findInIntervals = (y: number, intervals: Intervals): number => {
         const end = intervals[mid * 2 + 1];
         if (end < y) {
             lo = mid + 1;
-        } else if (start > y){
+        } else if (start > y) {
             hi = mid - 1;
         } else {
             return mid;
         }
     }
     return lo;
-}
+};
 
 /// Find the previous interval that is at least height tall, starting from previousEndIndex
 ///
 /// Returns the index of the end of that interval, or undefined if no such interval exists
-const findNextAvailableSpaceAbove = (intervals: Intervals, previousEndIndex: number, height: number): number | undefined => {
+const findNextAvailableSpaceAbove = (
+    intervals: Intervals,
+    previousEndIndex: number,
+    height: number,
+): number | undefined => {
     for (let i = previousEndIndex; i > 0; i -= 2) {
-        const start = intervals[i-1];
+        const start = intervals[i - 1];
         const end = intervals[i];
         if (end - start >= height) {
             return i;
         }
     }
     return undefined;
-}
+};
 
 /// Find the next interval that is at least height tall, starting from nextStartIndex
 ///
 /// Returns the index of the start of that interval, or undefined if no such interval exists
-const findNextAvailableSpaceBelow = (intervals: Intervals, nextStartIndex: number, height: number): number | undefined=> {
+const findNextAvailableSpaceBelow = (
+    intervals: Intervals,
+    nextStartIndex: number,
+    height: number,
+): number | undefined => {
     // note: i is always even and intervals.length is always even, so i < intervals.length is fine even if we are accessing i+1
     for (let i = nextStartIndex; i < intervals.length; i += 2) {
         const start = intervals[i];
-        const end = intervals[i+1];
+        const end = intervals[i + 1];
         if (end - start >= height) {
             return i;
         }
     }
     return undefined;
-}
+};

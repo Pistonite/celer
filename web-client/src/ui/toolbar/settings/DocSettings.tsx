@@ -23,8 +23,10 @@ import { ThemeIds } from "low/themes.g";
 import { SettingsSection } from "./SettingsSection";
 
 export const DocSettings: React.FC = () => {
-    const { syncMapToDoc, forceAnchorNotes, hideDocWhenResizing } = useSelector(settingsSelector);
-    const { setSyncMapToDoc, setForceAnchorNotes, setHideDocWhenResizing } = useActions(settingsActions);
+    const { syncMapToDoc, forceAnchorNotes, hideDocWhenResizing } =
+        useSelector(settingsSelector);
+    const { setSyncMapToDoc, setForceAnchorNotes, setHideDocWhenResizing } =
+        useActions(settingsActions);
     return (
         <>
             <SettingsSection title="Appearance">
@@ -35,7 +37,9 @@ export const DocSettings: React.FC = () => {
                 >
                     <Switch
                         checked={!!hideDocWhenResizing}
-                        onChange={(_, data) => setHideDocWhenResizing(data.checked)}
+                        onChange={(_, data) =>
+                            setHideDocWhenResizing(data.checked)
+                        }
                     />
                 </Field>
                 <Field
@@ -44,7 +48,9 @@ export const DocSettings: React.FC = () => {
                 >
                     <Switch
                         checked={!!forceAnchorNotes}
-                        onChange={(_, data) => setForceAnchorNotes(data.checked)}
+                        onChange={(_, data) =>
+                            setForceAnchorNotes(data.checked)
+                        }
                     />
                 </Field>
             </SettingsSection>
