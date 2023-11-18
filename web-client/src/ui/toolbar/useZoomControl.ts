@@ -1,7 +1,7 @@
 //! Hook for controlling map zoom from react
 
 import { useSelector } from "react-redux";
-import { viewActions, viewSelector } from "core/store";
+import { documentSelector, viewActions, viewSelector } from "core/store";
 import { useActions } from "low/store";
 
 /// Zoom control hook
@@ -9,11 +9,16 @@ import { useActions } from "low/store";
 /// Returns a function that can be called to zoom in or out.
 /// Returns undefined if the zoom control should be disabled
 export const useZoomControl = (isZoomIn: boolean): (() => void) | undefined => {
+    const { document } = useSelector(documentSelector);
     const {
         currentMapView,
         currentZoomBounds: [min, max],
     } = useSelector(viewSelector);
     const { setMapZoom } = useActions(viewActions);
+    if (!document) {
+        // document is not loaded
+        return undefined;
+    }
 
     if (Array.isArray(currentMapView)) {
         // map is being adjusted, so zoom control should be disabled
