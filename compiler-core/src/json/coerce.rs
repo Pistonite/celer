@@ -27,6 +27,9 @@ pub trait Coerce {
     /// Interpret a number or string as u64
     fn try_coerce_to_u64(&self) -> Option<u64>;
 
+    /// Interpret a number or string as u32
+    fn try_coerce_to_u32(&self) -> Option<u32>;
+
     /// Interpret a number or string as i64
     fn try_coerce_to_i64(&self) -> Option<i64>;
 
@@ -84,6 +87,15 @@ impl Coerce for Value {
             Value::Number(n) => n.as_u64(),
             Value::String(s) => s.trim().parse::<u64>().ok(),
             _ => None,
+        }
+    }
+
+    fn try_coerce_to_u32(&self) -> Option<u32> {
+        let x = self.try_coerce_to_u64()?;
+        if x > u32::MAX as u64 {
+            None
+        } else {
+            Some(x as u32)
         }
     }
 

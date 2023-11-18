@@ -32,22 +32,22 @@ export const getHeaderControls = (
         // Doc Controls
         {
             priority: 40,
-            controls: [SelectSection],
+            controls: [SelectSection, ViewDiagnostics],
         },
         // Map Controls
         {
             priority: 20,
             controls: [SwitchMapLayer, ZoomIn, ZoomOut],
         },
-        // Diagnostic/editor
-        {
-            // make this section hide last in edit mode
-            priority: mode === "edit" ? 89 : 39,
-            controls: [
-                ViewDiagnostics,
-                ...(mode === "edit" ? getEditorControls(editorMode) : []),
-            ],
-        },
+        // Eitor
+        ...(mode !== "edit"
+            ? []
+            : [
+                  {
+                      priority: 89,
+                      controls: getEditorControls(editorMode),
+                  },
+              ]),
         // Misc
         {
             priority: 10,

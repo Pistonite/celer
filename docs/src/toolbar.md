@@ -11,9 +11,9 @@ See [Layout](./layout.md) for the <FluentIcon name="DataTreemap20Regular" /> `La
 :::tip
 These options are disabled until a document is loaded
 :::
-Currently there is only one action for the document:
 
 - <FluentIcon name="ListBarTree20Regular"/> `Jump to section`: Scroll the document to a particular section.
+- <FluentIcon name="DocumentError20Regular" /> `View diagnostics`: Quickly jump to a line where there is an error, warning, or info message.
 
 ## Map Options
 :::tip
@@ -21,9 +21,6 @@ These options are disabled until a document is loaded
 :::
 - <FluentIcon name="Layer20Regular"/> `May layer`: Change the current layer displayed. This is disabled if there are only 1 layer.
 - <FluentIcon name="ZoomIn20Regular"/> `Zoom in` and <FluentIcon name="ZoomOut20Regular"/> `Zoom out`: Change the zoom level. You can also scroll on the map to change it.
-
-## Diagnostic Options
-- <FluentIcon name="DocumentError20Regular" /> `View diagnostics`: Quickly jump to a line where there is an error, warning, or info message.
 
 ## Other
 - <FluentIcon name="Settings20Regular" /> `Settings`: Open the setting dialog.
