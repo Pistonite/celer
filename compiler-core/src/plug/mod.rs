@@ -73,7 +73,9 @@ impl PluginInstance {
                     Box::new(variables::VariablesPlugin::from_props(&self.props))
                 }
                 BuiltInPlugin::Compat => Box::new(compat::CompatPlugin),
-                BuiltInPlugin::BotwAbilityUnstable => Box::new(botw_unstable::BotwAbilityUnstablePlugin::from_props(&self.props)),
+                BuiltInPlugin::BotwAbilityUnstable => Box::new(
+                    botw_unstable::BotwAbilityUnstablePlugin::from_props(&self.props),
+                ),
             },
             // TODO #24 implement JS plugin engine
             Plugin::Script(_) => Box::new(ScriptPluginRuntime),
@@ -105,5 +107,5 @@ pub enum BuiltInPlugin {
     Link,
     Variables,
     Compat,
-    BotwAbilityUnstable
+    BotwAbilityUnstable,
 }

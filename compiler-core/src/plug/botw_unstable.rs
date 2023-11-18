@@ -2,13 +2,13 @@
 
 use serde_json::Value;
 
-use crate::types::{GameCoord, DocRichText, DocDiagnostic, DocRichTextBlock};
-use crate::comp::{CompLine, CompDoc};
+use crate::comp::{CompDoc, CompLine};
 use crate::json::Coerce;
-use crate::{lang, CompilerMetadata};
 use crate::macros::async_trait;
+use crate::types::{DocDiagnostic, DocRichText, DocRichTextBlock, GameCoord};
+use crate::{lang, CompilerMetadata};
 
-use super::{PluginRuntime, operation, PlugResult};
+use super::{operation, PlugResult, PluginRuntime};
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";
@@ -58,7 +58,6 @@ pub struct BotwAbilityUnstablePlugin {
     gale_plus: bool,
     /// If fury plus is obtained
     fury_plus: bool,
-
 }
 
 impl BotwAbilityUnstablePlugin {
@@ -147,7 +146,6 @@ impl BotwAbilityUnstablePlugin {
         }
     }
 
-
     fn process_line(&mut self, line: &mut CompLine) {
         // consume the property regardless of if we are using it
         let time_override = line.properties.remove(TIME_OVERRIDE);
@@ -169,13 +167,13 @@ impl BotwAbilityUnstablePlugin {
                     line.diagnostics.push(DocDiagnostic {
                         msg: lang::parse_poor("`gale` must be a non-negative integer"),
                         msg_type: "error".to_string(),
-                        source: "plugin/botw-ability-unstable".to_string()
+                        source: "plugin/botw-ability-unstable".to_string(),
                     });
                     None
                 }
-                x => x
+                x => x,
             },
-            _ => None
+            _ => None,
         };
         let fury_override = match line.properties.remove(FURY) {
             Some(x) => match x.try_coerce_to_u32() {
@@ -183,13 +181,13 @@ impl BotwAbilityUnstablePlugin {
                     line.diagnostics.push(DocDiagnostic {
                         msg: lang::parse_poor("`fury` must be a non-negative integer"),
                         msg_type: "error".to_string(),
-                        source: "plugin/botw-ability-unstable".to_string()
+                        source: "plugin/botw-ability-unstable".to_string(),
                     });
                     None
                 }
-                x => x
+                x => x,
             },
-            _ => None
+            _ => None,
         };
         if self.estimate_recharge {
             let time = match time_override {
@@ -198,13 +196,13 @@ impl BotwAbilityUnstablePlugin {
                         line.diagnostics.push(DocDiagnostic {
                             msg: lang::parse_poor("`time-override` must be a non-negative integer"),
                             msg_type: "error".to_string(),
-                            source: "plugin/botw-ability-unstable".to_string()
+                            source: "plugin/botw-ability-unstable".to_string(),
                         });
                         None
                     }
-                    x => x
+                    x => x,
                 },
-                _ => None
+                _ => None,
             };
             let time = time.unwrap_or_else(|| estimate_time(&line.text));
             self.update_recharge(time as i32);
@@ -219,7 +217,13 @@ impl BotwAbilityUnstablePlugin {
         });
     }
 
-    fn process_block(&mut self, block: &mut DocRichTextBlock, gale_override: &Option<u32>, fury_override: &Option<u32>, diagnostics: &mut Vec<DocDiagnostic>) {
+    fn process_block(
+        &mut self,
+        block: &mut DocRichTextBlock,
+        gale_override: &Option<u32>,
+        fury_override: &Option<u32>,
+        diagnostics: &mut Vec<DocDiagnostic>,
+    ) {
         match &block.tag {
             Some(x) if x == GALE => {
                 let count = get_ability_use(&block.text, gale_override, diagnostics);
@@ -229,10 +233,16 @@ impl BotwAbilityUnstablePlugin {
                         block.text = text;
                     } else {
                         block.text = "GALE ?".to_string();
-                        add_usage_warning(GALE, self.gale_uses_left, count, self.gale_recharge_left, diagnostics);
+                        add_usage_warning(
+                            GALE,
+                            self.gale_uses_left,
+                            count,
+                            self.gale_recharge_left,
+                            diagnostics,
+                        );
                     }
                 }
-            },
+            }
             Some(x) if x == FURY => {
                 let count = get_ability_use(&block.text, fury_override, diagnostics);
                 if let Some(count) = count {
@@ -241,16 +251,27 @@ impl BotwAbilityUnstablePlugin {
                         block.text = text;
                     } else {
                         block.text = "FURY ?".to_string();
-                        add_usage_warning(FURY, self.fury_uses_left, count, self.fury_recharge_left, diagnostics);
+                        add_usage_warning(
+                            FURY,
+                            self.fury_uses_left,
+                            count,
+                            self.fury_recharge_left,
+                            diagnostics,
+                        );
                     }
                 }
-            },
+            }
             _ => {}
         }
     }
-
 }
-fn add_usage_warning(ability: &str, current: i32, need: i32, time_need: i32, diagnostics: &mut Vec<DocDiagnostic>) {
+fn add_usage_warning(
+    ability: &str,
+    current: i32,
+    need: i32,
+    time_need: i32,
+    diagnostics: &mut Vec<DocDiagnostic>,
+) {
     if current == 0 {
         diagnostics.push(DocDiagnostic {
             msg: lang::parse_poor(&format!("{ability} may not be recharged yet. May need {time_need} more seconds to recharge. Note that this is an estimate and may not be accurate.")),
@@ -259,51 +280,57 @@ fn add_usage_warning(ability: &str, current: i32, need: i32, time_need: i32, dia
         });
     } else {
         diagnostics.push(DocDiagnostic {
-            msg: lang::parse_poor(&format!("not enough {ability}! Need to use {need}, but only {current} left.")),
+            msg: lang::parse_poor(&format!(
+                "not enough {ability}! Need to use {need}, but only {current} left."
+            )),
             msg_type: "warning".to_string(),
-            source: "plugin/botw-ability-unstable".to_string()
+            source: "plugin/botw-ability-unstable".to_string(),
         });
     }
 }
 
-
-fn get_ability_use(text: &str, count_override: &Option<u32>, diagnostics: &mut Vec<DocDiagnostic>) -> Option<i32> {
-    let count = if text == "" {
+fn get_ability_use(
+    text: &str,
+    count_override: &Option<u32>,
+    diagnostics: &mut Vec<DocDiagnostic>,
+) -> Option<i32> {
+    let count = if text.is_empty() {
         match count_override {
             Some(x) => *x,
             _ => {
-                diagnostics.push(DocDiagnostic { 
-                    msg: lang::parse_poor("ability use count must be specified in the tag or as a property!"),
+                diagnostics.push(DocDiagnostic {
+                    msg: lang::parse_poor(
+                        "ability use count must be specified in the tag or as a property!",
+                    ),
                     msg_type: "error".to_string(),
-                    source: "plugin/botw-ability-unstable".to_string()
+                    source: "plugin/botw-ability-unstable".to_string(),
                 });
-                    return None;
+                return None;
             }
         }
     } else {
         match text.parse::<u32>() {
             Ok(x) => x,
             Err(_) => {
-                diagnostics.push(DocDiagnostic { 
+                diagnostics.push(DocDiagnostic {
                     msg: lang::parse_poor("ability use count must be a non-negative integer!"),
                     msg_type: "error".to_string(),
-                    source: "plugin/botw-ability-unstable".to_string()
+                    source: "plugin/botw-ability-unstable".to_string(),
                 });
                 return None;
             }
         }
     };
     if count > MAX_USE {
-        diagnostics.push(DocDiagnostic { 
+        diagnostics.push(DocDiagnostic {
             msg: lang::parse_poor("ability use count must be between 0 and 3!"),
             msg_type: "error".to_string(),
-            source: "plugin/botw-ability-unstable".to_string()
+            source: "plugin/botw-ability-unstable".to_string(),
         });
         return None;
     }
     Some(count as i32)
 }
-
 
 /// Get ability string.
 ///
@@ -357,7 +384,7 @@ fn estimate_time(text: &DocRichText) -> u32 {
             }
         }
     }
-    return movement_count * 14 + 6; // (approximately) same timing as old celer
+    movement_count * 14 + 6 // (approximately) same timing as old celer
 }
 
 #[async_trait(?Send)]

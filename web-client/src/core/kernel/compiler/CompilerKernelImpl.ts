@@ -206,7 +206,6 @@ export class CompilerKernelImpl implements CompilerKernel {
         this.store.dispatch(viewActions.setCompileInProgress(false));
         this.compiling = false;
         CompilerLog.info("finished compiling");
-
     }
 
     /// Try to wait for the compiler to be ready. Returns true if it becomes ready eventually.

@@ -40,13 +40,14 @@ export const getHeaderControls = (
             controls: [SwitchMapLayer, ZoomIn, ZoomOut],
         },
         // Eitor
-        ...(mode !== "edit" ? [] : [
-            {
-                priority: 89,
-                controls: 
-                    getEditorControls(editorMode),
-            },
-        ]),
+        ...(mode !== "edit"
+            ? []
+            : [
+                  {
+                      priority: 89,
+                      controls: getEditorControls(editorMode),
+                  },
+              ]),
         // Misc
         {
             priority: 10,
