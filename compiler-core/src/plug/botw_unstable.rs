@@ -3,7 +3,7 @@
 use serde_json::Value;
 
 use crate::types::{GameCoord, DocRichText, DocDiagnostic, DocRichTextBlock};
-use crate::comp::{CompLine, CompDoc, CompMovement};
+use crate::comp::{CompLine, CompDoc};
 use crate::json::Coerce;
 use crate::{lang, CompilerMetadata};
 use crate::macros::async_trait;
@@ -31,9 +31,10 @@ const CASTLE_Y: f64 = 194.78;
 const CASTLE_Z: f64 = -946.37;
 const CASTLE_RADIUS: f64 = 350.0;
 fn is_in_castle(coord: &GameCoord) -> bool {
+    // note that coord.2 is height
     let dx = coord.0 - CASTLE_X;
-    let dy = coord.1 - CASTLE_Y;
-    let dz = coord.2 - CASTLE_Z;
+    let dy = coord.1 - CASTLE_Z;
+    let dz = coord.2 - CASTLE_Y;
     let distsq = dx * dx + dy * dy + dz * dz;
     distsq < CASTLE_RADIUS * CASTLE_RADIUS
 }
@@ -46,13 +47,13 @@ pub struct BotwAbilityUnstablePlugin {
     /// Currently in castle
     in_castle: bool,
     /// Time left to recharge gale
-    gale_recharge_left: u32,
+    gale_recharge_left: i32,
     /// Time left to recharge fury
-    fury_recharge_left: u32,
+    fury_recharge_left: i32,
     /// Number of uses left for gale
-    gale_uses_left: u32,
+    gale_uses_left: i32,
     /// Number of uses left for fury
-    fury_uses_left: u32,
+    fury_uses_left: i32,
     /// If gale plus is obtained
     gale_plus: bool,
     /// If fury plus is obtained
@@ -66,10 +67,10 @@ impl BotwAbilityUnstablePlugin {
             estimate_recharge: false,
             multiplier: 1.0,
             in_castle: false,
-            gale_recharge_left: GALE_RECHARGE_SECONDS,
-            fury_recharge_left: FURY_RECHARGE_SECONDS,
-            gale_uses_left: MAX_USE,
-            fury_uses_left: MAX_USE,
+            gale_recharge_left: GALE_RECHARGE_SECONDS as i32,
+            fury_recharge_left: FURY_RECHARGE_SECONDS as i32,
+            gale_uses_left: MAX_USE as i32,
+            fury_uses_left: MAX_USE as i32,
             gale_plus: false,
             fury_plus: false,
         };
@@ -98,9 +99,10 @@ impl BotwAbilityUnstablePlugin {
             self.gale_recharge_left /= 3;
             self.fury_recharge_left /= 3;
         }
+        self.in_castle = in_castle;
     }
 
-    fn update_recharge(&mut self, seconds: u32) {
+    fn update_recharge(&mut self, seconds: i32) {
         if self.gale_uses_left <= 0 {
             if self.estimate_recharge {
                 self.gale_recharge_left -= seconds;
@@ -109,18 +111,18 @@ impl BotwAbilityUnstablePlugin {
                     if was_in_castle {
                         self.set_in_castle(false);
                     }
-                    self.gale_uses_left = MAX_USE;
-                    self.gale_recharge_left = GALE_RECHARGE_SECONDS;
+                    self.gale_uses_left = MAX_USE as i32;
+                    self.gale_recharge_left = GALE_RECHARGE_SECONDS as i32;
                     if self.gale_plus {
                         self.gale_recharge_left /= 3;
                     }
-                    self.gale_recharge_left = (self.gale_recharge_left as f64 * self.multiplier) as u32;
+                    self.gale_recharge_left = (self.gale_recharge_left as f64 * self.multiplier) as i32;
                     if was_in_castle {
                         self.set_in_castle(true);
                     }
                 }
             } else {
-                self.gale_uses_left = MAX_USE;
+                self.gale_uses_left = MAX_USE as i32;
             }
         }
         if self.fury_uses_left <= 0 {
@@ -131,18 +133,18 @@ impl BotwAbilityUnstablePlugin {
                     if was_in_castle {
                         self.set_in_castle(false);
                     }
-                    self.fury_uses_left = MAX_USE;
-                    self.fury_recharge_left = FURY_RECHARGE_SECONDS;
+                    self.fury_uses_left = MAX_USE as i32;
+                    self.fury_recharge_left = FURY_RECHARGE_SECONDS as i32;
                     if self.fury_plus {
                         self.fury_recharge_left /= 3;
                     }
-                    self.fury_recharge_left = (self.fury_recharge_left as f64 * self.multiplier) as u32;
+                    self.fury_recharge_left = (self.fury_recharge_left as f64 * self.multiplier) as i32;
                     if was_in_castle {
                         self.set_in_castle(true);
                     }
                 }
             } else {
-                self.fury_uses_left = MAX_USE;
+                self.fury_uses_left = MAX_USE as i32;
             }
         }
     }
@@ -207,21 +209,12 @@ impl BotwAbilityUnstablePlugin {
                 _ => None
             };
             let time = time.unwrap_or_else(|| estimate_time(&line.text));
-            self.update_recharge(time);
+            self.update_recharge(time as i32);
         } else {
             self.update_recharge(0);
         }
 
-        let mut new_in_castle = false;
-        for movement in &line.movements {
-            if let CompMovement::To{to, ..} = movement {
-                new_in_castle = is_in_castle(to);
-                if new_in_castle {
-                    break;
-                }
-            }
-        }
-        self.set_in_castle(new_in_castle);
+        self.set_in_castle(is_in_castle(&line.map_coord));
 
         operation::for_each_rich_text_except_counter!(block in line {
             self.process_block(block, &gale_override, &fury_override, &mut line.diagnostics);
@@ -250,7 +243,7 @@ impl BotwAbilityUnstablePlugin {
                         block.text = text;
                     } else {
                         block.text = "FURY ?".to_string();
-                        add_usage_warning(GALE, self.gale_uses_left, count, self.gale_recharge_left, diagnostics);
+                        add_usage_warning(FURY, self.fury_uses_left, count, self.fury_recharge_left, diagnostics);
                     }
                 }
             },
@@ -259,7 +252,7 @@ impl BotwAbilityUnstablePlugin {
     }
 
 }
-fn add_usage_warning(ability: &str, current: u32, need: u32, time_need: u32, diagnostics: &mut Vec<DocDiagnostic>) {
+fn add_usage_warning(ability: &str, current: i32, need: i32, time_need: i32, diagnostics: &mut Vec<DocDiagnostic>) {
     if current == 0 {
         diagnostics.push(DocDiagnostic {
             msg: lang::parse_poor(&format!("{ability} may not be recharged yet. May need {time_need} more seconds to recharge. Note that this is an estimate and may not be accurate.")),
@@ -276,7 +269,7 @@ fn add_usage_warning(ability: &str, current: u32, need: u32, time_need: u32, dia
 }
 
 
-fn get_ability_use(text: &str, count_override: &Option<u32>, diagnostics: &mut Vec<DocDiagnostic>) -> Option<u32> {
+fn get_ability_use(text: &str, count_override: &Option<u32>, diagnostics: &mut Vec<DocDiagnostic>) -> Option<i32> {
     let count = if text == "" {
         match count_override {
             Some(x) => *x,
@@ -310,7 +303,7 @@ fn get_ability_use(text: &str, count_override: &Option<u32>, diagnostics: &mut V
         });
         return None;
     }
-    Some(count)
+    Some(count as i32)
 }
 
 
@@ -321,7 +314,7 @@ fn get_ability_use(text: &str, count_override: &Option<u32>, diagnostics: &mut V
 /// - prefix is "GALE", uses_left is 2, need is 2, then the result is "GALE 2-3".
 ///
 /// Return None if need is more than uses_left.
-fn get_use_ability_string(prefix: &str, uses_left: &mut u32, need: u32) -> Option<String> {
+fn get_use_ability_string(prefix: &str, uses_left: &mut i32, need: i32) -> Option<String> {
     let current = *uses_left;
     if current < need {
         return None;
@@ -346,7 +339,11 @@ fn get_use_ability_string(prefix: &str, uses_left: &mut u32, need: u32) -> Optio
         }
         _ => {
             // current 3
-            format!("{prefix} 1-{need}")
+            if need == 1 {
+                format!("{prefix} 1")
+            } else {
+                format!("{prefix} 1-{need}")
+            }
         }
     };
     *uses_left -= need;
