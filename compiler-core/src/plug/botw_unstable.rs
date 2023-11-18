@@ -105,7 +105,7 @@ impl BotwAbilityUnstablePlugin {
     fn update_recharge(&mut self, seconds: i32) {
         if self.gale_uses_left <= 0 {
             if self.estimate_recharge {
-                self.gale_recharge_left -= seconds;
+                self.gale_recharge_left -= (seconds as f64 * self.multiplier) as i32;
                 if self.gale_recharge_left <= 0 {
                     let was_in_castle = self.in_castle;
                     if was_in_castle {
@@ -116,7 +116,6 @@ impl BotwAbilityUnstablePlugin {
                     if self.gale_plus {
                         self.gale_recharge_left /= 3;
                     }
-                    self.gale_recharge_left = (self.gale_recharge_left as f64 * self.multiplier) as i32;
                     if was_in_castle {
                         self.set_in_castle(true);
                     }
@@ -127,7 +126,7 @@ impl BotwAbilityUnstablePlugin {
         }
         if self.fury_uses_left <= 0 {
             if self.estimate_recharge {
-                self.fury_recharge_left -= seconds;
+                self.fury_recharge_left -= (seconds as f64 * self.multiplier) as i32;
                 if self.fury_recharge_left <= 0 {
                     let was_in_castle = self.in_castle;
                     if was_in_castle {
@@ -138,7 +137,6 @@ impl BotwAbilityUnstablePlugin {
                     if self.fury_plus {
                         self.fury_recharge_left /= 3;
                     }
-                    self.fury_recharge_left = (self.fury_recharge_left as f64 * self.multiplier) as i32;
                     if was_in_castle {
                         self.set_in_castle(true);
                     }
