@@ -1,8 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-/// A wrapper to add Send trait to `async_trait` and `async_recursion` based on the `no-async-send`
-/// feature gate
+/// A wrapper to remove Send trait to `async_trait` and `async_recursion` 
+/// if the `wasm` feature flag is enabled.
 ///
 /// # Examples
 /// Instead of
@@ -41,8 +41,8 @@ pub fn maybe_send(
     let attr = TokenStream::from(attr);
     let input = TokenStream::from(input);
     let tokens = quote! {
-        #[cfg_attr(not(feature="no-async-send"), #attr)]
-        #[cfg_attr(feature="no-async-send", #attr(?Send))]
+        #[cfg_attr(feature="native", #attr)]
+        #[cfg_attr(feature="wasm", #attr(?Send))]
         #input
     };
     tokens.into()

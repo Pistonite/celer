@@ -2,10 +2,13 @@ import { TransformContext, defineConfig } from "vitepress";
 import {
     homeNav,
     homeSideBar,
+    apiNav,
+    apiSideBar,
+    pluginsNav, 
+    pluginsSideBar,
     writingRoutesNav,
     writingRoutesSidebar,
 } from "./nav";
-import { pluginsNav, pluginsSideBar } from "./nav";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -76,28 +79,14 @@ export default defineConfig({
             homeNav,
             writingRoutesNav,
             pluginsNav,
-            // { text: "Developer", link: "/developer/" },
+            apiNav,
         ],
 
         sidebar: {
             ...homeSideBar,
             ...writingRoutesSidebar,
             ...pluginsSideBar,
-            // "/developer/": [
-            //     {
-            //         text: "Web Client",
-            //         items: [
-            //             {
-            //                 text: "core-engine",
-            //                 link: "/developer/web-client/core-engine",
-            //             },
-            //             {
-            //                 text: "Redux Store",
-            //                 link: "/developer/web-client/data-store",
-            //             },
-            //         ],
-            //     },
-            // ],
+            ...apiSideBar,
         },
 
         socialLinks: [

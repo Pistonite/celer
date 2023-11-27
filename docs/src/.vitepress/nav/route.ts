@@ -32,8 +32,7 @@ export const writingRoutesSidebar = {
                     link: "/route/customizing-movements",
                 },
                 { text: "Using Presets", link: "/route/using-presets" },
-                // { text: "Configuring Plugins", link: "/route/custoimizing-movements" },
-                // { text: "Built-in Plugins", link: "/route/customiziing-movements" },
+                { text: "Publish the Route", link: "/route/publish" },
             ],
         },
         {

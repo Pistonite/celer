@@ -12,6 +12,8 @@ use tower_http::services::{ServeDir, ServeFile};
 use tower_http::trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse};
 use tracing::{debug, info, Level};
 
+mod api;
+mod compiler;
 mod env;
 use env::Environment;
 mod services;
@@ -51,6 +53,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &env.app_dir,
         &["/celerc", "/static", "/assets", "/themes"],
     )?;
+    let router = api::init_api_v1(router);
 
     let router = router.layer(
         tower_http::trace::TraceLayer::new_for_http()

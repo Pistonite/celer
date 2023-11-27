@@ -1,8 +1,8 @@
 use instant::Instant;
-#[cfg(not(feature = "no-async-send"))]
+#[cfg(feature = "native")]
 use tokio::task::LocalSet;
 
-#[cfg(not(feature = "no-async-send"))]
+#[cfg(feature = "native")]
 use crate::pack::PackerError;
 use crate::pack::{self, PackerResult, Resource};
 use crate::types::EntryPoints;
@@ -53,14 +53,14 @@ pub async fn prepare_compiler(
     // TODO #25: I don't know why it is fine in compile but not here
     // however it is fine in WASM so we can keep it this way until compiler runs on the server
 
-    #[cfg(feature = "no-async-send")]
+    #[cfg(feature = "wasm")]
     for plugin in &plugins {
         plugin
             .create_runtime(&context)
             .on_pre_compile(&mut context)
             .await?;
     }
-    #[cfg(not(feature = "no-async-send"))]
+    #[cfg(feature = "native")]
     let mut context = {
         let local = LocalSet::new();
         let runtimes = plugins

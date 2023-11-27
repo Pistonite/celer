@@ -1,3 +1,7 @@
+
+#[cfg(all(feature = "native", feature = "wasm"))]
+compile_error!("`native` and `wasm` features are mutually exclusive!");
+
 mod api;
 pub use api::*;
 pub mod comp;

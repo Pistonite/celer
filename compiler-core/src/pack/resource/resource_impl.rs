@@ -6,13 +6,13 @@ use crate::util::{Marc, Path};
 
 use super::ResourceLoader;
 
-#[cfg(not(feature = "no-async-send"))]
+#[cfg(feature = "native")]
 pub type MarcLoader = Marc<dyn ResourceLoader + Send + Sync>;
-#[cfg(not(feature = "no-async-send"))]
+#[cfg(feature = "native")]
 pub type MarcResolver = Marc<dyn ResourceResolver + Send + Sync>;
-#[cfg(feature = "no-async-send")]
+#[cfg(feature = "wasm")]
 pub type MarcLoader = Marc<dyn ResourceLoader>;
-#[cfg(feature = "no-async-send")]
+#[cfg(feature = "wasm")]
 pub type MarcResolver = Marc<dyn ResourceResolver>;
 
 macro_rules! loader_delegate {
