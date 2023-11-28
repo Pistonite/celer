@@ -24,10 +24,6 @@ mod comp_preset;
 pub use comp_preset::*;
 mod comp_section;
 pub use comp_section::*;
-#[cfg(test)]
-mod compiler_builder;
-#[cfg(test)]
-pub use compiler_builder::*;
 mod desugar;
 use desugar::*;
 
@@ -238,12 +234,14 @@ macro_rules! validate_not_array_or_object {
 pub(crate) use validate_not_array_or_object;
 
 #[cfg(test)]
+mod compiler_builder;
+#[cfg(test)]
+pub use compiler_builder::*;
+#[cfg(test)]
 mod test_utils {
-    use crate::types::{Axis, MapCoordMap, MapMetadata, RouteMetadata};
-
-    use super::*;
-
-    pub fn create_test_compiler_with_coord_transform() -> Compiler<'static> {
+    #[cfg(feature = "test")]
+    pub fn create_test_compiler_with_coord_transform() -> super::Compiler<'static> {
+        use crate::types::{Axis, MapCoordMap, MapMetadata, RouteMetadata};
         let project = RouteMetadata {
             map: MapMetadata {
                 coord_map: MapCoordMap {
@@ -254,7 +252,7 @@ mod test_utils {
             },
             ..Default::default()
         };
-        let builder = CompilerBuilder::new(project, Default::default(), Default::default());
+        let builder = super::CompilerBuilder::new(project, Default::default(), Default::default());
         builder.build()
     }
 }

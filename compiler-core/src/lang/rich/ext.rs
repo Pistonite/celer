@@ -1,6 +1,7 @@
 //! Implementation for extended utils of [`DocRichText`]
 use std::fmt::Display;
 
+use crate::macros::test_suite;
 use crate::types::{DocRichText, DocRichTextBlock};
 
 impl DocRichText {
@@ -64,7 +65,7 @@ impl IntoIterator for DocRichText {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use crate::lang;
 

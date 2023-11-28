@@ -1,6 +1,9 @@
+use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
+
+use crate::macros::test_suite;
+
 use super::grammar::{self, pt, Ctx};
 use super::{TempStr, TempStrBlock};
-use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
 impl<S> From<S> for TempStr
 where
@@ -112,7 +115,7 @@ fn append_non_dollar(pt: &pt::NonDollar, out: &mut String) {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use super::*;
 

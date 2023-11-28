@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
+use crate::macros::test_suite;
 use crate::prop;
 use crate::types::GameCoord;
 
@@ -92,7 +93,7 @@ impl<'a> Compiler<'a> {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use serde_json::json;
 

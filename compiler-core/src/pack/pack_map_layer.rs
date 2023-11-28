@@ -3,6 +3,7 @@
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
+use crate::macros::test_suite;
 use crate::prop;
 use crate::types::{MapAttribution, MapLayerAttr, MapTilesetTransform};
 
@@ -183,7 +184,7 @@ fn parse_array_with_2_elements(value: Value) -> Option<(u64, u64)> {
     Some((x, y))
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use super::*;
 

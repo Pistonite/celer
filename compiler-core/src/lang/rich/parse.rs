@@ -1,5 +1,6 @@
 use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
+use crate::macros::test_suite;
 use crate::types::{DocRichText, DocRichTextBlock};
 
 use super::grammar::{self, pt};
@@ -138,7 +139,7 @@ fn append_unit_to_string(pt: &pt::Unit, out: &mut String) {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use super::*;
 

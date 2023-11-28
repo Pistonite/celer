@@ -4,7 +4,7 @@
 
 use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::CompDoc;
-use crate::macros::async_trait;
+use crate::macros::{async_trait, test_suite};
 use crate::pack::PackerResult;
 use crate::prop;
 use crate::types::{DocColor, DocRichTextBlock, DocTag};
@@ -83,7 +83,7 @@ fn transform_link_tag(rich_text: &mut DocRichTextBlock) {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use super::*;
 

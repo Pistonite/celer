@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-/// A wrapper to remove Send trait to `async_trait` and `async_recursion` 
+/// A wrapper to remove Send trait to `async_trait` and `async_recursion`
 /// if the `wasm` feature flag is enabled.
 ///
 /// # Examples
@@ -76,4 +76,19 @@ pub fn derive_wasm(
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     derive_wasm_impl::expand(feature_attr, input)
+}
+
+/// A wrapper for `#[cfg(test)]` to only define the test when the `test` feature flag is enabled
+#[proc_macro_attribute]
+pub fn test_suite(
+    _attr: proc_macro::TokenStream,
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let input = TokenStream::from(input);
+    let tokens = quote! {
+        #[cfg(feature="test")]
+        #[cfg(test)]
+        #input
+    };
+    tokens.into()
 }

@@ -1,5 +1,8 @@
-use serde_json::{json, Value};
 use std::collections::BTreeMap;
+
+use serde_json::{json, Value};
+
+use crate::macros::test_suite;
 
 use super::{Preset, PresetBlob};
 
@@ -50,7 +53,7 @@ impl PresetBlob {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use map_macro::btree_map;
 

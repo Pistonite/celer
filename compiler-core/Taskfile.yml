@@ -18,10 +18,10 @@ tasks:
   watch:
     desc: Run compiler core tests in watch mode
     cmds:
-    - cargo watch -x test
+    - cargo watch -x test --features native,test
 
   test:
     deps: [grammar]
     desc: Run compiler core tests
     cmds:
-    - cargo test {{.CLI_ARGS}}
+    - cargo test --features native,test {{.CLI_ARGS}}

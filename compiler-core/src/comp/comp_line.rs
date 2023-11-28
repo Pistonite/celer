@@ -6,6 +6,7 @@ use serde_json::Value;
 use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
+use crate::macros::test_suite;
 use crate::prop;
 use crate::types::{DocDiagnostic, DocNote, DocRichText, DocRichTextBlock, GameCoord};
 
@@ -299,7 +300,7 @@ impl<'a> Compiler<'a> {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use map_macro::btree_map;
     use serde_json::json;

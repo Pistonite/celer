@@ -5,6 +5,7 @@ use std::fmt::Display;
 use serde_json::Value;
 
 use crate::json::Coerce;
+use crate::macros::test_suite;
 use crate::prop;
 
 /// Result of parsing an object which could be loading a resource with
@@ -142,7 +143,7 @@ impl TryFrom<Value> for Use {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use serde_json::json;
 

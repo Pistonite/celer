@@ -1,5 +1,6 @@
 //! Poor string parsing
 
+use crate::macros::test_suite;
 use crate::types::{DocPoorText, DocPoorTextBlock};
 
 pub fn parse_poor(s: &str) -> DocPoorText {
@@ -45,7 +46,7 @@ fn is_part_link(part: &str) -> bool {
     false
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use super::*;
 

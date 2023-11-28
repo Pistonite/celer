@@ -59,7 +59,11 @@ tasks:
   check:rs:
     deps: [core:grammar]
     cmds:
-    - cargo clippy --all-features --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-macros --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-core --features native,test --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-core --features wasm --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-wasm --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package web-server --all-targets -- -D warnings -D clippy::todo
     - cargo fmt --check
 
   fix:rs:

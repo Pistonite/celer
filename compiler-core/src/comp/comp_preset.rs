@@ -4,6 +4,7 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
 use crate::lang::PresetInst;
+use crate::macros::test_suite;
 use crate::prop;
 
 use super::{validate_not_array_or_object, CompError, Compiler};
@@ -135,7 +136,7 @@ impl<'a> Compiler<'a> {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use serde_json::json;
 
