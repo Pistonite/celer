@@ -4,7 +4,7 @@ import {
     homeSideBar,
     apiNav,
     apiSideBar,
-    pluginsNav, 
+    pluginsNav,
     pluginsSideBar,
     writingRoutesNav,
     writingRoutesSidebar,
@@ -75,12 +75,7 @@ export default defineConfig({
         logo: "/../static/celer-3.svg",
 
         // https://vitepress.dev/reference/default-theme-config
-        nav: [
-            homeNav,
-            writingRoutesNav,
-            pluginsNav,
-            apiNav,
-        ],
+        nav: [homeNav, writingRoutesNav, pluginsNav, apiNav],
 
         sidebar: {
             ...homeSideBar,

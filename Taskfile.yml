@@ -40,7 +40,7 @@ tasks:
     cmds:
     - rustup update
     - cargo install cargo-watch cargo-expand wasm-pack regen-lang
-    - cargo install cross --git https://github.com/cross-rs/cross
+    - cargo install cross --git https://github.com/cross-rs/cross --locked
     - cargo install txtpp
     - task: themes:install
     - task: docs:install
@@ -80,6 +80,7 @@ tasks:
   build:server:
     deps:
     - core:grammar
+    dir: ./web-server
     cmds:
     - rustup default stable
     - cross build --bin celerserver --release --target x86_64-unknown-linux-musl
