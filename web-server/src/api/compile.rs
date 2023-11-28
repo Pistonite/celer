@@ -1,15 +1,17 @@
 use axum::extract::Path;
 use cached::proc_macro::cached;
-use celerc::types::ExecDoc;
+// use celerc::types::ExecDoc;
 
-pub async fn compile_owner_repo(Path((owner, repo)): Path<(String, String)>) -> String {
-    todo!()
+pub async fn compile_owner_repo(Path((_owner, _repo)): Path<(String, String)>) -> String {
+    // TODO #25: implement this
+    "".to_string()
 }
 
 pub async fn compile_owner_repo_path(
-    Path((owner, repo, path)): Path<(String, String, String)>,
+    Path((_owner, _repo, _path)): Path<(String, String, String)>,
 ) -> String {
-    todo!()
+    // TODO #25: implement this
+    "".to_string()
 }
 
 /// Separate string into before `:` and after
@@ -37,9 +39,15 @@ macro_rules! cache_key {
     size=32,
     time=600,
     key="String",
-    convert=r#"{ cache_key!(owner, repo, path, reference) }"#
+    convert=r#"{ cache_key!(_owner, _repo, _path, _reference) }"#
 )]
-async fn compile(owner: &str, repo: &str, path: Option<&str>, reference: Option<&str>) -> String {
+async fn compile(_owner: &str, _repo: &str, _path: Option<&str>, _reference: Option<&str>) -> String {
+    // create root resource (root of repo)
+    // load project entry points
+    //
+    // compile and return
+    // TODO #25: implement this
+    "".to_string()
 }
 
 

@@ -1,4 +1,4 @@
-use super::grammar::{self, pt, Ctx, Tok};
+use super::grammar::{self, pt, Ctx};
 use super::{TempStr, TempStrBlock};
 use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
@@ -66,7 +66,7 @@ pub fn from_pts(pts: Vec<pt::Block>) -> Vec<TempStrBlock> {
 }
 
 /// Parse tree hook for the Dollar node
-pub fn parse_dollar(pt: &pt::Dollar, ctx: &mut Ctx) -> Option<TempStrBlock> {
+pub fn parse_dollar(pt: &pt::Dollar, _ctx: &mut Ctx) -> Option<TempStrBlock> {
     match pt.m_tail.as_ref() {
         None => {
             // just a dollar sign
@@ -76,7 +76,10 @@ pub fn parse_dollar(pt: &pt::Dollar, ctx: &mut Ctx) -> Option<TempStrBlock> {
             // set the semantic of first dollar sign to be variable
             // only need to enable for wasm
             #[cfg(feature = "wasm")]
-            ctx.tbs.set(&pt.ast.m_0, Tok::SVariable);
+            {
+                use super::grammar::Tok;
+                _ctx.tbs.set(&pt.ast.m_0, Tok::SVariable);
+            }
 
             match pt_tail.as_ref() {
                 pt::DollarTail::Escape(_) => {
