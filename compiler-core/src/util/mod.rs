@@ -5,8 +5,8 @@ pub use coop::*;
 mod site_origin;
 pub use site_origin::*;
 
-/// Maybe Arc. Will be Rc if no-async-send feature is enabled
-#[cfg(not(feature = "no-async-send"))]
+/// Maybe Arc. Will be Rc for wasm where multi-threading is not needed.
+#[cfg(feature = "native")]
 pub type Marc<T> = std::sync::Arc<T>;
-#[cfg(feature = "no-async-send")]
+#[cfg(feature = "wasm")]
 pub type Marc<T> = std::rc::Rc<T>;

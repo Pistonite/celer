@@ -7,7 +7,6 @@ edition = "2021"
 [dependencies]
 async-recursion = "1.0.4"
 async-trait = "0.1.73"
-cached = { version = "0.45.1", features = ["async"]}
 compiler-macros = { path = "../compiler-macros" }
 derivative = "2.2.0"
 futures = "0.3.28"
@@ -28,26 +27,29 @@ instant = "0.1.12"
 log = "0.4.20"
 serde-wasm-bindgen = { version = "0.6.0", optional = true }
 roman = "0.1.6"
+
+[dev-dependencies]
 map-macro = "0.2.6"
 
 [features]
-default = [
+default = []
+native = [
     "dep:tokio", 
     "tokio/rt-multi-thread",
-    "cached/async_tokio_rt_multi_thread",
 ]
 wasm = [
-    "cached/wasm", 
     "dep:wasm-bindgen", 
     "dep:wasm-bindgen-futures",
     "dep:js-sys",
     "web-sys/WorkerGlobalScope",
     "instant/wasm-bindgen",
-    "no-async-send",
     "dep:tsify",
     "dep:serde-wasm-bindgen",
 ]
-no-async-send = []
+test = [
+    "dep:tokio",
+    "tokio/rt-multi-thread",
+]
 
 [lib]
 name = "celerc"

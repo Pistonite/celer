@@ -157,7 +157,33 @@ title: Example 2
 ... # detail not shown
 ```
 
-### Choose entry point in web editor
+### Aliasing
+You can also specify another entry point in the place of the project path. This allows you to have multiple names (aliases) for the same project, which is useful for versioning and other things.
+```yaml
+#/project.yaml
+entry-points:
+  hundo-latest: hundo-v4
+  hundo-v4: hundo-v4.1
+  hundo-v4.1: /hundo-v4.1.yaml
+```
+In the example above, all the entry points point to the same project, but the router can distribute an URL with the 
+"latest" version, and update the route later without redistribution.
+:::warning
+There is a maximum depth of aliasing to prevent infinite recursion.
+:::
+
+### Default
+You can also specify a special entry point named `default`. The compiler will be redirected
+to that entry point if it is given the root project as entry path. `default` can be either an alias
+or a path like other entry points.
+```yaml
+#/project.yaml
+entry-points:
+  default: my-project
+  my-project: /path/to/project.yaml
+```
+
+### Choose entry point
 To switch between entry points in the web editor:
 
 1. Load the monorepo directory (not subdirectories) in the web editor

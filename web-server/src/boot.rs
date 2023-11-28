@@ -1,5 +1,6 @@
 //! Things to do on server boot
 
+use celerc::macros::async_recursion;
 use celerc::util;
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -29,7 +30,7 @@ pub async fn setup_site_origin(
     Ok(())
 }
 
-#[async_recursion::async_recursion]
+#[async_recursion]
 async fn process_site_origin_for_path(
     path: PathBuf,
     origin: &'static str,
@@ -80,7 +81,7 @@ pub async fn gzip_static_assets(docs_dir: PathBuf, app_dir: PathBuf) -> io::Resu
     Ok(())
 }
 
-#[async_recursion::async_recursion]
+#[async_recursion]
 async fn gzip_static_assets_for_path(path: PathBuf, exts: &'static [&str]) -> io::Result<()> {
     if path.is_dir() {
         let mut dir = tokio::fs::read_dir(path).await?;

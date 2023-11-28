@@ -48,5 +48,4 @@ jobs:
     - uses: baptiste0928/cargo-install@v2
       with:
         crate: regen-lang
-    - run: task core:test -- --release
-    - run: task core:test -- --release --features wasm
+    - run: task core:test -- --release --features native,test

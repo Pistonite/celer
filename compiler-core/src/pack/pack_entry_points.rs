@@ -5,9 +5,11 @@ use std::collections::HashMap;
 use serde_json::Value;
 
 use crate::json::Cast;
+use crate::json::Coerce;
+use crate::macros::test_suite;
+use crate::prop;
 use crate::types::EntryPoints;
 use crate::util::{yield_budget, Path};
-use crate::{json::Coerce, prop};
 
 use super::{PackerError, PackerResult};
 
@@ -72,7 +74,7 @@ fn resolve_alias(
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use serde_json::json;
 

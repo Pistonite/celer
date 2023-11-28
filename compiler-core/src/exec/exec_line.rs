@@ -1,4 +1,5 @@
 use crate::comp::{CompLine, CompMovement};
+use crate::macros::test_suite;
 use crate::types::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
 use crate::util;
 
@@ -100,7 +101,7 @@ impl CompLine {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use crate::comp::{CompMarker, CompMovement};
     use crate::types::{

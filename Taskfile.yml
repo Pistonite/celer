@@ -40,7 +40,7 @@ tasks:
     cmds:
     - rustup update
     - cargo install cargo-watch cargo-expand wasm-pack regen-lang
-    - cargo install cross --git https://github.com/cross-rs/cross
+    - cargo install cross --git https://github.com/cross-rs/cross --locked
     - cargo install txtpp
     - task: themes:install
     - task: docs:install
@@ -59,7 +59,11 @@ tasks:
   check:rs:
     deps: [core:grammar]
     cmds:
-    - cargo clippy --all-features --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-macros --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-core --features native,test --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-core --features wasm --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-wasm --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package web-server --all-targets -- -D warnings -D clippy::todo
     - cargo fmt --check
 
   fix:rs:
@@ -76,6 +80,7 @@ tasks:
   build:server:
     deps:
     - core:grammar
+    dir: ./web-server
     cmds:
     - rustup default stable
     - cross build --bin celerserver --release --target x86_64-unknown-linux-musl
@@ -93,4 +98,15 @@ tasks:
     - core:grammar
     cmds:
     - cargo run --bin buildwasm --release
+
+  env:server:
+    desc: export the nvim lsp environment variables for server development. Run as `eval $(task env:server)`
+    cmds:
+    - echo "export LSP_RUST_ANALYZER_EXTRA_ARGS='--exclude compiler-wasm'"
+
+  env:wasm:
+    desc: export the nvim lsp environment variables for wasm development. Run as `eval $(task env:wasm)`
+    cmds:
+    - echo "export LSP_RUST_ANALYZER_EXTRA_ARGS='--exclude web-server'"
+    - echo "export LSP_RUST_ANALYZER_FEATURES=dep:tokio"
 

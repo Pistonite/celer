@@ -3,6 +3,7 @@
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
+use crate::macros::test_suite;
 use crate::prop;
 use crate::types::{GameCoord, MapMetadata};
 
@@ -103,7 +104,7 @@ pub fn pack_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapMetadata> 
     })
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use serde_json::json;
 

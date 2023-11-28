@@ -1,4 +1,5 @@
 use crate::comp::CompSection;
+use crate::macros::test_suite;
 use crate::types::{ExecSection, RouteMetadata};
 use crate::util::yield_budget;
 
@@ -28,7 +29,7 @@ impl CompSection {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use crate::comp::{CompLine, CompMarker, CompMovement};
     use crate::types::{GameCoord, MapIcon, MapLine, MapMarker};

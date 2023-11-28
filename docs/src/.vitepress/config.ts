@@ -2,10 +2,13 @@ import { TransformContext, defineConfig } from "vitepress";
 import {
     homeNav,
     homeSideBar,
+    apiNav,
+    apiSideBar,
+    pluginsNav,
+    pluginsSideBar,
     writingRoutesNav,
     writingRoutesSidebar,
 } from "./nav";
-import { pluginsNav, pluginsSideBar } from "./nav";
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -72,32 +75,13 @@ export default defineConfig({
         logo: "/../static/celer-3.svg",
 
         // https://vitepress.dev/reference/default-theme-config
-        nav: [
-            homeNav,
-            writingRoutesNav,
-            pluginsNav,
-            // { text: "Developer", link: "/developer/" },
-        ],
+        nav: [homeNav, writingRoutesNav, pluginsNav, apiNav],
 
         sidebar: {
             ...homeSideBar,
             ...writingRoutesSidebar,
             ...pluginsSideBar,
-            // "/developer/": [
-            //     {
-            //         text: "Web Client",
-            //         items: [
-            //             {
-            //                 text: "core-engine",
-            //                 link: "/developer/web-client/core-engine",
-            //             },
-            //             {
-            //                 text: "Redux Store",
-            //                 link: "/developer/web-client/data-store",
-            //             },
-            //         ],
-            //     },
-            // ],
+            ...apiSideBar,
         },
 
         socialLinks: [

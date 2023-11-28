@@ -2,6 +2,8 @@
 
 use std::collections::VecDeque;
 
+use crate::macros::test_suite;
+
 pub fn transform_text_fn<FGet, FExact, FRound>(
     text: &str,
     fn_get: FGet,
@@ -61,7 +63,7 @@ where
     Ok(new_text.into_iter().collect())
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use super::super::convert;
     use super::*;

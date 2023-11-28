@@ -1,3 +1,5 @@
+use crate::macros::test_suite;
+
 use super::Path;
 
 impl Path {
@@ -10,7 +12,7 @@ impl Path {
     }
 }
 
-#[cfg(test)]
+#[test_suite]
 mod test {
     use super::*;
 
