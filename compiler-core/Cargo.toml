@@ -7,7 +7,6 @@ edition = "2021"
 [dependencies]
 async-recursion = "1.0.4"
 async-trait = "0.1.73"
-# cached = { version = "0.45.1", features = ["async"]}
 compiler-macros = { path = "../compiler-macros" }
 derivative = "2.2.0"
 futures = "0.3.28"
@@ -35,10 +34,8 @@ default = []
 native = [
     "dep:tokio", 
     "tokio/rt-multi-thread",
-    # "cached/async_tokio_rt_multi_thread",
 ]
 wasm = [
-    # "cached/wasm", 
     "dep:wasm-bindgen", 
     "dep:wasm-bindgen-futures",
     "dep:js-sys",
