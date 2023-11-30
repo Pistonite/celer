@@ -7,26 +7,59 @@ import {
     Field,
     Switch,
     Option,
+    Checkbox,
 } from "@fluentui/react-components";
 import { useSelector } from "react-redux";
+import { useMemo } from "react";
 
 import {
+    documentSelector,
     settingsActions,
     settingsSelector,
     viewActions,
     viewSelector,
 } from "core/store";
-import { KeyBinding, KeyBindingName } from "core/doc";
+import { KeyBinding, KeyBindingName, getAllSplitTypes } from "core/doc";
 import { useActions } from "low/store";
 import { ThemeIds } from "low/themes.g";
 
 import { SettingsSection } from "./SettingsSection";
 
 export const DocSettings: React.FC = () => {
-    const { syncMapToDoc, forceAnchorNotes, hideDocWhenResizing } =
+    const {
+        serial,
+        document,
+    } = useSelector(documentSelector);
+    const { 
+        syncMapToDoc, 
+        forceAnchorNotes, 
+        hideDocWhenResizing ,
+        splitTypes,
+    } =
         useSelector(settingsSelector);
-    const { setSyncMapToDoc, setForceAnchorNotes, setHideDocWhenResizing } =
-        useActions(settingsActions);
+    const { 
+        setSyncMapToDoc, 
+        setForceAnchorNotes, 
+        setHideDocWhenResizing,
+        setSplitTypes,
+    } = useActions(settingsActions);
+
+    /* eslint-disable react-hooks/exhaustive-deps*/
+    const allSplitTypes = useMemo(() => {
+        if (document) {
+            return getAllSplitTypes(document);
+        }
+        return []
+    } , [serial]);
+    /* eslint-enable react-hooks/exhaustive-deps*/
+
+    const currentSplitTypes = useMemo(() => {
+        if (splitTypes) {
+            return splitTypes;
+        }
+        return allSplitTypes;
+    }, [allSplitTypes, splitTypes]);
+
     return (
         <>
             <SettingsSection title="Appearance">
@@ -73,6 +106,48 @@ export const DocSettings: React.FC = () => {
                     label="Next line"
                     hint="Move down one line in the document"
                 />
+                <KeyBindingEditor
+                    name="prevSplitKey"
+                    label="Previous split"
+                    hint="Move to the previous split (depends on split settings)"
+                />
+                <KeyBindingEditor
+                    name="nextSplitKey"
+                    label="Next split"
+                    hint="Move to the next split (depends on split settings)"
+                />
+            </SettingsSection>
+            <SettingsSection title="Splits">
+                <Field
+                    label="Choose where you want to split"
+                    hint="Check the boxes below to enable splitting on the corresponding types of items. Click the button to reset to the document default."
+                >
+                    <Button
+                        appearance="primary"
+                        onClick={() => setSplitTypes(undefined)}
+                    >
+                        Reset split types
+                    </Button>
+                </Field>
+                {
+                    allSplitTypes.map((type, i) => {
+                        return (
+                            <Checkbox 
+                                key={i}
+                                label={type}
+                                checked={currentSplitTypes.includes(type)}
+                                onChange={(_, data) => {
+                                    if (data.checked) {
+                                        setSplitTypes([...currentSplitTypes, type]);
+                                    } else {
+                                        setSplitTypes(currentSplitTypes.filter((x) => x !== type));
+                                    }
+                                }} 
+                            />
+                        );
+                    })
+                }
+
             </SettingsSection>
             <SettingsSection title="Map integration">
                 <Field

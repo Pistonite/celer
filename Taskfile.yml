@@ -104,9 +104,3 @@ tasks:
     cmds:
     - echo "export LSP_RUST_ANALYZER_EXTRA_ARGS='--exclude compiler-wasm'"
 
-  env:wasm:
-    desc: export the nvim lsp environment variables for wasm development. Run as `eval $(task env:wasm)`
-    cmds:
-    - echo "export LSP_RUST_ANALYZER_EXTRA_ARGS='--exclude web-server'"
-    - echo "export LSP_RUST_ANALYZER_FEATURES=dep:tokio"
-

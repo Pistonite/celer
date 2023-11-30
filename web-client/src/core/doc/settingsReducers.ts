@@ -6,7 +6,6 @@ import {
     DocSettingsState,
     KeyBinding,
     KeyBindingName,
-    initialPerDocSettings,
 } from "./state";
 
 export const setDocTheme = withPayload<DocSettingsState, string>(
@@ -27,11 +26,11 @@ export const setHideDocWhenResizing = withPayload<DocSettingsState, boolean>(
     },
 );
 
-export const setRememberDocPosition = withPayload<DocSettingsState, boolean>(
-    (state, value) => {
-        state.rememberDocPosition = value;
-    },
-);
+// export const setRememberDocPosition = withPayload<DocSettingsState, boolean>(
+//     (state, value) => {
+//         state.rememberDocPosition = value;
+//     },
+// );
 
 export const setForceAnchorNotes = withPayload<DocSettingsState, boolean>(
     (state, value) => {
@@ -39,7 +38,6 @@ export const setForceAnchorNotes = withPayload<DocSettingsState, boolean>(
     },
 );
 
-/// Set key bindings
 export const setDocKeyBinding = withPayload<
     DocSettingsState,
     {
@@ -52,47 +50,54 @@ export const setDocKeyBinding = withPayload<
     state[name] = value;
 });
 
+export const setSplitTypes = withPayload<
+    DocSettingsState,
+    string[] | undefined
+>((state, value) => {
+    state.splitTypes = value;
+});
+
 // per-doc settings
 
-type PerDocPayload<T> = { docId: string } & T;
+// type PerDocPayload<T> = { docId: string } & T;
 
-/// Set doc initial location
-export const setInitialDocLocation = withPayload<
-    DocSettingsState,
-    PerDocPayload<{
-        section: number;
-        line: number;
-    }>
->((state, { docId, section, line }) => {
-    if (!state.perDoc[docId]) {
-        state.perDoc[docId] = { ...initialPerDocSettings };
-    }
-    state.perDoc[docId].initialCurrentSection = section;
-    state.perDoc[docId].initialCurrentLine = line;
-});
-
-/// Set doc excluded diagnostic sources
-export const setExcludedDiagnosticSources = withPayload<
-    DocSettingsState,
-    PerDocPayload<{
-        value: string[];
-    }>
->((state, { docId, value }) => {
-    if (!state.perDoc[docId]) {
-        state.perDoc[docId] = { ...initialPerDocSettings };
-    }
-    state.perDoc[docId].excludeDiagnosticSources = value;
-});
-
-/// Set tags to not split on
-export const setExcludedSplitTags = withPayload<
-    DocSettingsState,
-    PerDocPayload<{
-        value: string[];
-    }>
->((state, { docId, value }) => {
-    if (!state.perDoc[docId]) {
-        state.perDoc[docId] = { ...initialPerDocSettings };
-    }
-    state.perDoc[docId].excludeSplitTags = value;
-});
+// /// Set doc initial location
+// export const setInitialDocLocation = withPayload<
+//     DocSettingsState,
+//     PerDocPayload<{
+//         section: number;
+//         line: number;
+//     }>
+// >((state, { docId, section, line }) => {
+//     if (!state.perDoc[docId]) {
+//         state.perDoc[docId] = { ...initialPerDocSettings };
+//     }
+//     state.perDoc[docId].initialCurrentSection = section;
+//     state.perDoc[docId].initialCurrentLine = line;
+// });
+//
+// /// Set doc excluded diagnostic sources
+// export const setExcludedDiagnosticSources = withPayload<
+//     DocSettingsState,
+//     PerDocPayload<{
+//         value: string[];
+//     }>
+// >((state, { docId, value }) => {
+//     if (!state.perDoc[docId]) {
+//         state.perDoc[docId] = { ...initialPerDocSettings };
+//     }
+//     state.perDoc[docId].excludeDiagnosticSources = value;
+// });
+//
+// /// Set tags to not split on
+// export const setExcludedSplitTags = withPayload<
+//     DocSettingsState,
+//     PerDocPayload<{
+//         value: string[];
+//     }>
+// >((state, { docId, value }) => {
+//     if (!state.perDoc[docId]) {
+//         state.perDoc[docId] = { ...initialPerDocSettings };
+//     }
+//     state.perDoc[docId].excludeSplitTags = value;
+// });

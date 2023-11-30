@@ -1,6 +1,6 @@
 //! Pack the `entry-point` property of the project.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde_json::Value;
 
@@ -19,7 +19,7 @@ pub async fn pack_entry_points(value: Value) -> PackerResult<EntryPoints> {
         .try_into_object()
         .map_err(|_| PackerError::InvalidMetadataPropertyType(prop::ENTRY_POINTS.to_string()))?;
 
-    let mut map = HashMap::with_capacity(obj.len());
+    let mut map = BTreeMap::new();
     for (key, value) in obj {
         yield_budget(64).await;
         let value = value.coerce_to_string();
@@ -55,7 +55,7 @@ pub async fn pack_entry_points(value: Value) -> PackerResult<EntryPoints> {
 
 const MAX_DEPTH: usize = 16;
 fn resolve_alias(
-    map: &HashMap<String, String>,
+    map: &BTreeMap<String, String>,
     key: &str,
     depth: usize,
 ) -> PackerResult<Option<String>> {

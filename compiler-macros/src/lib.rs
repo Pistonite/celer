@@ -41,7 +41,7 @@ pub fn maybe_send(
     let attr = TokenStream::from(attr);
     let input = TokenStream::from(input);
     let tokens = quote! {
-        #[cfg_attr(feature="native", #attr)]
+        #[cfg_attr(not(feature="wasm"), #attr)]
         #[cfg_attr(feature="wasm", #attr(?Send))]
         #input
     };

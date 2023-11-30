@@ -116,6 +116,7 @@ async fn pack_project(
         map: builder.map.ok_or(PackerError::MissingMap)?,
         icons: builder.icons,
         tags: builder.tags,
+        splits: builder.splits
     };
 
     let meta = CompilerMetadata {

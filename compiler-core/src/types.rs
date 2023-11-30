@@ -4,7 +4,7 @@
 //! definitions and WASM ABI
 
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +13,7 @@ use crate::macros::derive_wasm;
 /// Compiler entry points (name, path) pairs
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm(feature = "wasm")]
-pub struct EntryPoints(#[tsify(type = "Record<string, string>")] pub HashMap<String, String>);
+pub struct EntryPoints(#[tsify(type = "Record<string, string>")] pub BTreeMap<String, String>);
 
 impl EntryPoints {
     /// Remove the aliases. Only keep the entry points that map directly to a path
@@ -70,13 +70,15 @@ pub struct RouteMetadata {
     pub map: MapMetadata,
     /// Arbitrary key-value pairs that can be used for statistics or any other value
     #[tsify(type = "Record<string, string>")]
-    pub stats: HashMap<String, String>,
+    pub stats: BTreeMap<String, String>,
     /// Icon id to url map
     #[tsify(type = "Record<string, string>")]
-    pub icons: HashMap<String, String>,
+    pub icons: BTreeMap<String, String>,
     /// Tag id to tag
     #[tsify(type = "Record<string, DocTag>")]
-    pub tags: HashMap<String, DocTag>,
+    pub tags: BTreeMap<String, DocTag>,
+    /// Default tags to split
+    pub splits: Vec<String>,
 }
 
 /// Document tag type
@@ -104,6 +106,9 @@ pub struct DocTag {
     /// Background color of the text (light, dark)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub background: Option<DocColor>,
+    /// Display name for the split type of this tag
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub split_type: Option<String>,
 }
 
 macro_rules! apply_tag_prop {
@@ -131,6 +136,7 @@ impl DocTag {
         apply_tag_prop!(self, other, strikethrough);
         apply_tag_prop!(self, other, color);
         apply_tag_prop!(self, other, background);
+        apply_tag_prop!(self, other, split_type);
     }
 
     /// Apply the styles from another tag if self doesn't have the property
@@ -141,6 +147,7 @@ impl DocTag {
         apply_tag_if_none!(self, other, strikethrough);
         apply_tag_if_none!(self, other, color);
         apply_tag_if_none!(self, other, background);
+        apply_tag_if_none!(self, other, split_type);
     }
 }
 
