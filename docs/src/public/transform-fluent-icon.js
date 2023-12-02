@@ -1,5 +1,10 @@
 (function () {
-    function load() {
+    var transformingHref = undefined;
+    function transformIcons() {
+        if (window.location.href === transformingHref) {
+            return;
+        }
+        transformingHref = window.location.href;
         var elements = document.querySelectorAll("i.fluent-icon");
         elements.forEach(function (e) {
             var icon = e.getAttribute("data-icon");
@@ -30,9 +35,20 @@
                 });
         });
     }
+    function initLoadIcons() {
+        transformIcons();
+        if (window.MutationObserver) {
+            var observer = new MutationObserver(transformIcons);
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+            });
+        }
+    }
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", load);
+        document.addEventListener("DOMContentLoaded", initLoadIcons);
     } else {
-        load();
+        initLoadIcons();
     }
 })();
