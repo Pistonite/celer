@@ -14,10 +14,8 @@ route:
     # ^ note the property should have 2 spaces after where the line starts
 ```
 :::tip
-You can reference all properties for lines in [this article](./customizing-lines.md).
+You can reference all properties for lines [here](./property-reference.md).
 :::
-This section is an extension of [Customizing Lines](./customizing-lines.md),
-focusing on using [Tags](./config/tags.md) to customize text style in supported places.
 
 ## Primary and Secondary Text
 The `text` and `comment` property are used to specify primary and secondary text.

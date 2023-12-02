@@ -22,5 +22,5 @@ route:
 ```
 ![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1180397155500961812/image.png?ex=657d4584&is=656ad084&hm=cf45fa428bb55f0b545de91735c684d36adb9f3ce64443cc8a3ebddda3fe92a2&)
 
-You can check out more options for icon configuration [here](./customizing-lines#icon), including
+You can check out more options for icon configuration [here](./property-reference#icon), including
 changing its size in the map or hiding the icon in the document or the map.

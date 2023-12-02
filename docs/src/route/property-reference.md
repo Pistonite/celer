@@ -16,8 +16,8 @@ The rest of this page lists all available properties.
 The following properties are used for text customization:
 |Property|Type|Description|
 |-|-|-|
-|`comment`|[Rich Text](./customizing-text.md)|Secondary text. This text will appear below the primary text in a smaller font|
-|`text`|[Rich Text](./customizing-text.md)|Override the primary text. Presets specified here will NOT be expanded|
+|`comment`|[Rich Text](./tagging-text.md)|Secondary text. This text will appear below the primary text in a smaller font|
+|`text`|[Rich Text](./tagging-text.md)|Override the primary text. Presets specified here will NOT be expanded|
 
 Example:
 ```yaml
@@ -30,7 +30,7 @@ Example:
 The `notes` property can be used for adding notes that appear on the side.
 |Property|Type|Description|
 |-|-|-|
-|`notes`|[Rich Text](./customizing-text.md)|Set a text note to appear on the side|
+|`notes`|[Rich Text](./tagging-text.md)|Set a text note to appear on the side|
 
 You can also specify an array instead of a single note.
 
@@ -64,7 +64,7 @@ Example:
 This property can be used to customize the counter block.
 |Property|Type|Description|
 |-|-|-|
-|`counter`|[Rich Text](./customizing-text.md)|Set the text and style for the counter block on the left of the main column|
+|`counter`|[Rich Text](./tagging-text.md)|Set the text and style for the counter block on the left of the main column|
 :::warning
 The Rich Text style is applied to the whole block. This means you can only have one tag like `.tag(hello)` or `hello` (no tag)
 :::
@@ -170,7 +170,7 @@ See [Customizing Movements](./customizing-movements) for more details.
 Use this property to set the split name.
 |Property|Type|Description|
 |-|-|-|
-|`split-name`|[Rich Text](./customizing-text.md)|Name to be used when exporting to compatible software, such as livesplit|
+|`split-name`|[Rich Text](./tagging-text.md)|Name to be used when exporting to compatible software, such as livesplit|
 :::tip
 You can use Rich Text for the split name so that plugins can alter it if necessary.
 When exporting, the style provided by the Rich Text is usually not kept.

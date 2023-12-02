@@ -27,7 +27,7 @@ route: # The main route array
         z: .sub(y) # subtract y from z
 ```
 ### Operations
-Variables are manipulated using the [Rich Text](../route/customizing-text.md) system with special tags.
+Variables are manipulated using the [Rich Text](../route/tagging-text.md) system with special tags.
 These tags don't change how the text is displayed.
 
 There are 5 operations available to use in the `vars` property.
@@ -122,7 +122,6 @@ route:
       comment: .var(wood) # in secondary text
       notes: I really have .var(wood) # in notes
 ```
-See [Customizing Lines](../route/customizing-lines.md) for all the properties that accept Rich Text.
 
 Internally, the `var` tag will be replaced with the `val` tag and the actual value of the variable.
 For example, if `wood` is 3, `.var(wood)` will be turned into `.val(3)`.
