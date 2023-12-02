@@ -183,7 +183,7 @@ mod test {
             ("test2".to_string(), "test".to_string()),
         ]
         .into_iter()
-        .collect::<HashMap<_, _>>();
+        .collect::<BTreeMap<_, _>>();
 
         assert_eq!(result, Ok(EntryPoints(expected)));
     }
@@ -200,7 +200,7 @@ mod test {
             ("test2".to_string(), "/root".to_string()),
         ]
         .into_iter()
-        .collect::<HashMap<_, _>>();
+        .collect::<BTreeMap<_, _>>();
 
         assert_eq!(result, Ok(EntryPoints(expected)));
     }
