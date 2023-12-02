@@ -12,20 +12,22 @@ export const DocScroll = new DOMId<HTMLElement>("doc-scroll");
 /// The container div of the document
 export const DocContainer = new DOMId<HTMLElement>("doc-container");
 /// The container div of main doc content (excluding preface)
-export const DocContentContainer = new DOMId<HTMLElement>("doccontent-container");
+export const DocContentContainer = new DOMId<HTMLElement>(
+    "doccontent-container",
+);
 /// The note panel
 export const DocNoteContainer = new DOMId<HTMLElement>("doc-side");
 /// Class for the doc line container
 export const DocLineContainerClass = "docline-container";
 
 /// Class for the section heads (title) in the document
-export const DocSectionHead= new DOMClass("docsection-head");
+export const DocSectionHead = new DOMClass("docsection-head");
 DocSectionHead.style({
     "box-sizing": "border-box",
-    "padding": "16px 0px 16px 64px",
+    padding: "16px 0px 16px 64px",
     " span": {
-        "word-wrap": "break-word"
-    }
+        "word-wrap": "break-word",
+    },
 });
 
 /// Scroll view type
@@ -68,7 +70,9 @@ export const getLineLocationFromElement = (
 /// use DocContentContainer for relative to the main content
 ///
 /// line.getBoundingClientRect().y - containerOffsetY = line position relative to container
-export const getScrollContainerOffsetY = <E extends HTMLElement>(element: DOMId<E>): number => {
+export const getScrollContainerOffsetY = <E extends HTMLElement>(
+    element: DOMId<E>,
+): number => {
     const containerElement = element.get();
     if (!containerElement) {
         return 0;

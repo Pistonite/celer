@@ -37,7 +37,8 @@ export const getRelativeSplitLocation = (
             doc,
             currentSection,
             currentLine,
-            lineDelta,);
+            lineDelta,
+        );
         currentSection = newLoc.section;
         currentLine = newLoc.line;
 
@@ -59,7 +60,7 @@ export const getRelativeSplitLocation = (
     }
 
     return { section: currentSection, line: currentLine };
-}
+};
 
 /// Get the location relative to another location by line delta
 ///
@@ -120,7 +121,7 @@ export const getDefaultSplitTypes = (doc: ExecDoc): string[] => {
         }
     });
     return output;
-}
+};
 
 /// Get all split types defined in the document tags
 export const getAllSplitTypes = (doc: ExecDoc): string[] => {
@@ -133,4 +134,4 @@ export const getAllSplitTypes = (doc: ExecDoc): string[] => {
     const array = Array.from(output);
     array.sort();
     return array;
-}
+};

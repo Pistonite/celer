@@ -2,11 +2,7 @@
 
 import { withPayload } from "low/store";
 
-import {
-    DocSettingsState,
-    KeyBinding,
-    KeyBindingName,
-} from "./state";
+import { DocSettingsState, KeyBinding, KeyBindingName } from "./state";
 
 export const setDocTheme = withPayload<DocSettingsState, string>(
     (state, theme) => {

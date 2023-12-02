@@ -19,26 +19,24 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { KeyBinding, KeyBindingName, getAllSplitTypes, useDocSplitTypes } from "core/doc";
+import {
+    KeyBinding,
+    KeyBindingName,
+    getAllSplitTypes,
+    useDocSplitTypes,
+} from "core/doc";
 import { useActions } from "low/store";
 import { ThemeIds } from "low/themes.g";
 
 import { SettingsSection } from "./SettingsSection";
 
 export const DocSettings: React.FC = () => {
-    const {
-        serial,
-        document,
-    } = useSelector(documentSelector);
-    const { 
-        syncMapToDoc, 
-        forceAnchorNotes, 
-        hideDocWhenResizing ,
-    } =
+    const { serial, document } = useSelector(documentSelector);
+    const { syncMapToDoc, forceAnchorNotes, hideDocWhenResizing } =
         useSelector(settingsSelector);
-    const { 
-        setSyncMapToDoc, 
-        setForceAnchorNotes, 
+    const {
+        setSyncMapToDoc,
+        setForceAnchorNotes,
         setHideDocWhenResizing,
         setSplitTypes,
     } = useActions(settingsActions);
@@ -48,8 +46,8 @@ export const DocSettings: React.FC = () => {
         if (document) {
             return getAllSplitTypes(document);
         }
-        return []
-    } , [serial]);
+        return [];
+    }, [serial]);
     /* eslint-enable react-hooks/exhaustive-deps*/
 
     const currentSplitTypes = useDocSplitTypes();
@@ -114,9 +112,19 @@ export const DocSettings: React.FC = () => {
             <SettingsSection title="Splits">
                 <Field
                     label="Choose where you want to split"
-                    validationState={allSplitTypes.length === 0 ? "warning" : undefined}
-                    validationMessage={allSplitTypes.length === 0 ? "The document doesn't define any split type." : undefined}
-                    hint={allSplitTypes.length === 0 ? undefined : "Check the boxes below to enable splitting on the corresponding types of items. Click the button to reset to the document default."}
+                    validationState={
+                        allSplitTypes.length === 0 ? "warning" : undefined
+                    }
+                    validationMessage={
+                        allSplitTypes.length === 0
+                            ? "The document doesn't define any split type."
+                            : undefined
+                    }
+                    hint={
+                        allSplitTypes.length === 0
+                            ? undefined
+                            : "Check the boxes below to enable splitting on the corresponding types of items. Click the button to reset to the document default."
+                    }
                 >
                     <Button
                         appearance="primary"
@@ -125,25 +133,26 @@ export const DocSettings: React.FC = () => {
                         Reset split types
                     </Button>
                 </Field>
-                {
-                    allSplitTypes.map((type, i) => {
-                        return (
-                            <Checkbox 
-                                key={i}
-                                label={type}
-                                checked={currentSplitTypes.includes(type)}
-                                onChange={(_, data) => {
-                                    if (data.checked) {
-                                        setSplitTypes([...currentSplitTypes, type]);
-                                    } else {
-                                        setSplitTypes(currentSplitTypes.filter((x) => x !== type));
-                                    }
-                                }} 
-                            />
-                        );
-                    })
-                }
-
+                {allSplitTypes.map((type, i) => {
+                    return (
+                        <Checkbox
+                            key={i}
+                            label={type}
+                            checked={currentSplitTypes.includes(type)}
+                            onChange={(_, data) => {
+                                if (data.checked) {
+                                    setSplitTypes([...currentSplitTypes, type]);
+                                } else {
+                                    setSplitTypes(
+                                        currentSplitTypes.filter(
+                                            (x) => x !== type,
+                                        ),
+                                    );
+                                }
+                            }}
+                        />
+                    );
+                })}
             </SettingsSection>
             <SettingsSection title="Map integration">
                 <Field

@@ -20,7 +20,7 @@ import {
     DocContentContainer,
     DocLog,
     DocScroll,
-    DocNoteContainer
+    DocNoteContainer,
 } from "./utils";
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocController, initDocController } from "./DocController";
@@ -138,7 +138,7 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                         </div>
                     ))}
                 </div>
-                <div 
+                <div
                     id={DocContentContainer.id}
                     style={{
                         display: "flex",
@@ -147,16 +147,23 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                     <div
                         id="doc-main"
                         style={{
-                            minWidth: "min(calc(100% - var(--note-min-width)), 380px)",
-                            maxWidth: "380px"
+                            minWidth:
+                                "min(calc(100% - var(--note-min-width)), 380px)",
+                            maxWidth: "380px",
                         }}
                     >
                         {document.route.map(({ name, lines }, i) => (
                             <DocSection index={i} key={i} name={name}>
                                 {lines.map((line, j) => {
-                                    const counterTag = line.counterText?.tag || undefined;
-                                    const splitType = counterTag && document.project.tags[counterTag]?.splitType;
-                                    const isSplit = splitType && splitTypes.includes(splitType);
+                                    const counterTag =
+                                        line.counterText?.tag || undefined;
+                                    const splitType =
+                                        counterTag &&
+                                        document.project.tags[counterTag]
+                                            ?.splitType;
+                                    const isSplit =
+                                        splitType &&
+                                        splitTypes.includes(splitType);
                                     return (
                                         <DocLine
                                             sectionIndex={i}
@@ -168,8 +175,8 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                             iconUrl={
                                                 line.icon
                                                     ? document.project.icons[
-                                                    line.icon
-                                                ]
+                                                          line.icon
+                                                      ]
                                                     : undefined
                                             }
                                             secondaryText={line.secondaryText}
@@ -179,12 +186,12 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                                             isSplit={!!isSplit}
                                             splitType={splitType || undefined}
                                         />
-                                    )
+                                    );
                                 })}
                             </DocSection>
                         ))}
                     </div>
-                    <div 
+                    <div
                         id={DocNoteContainer.id}
                         style={{
                             // need this because note blocks have position: absolute

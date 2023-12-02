@@ -6,12 +6,8 @@ import { getDefaultSplitTypes } from "./utils";
 
 /// Get the current split types as configured in the settings
 export const useDocSplitTypes = (): string[] => {
-    const { splitTypes, } =
-        useSelector(settingsSelector);
-    const {
-        serial,
-        document,
-    } = useSelector(documentSelector);
+    const { splitTypes } = useSelector(settingsSelector);
+    const { serial, document } = useSelector(documentSelector);
     /* eslint-disable react-hooks/exhaustive-deps*/
     const currentSplitTypes = useMemo(() => {
         if (splitTypes) {
@@ -24,4 +20,4 @@ export const useDocSplitTypes = (): string[] => {
     }, [serial, splitTypes]);
     /* eslint-enable react-hooks/exhaustive-deps*/
     return currentSplitTypes;
-}
+};

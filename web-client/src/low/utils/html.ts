@@ -47,19 +47,26 @@ export class DOMStyleInject {
     }
 }
 
-function addCssObjectToMap(selector: string, obj: Record<string, unknown>, map: Record<string, string>) {
+function addCssObjectToMap(
+    selector: string,
+    obj: Record<string, unknown>,
+    map: Record<string, string>,
+) {
     let group = map[selector] || "";
-    Object.entries(obj)
-        .forEach(([key, value]) => {
-            if (value === undefined && value === null) {
-                return;
-            }
-            if (typeof value === "object") {
-                addCssObjectToMap(`${selector}${key}`, value as Record<string, unknown>, map);
-                return;
-            }
-            group += `${key}:${value};`
-        });
+    Object.entries(obj).forEach(([key, value]) => {
+        if (value === undefined && value === null) {
+            return;
+        }
+        if (typeof value === "object") {
+            addCssObjectToMap(
+                `${selector}${key}`,
+                value as Record<string, unknown>,
+                map,
+            );
+            return;
+        }
+        group += `${key}:${value};`;
+    });
     map[selector] = group;
 }
 
@@ -73,9 +80,11 @@ export class DOMClass {
     public style(style: Record<string, unknown>) {
         const map = {};
         addCssObjectToMap(`.${this.className}`, style, map);
-        const css = Object.entries(map).map(([selector, group]) => {
-            return `${selector}{${group}}`;
-        }).join("");
+        const css = Object.entries(map)
+            .map(([selector, group]) => {
+                return `${selector}{${group}}`;
+            })
+            .join("");
         new DOMStyleInject(`${this.className}-styles`).setStyle(css);
     }
 

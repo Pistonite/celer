@@ -36,7 +36,6 @@ export type DocSettingsState = {
     ///
     /// Undefined means to use the document default
     splitTypes: string[] | undefined;
-
 } & KeyBindingSettings;
 
 export type KeyBindingSettings = {

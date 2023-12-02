@@ -20,7 +20,12 @@ export const DocSection: React.FC<PropsWithChildren<DocSectionProps>> = ({
 }) => {
     return (
         <div className="docsection-container" data-section={index}>
-            <div className={clsx(DocSectionHead.className, SectionBannerWidthClass)}>
+            <div
+                className={clsx(
+                    DocSectionHead.className,
+                    SectionBannerWidthClass,
+                )}
+            >
                 <Text size={700}>{name || "\u00a0"}</Text>
             </div>
             <div className="docsection-body">{children}</div>

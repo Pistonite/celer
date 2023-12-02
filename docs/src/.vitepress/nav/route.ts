@@ -28,7 +28,10 @@ export const writingRoutesSidebar = {
                 { text: "Text and Notes", link: "/route/text-and-notes" },
                 { text: "Tagging Text", link: "/route/tagging-text" },
                 { text: "Adding Icons", link: "/route/adding-icons" },
-                { text: "Counter and Splits", link: "/route/counter-and-splits" },
+                {
+                    text: "Counter and Splits",
+                    link: "/route/counter-and-splits",
+                },
                 { text: "Movements", link: "/route/customizing-movements" },
                 // { text: "Customizing Lines", link: "/route/customizing-lines" },
                 // {
@@ -37,7 +40,10 @@ export const writingRoutesSidebar = {
                 // },
                 { text: "Using Presets", link: "/route/using-presets" },
                 { text: "Publish the Route", link: "/route/publish" },
-                { text: "Property Reference", link: "/route/property-reference" },
+                {
+                    text: "Property Reference",
+                    link: "/route/property-reference",
+                },
             ],
         },
         {

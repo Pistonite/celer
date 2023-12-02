@@ -8,7 +8,11 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { getDefaultSplitTypes, getRelativeLocation, getRelativeSplitLocation } from "core/doc";
+import {
+    getDefaultSplitTypes,
+    getRelativeLocation,
+    getRelativeSplitLocation,
+} from "core/doc";
 
 /// Manager for key events and bindings
 ///
@@ -58,12 +62,8 @@ export class KeyMgr {
         } else if (this.lastDetected.length === 0) {
             // detecting mode
             this.handleAddKey(key);
-            const {
-                prevLineKey,
-                nextLineKey,
-                prevSplitKey,
-                nextSplitKey,
-            } = settingsSelector(this.store.getState());
+            const { prevLineKey, nextLineKey, prevSplitKey, nextSplitKey } =
+                settingsSelector(this.store.getState());
             if (this.keySequenceMatches(prevLineKey)) {
                 this.handleMoveLineAction(-1);
                 this.lastDetected = prevLineKey;
