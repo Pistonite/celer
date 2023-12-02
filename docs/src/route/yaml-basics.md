@@ -78,7 +78,9 @@ person:
   name: Alice
   age: 28
   address:
+# ^ note this property starts here
     street: 123 Main St
+  # ^ note the indentation of properties in a mapping is 2 more than the parent
     city: Wonderland
     country: Fantasyland
   hobbies:

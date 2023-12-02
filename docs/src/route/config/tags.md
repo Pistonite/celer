@@ -9,7 +9,7 @@ hello .dir(world)
 ```
 The text `world` is tagged with the `dir` tag.
 
-For more on Rich Text and how to use them, see [Customizing Text](../customizing-text.md).
+For more on Rich Text and how to use them, see [Tagging Text](../tagging-text.md).
 This section focuses on how the tags used in Rich Texts are configured.
 
 Similar to icons, tags defined in all configurations are combined.

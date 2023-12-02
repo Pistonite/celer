@@ -25,7 +25,6 @@ Example:
   - Do the thing:
       comment: be fast
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174487919004766228/image.png?ex=6567c61c&is=6555511c&hm=1bbc08280e7609f8ca2d0d942bd60d67256b0530954dc15c00e3a13c6fa12ac1&)
 
 ## Notes
 The `notes` property can be used for adding notes that appear on the side.
@@ -45,7 +44,6 @@ Example:
       - if you can't do it you can do the backup
       - if you fail the backup you can do the other backup
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174488604505034822/image.png?ex=6567c6c0&is=655551c0&hm=d584cd5bb6a5fafbf1546361b4cd05169ecffd6e53e59584dfa88f4ca8ab569b&)
 
 ## Banner
 You can use the `banner` property to make a line extend to cover the notes panel
@@ -59,25 +57,7 @@ Example:
   - This is a normal line
   - This is a banner line:
       banner: true
-
-  # if the banner text is really long, you can
-  # specify the content with the `text` property
-  # so you can break it up in to multiple lines without escaping
-
-  - banner: # "banner" here is a placeholder text
-      text: Once there was a young artist who struggled
-            to find inspiration in her small town. One 
-            day, she discovered a hidden garden filled 
-            with vibrant flowers and singing birds.
-            Inspired, she began painting the garden, 
-            capturing its beauty and essence. As she shared 
-            her art, it brought joy and color to the lives
-            of people in her town. This recognition
-            encouraged her to pursue her dreams, reminding
-            her that inspiration can be found in the simplest of places.
-      banner: true
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174493787196756038/image.png?ex=6567cb93&is=65555693&hm=f1ca333826bacffe7a823b77086618208e451ca19242bca4ccf025c4abdbe47e&)
 
 
 ## Counter
@@ -87,9 +67,6 @@ This property can be used to customize the counter block.
 |`counter`|[Rich Text](./customizing-text.md)|Set the text and style for the counter block on the left of the main column|
 :::warning
 The Rich Text style is applied to the whole block. This means you can only have one tag like `.tag(hello)` or `hello` (no tag)
-:::
-:::tip
-This is the replacement for the `split-type` property in the older Celer format
 :::
 
 ## Icon
@@ -186,8 +163,8 @@ Examples:
 ```
 
 ## Movements
-Movements are more complicated than other properties, so it has its own dedicated section.
-See [Customizing Movements](./customizing-movements)
+Movements are customized with the `movements` property.
+See [Customizing Movements](./customizing-movements) for more details.
 
 ## Split Name
 Use this property to set the split name.

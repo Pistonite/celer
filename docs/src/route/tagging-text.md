@@ -1,8 +1,19 @@
-# Customizing Text
-This section is an extension of [Customizing Lines](./customizing-lines.md),
-focusing on using [Tags](./config/tags.md) to customize text style in supported places.
+# Tagging Text
+In this section, you will see how to use tags to customize the styles of texts in the main column and in the notes.
 
-## Syntax
+## Configuring a Tag
+Let's add a tag called `red` in the configuration, that changes the text to red
+```yaml
+config:
+- tags:
+    red:
+      color: red
+```
+:::tip
+See [Tags](./config/tags.md) for full reference on configuring tags.
+:::
+
+## Tagging Text
 The general syntax for tagging part of a text is:
 ```
 .foo(example)
@@ -10,8 +21,18 @@ The general syntax for tagging part of a text is:
 Here, the text `example` is tagged with the tag `foo`.
 There should be a tag defined with the name `foo`. Otherwise, the compiler will generate a warning.
 
+Now let's add our `red` tag to some text:
+```yaml
+route:
+- Example Section:
+  - I am .red(red):
+      comment: .red(hello) world
+      notes: this .red(color) is cool
+```
+![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1180394934998683679/image.png?ex=657d4373&is=656ace73&hm=6ff820e7d348437325904f8133b6e1dba8f1d965731e99e63d63e4faac2eecab&)
+
 ## White Spaces
-All white spaces in Rich Text are significant.
+All white spaces in tags are significant.
 
 If you write
 ```

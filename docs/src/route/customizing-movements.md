@@ -1,9 +1,8 @@
-# Customizing Movements
-This section is an extension of [Customizing Lines](./customizing-lines.md),
-focusing on the `coord` and `movements` properties for customizing map movements.
+# Movements and Map Features
+This section will cover properties that let you add visuals to the map.
 
 ## Single Coordinate
-Use the `coord` property if the line has a single movement segment.
+Use the `coord` property to specify the coordinates on the map this line corresponds to.
 The coordinate specified should be a [Route Coord](./config/map#coordinate-concepts)
 
 ```yaml
@@ -18,13 +17,20 @@ If both `coord` and `movements` are specified, `coord` will replace `movements`
 :::
 
 ## Multiple Movements
-The `movements` property can be used to specify more than one point of movement:
+The `movements` property can be used to specify more than one point of movement in a line.
 ```yaml
 - Move through 3 points:
     movements:
     - [0, 0]
     - [1, 2]
     - [100, 200]
+```
+## Color
+The `color` property allows you to change the line color. The change applies to all lines after this point,
+until you change it again. The color will also reflect in the document as a thin line to the left of the main column
+```yaml
+- Change to red:
+    color: red
 ```
 
 ## Additional Properties
@@ -120,3 +126,14 @@ into the `movements` of the line.
 When using presets in movements, properties other than `movements` of the
 preset are ignored.
 :::
+
+
+## Markers
+The `markers` property let you put circles on the map without the line going through them.
+```yaml
+- Markers example:
+    markers:
+    - at: [0, 0]
+    - at: [1, 2, 3]
+      color: red
+```
