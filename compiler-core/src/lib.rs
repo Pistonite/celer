@@ -6,7 +6,6 @@ pub mod json;
 pub mod lang;
 pub mod pack;
 pub mod plug;
-pub mod post;
 pub mod prop;
 pub mod types;
 pub mod util;

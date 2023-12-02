@@ -22,12 +22,6 @@ export const setHideDocWhenResizing = withPayload<DocSettingsState, boolean>(
     },
 );
 
-// export const setRememberDocPosition = withPayload<DocSettingsState, boolean>(
-//     (state, value) => {
-//         state.rememberDocPosition = value;
-//     },
-// );
-
 export const setForceAnchorNotes = withPayload<DocSettingsState, boolean>(
     (state, value) => {
         state.forceAnchorNotes = value;
@@ -52,48 +46,3 @@ export const setSplitTypes = withPayload<
 >((state, value) => {
     state.splitTypes = value;
 });
-
-// per-doc settings
-
-// type PerDocPayload<T> = { docId: string } & T;
-
-// /// Set doc initial location
-// export const setInitialDocLocation = withPayload<
-//     DocSettingsState,
-//     PerDocPayload<{
-//         section: number;
-//         line: number;
-//     }>
-// >((state, { docId, section, line }) => {
-//     if (!state.perDoc[docId]) {
-//         state.perDoc[docId] = { ...initialPerDocSettings };
-//     }
-//     state.perDoc[docId].initialCurrentSection = section;
-//     state.perDoc[docId].initialCurrentLine = line;
-// });
-//
-// /// Set doc excluded diagnostic sources
-// export const setExcludedDiagnosticSources = withPayload<
-//     DocSettingsState,
-//     PerDocPayload<{
-//         value: string[];
-//     }>
-// >((state, { docId, value }) => {
-//     if (!state.perDoc[docId]) {
-//         state.perDoc[docId] = { ...initialPerDocSettings };
-//     }
-//     state.perDoc[docId].excludeDiagnosticSources = value;
-// });
-//
-// /// Set tags to not split on
-// export const setExcludedSplitTags = withPayload<
-//     DocSettingsState,
-//     PerDocPayload<{
-//         value: string[];
-//     }>
-// >((state, { docId, value }) => {
-//     if (!state.perDoc[docId]) {
-//         state.perDoc[docId] = { ...initialPerDocSettings };
-//     }
-//     state.perDoc[docId].excludeSplitTags = value;
-// });

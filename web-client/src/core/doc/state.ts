@@ -53,40 +53,18 @@ export type KeyBindingName = keyof KeyBindingSettings;
 /// The keys need to be pressed in order to trigger the action.
 export type KeyBinding = string[];
 
-// /// Per-doc settings
-// export type PerDocSettings = {
-//     /// The initial current line position
-//     ///
-//     /// Document will be scrolled to this line on load
-//     initialCurrentSection: number;
-//     initialCurrentLine: number;
-//     /// Hide diagnostics from sources
-//     excludeDiagnosticSources: string[];
-//     /// Tags to not split on
-//     excludeSplitTags: string[];
-// };
-
 /// Default doc settings
 export const initialDocSettingsState: DocSettingsState = {
     theme: "default",
     syncMapToDoc: true,
     hideDocWhenResizing: false,
-    // rememberDocPosition: true,
     forceAnchorNotes: false,
     splitTypes: undefined,
     prevLineKey: ["Alt", "ArrowUp"],
     nextLineKey: ["Alt", "ArrowDown"],
     prevSplitKey: ["PageUp"],
     nextSplitKey: ["PageDown"],
-    // perDoc: {},
 };
-
-// export const initialPerDocSettings: PerDocSettings = {
-//     initialCurrentSection: 0,
-//     initialCurrentLine: 0,
-//     excludeDiagnosticSources: [],
-//     excludeSplitTags: [],
-// };
 
 /// The document state type
 export type DocumentState = {

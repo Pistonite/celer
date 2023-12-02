@@ -2,24 +2,6 @@
 
 import { DocPoorText, DocRichTextBlock, ExecDoc } from "low/celerc";
 
-// import {
-//     DocSettingsState,
-//     PerDocSettings,
-//     initialPerDocSettings,
-// } from "./state";
-
-// /// Get per-doc settings by doc id
-// export const getPerDocSettings = (
-//     state: DocSettingsState,
-//     docId: string,
-// ): PerDocSettings => {
-//     if (!state.perDoc[docId]) {
-//         return initialPerDocSettings;
-//     }
-//     return state.perDoc[docId];
-// };
-//
-
 /// Get the previous or next <delta>-th split.
 export const getRelativeSplitLocation = (
     doc: ExecDoc,
