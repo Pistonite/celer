@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 
@@ -18,10 +18,11 @@ const MAX_CONFIG_DEPTH: usize = 16;
 #[derive(Default, Debug)]
 pub struct ConfigBuilder {
     pub map: Option<MapMetadata>,
-    pub icons: HashMap<String, String>,
-    pub tags: HashMap<String, DocTag>,
+    pub icons: BTreeMap<String, String>,
+    pub tags: BTreeMap<String, DocTag>,
     pub presets: BTreeMap<String, Preset>,
     pub plugins: Vec<PluginInstance>,
+    pub splits: Vec<String>,
     pub default_icon_priority: Option<i64>,
 }
 
@@ -91,6 +92,15 @@ async fn process_config(
             }
             prop::TAGS => {
                 process_tags_config(builder, value, trace).await?;
+            }
+            prop::SPLITS => {
+                let splits = value.try_into_array().map_err(|_| {
+                    PackerError::InvalidConfigProperty(trace.clone(), prop::SPLITS.to_string())
+                })?;
+                for split in splits.into_iter() {
+                    yield_budget(256).await;
+                    builder.splits.push(split.coerce_to_string());
+                }
             }
             prop::PRESETS => {
                 let presets =

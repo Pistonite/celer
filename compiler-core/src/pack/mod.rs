@@ -1,11 +1,7 @@
-//! # Packer
+//! Packer (first steps of compiling a route)
 //!
-//! The packer is the first step of compiling a route.
-//! It takes a project from a resource context, processes the metadata,
+//! The packer takes a project from a resource context, processes the metadata,
 //! and resolves any `use` property defined in the route or metadata.
-//!
-//! The output of the packer is a [`RouteMetadata`](celerctypes::RouteMetadata)
-//! and a json blob of the route.
 
 use std::convert::Infallible;
 use std::fmt::{Display, Formatter};

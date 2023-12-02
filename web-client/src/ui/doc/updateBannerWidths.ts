@@ -1,6 +1,6 @@
 //! Logic for updating the width of banners upon updates
 
-import { DocContainerId, DocLog, getInjectedStyleTag } from "./utils";
+import { DocContainer, DocLog, getInjectedStyleTag } from "./utils";
 
 export const SectionBannerWidthClass = "section-banner-width-injected";
 export const BannerWidthClass = "banner-width-injected";
@@ -9,7 +9,7 @@ export const BannerTextWithIconWidthClass =
     "banner-text-width-with-icon-injected";
 
 export const updateBannerWidths = (): void => {
-    const container = document.getElementById(DocContainerId);
+    const container = DocContainer.get();
     if (!container) {
         return;
     }

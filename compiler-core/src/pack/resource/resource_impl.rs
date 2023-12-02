@@ -6,9 +6,9 @@ use crate::util::{Marc, Path};
 
 use super::ResourceLoader;
 
-#[cfg(feature = "native")]
+#[cfg(not(feature = "wasm"))]
 pub type MarcLoader = Marc<dyn ResourceLoader + Send + Sync>;
-#[cfg(feature = "native")]
+#[cfg(not(feature = "wasm"))]
 pub type MarcResolver = Marc<dyn ResourceResolver + Send + Sync>;
 #[cfg(feature = "wasm")]
 pub type MarcLoader = Marc<dyn ResourceLoader>;

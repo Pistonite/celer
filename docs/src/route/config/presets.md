@@ -67,7 +67,7 @@ Because of this, you cannot define a namespace with no presets inside it.
 
 ## Properties
 The properties you can define inside a preset is the same as a line.
-See [Customizing Lines](../customizing-lines.md) for details.
+See [Property Reference](../property-reference.md) for details.
 This includes specifying other presets with the `presets` property.
 ```yaml
 config:

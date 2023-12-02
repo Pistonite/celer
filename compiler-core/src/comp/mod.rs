@@ -1,3 +1,9 @@
+//! Compiler core logic
+//!
+//! The compiler takes in the raw route JSON blob and extracts the known properties
+//! into native structures. It also computes temporal properties like the current coordinates
+//! and color at any given point in the route.
+
 use std::borrow::Cow;
 use std::convert::Infallible;
 

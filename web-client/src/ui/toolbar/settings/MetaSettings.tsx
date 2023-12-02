@@ -60,7 +60,7 @@ export const MetaSettings: React.FC = () => {
             <SettingsSection title="Settings">
                 <Field
                     label="Reset all settings to default"
-                    hint="Click the button to reset all settings. This will also delete any setting specific to a route like split settings. This action is NOT REVERSIBLE"
+                    hint="Click the button to reset all settings. This action is NOT REVERSIBLE!"
                 >
                     <Button
                         appearance="primary"

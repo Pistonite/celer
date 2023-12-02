@@ -18,9 +18,9 @@ import { Debouncer, sleep } from "low/utils";
 import { GameCoord } from "low/celerc";
 
 import {
-    DocContainerId,
+    DocContainer,
     DocLog,
-    DocScrollId,
+    DocScroll,
     findLineByIndex,
     findNoteByIndex,
     findSectionByIndex,
@@ -217,7 +217,7 @@ export class DocController {
             needUpdateCurrentLine = true;
         } else {
             const { scrollTop, scrollBottom } = scrollView;
-            const containerOffsetY = getScrollContainerOffsetY(DocContainerId);
+            const containerOffsetY = getScrollContainerOffsetY(DocContainer);
             const {
                 scrollTop: currentLineTop,
                 scrollBottom: currentLineBottom,
@@ -337,7 +337,7 @@ export class DocController {
 
         // Scroll the current line to visible
         const { scrollTop, scrollBottom } = scrollView;
-        const containerOffsetY = getScrollContainerOffsetY(DocContainerId);
+        const containerOffsetY = getScrollContainerOffsetY(DocContainer);
         const { scrollTop: currentLineTop, scrollBottom: currentLineBottom } =
             getLineScrollView(newCurrentLine, containerOffsetY);
 
@@ -387,7 +387,7 @@ export class DocController {
 
 /// Set the scroll
 const setScrollView = (scrollTop: number): boolean => {
-    const scrollElement = document.getElementById(DocScrollId);
+    const scrollElement = DocScroll.get();
     if (!scrollElement) {
         return false;
     }
@@ -402,7 +402,7 @@ const setScrollView = (scrollTop: number): boolean => {
 ///
 /// This is calculated based on the container height
 const getScrollEdgeSize = (): number => {
-    const scrollElement = document.getElementById(DocScrollId);
+    const scrollElement = DocScroll.get();
     if (!scrollElement) {
         return 0;
     }

@@ -1,20 +1,34 @@
 //! Utilities
 
 import { DocColor, DocTag } from "low/celerc";
-import { Logger } from "low/utils";
+import { DOMClass, DOMId, Logger } from "low/utils";
 
 export const DocLog = new Logger("doc");
 
 // Constants
 
-/// The id of the doc scrolling div (parent of container)
-export const DocScrollId = "doc-scroll";
-/// The id of the container of doc view
-export const DocContainerId = "doc-container";
-/// The id of the container of main doc content (excluding preface)
-export const DocContentContainerId = "doccontent-container";
+/// The scrolling div of the document (parent of container)
+export const DocScroll = new DOMId<HTMLElement>("doc-scroll");
+/// The container div of the document
+export const DocContainer = new DOMId<HTMLElement>("doc-container");
+/// The container div of main doc content (excluding preface)
+export const DocContentContainer = new DOMId<HTMLElement>(
+    "doccontent-container",
+);
+/// The note panel
+export const DocNoteContainer = new DOMId<HTMLElement>("doc-side");
 /// Class for the doc line container
 export const DocLineContainerClass = "docline-container";
+
+/// Class for the section heads (title) in the document
+export const DocSectionHead = new DOMClass("docsection-head");
+DocSectionHead.style({
+    "box-sizing": "border-box",
+    padding: "16px 0px 16px 64px",
+    " span": {
+        "word-wrap": "break-word",
+    },
+});
 
 /// Scroll view type
 export type ScrollView = {
@@ -28,7 +42,7 @@ export type ScrollView = {
 ///
 /// Returns undefined if the document viewer is not found
 export const getScrollView = (): undefined | ScrollView => {
-    const scrollElement = document.getElementById(DocScrollId);
+    const scrollElement = DocScroll.get();
     if (!scrollElement) {
         return undefined;
     }
@@ -52,12 +66,14 @@ export const getLineLocationFromElement = (
 
 /// Get the offset of the scroll container relative to baseElementId
 ///
-/// use DocContainerId for relative to the entire document
-/// use DocContentContainerId for relative to the main content
+/// use DocContainer for relative to the entire document
+/// use DocContentContainer for relative to the main content
 ///
 /// line.getBoundingClientRect().y - containerOffsetY = line position relative to container
-export const getScrollContainerOffsetY = (baseElementId: string): number => {
-    const containerElement = document.getElementById(baseElementId);
+export const getScrollContainerOffsetY = <E extends HTMLElement>(
+    element: DOMId<E>,
+): number => {
+    const containerElement = element.get();
     if (!containerElement) {
         return 0;
     }

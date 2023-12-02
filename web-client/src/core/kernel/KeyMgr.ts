@@ -8,7 +8,11 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { getRelativeLocation } from "core/doc";
+import {
+    getDefaultSplitTypes,
+    getRelativeLocation,
+    getRelativeSplitLocation,
+} from "core/doc";
 
 /// Manager for key events and bindings
 ///
@@ -58,18 +62,20 @@ export class KeyMgr {
         } else if (this.lastDetected.length === 0) {
             // detecting mode
             this.handleAddKey(key);
-            const {
-                prevLineKey,
-                nextLineKey,
-                // prevSplitKey, // currently not supported until split setting is done
-                // nextSplitKey, // currently not supported until split setting is done
-            } = settingsSelector(this.store.getState());
+            const { prevLineKey, nextLineKey, prevSplitKey, nextSplitKey } =
+                settingsSelector(this.store.getState());
             if (this.keySequenceMatches(prevLineKey)) {
-                this.handleDocLocationAction(-1);
+                this.handleMoveLineAction(-1);
                 this.lastDetected = prevLineKey;
             } else if (this.keySequenceMatches(nextLineKey)) {
-                this.handleDocLocationAction(1);
+                this.handleMoveLineAction(1);
                 this.lastDetected = nextLineKey;
+            } else if (this.keySequenceMatches(prevSplitKey)) {
+                this.handleMoveSplitAction(-1);
+                this.lastDetected = prevSplitKey;
+            } else if (this.keySequenceMatches(nextSplitKey)) {
+                this.handleMoveSplitAction(1);
+                this.lastDetected = nextSplitKey;
             }
         } else {
             // waiting for release
@@ -132,8 +138,8 @@ export class KeyMgr {
         return true;
     }
 
-    /// Handle document location key binding action
-    private handleDocLocationAction(delta: number) {
+    /// Handle key binding action for moving documents by line
+    private handleMoveLineAction(delta: number) {
         const { document } = documentSelector(this.store.getState());
         if (!document) {
             return;
@@ -146,6 +152,29 @@ export class KeyMgr {
             currentSection,
             currentLine,
             delta,
+        );
+        this.store.dispatch(viewActions.setDocLocation(nextLocation));
+    }
+
+    /// Handle key binding action for moving documents by split
+    private handleMoveSplitAction(delta: number) {
+        const { document } = documentSelector(this.store.getState());
+        if (!document) {
+            return;
+        }
+        let { splitTypes } = settingsSelector(this.store.getState());
+        if (!splitTypes) {
+            splitTypes = getDefaultSplitTypes(document);
+        }
+        const { currentSection, currentLine } = viewSelector(
+            this.store.getState(),
+        );
+        const nextLocation = getRelativeSplitLocation(
+            document,
+            currentSection,
+            currentLine,
+            delta,
+            splitTypes,
         );
         this.store.dispatch(viewActions.setDocLocation(nextLocation));
     }

@@ -16,8 +16,8 @@ The rest of this page lists all available properties.
 The following properties are used for text customization:
 |Property|Type|Description|
 |-|-|-|
-|`comment`|[Rich Text](./customizing-text.md)|Secondary text. This text will appear below the primary text in a smaller font|
-|`text`|[Rich Text](./customizing-text.md)|Override the primary text. Presets specified here will NOT be expanded|
+|`comment`|[Rich Text](./tagging-text.md)|Secondary text. This text will appear below the primary text in a smaller font|
+|`text`|[Rich Text](./tagging-text.md)|Override the primary text. Presets specified here will NOT be expanded|
 
 Example:
 ```yaml
@@ -25,13 +25,12 @@ Example:
   - Do the thing:
       comment: be fast
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174487919004766228/image.png?ex=6567c61c&is=6555511c&hm=1bbc08280e7609f8ca2d0d942bd60d67256b0530954dc15c00e3a13c6fa12ac1&)
 
 ## Notes
 The `notes` property can be used for adding notes that appear on the side.
 |Property|Type|Description|
 |-|-|-|
-|`notes`|[Rich Text](./customizing-text.md)|Set a text note to appear on the side|
+|`notes`|[Rich Text](./tagging-text.md)|Set a text note to appear on the side|
 
 You can also specify an array instead of a single note.
 
@@ -45,7 +44,6 @@ Example:
       - if you can't do it you can do the backup
       - if you fail the backup you can do the other backup
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174488604505034822/image.png?ex=6567c6c0&is=655551c0&hm=d584cd5bb6a5fafbf1546361b4cd05169ecffd6e53e59584dfa88f4ca8ab569b&)
 
 ## Banner
 You can use the `banner` property to make a line extend to cover the notes panel
@@ -59,37 +57,16 @@ Example:
   - This is a normal line
   - This is a banner line:
       banner: true
-
-  # if the banner text is really long, you can
-  # specify the content with the `text` property
-  # so you can break it up in to multiple lines without escaping
-
-  - banner: # "banner" here is a placeholder text
-      text: Once there was a young artist who struggled
-            to find inspiration in her small town. One 
-            day, she discovered a hidden garden filled 
-            with vibrant flowers and singing birds.
-            Inspired, she began painting the garden, 
-            capturing its beauty and essence. As she shared 
-            her art, it brought joy and color to the lives
-            of people in her town. This recognition
-            encouraged her to pursue her dreams, reminding
-            her that inspiration can be found in the simplest of places.
-      banner: true
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174493787196756038/image.png?ex=6567cb93&is=65555693&hm=f1ca333826bacffe7a823b77086618208e451ca19242bca4ccf025c4abdbe47e&)
 
 
 ## Counter
 This property can be used to customize the counter block.
 |Property|Type|Description|
 |-|-|-|
-|`counter`|[Rich Text](./customizing-text.md)|Set the text and style for the counter block on the left of the main column|
+|`counter`|[Rich Text](./tagging-text.md)|Set the text and style for the counter block on the left of the main column|
 :::warning
 The Rich Text style is applied to the whole block. This means you can only have one tag like `.tag(hello)` or `hello` (no tag)
-:::
-:::tip
-This is the replacement for the `split-type` property in the older Celer format
 :::
 
 ## Icon
@@ -186,14 +163,14 @@ Examples:
 ```
 
 ## Movements
-Movements are more complicated than other properties, so it has its own dedicated section.
-See [Customizing Movements](./customizing-movements)
+Movements are customized with the `movements` property.
+See [Customizing Movements](./customizing-movements) for more details.
 
 ## Split Name
 Use this property to set the split name.
 |Property|Type|Description|
 |-|-|-|
-|`split-name`|[Rich Text](./customizing-text.md)|Name to be used when exporting to compatible software, such as livesplit|
+|`split-name`|[Rich Text](./tagging-text.md)|Name to be used when exporting to compatible software, such as livesplit|
 :::tip
 You can use Rich Text for the split name so that plugins can alter it if necessary.
 When exporting, the style provided by the Rich Text is usually not kept.

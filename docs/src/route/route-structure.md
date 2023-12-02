@@ -79,7 +79,7 @@ a replacement of the Banner feature in the old Celer format.
 Each element (i.e. text after `-`) specified before the first section will be rendered as one paragraph.
 
 Rich text formatting is supported here and the example above uses the [Link plugin](../plugin/link.md) to display a clickable link.
-See [Customizing Text](./customizing-text.md) for more details on the Rich text system.
+See [Tagging Text](./tagging-text.md) for more details on the Rich text system.
 :::tip
 Note that the first paragraph is surrounded by quotes. This is because there is a `:` in the
 text, and YAML will treat it as a mapping without the quotes.
@@ -121,14 +121,4 @@ Just like sections, you can load one or more lines from another file with the `u
 ```
 The resulting `Example Section` will have 5 lines, with the 3 lines from `some-lines.yaml`
 placed in the middle, where the `use` is at.
-
-A line can also be customized with extra properties, like icons, notes, and custom styles:
-```yaml
-
-# main.yaml
-- Example Section:
-  - line with custom icon:
-      icon: example-icon
-```
-See [Customizing Lines](./customizing-lines.md) for details.
 

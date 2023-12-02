@@ -39,6 +39,10 @@ type DocLineProps = {
     diagnostics: DocDiagnostic[];
     /// If the line is a banner
     isBanner: boolean;
+    /// If the line is a split. Will be false if disabled in the settings
+    isSplit: boolean;
+    /// The split type (display string). Should be present even if isSplit is false
+    splitType: string | undefined;
 };
 
 export const DocLine: React.FC<DocLineProps> = ({
@@ -52,13 +56,20 @@ export const DocLine: React.FC<DocLineProps> = ({
     counterType,
     diagnostics,
     isBanner,
+    isSplit,
+    splitType,
 }) => {
     const { setDocLocation } = useActions(viewActions);
     return (
         <div
-            className={DocLineContainerClass}
+            className={clsx(
+                DocLineContainerClass,
+                isSplit && "docline-split",
+                counterType && `docline-counter-${counterType}`,
+            )}
             data-section={sectionIndex}
             data-line={lineIndex}
+            data-split-type={splitType}
         >
             <div className="docline-main">
                 <div
@@ -94,7 +105,6 @@ export const DocLine: React.FC<DocLineProps> = ({
                     <div
                         className={clsx(
                             "docline-body",
-                            counterType && `docline-body-${counterType}`,
                             isBanner && BannerWidthClass,
                             isBanner && "docline-banner",
                         )}
