@@ -19,7 +19,7 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { KeyBinding, KeyBindingName, getAllSplitTypes } from "core/doc";
+import { KeyBinding, KeyBindingName, getAllSplitTypes, useDocSplitTypes } from "core/doc";
 import { useActions } from "low/store";
 import { ThemeIds } from "low/themes.g";
 
@@ -34,7 +34,6 @@ export const DocSettings: React.FC = () => {
         syncMapToDoc, 
         forceAnchorNotes, 
         hideDocWhenResizing ,
-        splitTypes,
     } =
         useSelector(settingsSelector);
     const { 
@@ -53,12 +52,7 @@ export const DocSettings: React.FC = () => {
     } , [serial]);
     /* eslint-enable react-hooks/exhaustive-deps*/
 
-    const currentSplitTypes = useMemo(() => {
-        if (splitTypes) {
-            return splitTypes;
-        }
-        return allSplitTypes;
-    }, [allSplitTypes, splitTypes]);
+    const currentSplitTypes = useDocSplitTypes();
 
     return (
         <>
@@ -120,7 +114,9 @@ export const DocSettings: React.FC = () => {
             <SettingsSection title="Splits">
                 <Field
                     label="Choose where you want to split"
-                    hint="Check the boxes below to enable splitting on the corresponding types of items. Click the button to reset to the document default."
+                    validationState={allSplitTypes.length === 0 ? "warning" : undefined}
+                    validationMessage={allSplitTypes.length === 0 ? "The document doesn't define any split type." : undefined}
+                    hint={allSplitTypes.length === 0 ? undefined : "Check the boxes below to enable splitting on the corresponding types of items. Click the button to reset to the document default."}
                 >
                     <Button
                         appearance="primary"

@@ -57,21 +57,46 @@
 }
 
 /* Different colors for different counter types */
-/* TODO #21: will support this when split type systen is available*/
-/* .docline-body.docline-body-shrine,
-.docline-body.docline-body-tower {
+.docline-counter-counter-shrine .docline-body,
+.docline-counter-counter-tower .docline-body,
+.docline-split .docline-body 
+{
     background-color: black;
     color: white;
 }
-.docline-body.docline-body-warp {
-    background-color: #a2c4c4;
+.docline-counter-counter-shrine .docline-body span.rich-text,
+.docline-counter-counter-shrine .docline-body span.rich-text *,
+.docline-counter-counter-tower .docline-body span.rich-text,
+.docline-counter-counter-tower .docline-body span.rich-text *,
+.docline-split .docline-body span.rich-text,
+.docline-split .docline-body span.rich-text *
+{
+    /*TXTPP#include shared/rich-text-dark.css
+     *TXTPP# */
 }
-.docline-body.docline-body-boss {
-    background-color: #ff4444;
+.docline-counter-counter-warp .docline-body{
+    background-color: #a2c4c4 !important;
 }
-.docline-body.docline-body-korok {
-    background-color: #c07ba0;
-} */
+.docline-counter-counter-warp .docline-body span.rich-text,
+.docline-counter-counter-warp .docline-body span.rich-text *{
+    /*TXTPP#include shared/rich-text-light.css
+     *TXTPP# */
+}
+.docline-container[data-split-type="Bosses"] .docline-body
+{
+    background-color: #ff8484 !important;
+}
+.docline-container[data-split-type="Bosses"] .docline-body span.rich-text,
+.docline-container[data-split-type="Bosses"] .docline-body span.rich-text * {
+    /*TXTPP#include shared/rich-text-light.css
+     *TXTPP# */
+}
+.docline-container[data-split-type="Koroks"] .docline-body{
+    background-color: #c07ba0 !important;
+} 
+.docline-container[data-split-type="Koroks"] .docline-primary-text span{
+    color: black !important;
+} 
 
 /* ==========================================
  * Note panel

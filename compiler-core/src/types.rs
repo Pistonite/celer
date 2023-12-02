@@ -86,7 +86,7 @@ pub struct RouteMetadata {
 /// Used to style text and provide extra function to the engine
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all(serialize = "camelCase", deserialize = "kebab-case"))]
 pub struct DocTag {
     /// Bold style
     #[serde(skip_serializing_if = "Option::is_none")]

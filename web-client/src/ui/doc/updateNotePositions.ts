@@ -10,11 +10,10 @@ import {
     getLineLocationFromElement,
     getScrollContainerOffsetY,
     findLineByIndex,
-    DocContentContainerId,
+    DocContentContainer,
+    DocNoteContainer,
+    DocSectionHead,
 } from "./utils";
-
-/// The id of the note panel
-export const DocNoteContainerId = "doc-side";
 
 /// Layout notes based on the given position
 ///
@@ -27,14 +26,14 @@ export const updateNotePositions = async (
 ): Promise<void> => {
     DocLog.info("updating note positions...");
     const intervals = findAvailableIntervals();
-    const noteContainer = document.getElementById(DocNoteContainerId);
+    const noteContainer = DocNoteContainer.get();
     if (!noteContainer || noteContainer.children.length === 0) {
         // no notes to layout
         return;
     }
 
     const baseIndex = findBaseNoteIndex(noteContainer.children, baseLine);
-    const containerOffsetY = getScrollContainerOffsetY(DocContentContainerId);
+    const containerOffsetY = getScrollContainerOffsetY(DocContentContainer);
 
     // Layout the base note
     const baseNoteBlock = noteContainer.children[baseIndex] as HTMLElement;
@@ -149,12 +148,12 @@ export const updateNotePositionsAnchored = async (
     shouldCancel: () => boolean,
 ): Promise<void> => {
     DocLog.info("updating note positions (anchored)...");
-    const noteContainer = document.getElementById(DocNoteContainerId);
+    const noteContainer = DocNoteContainer.get();
     if (!noteContainer || noteContainer.children.length === 0) {
         // no notes to layout
         return;
     }
-    const containerOffsetY = getScrollContainerOffsetY(DocContentContainerId);
+    const containerOffsetY = getScrollContainerOffsetY(DocContentContainer);
     const yielder = createYielder(64);
     for (let i = 0; i < noteContainer.children.length; i++) {
         const noteBlock = noteContainer.children[i] as HTMLElement;
@@ -251,10 +250,10 @@ const findAvailableIntervals = (): Intervals => {
     function add(e: Element) {
         rects.push(e.getBoundingClientRect());
     }
-    document.querySelectorAll(".docsection-head").forEach(add);
+    DocSectionHead.queryAll().forEach(add);
     document.querySelectorAll(".docline-banner").forEach(add);
 
-    const end = document.getElementById(DocContentContainerId);
+    const end = DocContentContainer.get();
     if (!end) {
         return [];
     }

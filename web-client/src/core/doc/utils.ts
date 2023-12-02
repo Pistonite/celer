@@ -130,5 +130,7 @@ export const getAllSplitTypes = (doc: ExecDoc): string[] => {
             output.add(tag.splitType);
         }
     });
-    return Array.from(output);
+    const array = Array.from(output);
+    array.sort();
+    return array;
 }

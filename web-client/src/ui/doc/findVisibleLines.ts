@@ -1,5 +1,5 @@
 import {
-    DocContainerId,
+    DocContainer,
     getScrollContainerOffsetY,
     getScrollView,
     getLineScrollView,
@@ -20,11 +20,11 @@ export const findVisibleLines = (): HTMLElement[] => {
     const { scrollTop, scrollBottom } = scrollView;
 
     const visibleLineElements: HTMLElement[] = [];
-    const containerElement = document.getElementById(DocContainerId);
+    const containerElement = DocContainer.get();
     if (!containerElement) {
         return [];
     }
-    const containerOffsetY = getScrollContainerOffsetY(DocContainerId);
+    const containerOffsetY = getScrollContainerOffsetY(DocContainer);
     // get all lines
     // This is always in the right order because querySelectorAll uses pre-order traversal
     // Therefore we can optimize the search

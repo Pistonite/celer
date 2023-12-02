@@ -8,3 +8,4 @@ export * as docViewReducers from "./viewReducers";
 export * as docSettingsReducers from "./settingsReducers";
 export * from "./useDocSections";
 export * from "./useDocDiagnostics";
+export * from "./useDocSplitTypes";
