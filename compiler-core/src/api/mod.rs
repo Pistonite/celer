@@ -18,7 +18,7 @@ mod compile;
 pub use compile::*;
 
 /// Resolve project.yaml resource under the root resource
-pub async fn resolve_project(root_resource: &Resource) -> PackerResult<Resource> {
+pub async fn resolve_project<TContext>(root_resource: &Resource<TContext>) -> PackerResult<Resource<TContext>> {
     let project_ref = ValidUse::Relative("./project.yaml".to_string());
     match root_resource.resolve(&project_ref).await {
         Err(_) => {
@@ -32,7 +32,7 @@ pub async fn resolve_project(root_resource: &Resource) -> PackerResult<Resource>
 /// Resolve an absolute path from the resource
 ///
 /// Returns Err if the path is not a valid absolute path that can be used with a `use` property
-pub async fn resolve_absolute(resource: &Resource, path: String) -> PackerResult<Resource> {
+pub async fn resolve_absolute<TContext>(resource: &Resource<TContext>, path: String) -> PackerResult<Resource<TContext>> {
     match Use::from(path) {
         Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
             resource.resolve(&valid).await
@@ -62,14 +62,14 @@ pub async fn make_doc_for_packer_error(source: &str, error: PackerError) -> Exec
     }
 }
 
-pub struct CompilerContext {
+pub struct CompilerContext<TContext> {
     pub start_time: Instant,
-    pub project_resource: Resource,
+    pub project_resource: Resource<TContext>,
     pub setting: Setting,
     pub phase0: Phase0,
 }
 
-impl CompilerContext {
+impl<TContext> CompilerContext<TContext> {
     /// Reset the start time to be now.
     ///
     /// If using a cached compiler context, this should be called so metrics are reported

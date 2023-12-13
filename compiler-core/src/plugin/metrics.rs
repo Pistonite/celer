@@ -52,16 +52,15 @@ impl MetricsPlugin {
 
 #[async_trait(?Send)]
 impl PluginRuntime for MetricsPlugin {
-    async fn on_compile(&mut self, _: &CompilerMetadata, _: &mut CompDoc) -> PlugResult<()> {
+    async fn on_after_compile(&mut self, _: &CompilerMetadata, _: &mut CompDoc) -> PlugResult<()> {
         if self.detailed {
             self.comp_time_ms = self.last_start_time.elapsed().as_millis() as u64;
             self.last_start_time = Instant::now();
         }
         Ok(())
     }
-    async fn on_post_compile<'a>(
+    async fn on_after_execute<'a>(
         &mut self,
-        _: &'a CompilerMetadata,
         doc: &mut ExecDoc<'a>,
     ) -> PlugResult<()> {
         let exec_time_ms = self.last_start_time.elapsed().as_millis() as u64;

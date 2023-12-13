@@ -43,9 +43,9 @@ pub struct Phase0 {
 /// If `redirect_default_entry_point` is true, the function will redirect to the default entry point
 /// if it is defined. The redirect will only happen once, and the redirected project will have its
 /// `entry-points` property removed and ignored.
-pub async fn pack_phase0(
+pub async fn pack_phase0<TContext>(
     source: &str,
-    project_resource: &Resource,
+    project_resource: &Resource<TContext>,
     setting: &Setting,
     redirect_default_entry_point: bool,
 ) -> PackerResult<Phase0> {
@@ -71,9 +71,9 @@ pub async fn pack_phase0(
 }
 
 /// Pack the project after loading the project object
-async fn pack_project(
+async fn pack_project<TContext>(
     source: &str,
-    project_resource: &Resource,
+    project_resource: &Resource<TContext>,
     mut project_obj: Map<String, Value>,
     setting: &Setting,
 ) -> PackerResult<Phase0> {
@@ -133,7 +133,8 @@ async fn pack_project(
 }
 
 /// Load the project object and only read the `entry-points` property
-pub async fn pack_project_entry_points(project_resource: &Resource) -> PackerResult<EntryPoints> {
+pub async fn pack_project_entry_points<TContext>(
+    project_resource: &Resource<TContext>) -> PackerResult<EntryPoints> {
     let mut project_obj = load_project_object(project_resource).await?;
 
     let entry_points_value = match project_obj.remove(prop::ENTRY_POINTS) {
@@ -144,7 +145,8 @@ pub async fn pack_project_entry_points(project_resource: &Resource) -> PackerRes
     super::pack_entry_points(entry_points_value).await
 }
 
-async fn load_project_object(project_resource: &Resource) -> PackerResult<Map<String, Value>> {
+async fn load_project_object<TContext>(project_resource: &Resource<TContext>) -> PackerResult<Map<String, Value>> 
+{
     match project_resource.load_structured().await? {
         Value::Object(o) => Ok(o),
         _ => Err(PackerError::InvalidResourceType(

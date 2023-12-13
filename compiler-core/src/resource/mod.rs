@@ -1,7 +1,48 @@
 use serde_json::Value;
 
 use crate::macros::async_trait;
+
+use crate::pack::ValidUse;
 use crate::pack::{PackerError, PackerResult};
+
+mod loader_empty;
+pub use loader_empty::*;
+mod resource_github;
+pub use resource_github::*;
+mod resource_impl;
+pub use resource_impl::*;
+mod resource_local;
+pub use resource_local::*;
+
+/// This is a grouping trait used to group resource loader types in
+/// an environment.
+pub trait ResourceEnvironment {
+    type FsLoader: ResourceLoader;
+    type UrlLoader: ResourceLoader;
+
+    fn fs_loader(&self) -> &Self::FsLoader;
+    fn url_loader(&self) -> &Self::UrlLoader;
+}
+
+
+
+#[async_trait(auto)]
+pub trait ResourceResolver {
+    /// Resolve a resource from the given `Use`.
+    ///
+    /// The returned resource must have the same loader types as the source.
+    /// This is due to the constraint of using static dispatch. However,
+    /// it does not make sense that different resource loaders are used in the same resource
+    /// context.
+    async fn resolve<TContext>(
+        &self, 
+        source: &Resource<TContext>, 
+        target: &ValidUse) 
+    -> PackerResult<Resource<TContext>> where
+        Self: Sized;
+}
+
+
 
 /// Loader that loads resources from external place
 #[async_trait(auto)]

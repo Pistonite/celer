@@ -3,7 +3,7 @@
 //! This plugin looks for the `link` tag and transforms it into a link.
 
 use crate::api::{CompilerContext, CompilerMetadata};
-use crate::comp::CompDoc;
+use crate::comp::{CompDoc, Compiler};
 use crate::macros::{async_trait, test_suite};
 use crate::pack::PackerResult;
 use crate::prop;
@@ -14,7 +14,7 @@ use super::{operation, PlugResult, PluginRuntime};
 pub struct LinkPlugin;
 #[async_trait(?Send)]
 impl PluginRuntime for LinkPlugin {
-    async fn on_pre_compile(&mut self, ctx: &mut CompilerContext) -> PackerResult<()> {
+    async fn on_before_compile<'a>(&mut self, ctx: &mut Compiler<'a>) -> PackerResult<()> {
         // add the link tag if not defined already
         let link_tag = DocTag {
             color: Some(DocColor::LightDark {
@@ -35,7 +35,7 @@ impl PluginRuntime for LinkPlugin {
             .or_insert(link_tag);
         Ok(())
     }
-    async fn on_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
+    async fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
         for preface in comp_doc.preface.iter_mut() {
             for block in preface.iter_mut() {
                 transform_link_tag(block);

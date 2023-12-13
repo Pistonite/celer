@@ -389,7 +389,7 @@ fn estimate_time(text: &DocRichText) -> u32 {
 
 #[async_trait(?Send)]
 impl PluginRuntime for BotwAbilityUnstablePlugin {
-    async fn on_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
+    async fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
         operation::for_each_line!(line in comp_doc {
             self.process_line(&mut line);
             line

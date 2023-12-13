@@ -8,6 +8,7 @@ use std::borrow::Cow;
 use std::convert::Infallible;
 
 use derivative::Derivative;
+use instant::Instant;
 use serde_json::Value;
 
 use crate::api::CompilerMetadata;
@@ -38,6 +39,8 @@ pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
 #[derive(Derivative, Debug, Clone)]
 #[derivative(Default)]
 pub struct Compiler<'a> {
+    /// The start time of the compilation (not just comp phase)
+    pub start_time: Instant,
     pub project: Cow<'a, RouteMetadata>,
     pub meta: Cow<'a, CompilerMetadata>,
     /// Current color of the map line

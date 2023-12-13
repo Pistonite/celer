@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use serde_json::{json, Map, Value};
 
 use crate::api::{CompilerContext, CompilerMetadata};
-use crate::comp::CompDoc;
+use crate::comp::{CompDoc, Compiler};
 use crate::json::Coerce;
 use crate::lang;
 use crate::macros::async_trait;
@@ -286,7 +286,7 @@ impl VariablesPlugin {
 
 #[async_trait(?Send)]
 impl PluginRuntime for VariablesPlugin {
-    async fn on_pre_compile(&mut self, ctx: &mut CompilerContext) -> PackerResult<()> {
+    async fn on_before_compile<'a>(&mut self, compiler: &mut Compiler<'a>) -> PackerResult<()> {
         // add the val tag if not defined already
         let tag = DocTag {
             color: Some(DocColor::LightDark {
@@ -295,16 +295,16 @@ impl PluginRuntime for VariablesPlugin {
             }),
             ..Default::default()
         };
-        ctx.phase0
+        compiler
             .project
             .tags
             .entry(VAL.to_string())
             .and_modify(|t| t.apply_to_default(&tag))
             .or_insert(tag);
-        ctx.phase0.project.tags.entry(VAL.to_string()).or_default();
+        compiler.phase0.project.tags.entry(VAL.to_string()).or_default();
         Ok(())
     }
-    async fn on_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
+    async fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
         comp_doc.known_props.insert(prop::VARS.to_string());
         comp_doc.known_props.insert(prop::VALS.to_string());
 

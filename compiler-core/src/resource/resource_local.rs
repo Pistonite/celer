@@ -1,14 +1,18 @@
 use crate::macros::async_trait;
 use crate::pack::{PackerError, PackerResult, ValidUse};
-use crate::util::{Marc, Path};
+use crate::util::{RefCounted, Path};
 
-use super::{create_github_resource_from, Resource, ResourcePath, ResourceResolver};
+use super::{create_github_resource_from, Resource, ResourceResolver, ResourceLoader};
 
 pub struct LocalResourceResolver(pub Path);
 
 #[async_trait(auto)]
 impl ResourceResolver for LocalResourceResolver {
-    async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
+    async fn resolve<TContext>(
+        &self, 
+        source: &Resource<TContext>, 
+        target: &ValidUse) -> PackerResult<Resource<TContext>> 
+    {
         match target {
             ValidUse::Relative(path) => {
                 let new_path = self
@@ -21,7 +25,7 @@ impl ResourceResolver for LocalResourceResolver {
                 let new_parent = new_path
                     .parent()
                     .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-                Ok(source.create(ResourcePath::FsPath(new_path), Marc::new(Self(new_parent))))
+                Ok(source.create_file(new_path, RefCounted::new(Self(new_parent))))
             }
             ValidUse::Absolute(path) => {
                 let new_path =
@@ -32,7 +36,7 @@ impl ResourceResolver for LocalResourceResolver {
                 let new_parent = new_path
                     .parent()
                     .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-                Ok(source.create(ResourcePath::FsPath(new_path), Marc::new(Self(new_parent))))
+                Ok(source.create_file(new_path, RefCounted::new(Self(new_parent))))
             }
             ValidUse::Remote {
                 owner,

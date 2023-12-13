@@ -17,12 +17,12 @@ use super::{CompilerContext, Setting};
 /// is used for further compilation. The compiler does not consume
 /// the pack phase 0 output, so the output can be cached to speed up
 /// future iterations
-pub async fn prepare_compiler(
+pub async fn prepare_compiler<TContext>(
     source: &str,
-    project_resource: Resource,
+    project_resource: Resource<TContext>,
     setting: Setting,
     redirect_to_default_entry_point: bool,
-) -> PackerResult<CompilerContext> {
+) -> PackerResult<CompilerContext<TContext>> {
     let start_time = Instant::now();
     let mut phase0 = pack::pack_phase0(
         source,
@@ -87,6 +87,6 @@ pub async fn prepare_compiler(
 /// or if the `entry-points` property is empty, returns `EntryPoints` with 0 entries.
 ///
 /// If the project object or the `entry-points` property is invalid, returns error.
-pub async fn prepare_entry_points(project_resource: &Resource) -> PackerResult<EntryPoints> {
+pub async fn prepare_entry_points<TContext>(project_resource: &Resource<TContext>) -> PackerResult<EntryPoints> {
     pack::pack_project_entry_points(project_resource).await
 }

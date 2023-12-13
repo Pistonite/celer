@@ -8,7 +8,7 @@ use crate::util::yield_budget;
 
 use super::CompilerContext;
 
-impl CompilerContext {
+impl<TContext> CompilerContext<TContext> {
     pub async fn compile(&self) -> ExecDoc<'_> {
         let mut plugin_runtimes = self.create_plugin_runtimes().await;
 
@@ -60,6 +60,7 @@ impl CompilerContext {
     }
     fn create_compiler(&self) -> Compiler<'_> {
         Compiler {
+            start_time: self.start_time.clone(),
             meta: Cow::Borrowed(&self.phase0.meta),
             color: self.phase0.project.map.initial_color.clone(),
             coord: self.phase0.project.map.initial_coord.clone(),

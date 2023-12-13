@@ -2,9 +2,9 @@
 
 use crate::macros::async_trait;
 use crate::pack::{PackerError, PackerResult, ValidUse};
-use crate::util::{Marc, Path};
+use crate::util::{RefCounted, Path};
 
-use super::{EmptyLoader, MarcLoader, Resource, ResourcePath, ResourceResolver};
+use super::{EmptyLoader, Resource, ResourceResolver, ResourceLoader, ResourceContext};
 
 pub struct GitHubResourceResolver {
     owner: String,
@@ -26,7 +26,11 @@ impl GitHubResourceResolver {
 
 #[async_trait(auto)]
 impl ResourceResolver for GitHubResourceResolver {
-    async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
+    async fn resolve<TContext>(
+        &self, 
+        source: &Resource<TContext>,
+        target: &ValidUse) -> PackerResult<Resource<TContext>> 
+    {
         match target {
             ValidUse::Relative(path) => {
                 let new_path = self
@@ -43,9 +47,9 @@ impl ResourceResolver for GitHubResourceResolver {
                     self.reference.as_deref(),
                 )
                 .await?;
-                Ok(source.create(
-                    ResourcePath::Url(url),
-                    Marc::new(Self::new(
+                Ok(source.create_url(
+                    url,
+                    RefCounted::new(Self::new(
                         &self.owner,
                         &self.repo,
                         new_path,
@@ -66,9 +70,9 @@ impl ResourceResolver for GitHubResourceResolver {
                     self.reference.as_deref(),
                 )
                 .await?;
-                Ok(source.create(
-                    ResourcePath::Url(url),
-                    Marc::new(Self::new(
+                Ok(source.create_url(
+                    url,
+                    RefCounted::new(Self::new(
                         &self.owner,
                         &self.repo,
                         new_path,
@@ -86,35 +90,40 @@ impl ResourceResolver for GitHubResourceResolver {
     }
 }
 
-pub async fn create_github_resource(
+pub async fn create_github_resource<TContext>(
     owner: &str,
     repo: &str,
     path: &str,
     reference: Option<&str>,
-    url_loader: MarcLoader,
-) -> PackerResult<Resource> {
+    url_loader: RefCounted<TContext::UrlLoader>,
+) -> PackerResult<Resource<TContext>>
+where
+    TContext: ResourceContext,
+{
     let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
     let url = get_github_url(owner, repo, &path, reference).await?;
-    Ok(Resource::new(
-        ResourcePath::Url(url),
-        Marc::new(EmptyLoader),
+    Ok(Resource::new_url(
+        url,
         url_loader,
-        Marc::new(GitHubResourceResolver::new(owner, repo, path, reference)),
+        RefCounted::new(GitHubResourceResolver::new(owner, repo, path, reference)),
     ))
 }
 
-pub async fn create_github_resource_from(
-    source: &Resource,
+pub async fn create_github_resource_from<TContext>(
+    source: &Resource<TContext>,
     owner: &str,
     repo: &str,
     path: &str,
     reference: Option<&str>,
-) -> PackerResult<Resource> {
+) -> PackerResult<Resource<TContext>>
+    where
+        TContext: ResourceContext,
+{
     let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
     let url = get_github_url(owner, repo, &path, reference).await?;
-    Ok(source.create(
-        ResourcePath::Url(url),
-        Marc::new(GitHubResourceResolver::new(owner, repo, path, reference)),
+    Ok(source.create_url(
+        url,
+        RefCounted::new(GitHubResourceResolver::new(owner, repo, path, reference)),
     ))
 }
 

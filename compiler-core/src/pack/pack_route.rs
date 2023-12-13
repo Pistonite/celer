@@ -20,8 +20,8 @@ use super::{PackerError, PackerValue, Resource, Use, ValidUse};
 /// - Otherwise, the resolved value replaces the `use`
 ///
 /// If a `use` cannot be resolved, a [`PackerValue::Err`] is placed in the place of the `use`
-pub async fn pack_route(
-    project_resource: &Resource,
+pub async fn pack_route<TContext>(
+    project_resource: &Resource<TContext>,
     route: Value,
     max_use_depth: usize,
     max_ref_depth: usize,
@@ -31,9 +31,9 @@ pub async fn pack_route(
 
 /// Pack a portion of the route
 #[async_recursion(auto)]
-async fn pack_route_internal(
+async fn pack_route_internal<TContext>(
     // The resource that contains the route
-    resource: &Resource,
+    resource: &Resource<TContext>,
     // The route blob
     route: Value,
     use_depth: usize,
@@ -129,9 +129,9 @@ async fn pack_route_internal(
 }
 
 /// Resolve a `use` in the route
-async fn resolve_use(
+async fn resolve_use<TContext>(
     // The resource that contains the `use`
-    resource: &Resource,
+    resource: &Resource<TContext>,
     use_prop: ValidUse,
     use_depth: usize,
     max_use_depth: usize,
