@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 use crate::api::Setting;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
-use crate::macros::{async_recursion, maybe_send};
+use crate::macros::async_recursion;
 use crate::plug::{BuiltInPlugin, Plugin, PluginInstance};
 use crate::prop;
 use crate::types::{DocTag, MapMetadata};
@@ -27,7 +27,7 @@ pub struct ConfigBuilder {
 }
 
 /// Pack a config json blob and apply the values to the [`ConfigBuilder`]
-#[maybe_send(async_recursion)]
+#[async_recursion(auto)]
 pub async fn pack_config(
     builder: &mut ConfigBuilder,
     project_resource: &Resource,

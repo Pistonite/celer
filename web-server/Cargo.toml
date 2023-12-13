@@ -7,7 +7,7 @@ default-run = "celerserver"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-compiler-core = { path = "../compiler-core", features = ["native"] }
+celerc = { package = "compiler-core", path = "../compiler-core", features = ["native"] }
 axum = "0.6.20"
 axum-server = { version = "0.5.1", features = ["tls-rustls"] }
 envconfig = "0.10.0"

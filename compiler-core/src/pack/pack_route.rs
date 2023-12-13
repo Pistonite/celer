@@ -7,7 +7,7 @@ use std::collections::BTreeMap;
 use serde_json::Value;
 
 use crate::json::Cast;
-use crate::macros::{async_recursion, maybe_send};
+use crate::macros::async_recursion;
 use crate::util::yield_budget;
 
 use super::{PackerError, PackerValue, Resource, Use, ValidUse};
@@ -30,7 +30,7 @@ pub async fn pack_route(
 }
 
 /// Pack a portion of the route
-#[maybe_send(async_recursion)]
+#[async_recursion(auto)]
 async fn pack_route_internal(
     // The resource that contains the route
     resource: &Resource,

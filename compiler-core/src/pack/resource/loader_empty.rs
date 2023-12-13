@@ -1,4 +1,4 @@
-use crate::macros::{async_trait, maybe_send};
+use crate::macros::async_trait;
 use crate::pack::{PackerError, PackerResult};
 
 use super::ResourceLoader;
@@ -14,7 +14,7 @@ impl EmptyLoader {
     }
 }
 
-#[maybe_send(async_trait)]
+#[async_trait(auto)]
 impl ResourceLoader for EmptyLoader {
     async fn load_raw(&self, _: &str) -> PackerResult<Vec<u8>> {
         Err(Self::throw())

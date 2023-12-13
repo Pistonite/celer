@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use crate::json::Cast;
 use crate::lang::Preset;
-use crate::macros::{async_recursion, maybe_send};
+use crate::macros::async_recursion;
 use crate::prop;
 use crate::util::yield_budget;
 
@@ -21,7 +21,7 @@ pub async fn pack_presets(
     Ok(output)
 }
 
-#[maybe_send(async_recursion)]
+#[async_recursion(auto)]
 async fn pack_presets_internal(
     preset_name: &str,
     value: Value,

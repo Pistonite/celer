@@ -1,6 +1,6 @@
 //! GitHub resource resolver and loader impl
 
-use crate::macros::{async_trait, maybe_send};
+use crate::macros::async_trait;
 use crate::pack::{PackerError, PackerResult, ValidUse};
 use crate::util::{Marc, Path};
 
@@ -24,7 +24,7 @@ impl GitHubResourceResolver {
     }
 }
 
-#[maybe_send(async_trait)]
+#[async_trait(auto)]
 impl ResourceResolver for GitHubResourceResolver {
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
         match target {

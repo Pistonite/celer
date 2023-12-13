@@ -1,28 +1,29 @@
-use proc_macro2::TokenStream;
-use quote::quote;
+use proc_macro::TokenStream;
 use syn::{
-    parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Field, Fields, Meta,
+    Attribute, Data, DataEnum, DataStruct, DeriveInput, Field, Fields, Meta,
 };
+
+type TokenStream2 = proc_macro2::TokenStream;
 
 /// Implementation of [`derive_wasm`](crate::derive_wasm) macro
 pub fn expand(
-    feature_attr: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let feature_attr = TokenStream::from(feature_attr);
+    feature_attr: TokenStream,
+    input: TokenStream,
+) -> TokenStream {
+    let feature_attr = TokenStream2::from(feature_attr);
     let mut parsed = {
         let input = input.clone();
-        parse_macro_input!(input as DeriveInput)
+        syn::parse_macro_input!(input as DeriveInput)
     };
 
     let derive_tsify = if feature_attr.is_empty() {
-        quote! {
+        quote::quote! {
             #[derive(tsify::Tsify)]
             #[tsify(into_wasm_abi, from_wasm_abi)]
         }
     } else {
         transform_tsify(&mut parsed, &feature_attr);
-        quote! {
+        quote::quote! {
             #[cfg_attr(#feature_attr, derive(tsify::Tsify))]
             #[cfg_attr(#feature_attr, tsify(into_wasm_abi, from_wasm_abi))]
         }
@@ -33,14 +34,14 @@ pub fn expand(
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     let cfg_attribute = if feature_attr.is_empty() {
-        TokenStream::new()
+        TokenStream2::new()
     } else {
-        quote! {
+        quote::quote! {
             #[cfg(#feature_attr)]
         }
     };
 
-    let expanded = quote! {
+    let expanded = quote::quote! {
         #derive_tsify
         #parsed
 
@@ -69,7 +70,7 @@ pub fn expand(
 }
 
 /// Transforms tsify attributes according to feature flags
-fn transform_tsify(data: &mut DeriveInput, feature: &TokenStream) {
+fn transform_tsify(data: &mut DeriveInput, feature: &TokenStream2) {
     match &mut data.data {
         Data::Struct(data) => transform_tsify_for_struct(data, feature),
         Data::Enum(data) => transform_tsify_for_enum(data, feature),
@@ -78,7 +79,7 @@ fn transform_tsify(data: &mut DeriveInput, feature: &TokenStream) {
         }
     }
 }
-fn transform_tsify_for_struct(data: &mut DataStruct, feature: &TokenStream) {
+fn transform_tsify_for_struct(data: &mut DataStruct, feature: &TokenStream2) {
     match &mut data.fields {
         Fields::Unit => {}
         Fields::Unnamed(fields) => {
@@ -94,7 +95,7 @@ fn transform_tsify_for_struct(data: &mut DataStruct, feature: &TokenStream) {
     }
 }
 
-fn transform_tsify_for_enum(data: &mut DataEnum, feature: &TokenStream) {
+fn transform_tsify_for_enum(data: &mut DataEnum, feature: &TokenStream2) {
     for variant in data.variants.iter_mut() {
         for attr in variant.attrs.iter_mut() {
             transform_tsify_attr(attr, feature);
@@ -105,20 +106,20 @@ fn transform_tsify_for_enum(data: &mut DataEnum, feature: &TokenStream) {
     }
 }
 
-fn transform_tsify_for_field(field: &mut Field, feature: &TokenStream) {
+fn transform_tsify_for_field(field: &mut Field, feature: &TokenStream2) {
     for attr in field.attrs.iter_mut() {
         transform_tsify_attr(attr, feature);
     }
 }
 
-fn transform_tsify_attr(attr: &mut Attribute, feature: &TokenStream) {
+fn transform_tsify_attr(attr: &mut Attribute, feature: &TokenStream2) {
     if let Meta::List(list) = &mut attr.meta {
         if !list.path.is_ident("tsify") {
             return;
         }
         list.path = syn::parse_str("cfg_attr").expect("syn::parse_str failed to parse cfg_attr");
         let tokens = &list.tokens;
-        let tokens = quote! {
+        let tokens = quote::quote! {
             #feature, tsify(#tokens)
         };
         list.tokens = tokens;

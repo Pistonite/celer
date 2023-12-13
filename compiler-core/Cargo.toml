@@ -46,10 +46,7 @@ wasm = [
     "dep:tsify",
     "dep:serde-wasm-bindgen",
 ]
-test = [
-    "dep:tokio",
-    "tokio/rt-multi-thread",
-]
+test = [ "native" ]
 
 [lib]
 name = "celerc"

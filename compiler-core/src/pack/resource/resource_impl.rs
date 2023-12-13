@@ -1,18 +1,12 @@
 use serde_json::Value;
 
-use crate::macros::{async_trait, maybe_send};
+use crate::macros::async_trait;
 use crate::pack::{PackerResult, ValidUse};
 use crate::util::{Marc, Path};
 
 use super::ResourceLoader;
 
-#[cfg(not(feature = "wasm"))]
-pub type MarcLoader = Marc<dyn ResourceLoader + Send + Sync>;
-#[cfg(not(feature = "wasm"))]
-pub type MarcResolver = Marc<dyn ResourceResolver + Send + Sync>;
-#[cfg(feature = "wasm")]
 pub type MarcLoader = Marc<dyn ResourceLoader>;
-#[cfg(feature = "wasm")]
 pub type MarcResolver = Marc<dyn ResourceResolver>;
 
 macro_rules! loader_delegate {
@@ -80,7 +74,7 @@ impl Resource {
     }
 }
 
-#[maybe_send(async_trait)]
+#[async_trait(auto)]
 pub trait ResourceResolver {
     /// Resolve a resource from the given `Use` and loader
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource>;

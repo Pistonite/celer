@@ -1,4 +1,4 @@
-use crate::macros::{async_trait, maybe_send};
+use crate::macros::async_trait;
 use crate::pack::{PackerError, PackerResult, ValidUse};
 use crate::util::{Marc, Path};
 
@@ -6,7 +6,7 @@ use super::{create_github_resource_from, Resource, ResourcePath, ResourceResolve
 
 pub struct LocalResourceResolver(pub Path);
 
-#[maybe_send(async_trait)]
+#[async_trait(auto)]
 impl ResourceResolver for LocalResourceResolver {
     async fn resolve(&self, source: &Resource, target: &ValidUse) -> PackerResult<Resource> {
         match target {
