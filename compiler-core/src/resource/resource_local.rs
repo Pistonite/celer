@@ -2,7 +2,7 @@ use crate::macros::async_trait;
 use crate::pack::{PackerError, PackerResult, ValidUse};
 use crate::util::{RefCounted, Path};
 
-use super::{create_github_resource_from, Resource, ResourceResolver, ResourceLoader};
+use super::{create_github_resource_from, Resource, ResourceResolver};
 
 pub struct LocalResourceResolver(pub Path);
 

@@ -1,10 +1,10 @@
-//! Builder for making a compiler in tests
+//! Test utilities
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use crate::api::CompilerMetadata;
 use crate::lang::Preset;
-use crate::types::{GameCoord, RouteMetadata};
+use crate::types::{Axis, MapCoordMap, MapMetadata, RouteMetadata, GameCoord, RouteMetadata};
 
 use super::Compiler;
 
@@ -49,4 +49,19 @@ impl CompilerBuilder {
             ..Default::default()
         }
     }
+}
+
+pub fn create_test_compiler_with_coord_transform() -> Compiler<'static> {
+    let project = RouteMetadata {
+        map: MapMetadata {
+            coord_map: MapCoordMap {
+                mapping_3d: (Axis::X, Axis::Y, Axis::Z),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    let builder = super::CompilerBuilder::new(project, Default::default(), Default::default());
+    builder.build()
 }

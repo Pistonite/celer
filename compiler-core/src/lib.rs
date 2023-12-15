@@ -27,11 +27,13 @@ pub use api::*;
 //pub mod expo;  // export phase (todo)
 pub mod exec;    // executor, depends on: comp
 pub mod comp;
+pub mod pack;
+
 pub mod json;
 pub mod lang;
-pub mod pack;
-pub mod plug;
+pub mod plugin;
 pub mod prop;
+pub mod resource;
 pub mod types;
 pub mod util;
 

@@ -4,7 +4,7 @@ use crate::macros::async_trait;
 use crate::pack::{PackerError, PackerResult, ValidUse};
 use crate::util::{RefCounted, Path};
 
-use super::{EmptyLoader, Resource, ResourceResolver, ResourceLoader, ResourceContext};
+use super::{Resource, ResourceResolver, ResourceLoader, ResourceContext};
 
 pub struct GitHubResourceResolver {
     owner: String,

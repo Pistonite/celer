@@ -143,7 +143,30 @@ impl TryFrom<Value> for Use {
     }
 }
 
-#[test_suite]
+impl ValidUse {
+    pub fn path(&self) -> &str {
+        match self {
+            ValidUse::Relative(v) => v,
+            ValidUse::Absolute(v) => v,
+            ValidUse::Remote { path, .. } => path,
+        }
+    }
+
+    /// Return the base URL if the variant is a Remote
+    pub fn base_url(&self) -> Option<String> {
+        match self {
+            ValidUse::Relative(v) => None,
+            ValidUse::Absolute(v) => None,
+            ValidUse::Remote { owner, repo, reference, .. } => {
+                let branch = reference.as_deref().unwrap_or("main");
+                let url = format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/");
+                Some(url)
+            }
+        }
+    }
+}
+
+#[cfg(test)]
 mod test {
     use serde_json::json;
 

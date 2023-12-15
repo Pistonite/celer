@@ -94,20 +94,3 @@ pub fn derive_wasm(
     derive_wasm_impl::expand(feature_attr, input)
 }
 mod derive_wasm_impl;
-
-/// A wrapper for `#[cfg(test)]` to only define the test when the `test` feature flag is enabled
-#[proc_macro_attribute]
-pub fn test_suite(
-    _attr: TokenStream,
-    input: TokenStream,
-) -> TokenStream {
-    let input = TokenStream2::from(input);
-    let tokens = quote::quote! {
-        #[cfg(feature="test")]
-        #[cfg(test)]
-        #input
-    };
-    tokens.into()
-}
-
-

@@ -10,9 +10,6 @@ proc-macro2 = "1.0.69"
 quote = "1.0.33"
 syn = "2.0.38"
 
-[dev-dependencies]
-celerc = { package = "compiler-core", path = "../compiler-core", features = ["test"]}
-
 # used for testing
 # [features]
 # wasm = []

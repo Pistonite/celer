@@ -243,25 +243,4 @@ macro_rules! validate_not_array_or_object {
 pub(crate) use validate_not_array_or_object;
 
 #[cfg(test)]
-mod compiler_builder;
-#[cfg(test)]
-pub use compiler_builder::*;
-#[cfg(test)]
-mod test_utils {
-    #[cfg(feature = "test")]
-    pub fn create_test_compiler_with_coord_transform() -> super::Compiler<'static> {
-        use crate::types::{Axis, MapCoordMap, MapMetadata, RouteMetadata};
-        let project = RouteMetadata {
-            map: MapMetadata {
-                coord_map: MapCoordMap {
-                    mapping_3d: (Axis::X, Axis::Y, Axis::Z),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-        let builder = super::CompilerBuilder::new(project, Default::default(), Default::default());
-        builder.build()
-    }
-}
+mod test_utils;
