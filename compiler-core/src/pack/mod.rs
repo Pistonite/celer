@@ -7,6 +7,7 @@ use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 
 use crate::lang;
+use crate::resource::ResError;
 use crate::types::DocDiagnostic;
 
 mod pack_config;
@@ -25,12 +26,8 @@ mod pack_project;
 pub use pack_project::*;
 mod pack_route;
 pub use pack_route::*;
-mod pack_use;
-pub use pack_use::*;
 mod pack_value;
 pub use pack_value::*;
-mod resource;
-pub use resource::*;
 
 #[derive(Default, Debug, Clone, PartialEq)]
 pub struct ConfigTrace(Vec<usize>);
@@ -74,10 +71,10 @@ impl From<&[usize]> for ConfigTrace {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+#[derive(Debug, PartialEq, thiserror::Error)]
 pub enum PackerError {
-    #[error("The project file (project.yaml) is missing or invalid.")]
-    InvalidProject,
+    #[error("Failed to load resource: {0}")]
+    Res(#[from] ResError),
 
     #[error("Invalid `use` value: {0}. If you are specifying a relative path, make sure to start with ./ or ../")]
     InvalidUse(String),
@@ -97,8 +94,8 @@ pub enum PackerError {
     #[error("Max preset namespace depth of {0} levels is reached. There might be a formatting error in your project files. If this is intentional, consider making the namespaces less complex.")]
     MaxPresetNamespaceDepthExceeded(usize),
 
-    #[error("The format of resource {0} cannot be determined")]
-    UnknownFormat(String),
+    // #[error("The format of resource {0} cannot be determined")]
+    // UnknownFormat(String),
 
     #[error("Cannot load file: {0}")]
     LoadFile(String),
@@ -106,11 +103,11 @@ pub enum PackerError {
     #[error("Cannot load url: {0}")]
     LoadUrl(String),
 
-    #[error("Error when parsing structured data in file {0}: {1}")]
-    InvalidFormat(String, String),
-
-    #[error("Error when parsing file {0}: file is not UTF-8")]
-    InvalidUtf8(String),
+    // #[error("Error when parsing structured data in file {0}: {1}")]
+    // InvalidFormat(String, String),
+    //
+    // #[error("Error when parsing file {0}: file is not UTF-8")]
+    // InvalidUtf8(String),
 
     #[error("")]
     InvalidIcon,

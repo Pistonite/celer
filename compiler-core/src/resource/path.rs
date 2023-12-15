@@ -12,26 +12,26 @@ use crate::util::{Path, PathBuf, RefCounted};
 /// Calling `to_string()` will result in either the relative path from the root, or the URL of the
 /// resource.
 #[derive(Debug, Clone, PartialEq)]
-pub enum ResPath<'a> {
+pub enum ResPath<'url, 'path> {
     /// Local path, represented as a relative path from the "root"
     /// (i.e. without the leading "/")
-    Local(Cow<'a, Path>),
+    Local(Cow<'path, Path>),
     /// Remote path, represented as a URL prefix (with a trailing "/")
     /// and a relative path (without the leading "/")
-    Remote(Cow<'a, str>, Cow<'a, Path>),
+    Remote(Cow<'url, str>, Cow<'path, Path>),
 }
 
-impl<'a> ResPath<'a> {
+impl<'url, 'path> ResPath<'url, 'path> {
     /// Create a new local resource path.
     ///
     /// Converts the path to a relative path if it is absolute.
     pub fn new_local<P>(path: P) -> Self where P: AsRef<Path> {
         let path = match path.as_ref().strip_prefix("/") {
-            Some(path) => path,
-            None => path,
+            Ok(path) => Cow::from(path),
+            _ => Cow::from(path.as_ref()),
         };
 
-        Self::Local(Cow::borrowed(path))
+        Self::Local(path)
     }
 
     /// Create a new remote resource path.
@@ -39,19 +39,19 @@ impl<'a> ResPath<'a> {
     /// Converts the path to a relative path if it is absolute.
     pub fn new_remote<P>(url: &str, path: P) -> Self where P: AsRef<Path>{
         let path = match path.as_ref().strip_prefix("/") {
-            Some(path) => path,
-            None => path,
+            Ok(path) => Cow::from(path),
+            _ => Cow::from(path.as_ref()),
         };
 
         let url = if url.ends_with('/') {
-            Cow::borrowed(url)
+            Cow::from(url)
         } else {
             let mut url: String = url.to_owned();
             url.push('/');
-            Cow::owned(url)
+            Cow::from(url)
         };
 
-        Self::Remote(url, Cow::borrowed(path))
+        Self::Remote(url, path)
     }
 
     /// Get if the path is local
@@ -64,34 +64,36 @@ impl<'a> ResPath<'a> {
     }
 
     /// Get the parent path. Returns `None` if the path is at the root
-    pub fn parent(&self) -> Option<Self<'_>> {
-        todo!()
+    pub fn parent(&self) -> Option<Self> {
+        match self {
+            Self::Local(path) => {
+                match path.parent() {
+                    Some(path) => Some(Self::Local(Cow::from(path))),
+                    None => None,
+                }
+            }
+            Self::Remote(url, path) => {
+                match path.parent() {
+                    Some(path) => Some(Self::Remote(Cow::clone(url), Cow::from(path))),
+                    None => None,
+                }
+            }
+        }
     }
 
     /// Join a path to the current path, "." and ".."s are normalized away
     ///
     /// Returns `None` if the path tries to get the parent of root at any point
-    pub fn join_resolve<P>(&self, path: P) -> Option<Self<'_>> where P: AsRef<Path> {
+    pub fn join_resolve<P>(&self, path: P) -> Option<Self> where P: AsRef<Path> {
         todo!()
     }
 }
 
-impl<'a> Display for ResPath<'a> {
+impl<'a, 'b> Display for ResPath<'a, 'b> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Local(path) => write!(f, "{}", path.to_str()),
             Self::Remote(url, path) => write!(f, "{}{}", url, path.to_str()),
-        }
-    }
-}
-
-impl<'a> ToOwned for ResPath<'a> {
-    type Owned = ResPath<'static>;
-
-    fn to_owned(&self) -> Self::Owned {
-        match self {
-            Self::Local(path) => Self::Local(path.to_owned()),
-            Self::Remote(url, path) => Self::Remote(url.to_owned(), path.to_owned()),
         }
     }
 }

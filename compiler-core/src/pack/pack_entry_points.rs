@@ -6,7 +6,6 @@ use serde_json::Value;
 
 use crate::json::Cast;
 use crate::json::Coerce;
-use crate::macros::test_suite;
 use crate::prop;
 use crate::types::EntryPoints;
 use crate::util::{yield_budget, Path};
@@ -23,16 +22,16 @@ pub async fn pack_entry_points(value: Value) -> PackerResult<EntryPoints> {
     for (key, value) in obj {
         yield_budget(64).await;
         let value = value.coerce_to_string();
-        let path = if value.starts_with('/') {
-            match Path::try_from(&value) {
-                Some(path) => format!("/{path}"),
-                None => value,
-            }
-        } else {
-            value
-        };
+        // let path = if value.starts_with('/') {
+        //     match Path::try_from(&value) {
+        //         Some(path) => format!("/{path}"),
+        //         None => value,
+        //     }
+        // } else {
+        //     value
+        // };
 
-        map.insert(key, path);
+        map.insert(key, value);
     }
 
     for (key, value) in &map {
@@ -74,7 +73,7 @@ fn resolve_alias(
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use serde_json::json;
 

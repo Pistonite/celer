@@ -1,7 +1,5 @@
 use serde_json::Value;
 
-use crate::macros::test_suite;
-
 /// Loosely interpret a json value as a type
 pub trait Coerce {
     /// Interpret a json value as a string, without recursively expanding array or object
@@ -132,7 +130,7 @@ impl Coerce for Value {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use super::*;
     use serde_json::json;

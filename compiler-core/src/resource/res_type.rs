@@ -33,10 +33,13 @@ impl ResType {
     }
 }
 
-impl<'a> ResPath<'a> {
+impl<'a, 'b> ResPath<'a, 'b> {
     /// Guess the resource type based on the extension
     pub fn get_type(&self) -> Option<ResType> {
-        let ext = self.extension()?;
+        let ext = match self {
+            Self::Local(path) => path.extension()?,
+            Self::Remote(_, path) => path.extension()?,
+        };
         if ext.eq_ignore_ascii_case("yaml") || ext.eq_ignore_ascii_case("yml") {
             return Some(ResType::Yaml);
         }

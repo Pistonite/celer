@@ -6,7 +6,6 @@ use serde_json::Value;
 use crate::json::Coerce;
 use crate::lang;
 use crate::lang::PresetInst;
-use crate::macros::test_suite;
 use crate::prop;
 use crate::types::{DocDiagnostic, DocNote, DocRichText, DocRichTextBlock, GameCoord};
 
@@ -300,13 +299,13 @@ impl<'a> Compiler<'a> {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use map_macro::btree_map;
     use serde_json::json;
 
-    use crate::comp::test_utils;
-    use crate::comp::{CompMarker, CompMovement, CompilerBuilder};
+    use crate::comp::test_utils::{self, CompilerBuilder};
+    use crate::comp::{CompMarker, CompMovement};
     use crate::lang::Preset;
     use crate::types::{Axis, DocRichText, GameCoord, MapCoordMap, MapMetadata, RouteMetadata};
 

@@ -301,7 +301,7 @@ impl PluginRuntime for VariablesPlugin {
             .entry(VAL.to_string())
             .and_modify(|t| t.apply_to_default(&tag))
             .or_insert(tag);
-        compiler.phase0.project.tags.entry(VAL.to_string()).or_default();
+        compiler.project.tags.entry(VAL.to_string()).or_default();
         Ok(())
     }
     async fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {

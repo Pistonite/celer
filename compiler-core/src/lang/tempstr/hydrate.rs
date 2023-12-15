@@ -1,5 +1,3 @@
-use crate::macros::test_suite;
-
 use super::{TempStr, TempStrBlock};
 
 impl TempStr {
@@ -25,7 +23,7 @@ impl TempStr {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use super::*;
 

@@ -1,7 +1,5 @@
 use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
-use crate::macros::test_suite;
-
 use super::grammar::{self, pt, Ctx};
 use super::{TempStr, TempStrBlock};
 
@@ -115,7 +113,7 @@ fn append_non_dollar(pt: &pt::NonDollar, out: &mut String) {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use super::*;
 

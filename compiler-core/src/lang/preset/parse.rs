@@ -1,7 +1,5 @@
 use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
-use crate::macros::test_suite;
-
 use super::grammar::{self, pt};
 use super::PresetInst;
 
@@ -74,7 +72,7 @@ fn parse_arg(pt: &pt::ArgText) -> String {
     out
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use super::*;
 

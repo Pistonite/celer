@@ -1,7 +1,6 @@
 use serde_json::Value;
 
 use crate::lang::TempStr;
-use crate::macros::test_suite;
 
 use super::{Preset, PresetBlob};
 
@@ -105,7 +104,7 @@ impl PresetBlob {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use serde_json::json;
 

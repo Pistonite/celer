@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 
 use crate::comp::CompDoc;
-use crate::macros::test_suite;
 use crate::types::{ExecDoc, RouteMetadata};
 
 use super::{ExecResult, MapSectionBuilder};
@@ -25,7 +24,7 @@ impl CompDoc {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use crate::types::{
         DocDiagnostic, DocRichText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine,

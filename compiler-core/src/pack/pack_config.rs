@@ -6,12 +6,13 @@ use crate::api::Setting;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
 use crate::macros::async_recursion;
-use crate::plug::{BuiltInPlugin, Plugin, PluginInstance};
+use crate::plugin::{BuiltInPlugin, Plugin, PluginInstance};
 use crate::prop;
 use crate::types::{DocTag, MapMetadata};
 use crate::util::yield_budget;
+use crate::resource::{Use, ValidUse, Loader, Resource};
 
-use super::{ConfigTrace, PackerError, PackerResult, Resource, Use, ValidUse, ResourceLoader};
+use super::{ConfigTrace, PackerError, PackerResult};
 
 const MAX_CONFIG_DEPTH: usize = 16;
 
@@ -28,13 +29,13 @@ pub struct ConfigBuilder {
 
 /// Pack a config json blob and apply the values to the [`ConfigBuilder`]
 #[async_recursion(auto)]
-pub async fn pack_config<TContext>(
+pub async fn pack_config<L>(
     builder: &mut ConfigBuilder,
-    project_resource: &Resource<TContext>,
+    project_resource: &Resource<'_, '_, L>,
     config: Value,
     trace: &mut ConfigTrace,
     setting: &Setting,
-) -> PackerResult<()> 
+) -> PackerResult<()>  where L: Loader
 {
     if trace.len() > MAX_CONFIG_DEPTH {
         return Err(PackerError::MaxConfigDepthExceeded(trace.clone()));
@@ -53,15 +54,15 @@ pub async fn pack_config<TContext>(
 }
 
 /// Load a top-level `use`
-async fn process_config_from_use<TContext>(
+async fn process_config_from_use<L>(
     builder: &mut ConfigBuilder,
-    project_resource: &Resource<TContext>,
+    project_resource: &Resource<'_, '_, L>,
     use_prop: ValidUse,
     trace: &mut ConfigTrace,
     setting: &Setting,
-) -> PackerResult<()> 
+) -> PackerResult<()> where L: Loader
 {
-    let config_resource = project_resource.resolve(&use_prop).await?;
+    let config_resource = project_resource.resolve(&use_prop)?;
     let config = config_resource.load_structured().await?;
     // process this config with the config resource context instead of the project context
     // so `use`'s inside are resolved correctly
@@ -69,13 +70,13 @@ async fn process_config_from_use<TContext>(
 }
 
 /// Process a config, adding values to Builder and use the resource to resolve `use`'s
-async fn process_config<TContext>(
+async fn process_config<L>(
     builder: &mut ConfigBuilder,
-    resource: &Resource<TContext>,
+    resource: &Resource<'_, '_, L>,
     config: Value,
     trace: &mut ConfigTrace,
     setting: &Setting,
-) -> PackerResult<()> 
+) -> PackerResult<()> where L: Loader
 {
     let config = config
         .try_into_object()
@@ -145,12 +146,12 @@ async fn process_config<TContext>(
 /// Process the `icons` property
 ///
 /// Resolves `use`'s using the resource context and add the icon URLs to the builder
-async fn process_icons_config<TContext>(
+async fn process_icons_config<L>(
     builder: &mut ConfigBuilder,
-    resource: &Resource<TContext>,
+    resource: &Resource<'_, '_, L>,
     icons: Value,
     trace: &mut ConfigTrace,
-) -> PackerResult<()> 
+) -> PackerResult<()> where L: Loader
 {
     let icons = icons
         .try_into_object()
@@ -170,7 +171,7 @@ async fn process_icons_config<TContext>(
             }
             Ok(Use::Invalid(path)) => return Err(PackerError::InvalidUse(path)),
             Ok(Use::Valid(valid_use)) => {
-                let icon_resource = resource.resolve(&valid_use).await?;
+                let icon_resource = resource.resolve(&valid_use)?;
                 let image_url = icon_resource.load_image_url().await?;
                 builder.icons.insert(key, image_url);
             }
@@ -183,12 +184,12 @@ async fn process_icons_config<TContext>(
 /// Process the `plugins` property
 ///
 /// Resolves `use`'s using the resource context and add the plugins to the builder
-async fn process_plugins_config<TContext>(
+async fn process_plugins_config<L>(
     builder: &mut ConfigBuilder,
-    resource: &Resource<TContext>,
+    resource: &Resource<'_, '_, L>,
     plugins: Value,
     trace: &mut ConfigTrace,
-) -> PackerResult<()>
+) -> PackerResult<()> where L: Loader
 {
     let plugins = plugins.try_into_array().map_err(|_| {
         PackerError::InvalidConfigProperty(trace.clone(), prop::PLUGINS.to_string())
@@ -212,9 +213,10 @@ async fn process_plugins_config<TContext>(
                                 Use::Invalid(path) => return Err(PackerError::InvalidPlugin(path)),
                                 Use::Valid(valid_use) => {
                                     // load the script
-                                    let script_resource = resource.resolve(&valid_use).await?;
+                                    let script_resource = resource.resolve(&valid_use)?;
                                     let script = script_resource.load_utf8().await?;
-                                    Some(Plugin::Script(script))
+                                    // TODO #24: do we want to clone here?
+                                    Some(Plugin::UncompiledScript(script.into_owned()))
                                 }
                             }
                         }

@@ -12,12 +12,8 @@ pub use res_type::*;
 mod resolve;
 pub use resolve::*;
 
-mod resource_github;
-pub use resource_github::*;
 mod resource_impl;
 pub use resource_impl::*;
-mod resource_local;
-pub use resource_local::*;
 
 #[cfg(test)]
 mod test_utils;
@@ -44,40 +40,25 @@ pub enum ResError {
     CannotResolve(String, String),
 }
 
+impl PartialEq for ResError {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::InvalidUtf8(a), Self::InvalidUtf8(b)) => a == b,
+            (Self::InvalidJson(a, _), Self::InvalidJson(b, _)) => a == b,
+            (Self::InvalidYaml(a, _), Self::InvalidYaml(b, _)) => a == b,
+            (Self::UnknownDataFormat(a), Self::UnknownDataFormat(b)) => a == b,
+            (Self::UnknownImageFormat(a), Self::UnknownImageFormat(b)) => a == b,
+            (Self::CannotResolve(a, b), Self::CannotResolve(c, d)) => a == c && b == d,
+            _ => false,
+        }
+    }
+}
+
 pub type ResResult<T> = Result<T, ResError>;
-
-// /// This is a grouping trait used to group resource loader types in
-// /// an environment.
-// pub trait ResourceEnvironment {
-//     type FsLoader: ResourceLoader;
-//     type UrlLoader: ResourceLoader;
-//
-//     fn fs_loader(&self) -> &Self::FsLoader;
-//     fn url_loader(&self) -> &Self::UrlLoader;
-// }
-
-
-// #[async_trait(auto)]
-// pub trait ResourceResolver {
-//     /// Resolve a resource from the given `Use`.
-//     ///
-//     /// The returned resource must have the same loader types as the source.
-//     /// This is due to the constraint of using static dispatch. However,
-//     /// it does not make sense that different resource loaders are used in the same resource
-//     /// context.
-//     async fn resolve<TResEnv>(
-//         rc_self: &RefCounted<Self>,
-//         source: &RefCounted<TResEnv>,
-//         target: &ValidUse) 
-//     -> PackerResult<Resource<TResEnv>> where
-//         Self: Sized;
-// }
-//
-
 
 /// Loader that loads resources from external place
 #[async_trait(auto)]
 pub trait Loader {
     /// Load a resource as raw bytes
-    async fn load_raw<'s, 'a>(&'s self, path: &ResPath<'a>) -> ResResult<Cow<'s, [u8]>>;
+    async fn load_raw<'s>(&'s self, path: &ResPath<'_, '_>) -> ResResult<Cow<'s, [u8]>>;
 }

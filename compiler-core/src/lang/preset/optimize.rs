@@ -1,7 +1,5 @@
 use std::collections::BTreeMap;
 
-use crate::macros::test_suite;
-
 use super::Preset;
 
 impl Preset {
@@ -34,5 +32,5 @@ impl Preset {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {}

@@ -8,8 +8,9 @@ use log::error;
 
 use crate::comp::Compiler;
 use crate::lang::Preset;
-use crate::pack::{PackerError, PackerResult, Phase0, Resource, Use, ValidUse};
-use crate::plug::PluginInstance;
+use crate::pack::{PackerError, PackerResult, Phase0};
+use crate::plugin::PluginInstance;
+use crate::resource::{Resource, ValidUse, Use, Loader};
 use crate::types::{ExecDoc, RouteMetadata};
 
 mod prepare;
@@ -18,24 +19,22 @@ mod compile;
 pub use compile::*;
 
 /// Resolve project.yaml resource under the root resource
-pub async fn resolve_project<TContext>(root_resource: &Resource<TContext>) -> PackerResult<Resource<TContext>> {
+pub fn resolve_project<'a, 'b, L>(root_resource: &Resource<'a, 'b, L>) -> PackerResult<Resource<'a, 'b, L>> 
+where L: Loader
+{
     let project_ref = ValidUse::Relative("./project.yaml".to_string());
-    match root_resource.resolve(&project_ref).await {
-        Err(_) => {
-            error!("fail to resolve project.yaml");
-            Err(PackerError::InvalidProject)
-        }
-        x => x,
-    }
+    Ok(root_resource.resolve(&project_ref)?)
 }
 
 /// Resolve an absolute path from the resource
 ///
 /// Returns Err if the path is not a valid absolute path that can be used with a `use` property
-pub async fn resolve_absolute<TContext>(resource: &Resource<TContext>, path: String) -> PackerResult<Resource<TContext>> {
+pub async fn resolve_absolute<'a, 'b, L>(resource: &Resource<'a, 'b, L>, path: String) -> PackerResult<Resource<'a, 'b, L>> 
+where L: Loader
+{
     match Use::from(path) {
         Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
-            resource.resolve(&valid).await
+            Ok(resource.resolve(&valid)?)
         }
         other => Err(PackerError::InvalidPath(other.to_string())),
     }
@@ -62,14 +61,14 @@ pub async fn make_doc_for_packer_error(source: &str, error: PackerError) -> Exec
     }
 }
 
-pub struct CompilerContext<TContext> {
+pub struct CompilerContext<L> where L: Loader {
     pub start_time: Instant,
-    pub project_resource: Resource<TContext>,
+    pub project_resource: Resource<'static, 'static, L>,
     pub setting: Setting,
     pub phase0: Phase0,
 }
 
-impl<TContext> CompilerContext<TContext> {
+impl<L> CompilerContext<L> where L: Loader {
     /// Reset the start time to be now.
     ///
     /// If using a cached compiler context, this should be called so metrics are reported

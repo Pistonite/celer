@@ -2,13 +2,14 @@ use std::borrow::Cow;
 
 use crate::comp::Compiler;
 use crate::pack::pack_route;
-use crate::plug::PluginRuntime;
+use crate::plugin::PluginRuntime;
+use crate::resource::Loader;
 use crate::types::ExecDoc;
 use crate::util::yield_budget;
 
 use super::CompilerContext;
 
-impl<TContext> CompilerContext<TContext> {
+impl<L> CompilerContext<L> where L: Loader {
     pub async fn compile(&self) -> ExecDoc<'_> {
         let mut plugin_runtimes = self.create_plugin_runtimes().await;
 

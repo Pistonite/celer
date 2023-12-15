@@ -3,7 +3,6 @@ use std::collections::BTreeMap;
 use serde_json::{json, Map, Value};
 
 use crate::json::Coerce;
-use crate::macros::test_suite;
 use crate::prop;
 
 use super::CompError;
@@ -59,7 +58,7 @@ pub fn desugar_properties(properties: &mut BTreeMap<String, Value>) {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use super::*;
 

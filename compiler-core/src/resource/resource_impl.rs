@@ -22,8 +22,8 @@ use super::{ResPath, Loader, ResResult, ResError, ResType, ValidUse};
 /// It can be a local file or a remote URL. It also has an associated ref-counted
 /// [`Loader`] that can be used to load the resource.
 #[derive(Debug, Clone)]
-pub struct Resource<L> where L: Loader {
-    path: ResPath<'static>,
+pub struct Resource<'a, 'b, L> where L: Loader {
+    path: ResPath<'a, 'b>,
     loader: RefCounted<L>,
         //resolver: RefCounted<dyn ResourceResolver>,
 }
@@ -69,16 +69,16 @@ pub struct Resource<L> where L: Loader {
 //
 // }
 
-impl<L> Resource<L> {//where L: Loader {
+impl<'a, 'b, L> Resource<'a, 'b, L> where L: Loader {
     pub fn new(
-        path: &ResPath<'_>,
+        path: &ResPath<'a, 'b>,
         loader: RefCounted<L>,
         // fs_loader: RefCounted<TContext::FsLoader>,
         // url_loader: RefCounted<TContext::UrlLoader>,
         // resolver: RefCounted<dyn ResourceResolver>,
     ) -> Self {
         Self {
-            path: path.to_owned(),
+            path: path.clone(), //clone the pointer, not data
             loader,
             // fs_loader,
             // url_loader,
@@ -123,7 +123,7 @@ impl<L> Resource<L> {//where L: Loader {
     //     )
     // }
 
-    pub fn path(&self) -> &ResPath<'_> {
+    pub fn path(&self) -> &ResPath<'a, 'b> {
         &self.path
         // match &self{
         //     Self::Url(res) => &res.url,
@@ -139,39 +139,48 @@ impl<L> Resource<L> {//where L: Loader {
     /// Load the resource as UTF-8 string
     pub async fn load_utf8(&self) -> ResResult<Cow<'_, str>> {
         let bytes = self.loader.load_raw(&self.path).await?;
-        match str::from_utf8(bytes) {
-            Ok(v) => Ok(v),
-            Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
+        match bytes {
+            Cow::Borrowed(bytes) => {
+                match std::str::from_utf8(bytes) {
+                    Ok(v) => Ok(Cow::from(v)),
+                    Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
+                }
+            }
+            Cow::Owned(bytes) => {
+                match String::from_utf8(bytes) {
+                    Ok(v) => Ok(Cow::from(v)),
+                    Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
+                }
+            }
         }
     }
 
     /// Load the resource as structured value for supported formats (JSON, YAML)
     pub async fn load_structured(&self) -> ResResult<Value> {
-        let t = self.path.get_type();
         match self.path.get_type() {
             Some(ResType::Yaml) => {
                 let bytes = self.loader.load_raw(&self.path).await?;
-                match serde_yaml::from_slice(bytes) {
+                match serde_yaml::from_slice(&bytes) {
                     Ok(v) => Ok(v),
                     Err(e) => Err(ResError::InvalidYaml(self.path.to_string(), e)),
                 }
             }
             Some(ResType::Json) => {
                 let bytes = self.loader.load_raw(&self.path).await?;
-                match serde_json::from_slice(bytes) {
+                match serde_json::from_slice(&bytes) {
                     Ok(v) => Ok(v),
                     Err(e) => Err(ResError::InvalidJson(self.path.to_string(), e)),
                 }
             }
-            _ => Err(ResError::UnknownFormat(self.path.to_string())),
+            _ => Err(ResError::UnknownDataFormat(self.path.to_string())),
         }
     }
 
     /// Load the image as either a remote URL or a data URL
     pub async fn load_image_url(&self) -> ResResult<String> {
-        if !self.is_local() {
+        if !self.path.is_local() {
             // if path is a URL, just return it
-            return self.path.to_string();
+            return Ok(self.path.to_string());
         }
         let image_type = self.path.get_type();
         let media_type = match image_type {

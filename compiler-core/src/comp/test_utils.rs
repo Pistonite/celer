@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use crate::api::CompilerMetadata;
 use crate::lang::Preset;
-use crate::types::{Axis, MapCoordMap, MapMetadata, RouteMetadata, GameCoord, RouteMetadata};
+use crate::types::{Axis, MapCoordMap, MapMetadata, GameCoord, RouteMetadata};
 
 use super::Compiler;
 
@@ -62,6 +62,6 @@ pub fn create_test_compiler_with_coord_transform() -> Compiler<'static> {
         },
         ..Default::default()
     };
-    let builder = super::CompilerBuilder::new(project, Default::default(), Default::default());
+    let builder = CompilerBuilder::new(project, Default::default(), Default::default());
     builder.build()
 }

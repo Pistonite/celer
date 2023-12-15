@@ -5,10 +5,11 @@ use crate::macros::async_trait;
 
 use super::{Loader, ResPath, ResResult};
 
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct StubLoader;
 #[async_trait(auto)]
 impl Loader for StubLoader {
-    async fn load_raw<'s, 'a>(&'s self, _: &ResPath<'a>) -> ResResult<Cow<'s, [u8]>> {
+    async fn load_raw<'s>(&'s self, _: &ResPath<'_, '_>) -> ResResult<Cow<'s, [u8]>> {
         panic!("stub loader called")
     }
 }

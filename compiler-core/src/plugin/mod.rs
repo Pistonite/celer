@@ -58,37 +58,37 @@ pub trait PluginRuntime {
     }
 }
 
-/// An instance of a plugin read from the config file, with a source where the plugin can be loaded
-/// from and properties to pass into the plugin
-pub trait PluginInstance {
-
-    /// Prepare the instance in the prep phase.
-    ///
-    /// Any preparation that can be used to speed up the `create_runtime` call should happen here.
-    /// For example, scripts can be compiled here and props can be parsed.
-    fn prepare<'a>(boxed: Box<Self>, compiler: &Compiler<'a>) -> PlugResult<Box<dyn PluginInstance>>;
-
-    fn create_runtime<'a>(&self, compiler: &Compiler<'a>) -> Box<dyn PluginRuntime>;
-}
-
-pub struct LoadedPluginInstance<TRt> 
-where TRt: PluginRuntime + Clone,
-    {
-        runtime: TRt,
-}
-
-impl PluginInstance for LoadedPluginInstance<TRt> 
-where TRt: PluginRuntime + Clone,
-    {
-        fn prepare<'a>(boxed: Box<Self>, compiler: &Compiler<'a>) -> PlugResult<Box<dyn PluginInstance>> {
-            Ok(boxed)
-        }
-
-        fn create_runtime<'a>(&self, compiler: &Compiler<'a>) -> Box<dyn PluginRuntime> {
-            Box::new(self.runtime.clone())
-        }
-    }
-
+// /// An instance of a plugin read from the config file, with a source where the plugin can be loaded
+// /// from and properties to pass into the plugin
+// pub trait PluginInstance {
+//
+//     /// Prepare the instance in the prep phase.
+//     ///
+//     /// Any preparation that can be used to speed up the `create_runtime` call should happen here.
+//     /// For example, scripts can be compiled here and props can be parsed.
+//     fn prepare<'a>(boxed: Box<Self>, compiler: &Compiler<'a>) -> PlugResult<Box<dyn PluginInstance>>;
+//
+//     fn create_runtime<'a>(&self, compiler: &Compiler<'a>) -> Box<dyn PluginRuntime>;
+// }
+//
+// pub struct LoadedPluginInstance<TRt> 
+// where TRt: PluginRuntime + Clone,
+//     {
+//         runtime: TRt,
+// }
+//
+// impl PluginInstance for LoadedPluginInstance<TRt> 
+// where TRt: PluginRuntime + Clone,
+//     {
+//         fn prepare<'a>(boxed: Box<Self>, compiler: &Compiler<'a>) -> PlugResult<Box<dyn PluginInstance>> {
+//             Ok(boxed)
+//         }
+//
+//         fn create_runtime<'a>(&self, compiler: &Compiler<'a>) -> Box<dyn PluginRuntime> {
+//             Box::new(self.runtime.clone())
+//         }
+//     }
+//
 #[derive(Debug, Clone)]
 pub struct PluginInstance {
     pub plugin: Plugin,
@@ -113,7 +113,8 @@ impl PluginInstance {
                 ),
             },
             // TODO #24 implement JS plugin engine
-            Plugin::Script(_) => Box::new(ScriptPluginRuntime),
+            Plugin::UncompiledScript(_) => Box::new(ScriptPluginRuntime),
+            Plugin::CompiledScript => Box::new(ScriptPluginRuntime),
         }
     }
 }
@@ -121,7 +122,7 @@ impl PluginInstance {
 struct ScriptPluginRuntime;
 #[async_trait(?Send)]
 impl PluginRuntime for ScriptPluginRuntime {
-    async fn on_before_compile(&mut self, _: &CompilerMetadata, _: &mut CompDoc) -> PlugResult<()> {
+    async fn on_after_compile(&mut self, _: &CompilerMetadata, _: &mut CompDoc) -> PlugResult<()> {
         // TODO #24 implement JS plugin engine
         Err(PlugError::NotImpl(
             "Script plugins are not implemented yet".to_string(),
@@ -131,7 +132,7 @@ impl PluginRuntime for ScriptPluginRuntime {
 
 /// The source of a plugin, from which a [`PluginInstance`] can be created
 #[derive(Debug, Clone)]
-pub enum PluginSource {
+pub enum Plugin{
     /// A built-in plugin
     BuiltIn(BuiltInPlugin),
     /// A script that is downloaded but not parsed.
@@ -140,3 +141,12 @@ pub enum PluginSource {
     CompiledScript,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum BuiltInPlugin {
+    Metrics,
+    Link,
+    Variables,
+    // Compat,
+    BotwAbilityUnstable,
+}

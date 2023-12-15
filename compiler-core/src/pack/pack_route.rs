@@ -9,8 +9,9 @@ use serde_json::Value;
 use crate::json::Cast;
 use crate::macros::async_recursion;
 use crate::util::yield_budget;
+use crate::resource::{Use, Resource, ValidUse, Loader};
 
-use super::{PackerError, PackerValue, Resource, Use, ValidUse};
+use super::{PackerError, PackerValue};
 
 /// Resolve `use`s inside the route json blob
 ///
@@ -20,27 +21,32 @@ use super::{PackerError, PackerValue, Resource, Use, ValidUse};
 /// - Otherwise, the resolved value replaces the `use`
 ///
 /// If a `use` cannot be resolved, a [`PackerValue::Err`] is placed in the place of the `use`
-pub async fn pack_route<TContext>(
-    project_resource: &Resource<TContext>,
+pub async fn pack_route<L>(
+    project_resource: &Resource<'_, '_, L>,
     route: Value,
     max_use_depth: usize,
     max_ref_depth: usize,
-) -> PackerValue {
+) -> PackerValue 
+where L: Loader
+{
     pack_route_internal(project_resource, route, 0, 0, max_use_depth, max_ref_depth).await
 }
 
 /// Pack a portion of the route
 #[async_recursion(auto)]
-async fn pack_route_internal<TContext>(
+async fn pack_route_internal<L>(
     // The resource that contains the route
-    resource: &Resource<TContext>,
+    resource: &Resource<'_, '_, L>,
     // The route blob
     route: Value,
     use_depth: usize,
     ref_depth: usize,
     max_use_depth: usize,
     max_ref_depth: usize,
-) -> PackerValue {
+) -> PackerValue
+where
+    L: Loader,
+{
     if use_depth > max_use_depth {
         return PackerValue::Err(PackerError::MaxUseDepthExceeded(max_use_depth));
     }
@@ -129,23 +135,26 @@ async fn pack_route_internal<TContext>(
 }
 
 /// Resolve a `use` in the route
-async fn resolve_use<TContext>(
+async fn resolve_use<L>(
     // The resource that contains the `use`
-    resource: &Resource<TContext>,
+    resource: &Resource<'_, '_, L>,
     use_prop: ValidUse,
     use_depth: usize,
     max_use_depth: usize,
     max_ref_depth: usize,
-) -> PackerValue {
+) -> PackerValue
+where
+    L: Loader,
+{
     // Resolve the resource
-    let inner_resource = match resource.resolve(&use_prop).await {
+    let inner_resource = match resource.resolve(&use_prop) {
         Ok(r) => r,
-        Err(e) => return PackerValue::Err(e),
+        Err(e) => return PackerValue::Err(e.into()),
     };
     // Load the resource
     let data = match inner_resource.load_structured().await {
         Ok(r) => r,
-        Err(e) => return PackerValue::Err(e),
+        Err(e) => return PackerValue::Err(e.into()),
     };
 
     pack_route_internal(

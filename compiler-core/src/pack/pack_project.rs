@@ -3,10 +3,11 @@ use serde_json::{Map, Value};
 use crate::api::{CompilerMetadata, Setting};
 use crate::json::{Cast, Coerce};
 use crate::prop;
+use crate::resource::{Resource, Loader};
 use crate::types::{EntryPoints, RouteMetadata};
 use crate::util::yield_budget;
 
-use super::{ConfigBuilder, ConfigTrace, PackerError, PackerResult, Resource};
+use super::{ConfigBuilder, ConfigTrace, PackerError, PackerResult};
 
 macro_rules! check_metadata_not_array_or_object {
     ($property:expr, $value:ident) => {{
@@ -43,12 +44,14 @@ pub struct Phase0 {
 /// If `redirect_default_entry_point` is true, the function will redirect to the default entry point
 /// if it is defined. The redirect will only happen once, and the redirected project will have its
 /// `entry-points` property removed and ignored.
-pub async fn pack_phase0<TContext>(
+pub async fn pack_phase0<L>(
     source: &str,
-    project_resource: &Resource<TContext>,
+    project_resource: &Resource<'_, '_, L>,
     setting: &Setting,
     redirect_default_entry_point: bool,
-) -> PackerResult<Phase0> {
+) -> PackerResult<Phase0> 
+where L: Loader
+{
     let mut project_obj = load_project_object(project_resource).await?;
 
     // if entry points is found, redirect to the default entry point if it exists,
@@ -71,12 +74,14 @@ pub async fn pack_phase0<TContext>(
 }
 
 /// Pack the project after loading the project object
-async fn pack_project<TContext>(
+async fn pack_project<L>(
     source: &str,
-    project_resource: &Resource<TContext>,
+    project_resource: &Resource<'_, '_, L>,
     mut project_obj: Map<String, Value>,
     setting: &Setting,
-) -> PackerResult<Phase0> {
+) -> PackerResult<Phase0>
+where L: Loader
+{
     let title = check_metadata_required_property!(prop::TITLE, project_obj)?;
     let version = check_metadata_required_property!(prop::VERSION, project_obj)?;
     let route = check_metadata_required_property!(prop::ROUTE, project_obj)?;
@@ -133,8 +138,9 @@ async fn pack_project<TContext>(
 }
 
 /// Load the project object and only read the `entry-points` property
-pub async fn pack_project_entry_points<TContext>(
-    project_resource: &Resource<TContext>) -> PackerResult<EntryPoints> {
+pub async fn pack_project_entry_points<L>( project_resource: &Resource<'_, '_, L>) -> PackerResult<EntryPoints> 
+where L: Loader
+{
     let mut project_obj = load_project_object(project_resource).await?;
 
     let entry_points_value = match project_obj.remove(prop::ENTRY_POINTS) {
@@ -145,12 +151,13 @@ pub async fn pack_project_entry_points<TContext>(
     super::pack_entry_points(entry_points_value).await
 }
 
-async fn load_project_object<TContext>(project_resource: &Resource<TContext>) -> PackerResult<Map<String, Value>> 
+async fn load_project_object<L>(project_resource: &Resource<'_, '_, L>) -> PackerResult<Map<String, Value>> 
+where L: Loader
 {
     match project_resource.load_structured().await? {
         Value::Object(o) => Ok(o),
         _ => Err(PackerError::InvalidResourceType(
-            project_resource.name().to_string(),
+            project_resource.path().to_string(),
             "object".to_string(),
         )),
     }

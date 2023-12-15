@@ -1,7 +1,6 @@
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
-use crate::macros::test_suite;
 use crate::types::{Axis, GameCoord};
 
 use super::{CompError, Compiler};
@@ -53,11 +52,11 @@ impl<'a> Compiler<'a> {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use serde_json::json;
 
-    use crate::comp::CompilerBuilder;
+    use crate::comp::test_utils::CompilerBuilder;
     use crate::types::{MapCoordMap, MapMetadata, RouteMetadata};
 
     use super::*;

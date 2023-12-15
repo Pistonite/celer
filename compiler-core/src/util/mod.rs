@@ -19,7 +19,7 @@ pub struct RefCounted<T> where T: ?Sized {
     inner: std::rc::Rc<T>,
 }
 
-impl<T> RefCounted<T> where T: ?Sized{
+impl<T> RefCounted<T> {
     #[inline]
     pub fn new(inner: T) -> Self {
         Self {
@@ -31,7 +31,7 @@ impl<T> RefCounted<T> where T: ?Sized{
     }
 }
 
-impl Clone for RefCounted<()> {
+impl<L> Clone for RefCounted<L> {
     #[inline]
     fn clone(&self) -> Self {
         Self {

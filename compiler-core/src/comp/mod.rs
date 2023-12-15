@@ -36,10 +36,12 @@ use desugar::*;
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
 
-#[derive(Derivative, Debug, Clone)]
-#[derivative(Default)]
+#[derive(Debug, Clone)]
+#[cfg_attr(test, derive(Derivative))] // TODO: better way to handle this?
+#[cfg_attr(test, derivative(Default))]
 pub struct Compiler<'a> {
     /// The start time of the compilation (not just comp phase)
+    #[cfg_attr(test, derivative(Default(value = "Instant::now()")))]
     pub start_time: Instant,
     pub project: Cow<'a, RouteMetadata>,
     pub meta: Cow<'a, CompilerMetadata>,
@@ -47,11 +49,11 @@ pub struct Compiler<'a> {
     pub color: String,
     /// Current position on the map
     pub coord: GameCoord,
-    #[derivative(Default(value = "8"))]
+    #[cfg_attr(test, derivative(Default(value = "8")))]
     pub max_preset_depth: usize,
 }
 
-#[derive(PartialEq, Debug, Clone, thiserror::Error)]
+#[derive(PartialEq, Debug, thiserror::Error)]
 pub enum CompError {
     /// When an array is specified as a line
     #[error("A line cannot be an array. Check the formatting of your route.")]

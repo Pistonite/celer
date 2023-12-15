@@ -3,7 +3,6 @@
 use serde_json::Value;
 
 use crate::json::Cast;
-use crate::macros::test_suite;
 use crate::prop;
 use crate::types::{Axis, MapCoordMap};
 
@@ -127,7 +126,7 @@ pub fn pack_coord_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapCoor
     })
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use super::*;
 

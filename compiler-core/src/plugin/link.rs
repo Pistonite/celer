@@ -4,7 +4,7 @@
 
 use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::{CompDoc, Compiler};
-use crate::macros::{async_trait, test_suite};
+use crate::macros::{async_trait};
 use crate::pack::PackerResult;
 use crate::prop;
 use crate::types::{DocColor, DocRichTextBlock, DocTag};
@@ -27,8 +27,7 @@ impl PluginRuntime for LinkPlugin {
             }),
             ..Default::default()
         };
-        ctx.phase0
-            .project
+        ctx .project
             .tags
             .entry(prop::LINK.to_string())
             .and_modify(|tag| tag.apply_to_default(&link_tag))
@@ -83,7 +82,7 @@ fn transform_link_tag(rich_text: &mut DocRichTextBlock) {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use super::*;
 

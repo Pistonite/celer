@@ -1,4 +1,3 @@
-use crate::macros::test_suite;
 use crate::types::{ExecMapSection, GameCoord, MapIcon, MapLine, MapMarker};
 
 #[derive(PartialEq, Default, Debug, Clone)]
@@ -96,7 +95,7 @@ fn new_with_last_point(line: &MapLine) -> MapLine {
     new_line
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use super::*;
 
