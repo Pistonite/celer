@@ -33,7 +33,7 @@ impl ResType {
     }
 }
 
-impl<'a, 'b> ResPath<'a, 'b> {
+impl<'a> ResPath<'a> {
     /// Guess the resource type based on the extension
     pub fn get_type(&self) -> Option<ResType> {
         let ext = match self {

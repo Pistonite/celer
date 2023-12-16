@@ -16,5 +16,5 @@ syn = "2.0.38"
 
 [lib]
 proc-macro = true
-name = "celercmacros"
+name = "celerm"
 path = "src/lib.rs"

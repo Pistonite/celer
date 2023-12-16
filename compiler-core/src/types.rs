@@ -4,16 +4,16 @@
 //! definitions and WASM ABI
 
 use std::borrow::Cow;
-use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
 use crate::macros::derive_wasm;
+use crate::util::StringMap;
 
 /// Compiler entry points (name, path) pairs
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-pub struct EntryPoints(#[tsify(type = "Record<string, string>")] pub BTreeMap<String, String>);
+#[derive_wasm]
+pub struct EntryPoints(pub StringMap<String>);
 
 impl EntryPoints {
     /// Remove the aliases. Only keep the entry points that map directly to a path
@@ -24,7 +24,7 @@ impl EntryPoints {
 }
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
+#[derive_wasm]
 pub struct EntryPointsSorted(pub Vec<(String, String)>);
 
 impl From<EntryPoints> for EntryPointsSorted {
@@ -40,8 +40,7 @@ impl From<EntryPoints> for EntryPointsSorted {
 /// This is the final output of compiler with
 /// map items separated from doc items
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct ExecDoc<'a> {
     /// Project metadata
     pub project: Cow<'a, RouteMetadata>,
@@ -57,8 +56,7 @@ pub struct ExecDoc<'a> {
 ///
 /// This is produced by the bundling process and will not change afterwards
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct RouteMetadata {
     /// Source of the route, could be a URL or any string
     pub source: String,
@@ -69,14 +67,11 @@ pub struct RouteMetadata {
     /// Map metadata
     pub map: MapMetadata,
     /// Arbitrary key-value pairs that can be used for statistics or any other value
-    #[tsify(type = "Record<string, string>")]
-    pub stats: BTreeMap<String, String>,
+    pub stats: StringMap<String>,
     /// Icon id to url map
-    #[tsify(type = "Record<string, string>")]
-    pub icons: BTreeMap<String, String>,
+    pub icons: StringMap<String>,
     /// Tag id to tag
-    #[tsify(type = "Record<string, DocTag>")]
-    pub tags: BTreeMap<String, DocTag>,
+    pub tags: StringMap<DocTag>,
     /// Default tags to split
     pub splits: Vec<String>,
 }
@@ -85,29 +80,21 @@ pub struct RouteMetadata {
 ///
 /// Used to style text and provide extra function to the engine
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all(serialize = "camelCase", deserialize = "kebab-case"))]
+#[derive_wasm]
 pub struct DocTag {
     /// Bold style
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub bold: Option<bool>,
     /// Italic style
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub italic: Option<bool>,
     /// Underline style
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub underline: Option<bool>,
     /// Strikethrough style
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub strikethrough: Option<bool>,
     /// Color of the text (light, dark)
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<DocColor>,
     /// Background color of the text (light, dark)
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub background: Option<DocColor>,
     /// Display name for the split type of this tag
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub split_type: Option<String>,
 }
 
@@ -155,7 +142,7 @@ impl DocTag {
 ///
 /// Used to specify color for [`DocTag`]s.
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
+#[derive_wasm]
 #[serde(untagged)]
 pub enum DocColor {
     /// Single color for any background
@@ -163,18 +150,15 @@ pub enum DocColor {
     /// Different colors for light and dark backgrounds
     LightDark {
         /// Color to set if the text is displayed with a light background
-        #[serde(skip_serializing_if = "Option::is_none")]
         light: Option<String>,
         /// Color to set if the text is displayed with a dark background
-        #[serde(skip_serializing_if = "Option::is_none")]
         dark: Option<String>,
     },
 }
 
 /// A section in the executed document
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct ExecSection {
     /// Name of the section
     pub name: String,
@@ -186,8 +170,7 @@ pub struct ExecSection {
 
 /// A line in the executed document
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct ExecLine {
     /// Section number
     pub section: usize,
@@ -202,17 +185,14 @@ pub struct ExecLine {
     /// Diagnostic messages
     pub diagnostics: Vec<DocDiagnostic>,
     /// The icon id to show on the document
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub icon: Option<String>,
     /// Secondary text to show below the primary text
     pub secondary_text: DocRichText,
     /// Counter text to display
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub counter_text: Option<DocRichTextBlock>,
     /// The notes
     pub notes: Vec<DocNote>,
     /// The split name, if different from text
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub split_name: Option<String>,
     /// If the line text is a banner
     pub is_banner: bool,
@@ -220,8 +200,7 @@ pub struct ExecLine {
 
 /// Diagnostic message
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct DocDiagnostic {
     /// The diagnostic message
     pub msg: DocPoorText,
@@ -241,23 +220,20 @@ pub struct DocDiagnostic {
 ///
 /// This is a collection of [`DocRichTextBlock`]s
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
+#[derive_wasm]
 pub struct DocRichText(pub Vec<DocRichTextBlock>);
 
 /// Document rich text block
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct DocRichTextBlock {
     /// The tag name of the text
     ///
     /// Each block only contains one tag
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub tag: Option<String>,
     /// The text content
     pub text: String,
     /// The hyperlink of the text.
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub link: Option<String>,
 }
 
@@ -285,13 +261,13 @@ impl DocRichTextBlock {
 ///
 /// This is a collection of [`DocPoorTextBlock`]s
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
+#[derive_wasm]
 pub struct DocPoorText(pub Vec<DocPoorTextBlock>);
 
 /// Document poor text block. Just text or link
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(tag = "type", content = "data", rename_all = "camelCase")]
+#[derive_wasm]
+#[serde(tag = "type", content = "data")]
 pub enum DocPoorTextBlock {
     Text(String),
     Link(String),
@@ -299,8 +275,8 @@ pub enum DocPoorTextBlock {
 
 /// Document note block
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[derive_wasm]
+#[serde(tag = "type")]
 pub enum DocNote {
     Text { content: DocRichText },
     Image { link: String },
@@ -311,8 +287,7 @@ pub enum DocNote {
 ///
 /// This includes configuration like map layers, coordinates, etc.
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct MapMetadata {
     /// The map layers. First is the lowest layer.
     pub layers: Vec<MapLayerAttr>,
@@ -333,7 +308,7 @@ pub struct MapMetadata {
 ///
 /// Default value of 0 will be assigned to the unmapped axis.
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
+#[derive_wasm]
 pub struct MapCoordMap {
     /// Mapping for 2d coordinates in the route.
     #[serde(rename = "2d")]
@@ -345,8 +320,7 @@ pub struct MapCoordMap {
 
 /// Attribute (definition) of a map layer in the route
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct MapLayerAttr {
     /// Display name of the layer
     ///
@@ -392,8 +366,7 @@ pub struct MapLayerAttr {
 /// (x, y) -> (x * scale[0] + translate[0], y * scale[1] + translate[1])
 /// ```
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct MapTilesetTransform {
     /// The scale of the transformation
     pub scale: (f64, f64),
@@ -405,8 +378,7 @@ pub struct MapTilesetTransform {
 ///
 /// (displayed as &copy; LINK)
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct MapAttribution {
     /// Url of the attribution
     pub link: String,
@@ -417,8 +389,7 @@ pub struct MapAttribution {
 
 /// Axis of the map
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub enum Axis {
     /// Horizontal axis
     #[default]
@@ -440,8 +411,7 @@ pub enum Axis {
 
 /// Map features for one section
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct ExecMapSection {
     /// The icons
     pub icons: Vec<MapIcon>,
@@ -453,8 +423,7 @@ pub struct ExecMapSection {
 
 /// Icon on the map
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct MapIcon {
     /// Internal icon name (usually kebab-case)
     pub id: String,
@@ -470,8 +439,7 @@ pub struct MapIcon {
 
 /// Markers on the map
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct MapMarker {
     pub coord: GameCoord,
     /// The corresponding line index in section of the document
@@ -487,8 +455,7 @@ pub struct MapMarker {
 /// The coordinates do not have to be on the same map layer.
 /// The map will automatically split the path if it croses map layers.
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct MapLine {
     /// Color of the line
     pub color: String,
@@ -498,5 +465,5 @@ pub struct MapLine {
 
 /// Coordinates representing a point (x, y, z) in the game
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm(feature = "wasm")]
+#[derive_wasm]
 pub struct GameCoord(pub f64, pub f64, pub f64);

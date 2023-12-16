@@ -1,13 +1,14 @@
 //! Implementation for resolving a `use` from a resource
 
-use crate::util::{Path, RefCounted};
+use crate::util::Path;
+use crate::env::RefCounted;
 
 use super::{ResPath, Loader, Resource, ValidUse, ResResult, ResError};
 
-impl<'a, 'b, L> Resource<'a, 'b, L> where L: Loader {
+impl<'a, L> Resource<'a, L> where L: Loader {
 
     /// Resolve a `use` property from this resource
-    pub fn resolve(&self, target: &ValidUse) -> ResResult<Resource<'a, 'b, L>> {
+    pub fn resolve(&self, target: &ValidUse) -> ResResult<Resource<'a, L>> {
         // See tests
         todo!()
     }
@@ -195,20 +196,20 @@ impl<'a, 'b, L> Resource<'a, 'b, L> where L: Loader {
 mod test {
     use super::*;
 
-    use crate::resource::test_utils::StubLoader;
+    use crate::res::test_utils::StubLoader;
 
     static TEST_URL_PREFIX: &str = "https://hello/";
 
     fn create_local_resource(path: &str) -> Resource<StubLoader> {
         Resource::new(
-            &ResPath::new_local(path),
+            ResPath::new_local(path),
             RefCounted::new(StubLoader),
         )
     }
 
     fn create_remote_resource(path: &str) -> Resource<StubLoader> {
         Resource::new(
-            &ResPath::new_remote(TEST_URL_PREFIX, path),
+            ResPath::new_remote(TEST_URL_PREFIX, path),
             RefCounted::new(StubLoader),
         )
     }

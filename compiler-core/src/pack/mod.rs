@@ -79,11 +79,11 @@ pub enum PackerError {
     #[error("Invalid `use` value: {0}. If you are specifying a relative path, make sure to start with ./ or ../")]
     InvalidUse(String),
 
-    #[error("Invalid path: {0}")]
-    InvalidPath(String),
-
-    #[error("Invalid url: {0}")]
-    InvalidUrl(String),
+    // #[error("Invalid path: {0}")]
+    // InvalidPath(String),
+    //
+    // #[error("Invalid url: {0}")]
+    // InvalidUrl(String),
 
     #[error("Max depth of {0} levels of `use` is reached. Please make sure there are no circular dependencies.")]
     MaxUseDepthExceeded(usize),
@@ -97,11 +97,11 @@ pub enum PackerError {
     // #[error("The format of resource {0} cannot be determined")]
     // UnknownFormat(String),
 
-    #[error("Cannot load file: {0}")]
-    LoadFile(String),
-
-    #[error("Cannot load url: {0}")]
-    LoadUrl(String),
+    // #[error("Cannot load file: {0}")]
+    // LoadFile(String),
+    //
+    // #[error("Cannot load url: {0}")]
+    // LoadUrl(String),
 
     // #[error("Error when parsing structured data in file {0}: {1}")]
     // InvalidFormat(String, String),
@@ -109,8 +109,8 @@ pub enum PackerError {
     // #[error("Error when parsing file {0}: file is not UTF-8")]
     // InvalidUtf8(String),
 
-    #[error("")]
-    InvalidIcon,
+    // #[error("")]
+    // InvalidIcon,
 
     #[error("Resource type is invalid: {0} should be of type {1}")]
     InvalidResourceType(String, String),

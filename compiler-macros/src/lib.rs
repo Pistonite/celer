@@ -85,12 +85,11 @@ mod async_impl;
 ///    pub a_thing: i32,
 /// }
 /// ```
-/// If the derive resides in compiler-core, `#[derive_wasm(feature="wasm")]` should be used.
 #[proc_macro_attribute]
 pub fn derive_wasm(
-    feature_attr: TokenStream,
+    _attr: TokenStream,
     input: TokenStream,
 ) -> TokenStream {
-    derive_wasm_impl::expand(feature_attr, input)
+    derive_wasm_impl::expand(input)
 }
 mod derive_wasm_impl;

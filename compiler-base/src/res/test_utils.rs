@@ -9,7 +9,7 @@ use super::{Loader, ResPath, ResResult};
 pub struct StubLoader;
 #[async_trait(auto)]
 impl Loader for StubLoader {
-    async fn load_raw<'s>(&'s self, _: &ResPath<'_, '_>) -> ResResult<Cow<'s, [u8]>> {
+    async fn load_raw<'s>(&'s self, _: &ResPath<'_>) -> ResResult<Cow<'s, [u8]>> {
         panic!("stub loader called")
     }
 }

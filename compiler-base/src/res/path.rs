@@ -2,7 +2,7 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 
-use crate::util::{Path, PathBuf, RefCounted};
+use crate::util::{Path, PathBuf};
 
 /// Path of a resource in the context of a certain project, either local or remote (URL)
 ///
@@ -11,47 +11,54 @@ use crate::util::{Path, PathBuf, RefCounted};
 ///
 /// Calling `to_string()` will result in either the relative path from the root, or the URL of the
 /// resource.
-#[derive(Debug, Clone, PartialEq)]
-pub enum ResPath<'url, 'path> {
+///
+/// # Lifetime
+/// The lifetime parameter `'u` is the lifetime of the URL prefix for remote paths.
+/// It may contain a borrowed URL prefix, since the URL prefix is only modified when switching
+/// between remote repositories.
+#[derive(Debug, PartialEq)]
+pub enum ResPath<'u> {
     /// Local path, represented as a relative path from the "root"
     /// (i.e. without the leading "/")
-    Local(Cow<'path, Path>),
+    Local(PathBuf),
     /// Remote path, represented as a URL prefix (with a trailing "/")
     /// and a relative path (without the leading "/")
-    Remote(Cow<'url, str>, Cow<'path, Path>),
+    Remote(Cow<'u, str>, PathBuf),
 }
 
-impl<'url, 'path> ResPath<'url, 'path> {
+impl<'u> ResPath<'u> {
     /// Create a new local resource path.
     ///
-    /// Converts the path to a relative path if it is absolute.
-    pub fn new_local<P>(path: P) -> Self where P: AsRef<Path> {
-        let path = match path.as_ref().strip_prefix("/") {
-            Ok(path) => Cow::from(path),
-            _ => Cow::from(path.as_ref()),
-        };
-
+    /// # Requirements
+    /// Path must be relative.
+    pub fn new_local<P>(path: P) -> Self where P: Into<PathBuf> {
+        let path = path.into();
+        debug_assert!(path.is_relative());
         Self::Local(path)
     }
-
     /// Create a new remote resource path.
     ///
-    /// Converts the path to a relative path if it is absolute.
-    pub fn new_remote<P>(url: &str, path: P) -> Self where P: AsRef<Path>{
-        let path = match path.as_ref().strip_prefix("/") {
-            Ok(path) => Cow::from(path),
-            _ => Cow::from(path.as_ref()),
-        };
-
-        let url = if url.ends_with('/') {
-            Cow::from(url)
-        } else {
-            let mut url: String = url.to_owned();
-            url.push('/');
-            Cow::from(url)
-        };
+    /// # Requirements
+    /// 1. Path must be relative.
+    /// 2. Url must end with a trailing "/".
+    pub fn new_remote<U, P>(url: U, path: P) -> Self 
+where 
+        U: Into<Cow<'u, str>>,
+        P: Into<PathBuf>{
+        let path = path.into();
+        let url = url.into();
+        debug_assert!(path.is_relative());
+        debug_assert!(url.ends_with('/'));
 
         Self::Remote(url, path)
+    }
+
+    /// Change the path to a new path, while keep the same url prefix (for remote paths)
+    pub fn change_path<P>(&self, path: P) -> Self where P: Into<PathBuf> {
+        match self {
+            Self::Local(_) => Self::new_local(path),
+            Self::Remote(url, _) => Self::new_remote(url.clone(), path),
+        }
     }
 
     /// Get if the path is local
@@ -63,21 +70,11 @@ impl<'url, 'path> ResPath<'url, 'path> {
         }
     }
 
-    /// Get the parent path. Returns `None` if the path is at the root
-    pub fn parent(&self) -> Option<Self> {
+    /// Get the path as a `Path` for manipulation
+    pub fn as_path(&self) -> &Path {
         match self {
-            Self::Local(path) => {
-                match path.parent() {
-                    Some(path) => Some(Self::Local(Cow::from(path))),
-                    None => None,
-                }
-            }
-            Self::Remote(url, path) => {
-                match path.parent() {
-                    Some(path) => Some(Self::Remote(Cow::clone(url), Cow::from(path))),
-                    None => None,
-                }
-            }
+            Self::Local(path) => path.as_path(),
+            Self::Remote(_, path) => path.as_path(),
         }
     }
 
@@ -89,7 +86,7 @@ impl<'url, 'path> ResPath<'url, 'path> {
     }
 }
 
-impl<'a, 'b> Display for ResPath<'a, 'b> {
+impl<'a> Display for ResPath<'a> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Local(path) => write!(f, "{}", path.to_str()),

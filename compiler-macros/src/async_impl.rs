@@ -33,7 +33,10 @@ pub fn expand(trait_name: &str, attr: TokenStream, input: TokenStream) -> TokenS
         (input.clone(), input)
     };
 
-    let celerc = util::get_compiler_core_crate();
+    let celerc = util::compiler_crate_ident();
+    let macro_use = quote::quote! {
+        #celerc::macros::macro_use
+    };
     let is_auto = if attr.is_empty() {
         false
     } else {
@@ -47,21 +50,21 @@ pub fn expand(trait_name: &str, attr: TokenStream, input: TokenStream) -> TokenS
 
     let out = if is_auto {
         quote::quote! {
-            #[cfg_attr(not(feature="wasm"), #celerc::macros::external::#trait_ident)]
+            #[cfg_attr(not(feature="wasm"), #macro_use::#trait_ident)]
             #[cfg(not(feature="wasm"))]
             #input_send_sync
-            #[cfg_attr(feature="wasm", #celerc::macros::external::#trait_ident(?Send))]
+            #[cfg_attr(feature="wasm", #macro_use::#trait_ident(?Send))]
             #[cfg(feature="wasm")]
             #input
         }
     } else if attr.is_empty() {
         quote::quote! {
-            #[#celerc::macros::external::#trait_ident]
+            #[#macro_use::#trait_ident]
             #input_send_sync
         }
     } else {
         quote::quote! {
-            #[#celerc::macros::external::#trait_ident(?Send)]
+            #[#macro_use::#trait_ident(?Send)]
             #input
         }
     };
