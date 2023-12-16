@@ -2,13 +2,12 @@
 
 use serde_json::Value;
 
+use crate::CompilerMetadata;
 use crate::comp::{CompDoc, CompLine};
 use crate::json::Coerce;
-use crate::macros::async_trait;
-use crate::types::{DocDiagnostic, DocRichText, DocRichTextBlock, GameCoord};
-use crate::{lang, CompilerMetadata};
-
-use super::{operation, PlugResult, PluginRuntime};
+use crate::types::{DocDiagnostic, GameCoord};
+use crate::lang::{self, DocRichText, DocRichTextBlock};
+use crate::plugin::{operation, PluginResult, PluginRuntime};
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";
@@ -387,9 +386,8 @@ fn estimate_time(text: &DocRichText) -> u32 {
     movement_count * 14 + 6 // (approximately) same timing as old celer
 }
 
-#[async_trait(?Send)]
 impl PluginRuntime for BotwAbilityUnstablePlugin {
-    async fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
+    fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PluginResult<()> {
         operation::for_each_line!(line in comp_doc {
             self.process_line(&mut line);
             line

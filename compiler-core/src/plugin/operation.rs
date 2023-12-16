@@ -5,7 +5,6 @@ macro_rules! for_each_line {
             let lines = std::mem::take(&mut section.lines);
             #[allow(unused_mut)]
             for mut $line in lines.into_iter() {
-                $crate::util::yield_budget(64).await;
                 let l = $fun;
                 section.lines.push(l);
             }

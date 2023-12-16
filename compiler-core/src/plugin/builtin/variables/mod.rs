@@ -8,14 +8,12 @@ use serde_json::{json, Map, Value};
 use crate::api::{CompilerContext, CompilerMetadata};
 use crate::comp::{CompDoc, Compiler};
 use crate::json::Coerce;
-use crate::lang;
+use crate::lang::{self, DocRichTextBlock};
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::types::{DocColor, DocDiagnostic, DocRichTextBlock, DocTag};
-use crate::util::yield_budget;
-
-use super::{operation, PlugResult, PluginRuntime};
+use crate::types::{DocColor, DocDiagnostic, DocTag};
+use crate::plugin::{operation, PluginResult, PluginRuntime};
 
 mod convert;
 mod transform;
@@ -284,9 +282,8 @@ impl VariablesPlugin {
     }
 }
 
-#[async_trait(?Send)]
 impl PluginRuntime for VariablesPlugin {
-    async fn on_before_compile<'a>(&mut self, compiler: &mut Compiler<'a>) -> PackerResult<()> {
+    fn on_before_compile<'a>(&mut self, compiler: &mut Compiler<'a>) -> PluginResult<()> {
         // add the val tag if not defined already
         let tag = DocTag {
             color: Some(DocColor::LightDark {
@@ -304,12 +301,12 @@ impl PluginRuntime for VariablesPlugin {
         compiler.project.tags.entry(VAL.to_string()).or_default();
         Ok(())
     }
-    async fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PlugResult<()> {
+
+    fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PluginResult<()> {
         comp_doc.known_props.insert(prop::VARS.to_string());
         comp_doc.known_props.insert(prop::VALS.to_string());
 
         for preface in comp_doc.preface.iter_mut() {
-            yield_budget(64).await;
             for block in preface.iter_mut() {
                 self.transform_text(&mut comp_doc.diagnostics, block, VAL);
             }

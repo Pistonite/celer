@@ -52,29 +52,6 @@ pub struct ExecDoc<'a> {
     pub diagnostics: Vec<DocDiagnostic>,
 }
 
-/// Metadata of the route project
-///
-/// This is produced by the bundling process and will not change afterwards
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-pub struct RouteMetadata {
-    /// Source of the route, could be a URL or any string
-    pub source: String,
-    /// Version of the project
-    pub version: String,
-    /// Display title of the project
-    pub title: String,
-    /// Map metadata
-    pub map: MapMetadata,
-    /// Arbitrary key-value pairs that can be used for statistics or any other value
-    pub stats: StringMap<String>,
-    /// Icon id to url map
-    pub icons: StringMap<String>,
-    /// Tag id to tag
-    pub tags: StringMap<DocTag>,
-    /// Default tags to split
-    pub splits: Vec<String>,
-}
 
 /// Document tag type
 ///
@@ -216,62 +193,7 @@ pub struct DocDiagnostic {
     pub source: String,
 }
 
-/// Document rich text
-///
-/// This is a collection of [`DocRichTextBlock`]s
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-pub struct DocRichText(pub Vec<DocRichTextBlock>);
 
-/// Document rich text block
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-pub struct DocRichTextBlock {
-    /// The tag name of the text
-    ///
-    /// Each block only contains one tag
-    pub tag: Option<String>,
-    /// The text content
-    pub text: String,
-    /// The hyperlink of the text.
-    pub link: Option<String>,
-}
-
-impl DocRichTextBlock {
-    /// Create a rich text block with no tag
-    pub fn text(text: &str) -> Self {
-        Self {
-            tag: None,
-            text: text.to_string(),
-            link: None,
-        }
-    }
-
-    /// Create a rich text block with a tag
-    pub fn with_tag(tag: &str, text: &str) -> Self {
-        Self {
-            tag: Some(tag.to_string()),
-            text: text.to_string(),
-            link: None,
-        }
-    }
-}
-
-/// Document poor text
-///
-/// This is a collection of [`DocPoorTextBlock`]s
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-pub struct DocPoorText(pub Vec<DocPoorTextBlock>);
-
-/// Document poor text block. Just text or link
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-#[serde(tag = "type", content = "data")]
-pub enum DocPoorTextBlock {
-    Text(String),
-    Link(String),
-}
 
 /// Document note block
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]

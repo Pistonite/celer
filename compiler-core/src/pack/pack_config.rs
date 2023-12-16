@@ -9,23 +9,13 @@ use crate::macros::async_recursion;
 use crate::plugin::{BuiltInPlugin, Plugin, PluginInstance};
 use crate::prop;
 use crate::types::{DocTag, MapMetadata};
-use crate::util::yield_budget;
-use crate::resource::{Use, ValidUse, Loader, Resource};
+use crate::env::yield_budget;
+use crate::res::{Use, ValidUse, Loader, Resource};
 
 use super::{ConfigTrace, PackerError, PackerResult};
 
 const MAX_CONFIG_DEPTH: usize = 16;
 
-#[derive(Default, Debug)]
-pub struct ConfigBuilder {
-    pub map: Option<MapMetadata>,
-    pub icons: BTreeMap<String, String>,
-    pub tags: BTreeMap<String, DocTag>,
-    pub presets: BTreeMap<String, Preset>,
-    pub plugins: Vec<PluginInstance>,
-    pub splits: Vec<String>,
-    pub default_icon_priority: Option<i64>,
-}
 
 /// Pack a config json blob and apply the values to the [`ConfigBuilder`]
 #[async_recursion(auto)]
@@ -143,44 +133,6 @@ async fn process_config<L>(
     Ok(())
 }
 
-/// Process the `icons` property
-///
-/// Resolves `use`'s using the resource context and add the icon URLs to the builder
-async fn process_icons_config<L>(
-    builder: &mut ConfigBuilder,
-    resource: &Resource<'_, '_, L>,
-    icons: Value,
-    trace: &mut ConfigTrace,
-) -> PackerResult<()> where L: Loader
-{
-    let icons = icons
-        .try_into_object()
-        .map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), prop::ICONS.to_string()))?;
-
-    for (key, v) in icons.into_iter() {
-        match Use::try_from(v) {
-            Err(v) => {
-                // not a use, just a icon url
-                if v.is_array() || v.is_object() {
-                    return Err(PackerError::InvalidConfigProperty(
-                        trace.clone(),
-                        format!("{}.{}", prop::ICONS, key),
-                    ));
-                }
-                builder.icons.insert(key, v.coerce_to_string());
-            }
-            Ok(Use::Invalid(path)) => return Err(PackerError::InvalidUse(path)),
-            Ok(Use::Valid(valid_use)) => {
-                let icon_resource = resource.resolve(&valid_use)?;
-                let image_url = icon_resource.load_image_url().await?;
-                builder.icons.insert(key, image_url);
-            }
-        }
-    }
-
-    Ok(())
-}
-
 /// Process the `plugins` property
 ///
 /// Resolves `use`'s using the resource context and add the plugins to the builder
@@ -248,54 +200,3 @@ async fn process_plugins_config<L>(
     Ok(())
 }
 
-/// Process the `tags` property
-async fn process_tags_config(
-    builder: &mut ConfigBuilder,
-    tags: Value,
-    trace: &ConfigTrace,
-) -> PackerResult<()> {
-    let tags = tags
-        .try_into_object()
-        .map_err(|_| PackerError::InvalidConfigProperty(trace.clone(), prop::TAGS.to_string()))?;
-    for (key, mut value) in tags.into_iter() {
-        let mut tag = DocTag::default();
-        // resolve includes
-        if let Some(includes) = value
-            .as_object_mut()
-            .and_then(|map| map.remove(prop::INCLUDES))
-        {
-            let includes = match includes {
-                Value::Array(v) => v,
-                Value::Object(_) => {
-                    return Err(PackerError::InvalidConfigProperty(
-                        trace.clone(),
-                        format!("{}.{}.{}", prop::TAGS, key, prop::INCLUDES),
-                    ))
-                }
-                other => vec![other],
-            };
-            for include in includes {
-                let include = include.coerce_to_string();
-
-                let include_tag = match builder.tags.get(&include) {
-                    None if include != key => {
-                        return Err(PackerError::TagNotFound(trace.clone(), include.clone()))
-                    }
-                    other => other,
-                };
-                if let Some(t) = include_tag {
-                    tag.apply_override(t);
-                }
-            }
-        }
-
-        let last_tag = serde_json::from_value::<DocTag>(value).map_err(|_| {
-            PackerError::InvalidConfigProperty(trace.clone(), format!("{}.{}", prop::TAGS, key))
-        })?;
-        tag.apply_override(&last_tag);
-
-        builder.tags.insert(key, tag);
-    }
-
-    Ok(())
-}

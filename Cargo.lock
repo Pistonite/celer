@@ -366,6 +366,8 @@ dependencies = [
  "base64",
  "compiler-macros",
  "js-sys",
+ "map-macro",
+ "regen-lang",
  "serde",
  "serde-wasm-bindgen 0.6.3",
  "serde_json",
@@ -390,7 +392,6 @@ dependencies = [
  "js-sys",
  "log",
  "map-macro",
- "regen-lang",
  "roman",
  "serde",
  "serde_json",
@@ -1144,9 +1145,9 @@ dependencies = [
 
 [[package]]
 name = "regen-lang"
-version = "0.0.6"
+version = "0.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86465e9fbebea9a637c71329acec352acb2eb54883d791bb10551c35fe8f0361"
+checksum = "34370c126b07d798fb9c766834c7061d71639e49596f4cb44ab1174329ba7f4d"
 dependencies = [
  "clap",
  "codize",

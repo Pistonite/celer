@@ -1,6 +1,7 @@
 //! Rich string
-mod ext;
 mod grammar;
-pub use ext::*;
+mod rich_text;
+pub use rich_text::*;
 mod parse;
 pub use parse::parse_rich;
+

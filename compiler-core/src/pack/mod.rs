@@ -7,7 +7,7 @@ use std::convert::Infallible;
 use std::fmt::{Display, Formatter};
 
 use crate::lang;
-use crate::resource::ResError;
+use crate::res::ResError;
 use crate::types::DocDiagnostic;
 
 mod pack_config;
@@ -29,55 +29,14 @@ pub use pack_route::*;
 mod pack_value;
 pub use pack_value::*;
 
-#[derive(Default, Debug, Clone, PartialEq)]
-pub struct ConfigTrace(Vec<usize>);
-
-impl ConfigTrace {
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-    #[inline]
-    pub fn push(&mut self, v: usize) {
-        self.0.push(v)
-    }
-    #[inline]
-    pub fn pop(&mut self) -> Option<usize> {
-        self.0.pop()
-    }
-}
-
-impl Display for ConfigTrace {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "trace=[{}]",
-            self.0
-                .iter()
-                .map(|x| x.to_string())
-                .collect::<Vec<_>>()
-                .join(",")
-        )
-    }
-}
-
-impl From<&[usize]> for ConfigTrace {
-    fn from(v: &[usize]) -> Self {
-        Self(v.to_vec())
-    }
-}
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum PackerError {
     #[error("Failed to load resource: {0}")]
     Res(#[from] ResError),
 
-    #[error("Invalid `use` value: {0}. If you are specifying a relative path, make sure to start with ./ or ../")]
-    InvalidUse(String),
+    // #[error("Invalid `use` value: {0}. If you are specifying a relative path, make sure to start with ./ or ../")]
+    // InvalidUse(String),
 
     // #[error("Invalid path: {0}")]
     // InvalidPath(String),
@@ -127,8 +86,8 @@ pub enum PackerError {
     #[error("Project config ({0}) has an invalid type")]
     InvalidConfigType(ConfigTrace),
 
-    #[error("Project config ({0}): the `{1}` property is invalid")]
-    InvalidConfigProperty(ConfigTrace, String),
+    // #[error("Project config ({0}): the `{1}` property is invalid")]
+    // InvalidConfigProperty(ConfigTrace, String),
 
     #[error("Project config ({0}): the required `{1}` property is missing")]
     MissingConfigProperty(ConfigTrace, String),
@@ -145,8 +104,8 @@ pub enum PackerError {
     #[error("Project config ({0}): config is nesting too deep!")]
     MaxConfigDepthExceeded(ConfigTrace),
 
-    #[error("Project config ({0}): the tag `{1}` is not defined")]
-    TagNotFound(ConfigTrace, String),
+    // #[error("Project config ({0}): the tag `{1}` is not defined")]
+    // TagNotFound(ConfigTrace, String),
 
     #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
     InvalidEntryPoint(String, String),

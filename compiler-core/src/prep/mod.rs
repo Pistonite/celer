@@ -19,14 +19,25 @@
 //! the compiler with additional (and optional) plugins.
 
 mod entry_point;
+use std::borrow::Cow;
+
 pub use entry_point::*;
+mod config;
+pub use config::*;
 
 use crate::types::EntryPoints;
+use crate::res::{ResError, Loader, Resource};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PrepError {
     #[error("Failed to load resource: {0}")]
     Res(#[from] ResError),
+
+    #[error("Project config ({0}): property `{1}` has an invalid type (expected {2})")]
+    InvalidConfigPropertyType(ConfigTrace, Cow<'static, str>, &'static str),
+
+    #[error("Project config ({0}): cannot find tag `{1}`")]
+    TagNotFound(ConfigTrace, String),
 }
 
 pub type PrepResult<T> = Result<T, PrepError>;
@@ -37,4 +48,8 @@ where L: Loader {
 }
 
 
-// pub struct PreparedContext
+pub struct PreparedContext {
+    pub config: RouteConfig,
+    pub meta: CompilerMetadata,
+    pub route: Value,
+}

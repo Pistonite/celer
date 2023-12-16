@@ -1,4 +1,6 @@
 //! Template string
+//!
+//! Template string is the $(number) syntax used in defining presets
 use serde::{Deserialize, Serialize};
 
 mod grammar;

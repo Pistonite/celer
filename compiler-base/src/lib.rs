@@ -4,6 +4,7 @@
 
 pub mod env;
 pub mod json;
+pub mod lang;
 pub mod prop;
 pub mod res;
 pub mod util;

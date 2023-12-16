@@ -1,8 +1,7 @@
 use regen::sdk::{ASTParser, CreateParseTree, ParseTreeResult, TokenStream};
 
-use crate::types::{DocRichText, DocRichTextBlock};
-
 use super::grammar::{self, pt};
+use super::{DocRichText, DocRichTextBlock};
 
 pub fn parse_rich(s: &str) -> DocRichText {
     let lex_output = grammar::tokenize(s);

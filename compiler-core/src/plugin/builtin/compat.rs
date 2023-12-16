@@ -5,7 +5,7 @@ use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::macros::async_trait;
 
-use super::{operation, PlugResult, PluginRuntime};
+// use super::{operation, PlugResult, PluginRuntime};
 
 const HIDE_ICON_ON_MAP: &str = "hide-icon-on-map";
 const HIDE_ICON_ON_DOC: &str = "hide-icon-on-doc";

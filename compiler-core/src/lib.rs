@@ -13,18 +13,17 @@
 //!    - [`exec`] Process the route data into a renderable object
 //!    - [`expo`] Export artifacts from the route
 
-mod api;         // depends on: all
+mod api;
 pub use api::*;
 
-pub mod prep;
-
-//pub mod expo;  // export phase (todo)
-pub mod exec;    // executor, depends on: comp
-pub mod comp;
-pub mod pack;
-
-pub mod lang;
 pub mod plugin;
+
+pub mod prep;
+pub mod pack;
+pub mod comp;
+pub mod exec;    // executor, depends on: comp
+//pub mod expo;  // export phase (todo)
+
 pub mod types;
 
 pub use celerb::*;

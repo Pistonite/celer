@@ -22,6 +22,9 @@ mod test_utils;
 /// Resource-related error types
 #[derive(Debug, thiserror::Error)]
 pub enum ResError {
+    #[error("Invalid `use` value: `{0}`. If you are specifying a relative path, make sure to start with ./ or ../")]
+    InvalidUse(String),
+
     #[error("Resource is not valid UTF-8: {0}")]
     InvalidUtf8(String),
 

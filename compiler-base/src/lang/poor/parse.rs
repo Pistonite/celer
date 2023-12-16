@@ -1,6 +1,6 @@
 //! Poor string parsing
 
-use crate::types::{DocPoorText, DocPoorTextBlock};
+use super::{DocPoorText, DocPoorTextBlock};
 
 pub fn parse_poor(s: &str) -> DocPoorText {
     let mut output = vec![];
