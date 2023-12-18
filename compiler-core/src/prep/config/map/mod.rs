@@ -1,5 +1,6 @@
 //! Process the `map` config property
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::prop;
@@ -133,13 +134,14 @@ mod test {
 
         let mut config = PreparedConfig::default();
 
-        for (i, v) in values.into_iter().enumerate() {
+        for v in values.into_iter().enumerate() {
             let result = config.load_map(v).await;
             assert_eq!(
                 result,
-                Err(PrepError::InvalidConfigProperty(
-                    ConfigTrace::default(),
-                    prop::MAP
+                Err(PrepError::InvalidConfigPropertyType(
+                    Default::default(),
+                    prop::MAP,
+                    "mapping object"
                 ))
             );
         }

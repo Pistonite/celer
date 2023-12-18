@@ -34,7 +34,7 @@ pub enum PrepError {
     Res(#[from] ResError),
 
     #[error("Project config ({0}): property `{1}` has an invalid type (expected {2})")]
-    InvalidConfigPropertyType(ConfigTrace, Cow<'static, str>, &'static str),
+    InvalidConfigPropertyType(ConfigTrace, Cow<'static, str>, Cow<'static,str>),
 
     #[error("Project config ({0}): property `{1}` is missing")]
     MissingConfigProperty(ConfigTrace, Cow<'static, str>),
