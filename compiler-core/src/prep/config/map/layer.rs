@@ -8,6 +8,74 @@ use crate::types::{MapAttribution, MapLayerAttr, MapTilesetTransform};
 
 use super::{ConfigTrace, PackerError, PackerResult};
 
+/// Attribute (definition) of a map layer in the route
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub struct MapLayer {
+    /// Display name of the layer
+    ///
+    /// This is visible in the layer switch UI
+    pub name: String,
+
+    /// The tileset url template, with {x} {y} {z} as placeholders.
+    ///
+    /// The url should conform to the leaflet tile layer API:
+    /// https://leafletjs.com/reference.html#tilelayer
+    pub template_url: String,
+
+    /// The raster coordinate size
+    ///
+    /// See: https://github.com/commenthol/leaflet-rastercoords.
+    /// Form is [width, height]
+    pub size: (u64, u64),
+
+    /// Min and max zoom levels
+    pub zoom_bounds: (u64, u64),
+
+    /// Max native zoom of the tileset
+    pub max_native_zoom: u64,
+
+    /// Coordinate transformation
+    ///
+    /// This should transform (x, y) from the game's coordinate space to (x, y) in the raster image.
+    pub transform: MapTilesetTransform,
+
+    /// The minimum Z value this layer should be used
+    ///
+    /// This value is ignored for the first (lowest) layer
+    pub start_z: f64,
+
+    /// Attribution
+    pub attribution: MapAttribution,
+}
+
+/// The tileset transform
+///
+/// The transformed coordiante will be:
+/// ```no-compile
+/// (x, y) -> (x * scale[0] + translate[0], y * scale[1] + translate[1])
+/// ```
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub struct MapTilesetTransform {
+    /// The scale of the transformation
+    pub scale: (f64, f64),
+    /// The translation of the transformation
+    pub translate: (f64, f64),
+}
+
+/// Attribution to display on the map
+///
+/// (displayed as &copy; LINK)
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub struct MapAttribution {
+    /// Url of the attribution
+    pub link: String,
+    /// If the copyright sign should be displayed
+    #[serde(default)]
+    pub copyright: bool,
+}
 macro_rules! check_layer_required_property {
     ($property:expr, $trace:ident, $layer_index:ident, $obj:ident) => {
         match $obj.remove($property) {

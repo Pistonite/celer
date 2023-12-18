@@ -1,12 +1,55 @@
 //! Packs map.coord-map into [`MapCoordMap`]
 
+use serde::{Serialize, Deserialize};
 use serde_json::Value;
 
+use crate::macros::derive_wasm;
+use crate::res::Loader;
 use crate::json::Cast;
+use crate::prep::{PrepResult, PreparedConfig};
 use crate::prop;
-use crate::types::{Axis, MapCoordMap};
 
-use super::{ConfigTrace, PackerError, PackerResult};
+
+/// The mapping if 2 coordinates are specified in the route
+///
+/// For example, ["x", "z"] will map the coordinates
+/// to the x (horizontal) and z (height) axis of the map.
+///
+/// Default value of 0 will be assigned to the unmapped axis.
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub struct MapCoordMap {
+    /// Mapping for 2d coordinates in the route.
+    #[serde(rename = "2d")]
+    pub mapping_2d: (Axis, Axis),
+    // Mapping for 3d coordinates in the route.
+    #[serde(rename = "3d")]
+    pub mapping_3d: (Axis, Axis, Axis),
+}
+
+/// Axis of the map
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub enum Axis {
+    /// Horizontal axis
+    #[default]
+    X,
+    /// Vertical axis
+    Y,
+    /// Height axis
+    Z,
+    /// Negative Horizontal axis
+    #[serde(rename = "-x")]
+    NegX,
+    /// Negative Vertical axis
+    #[serde(rename = "-y")]
+    NegY,
+    /// Negative Height axis
+    #[serde(rename = "-z")]
+    NegZ,
+}
+
+
 
 macro_rules! check_coord_map_required_property {
     ($property:expr, $trace:ident, $value:expr) => {
@@ -44,7 +87,9 @@ macro_rules! try_parse_axis {
     };
 }
 
-pub fn pack_coord_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapCoordMap> {
+impl<L> PreparedConfig<L> where L: Loader {
+    /// Parse the `coord-map` property in map configs
+    pub fn parse_coord_map(&self, coord_map: Value) -> PrepResult<MapCoordMap> {
     let mut obj = value.try_into_object().map_err(|_| {
         PackerError::InvalidConfigProperty(
             trace.clone(),
@@ -124,6 +169,7 @@ pub fn pack_coord_map(value: Value, trace: &ConfigTrace) -> PackerResult<MapCoor
         mapping_2d,
         mapping_3d,
     })
+    }
 }
 
 #[cfg(test)]

@@ -1,12 +1,15 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, borrow::Cow};
 
 use crate::res::{Resource, Loader};
 
-use super::PrepResult;
+use super::{PrepResult, PrepError};
 
 mod icon;
 pub use icon::*;
+mod map;
+pub use map::*;
 mod tag;
+use serde_json::{Value, Map};
 pub use tag::*;
 mod trace;
 pub use trace::*;
@@ -62,6 +65,56 @@ impl<L> PreparedConfig<L> where L: Loader {
             }
         }
         Ok(())
+    }
+
+    /// Check if `prop` is `Some`, otherwise returns [`PrepError::MissingConfigProperty`] with the
+    /// current trace.
+    pub fn check_required_property<T, S>(&self, prop: Option<T>, prop_name: S) -> PrepResult<T> where S: Into<Cow<'static, str>> 
+    {
+        match prop {
+            Some(v) => Ok(v),
+            None => Err(PrepError::MissingConfigProperty(
+                self.trace.clone(),
+                prop_name.into(),
+            )),
+        }
+    }
+
+    /// Check if `prop_name` is `None`, otherwise returns [`PrepError::UnusedConfigProperty`] with the
+    /// current trace.
+    pub fn check_unused_property<S>(&self, prop_name: Option<S>) -> PrepResult<()> where S: Into<Cow<'static, str>> 
+    {
+        match prop_name {
+            None => Ok(()),
+            Some(name) => Err(PrepError::MissingConfigProperty(
+                self.trace.clone(),
+                name.into(),
+            )),
+        }
+    }
+
+    /// Convert `prop` into a Map, otherwise returns [`PrepError::InvalidConfigPropertyType`]
+    pub fn check_map<TPropName, TType>(&self, prop: Value, prop_name: TPropName) -> PrepResult<Map<String, Value>>
+    where
+        TPropName: Into<Cow<'static, str>>,
+        TType: Into<Cow<'static, str>>,
+    {
+        let map = prop
+            .try_into_map()
+            .map_err(|_| PrepError::InvalidConfigPropertyType(self.trace.clone(), prop_name.into(), "mapping object".into()))?;
+        Ok(map)
+    }
+
+    /// Convert `prop` into an array, otherwise returns [`PrepError::InvalidConfigPropertyType`]
+    pub fn check_array<TPropName, TType>(&self, prop: Value, prop_name: TPropName) -> PrepResult<Vec<Value>>
+    where
+        TPropName: Into<Cow<'static, str>>,
+        TType: Into<Cow<'static, str>>,
+    {
+        let map = prop
+            .try_into_array()
+            .map_err(|_| PrepError::InvalidConfigPropertyType(self.trace.clone(), prop_name.into(), "array".into()))?;
+        Ok(map)
     }
 }
 

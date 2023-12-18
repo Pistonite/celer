@@ -15,15 +15,9 @@ impl<L> PreparedConfig<L> where L: Loader {
         &mut self,
         tags: Value,
     ) -> PrepResult<()> {
-        let tags = tags
-            .try_into_object()
-            .map_err(|_| 
-                PrepError::InvalidConfigPropertyType(
-                    self.trace.clone(), 
-                    prop::TAGS,
-                    "object"
-                ))?;
+        let tags = self.check_map(tags, prop::TAGS)?;
         for (key, mut value) in tags.into_iter() {
+            yield_budget(16).await;
             let mut tag = DocTag::default();
             // resolve includes
             if let Some(includes) = value

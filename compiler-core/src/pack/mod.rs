@@ -89,11 +89,11 @@ pub enum PackerError {
     // #[error("Project config ({0}): the `{1}` property is invalid")]
     // InvalidConfigProperty(ConfigTrace, String),
 
-    #[error("Project config ({0}): the required `{1}` property is missing")]
-    MissingConfigProperty(ConfigTrace, String),
-
-    #[error("Project config ({0}): the `{1}` property is unused")]
-    UnusedConfigProperty(ConfigTrace, String),
+    // #[error("Project config ({0}): the required `{1}` property is missing")]
+    // MissingConfigProperty(ConfigTrace, String),
+    //
+    // #[error("Project config ({0}): the `{1}` property is unused")]
+    // UnusedConfigProperty(ConfigTrace, String),
 
     #[error("Project config ({0}): The preset {1} is invalid")]
     InvalidPreset(ConfigTrace, String),

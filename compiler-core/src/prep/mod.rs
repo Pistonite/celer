@@ -36,8 +36,14 @@ pub enum PrepError {
     #[error("Project config ({0}): property `{1}` has an invalid type (expected {2})")]
     InvalidConfigPropertyType(ConfigTrace, Cow<'static, str>, &'static str),
 
+    #[error("Project config ({0}): property `{1}` is missing")]
+    MissingConfigProperty(ConfigTrace, Cow<'static, str>),
+    
+    #[error("Project config ({0}): the `{1}` property is unused")]
+    UnusedConfigProperty(ConfigTrace, Cow<'static, str>),
+
     #[error("Project config ({0}): cannot find tag `{1}`")]
-    TagNotFound(ConfigTrace, String),
+    TagNotFound(ConfigTrace, Cow<'static, str>),
 }
 
 pub type PrepResult<T> = Result<T, PrepError>;
