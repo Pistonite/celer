@@ -2,11 +2,11 @@
 //!
 //! This plugin looks for the `link` tag and transforms it into a link.
 
-use crate::api::CompilerMetadata;
+use crate::prep::CompilerMetadata;
 use crate::comp::{CompDoc, Compiler};
 use crate::prop;
 use crate::lang::DocRichTextBlock;
-use crate::types::{DocColor, DocTag};
+use crate::prep::{DocTagColor, DocTag};
 
 use crate::plugin::{operation, PluginResult, PluginRuntime};
 
@@ -15,11 +15,11 @@ impl PluginRuntime for LinkPlugin {
     fn on_before_compile<'a>(&mut self, ctx: &mut Compiler<'a>) -> PluginResult<()> {
         // add the link tag if not defined already
         let link_tag = DocTag {
-            color: Some(DocColor::LightDark {
+            color: Some(DocTagColor::LightDark {
                 light: Some("var(--link-text-color-light)".to_string()),
                 dark: Some("var(--link-text-color-dark)".to_string()),
             }),
-            background: Some(DocColor::LightDark {
+            background: Some(DocTagColor::LightDark {
                 light: Some("var(--link-text-background-light)".to_string()),
                 dark: Some("var(--link-text-background-dark)".to_string()),
             }),

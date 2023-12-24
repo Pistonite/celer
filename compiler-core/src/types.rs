@@ -8,7 +8,9 @@ use std::borrow::Cow;
 use serde::{Deserialize, Serialize};
 
 use crate::macros::derive_wasm;
+use crate::prep::{GameCoord, RouteConfig};
 use crate::util::StringMap;
+use crate::lang::{DocPoorText, DocPoorTextBlock, DocRichTextBlock, DocRichText};
 
 /// Compiler entry points (name, path) pairs
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
@@ -43,7 +45,7 @@ impl From<EntryPoints> for EntryPointsSorted {
 #[derive_wasm]
 pub struct ExecDoc<'a> {
     /// Project metadata
-    pub project: Cow<'a, RouteMetadata>,
+    pub project: Cow<'a, RouteConfig>,
     /// The preface
     pub preface: Vec<DocRichText>,
     /// The route

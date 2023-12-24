@@ -8,7 +8,8 @@ use crate::json::Cast;
 use crate::json::Coerce;
 use crate::prop;
 use crate::types::EntryPoints;
-use crate::util::{yield_budget, Path};
+use crate::util::{Path};
+use crate::env::yield_budget;
 
 use super::{PackerError, PackerResult};
 

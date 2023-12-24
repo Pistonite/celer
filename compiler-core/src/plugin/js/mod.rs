@@ -1,6 +1,7 @@
 use serde_json::Value;
 
-use crate::{CompilerMetadata, comp::{CompDoc, Compiler}};
+use crate::comp::{CompDoc, Compiler};
+use crate::prep::{CompilerMetadata};
 
 use super::{PluginRuntime, PluginError, PluginResult};
 

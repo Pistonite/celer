@@ -3,9 +3,9 @@ use std::borrow::Cow;
 use crate::comp::Compiler;
 use crate::pack::pack_route;
 use crate::plugin::PluginRuntime;
-use crate::resource::Loader;
+use crate::res::Loader;
 use crate::types::ExecDoc;
-use crate::util::yield_budget;
+use crate::env::yield_budget;
 
 use super::CompilerContext;
 

@@ -2,10 +2,10 @@
 
 use serde_json::Value;
 
-use crate::CompilerMetadata;
+use crate::prep::{CompilerMetadata, GameCoord};
 use crate::comp::{CompDoc, CompLine};
 use crate::json::Coerce;
-use crate::types::{DocDiagnostic, GameCoord};
+use crate::types::{DocDiagnostic};
 use crate::lang::{self, DocRichText, DocRichTextBlock};
 use crate::plugin::{operation, PluginResult, PluginRuntime};
 

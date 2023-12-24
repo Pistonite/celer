@@ -1,7 +1,7 @@
 use instant::Instant;
 use serde_json::Value;
 
-use crate::api::CompilerMetadata;
+use crate::prep::CompilerMetadata;
 use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::prop;

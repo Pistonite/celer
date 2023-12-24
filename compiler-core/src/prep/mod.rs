@@ -18,17 +18,22 @@
 //! The output of this phase is a [`PreparedContext`] object that can be used to create
 //! the compiler with additional (and optional) plugins.
 
-mod entry_point;
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 
+use serde_json::Value;
+
+use crate::lang::Preset;
+use crate::plugin::PluginInstance;
+use crate::types::EntryPoints;
+use crate::res::{ResError, Loader, Resource};
+
+mod entry_point;
 pub use entry_point::*;
 mod config;
 pub use config::*;
 
-use crate::types::EntryPoints;
-use crate::res::{ResError, Loader, Resource};
-
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, PartialEq, thiserror::Error)]
 pub enum PrepError {
     #[error("Failed to load resource: {0}")]
     Res(#[from] ResError),
@@ -58,4 +63,17 @@ pub struct PreparedContext {
     pub config: RouteConfig,
     pub meta: CompilerMetadata,
     pub route: Value,
+}
+
+
+/// Metadata of the compiler
+///
+/// This is information needed during compilation,
+/// but not needed to render the route.
+/// IDEs may also find this useful to provide auto-complete, etc.
+#[derive(Default, Debug, Clone)]
+pub struct CompilerMetadata {
+    pub presets: BTreeMap<String, Preset>,
+    pub plugins: Vec<PluginInstance>,
+    pub default_icon_priority: i64,
 }

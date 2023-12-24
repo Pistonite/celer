@@ -6,8 +6,9 @@ use serde_json::Value;
 use crate::macros::derive_wasm;
 use crate::res::Loader;
 use crate::json::Cast;
-use crate::prep::{PrepError, PrepResult, PreparedConfig};
+use crate::prep::{config, PrepError, PrepResult, PreparedConfig};
 use crate::prop;
+
 
 /// The mapping if 2 coordinates are specified in the route
 ///
@@ -53,17 +54,33 @@ impl<L> PreparedConfig<L> where L: Loader {
     /// Parse the `coord-map` property in map configs
     pub fn parse_coord_map(&self, coord_map: Value) -> PrepResult<MapCoordMap> {
         
-        let mut obj = self.check_map(coord_map, format!("{}.{}", prop::MAP, prop::COORD_MAP))?;
+        let mut obj = config::check_map!(self, coord_map, format!("{}.{}", prop::MAP, prop::COORD_MAP))?;
 
-        let mapping_2d = self.check_required_property(obj.remove(prop::MAPPING_2D), prop::MAPPING_2D)?;
-        let mapping_3d = self.check_required_property(obj.remove(prop::MAPPING_3D), prop::MAPPING_3D)?;
+        let mapping_2d = config::check_required_property!(
+            self, 
+            obj.remove(prop::MAPPING_2D), 
+            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_2D)
+        )?;
+        let mapping_3d = config::check_required_property!(
+            self, 
+            obj.remove(prop::MAPPING_3D), 
+            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_3D)
+        )?;
 
         self.check_unused_property(obj.keys().next().map(|k|{
             format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, k)
         }))?;
 
-        let mut mapping_2d = self.check_array(mapping_2d, format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_2D))?;
-        let mut mapping_3d = self.check_array(mapping_3d, format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_3D))?;
+        let mut mapping_2d = config::check_array!(
+            self,
+            mapping_2d, 
+            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_2D)
+        )?;
+        let mut mapping_3d = config::check_array!(
+            self, 
+            mapping_3d,
+            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_3D)
+        )?;
 
         let (c1_2d, c2_2d) = {
             let c2 = self.pop_coord_map_array(&mut mapping_2d, prop::MAPPING_2D, 2)?;
@@ -86,16 +103,16 @@ impl<L> PreparedConfig<L> where L: Loader {
         };
 
         let mapping_2d = {
-            let c1 = self.try_parse_axis(c1_2d, prop::MAPPING_2D, 0)?;
-            let c2 = self.try_parse_axis(c2_2d, prop::MAPPING_2D, 1)?;
+            let c1 = self.parse_axis(c1_2d, prop::MAPPING_2D, 0)?;
+            let c2 = self.parse_axis(c2_2d, prop::MAPPING_2D, 1)?;
 
             (c1, c2)
         };
 
         let mapping_3d = {
-            let c1 = self.try_parse_axis(c1_3d, prop::MAPPING_3D, 0)?;
-            let c2 = self.try_parse_axis(c2_3d, prop::MAPPING_3D, 1)?;
-            let c3 = self.try_parse_axis(c3_3d, prop::MAPPING_3D, 2)?;
+            let c1 = self.parse_axis(c1_3d, prop::MAPPING_3D, 0)?;
+            let c2 = self.parse_axis(c2_3d, prop::MAPPING_3D, 1)?;
+            let c3 = self.parse_axis(c3_3d, prop::MAPPING_3D, 2)?;
 
             (c1, c2, c3)
         };
@@ -116,8 +133,8 @@ impl<L> PreparedConfig<L> where L: Loader {
     fn err_invalid_coord_array(&self, prop: &str, i: usize) -> PrepError {
         PrepError::InvalidConfigPropertyType(
             self.trace.clone(),
-            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop),
-            format!("array of {} axes", i),
+            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop).into(),
+            format!("array of {} axes", i).into(),
         )
     }
 
@@ -126,8 +143,8 @@ impl<L> PreparedConfig<L> where L: Loader {
             Ok(v) => Ok(v),
             Err(_) => Err(PrepError::InvalidConfigPropertyType(
                 self.trace.clone(),
-                format!("{}.{}.{}[{}]", prop::MAP, prop::COORD_MAP, prop, i),
-                "axis string",
+                format!("{}.{}.{}[{}]", prop::MAP, prop::COORD_MAP, prop, i).into(),
+                "axis string".into(),
             )),
         }
     }
@@ -138,6 +155,8 @@ mod test {
     use super::*;
 
     use serde_json::json;
+
+    use crate::res::test_utils::StubLoader;
 
     #[test]
     fn test_invalid_value() {
@@ -151,16 +170,16 @@ mod test {
             json!("hello"),
         ];
 
-        let config = PreparedConfig::default();
+        let config = PreparedConfig::<StubLoader>::default();
 
-        for v in values.into_iter().enumerate() {
+        for v in values.into_iter() {
             let result = config.parse_coord_map(v);
             assert_eq!(
                 result,
                 Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.coord-map",
-                    "mapping object"
+                    "map.coord-map".into(),
+                    "mapping object".into()
                 ))
             );
         }
@@ -169,13 +188,13 @@ mod test {
     #[test]
     fn test_missing_properties() {
         let v = json!({});
-        let config = PreparedConfig::default();
+        let config = PreparedConfig::<StubLoader>::default();
         let result = config.parse_coord_map(v);
         assert_eq!(
             result,
             Err(PrepError::MissingConfigProperty(
                 Default::default(),
-                "map.coord-map.2d"
+                "map.coord-map.2d".into()
             ))
         );
 
@@ -185,7 +204,7 @@ mod test {
             result,
             Err(PrepError::MissingConfigProperty(
                 Default::default(),
-                "map.coord-map.3d"
+                "map.coord-map.3d".into()
             ))
         );
     }
@@ -193,13 +212,13 @@ mod test {
     #[test]
     fn test_extra_properties() {
         let v = json!({"2d": {}, "3d": {}, "extra": 1});
-        let config = PreparedConfig::default();
+        let config = PreparedConfig::<StubLoader>::default();
         let result = config.parse_coord_map(v);
         assert_eq!(
             result,
             Err(PrepError::UnusedConfigProperty(
                 Default::default(),
-                "map.coord-map.extra"
+                "map.coord-map.extra".into()
             ))
         );
     }
@@ -216,7 +235,7 @@ mod test {
             json!("hello"),
         ];
         
-        let config = PreparedConfig::default();
+        let config = PreparedConfig::<StubLoader>::default();
 
         for v in values.iter() {
             let v = json!({"2d": v.clone(), "3d": {}});
@@ -225,8 +244,8 @@ mod test {
                 result,
                 Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.coord-map.2d",
-                    "array"
+                    "map.coord-map.2d".into(),
+                    "array".into()
                 ))
             );
         }
@@ -238,8 +257,8 @@ mod test {
                 result,
                 Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.coord-map.3d".to_string(),
-                    "array"
+                    "map.coord-map.3d".into(),
+                    "array".into()
                 ))
             );
         }
@@ -254,7 +273,7 @@ mod test {
             json!(["h", "1", "2", "3", "x"]),
         ];
 
-        let config = PreparedConfig::default();
+        let config = PreparedConfig::<StubLoader>::default();
 
         for v in values.iter() {
             let v = json!({"2d": v.clone(), "3d": []});
@@ -263,8 +282,8 @@ mod test {
                 result,
                 Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.coord-map.2d".to_string(),
-                    "array of 2 axes"
+                    "map.coord-map.2d".into(),
+                    "array of 2 axes".into()
                 ))
             );
         }
@@ -276,8 +295,8 @@ mod test {
                 result,
                 Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.coord-map.3d".to_string(),
-                    "array of 3 axes"
+                    "map.coord-map.3d".into(),
+                    "array of 3 axes".into()
                 ))
             );
         }
@@ -286,10 +305,10 @@ mod test {
         let result = config.parse_coord_map(v);
         assert_eq!(
             result,
-            Err(PrepError::InvalidConfigProperty(
+            Err(PrepError::InvalidConfigPropertyType(
                 Default::default(),
-                "map.coord-map.2d".to_string(),
-                "array of 2 axes"
+                "map.coord-map.2d".into(),
+                "array of 2 axes".into()
             ))
         );
 
@@ -297,10 +316,10 @@ mod test {
         let result = config.parse_coord_map(v);
         assert_eq!(
             result,
-            Err(PrepError::InvalidConfigProperty(
+            Err(PrepError::InvalidConfigPropertyType(
                 Default::default(),
-                "map.coord-map.3d".to_string(),
-                "array of 3 axes"
+                "map.coord-map.3d".into(),
+                "array of 3 axes".into()
             ))
         );
     }
@@ -313,7 +332,7 @@ mod test {
             (json!(["x", "h"]), 1),
         ];
         
-        let config = PreparedConfig::default();
+        let config = PreparedConfig::<StubLoader>::default();
 
         for (v, j) in values.into_iter() {
             let v = json!({"2d": v, "3d": ["h", "j", "k"]});
@@ -322,8 +341,8 @@ mod test {
                 result,
                 Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    format!("map.coord-map.2d[{j}]"),
-                    "axis string"
+                    format!("map.coord-map.2d[{j}]").into(),
+                    "axis string".into()
                 ))
             );
         }
@@ -343,10 +362,10 @@ mod test {
             let result = config.parse_coord_map(v);
             assert_eq!(
                 result,
-                Err(PrepError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    format!("map.coord-map.3d[{j}]"),
-                    "axis string"
+                    format!("map.coord-map.3d[{j}]").into(),
+                    "axis string".into()
                 ))
             );
         }
@@ -358,7 +377,7 @@ mod test {
             "2d": ["x", "y"],
             "3d": ["x", "y", "z"],
         });
-        let config = PreparedConfig::default();
+        let config = PreparedConfig::<StubLoader>::default();
         let result = config.parse_coord_map(v);
         assert_eq!(
             result,

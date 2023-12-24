@@ -16,8 +16,7 @@ pub use res_type::*;
 mod resolve;
 pub use resolve::*;
 
-#[cfg(test)]
-mod test_utils;
+pub mod test_utils;
 
 /// Resource-related error types
 #[derive(Debug, thiserror::Error)]

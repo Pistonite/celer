@@ -12,14 +12,8 @@ use crate::types::DocDiagnostic;
 
 mod pack_config;
 pub use pack_config::*;
-mod pack_coord_map;
-pub use pack_coord_map::*;
 mod pack_entry_points;
 pub use pack_entry_points::*;
-mod pack_map;
-pub use pack_map::*;
-mod pack_map_layer;
-pub use pack_map_layer::*;
 mod pack_preset;
 pub use pack_preset::*;
 mod pack_project;
@@ -83,8 +77,8 @@ pub enum PackerError {
     #[error("Project metadata has extra unused property: {0}")]
     UnusedMetadataProperty(String),
 
-    #[error("Project config ({0}) has an invalid type")]
-    InvalidConfigType(ConfigTrace),
+    // #[error("Project config ({0}) has an invalid type")]
+    // InvalidConfigType(ConfigTrace),
 
     // #[error("Project config ({0}): the `{1}` property is invalid")]
     // InvalidConfigProperty(ConfigTrace, String),
@@ -95,14 +89,14 @@ pub enum PackerError {
     // #[error("Project config ({0}): the `{1}` property is unused")]
     // UnusedConfigProperty(ConfigTrace, String),
 
-    #[error("Project config ({0}): The preset {1} is invalid")]
-    InvalidPreset(ConfigTrace, String),
+    // #[error("Project config ({0}): The preset {1} is invalid")]
+    // InvalidPreset(ConfigTrace, String),
 
-    #[error("Project config ({0}): defining map when a previous config already defines one")]
-    DuplicateMap(ConfigTrace),
-
-    #[error("Project config ({0}): config is nesting too deep!")]
-    MaxConfigDepthExceeded(ConfigTrace),
+    // #[error("Project config ({0}): defining map when a previous config already defines one")]
+    // DuplicateMap(ConfigTrace),
+    //
+    // #[error("Project config ({0}): config is nesting too deep!")]
+    // MaxConfigDepthExceeded(ConfigTrace),
 
     // #[error("Project config ({0}): the tag `{1}` is not defined")]
     // TagNotFound(ConfigTrace, String),

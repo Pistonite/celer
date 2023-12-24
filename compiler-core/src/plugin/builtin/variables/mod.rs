@@ -5,14 +5,14 @@ use std::collections::HashMap;
 
 use serde_json::{json, Map, Value};
 
-use crate::api::{CompilerContext, CompilerMetadata};
+use crate::prep::{CompilerMetadata, DocTagColor, DocTag};
 use crate::comp::{CompDoc, Compiler};
 use crate::json::Coerce;
 use crate::lang::{self, DocRichTextBlock};
 use crate::macros::async_trait;
 use crate::pack::PackerResult;
 use crate::prop;
-use crate::types::{DocColor, DocDiagnostic, DocTag};
+use crate::types::{DocDiagnostic};
 use crate::plugin::{operation, PluginResult, PluginRuntime};
 
 mod convert;
@@ -286,7 +286,7 @@ impl PluginRuntime for VariablesPlugin {
     fn on_before_compile<'a>(&mut self, compiler: &mut Compiler<'a>) -> PluginResult<()> {
         // add the val tag if not defined already
         let tag = DocTag {
-            color: Some(DocColor::LightDark {
+            color: Some(DocTagColor::LightDark {
                 light: Some("#800".to_string()),
                 dark: Some("#ffc0cb".to_string()),
             }),

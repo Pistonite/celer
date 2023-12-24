@@ -1,6 +1,6 @@
 use instant::Instant;
 use crate::pack::{self, PackerResult};
-use crate::resource::{Resource, Loader};
+use crate::res::{Resource, Loader};
 use crate::types::EntryPoints;
 
 use super::{CompilerContext, Setting};
@@ -15,7 +15,7 @@ use super::{CompilerContext, Setting};
 /// future iterations
 pub async fn prepare_compiler<L>(
     source: &str,
-    project_resource: Resource<'static, 'static, L>,
+    project_resource: Resource<'static, L>,
     setting: Setting,
     redirect_to_default_entry_point: bool,
 ) -> PackerResult<CompilerContext<L>> 
@@ -85,7 +85,7 @@ where L: Loader
 /// or if the `entry-points` property is empty, returns `EntryPoints` with 0 entries.
 ///
 /// If the project object or the `entry-points` property is invalid, returns error.
-pub async fn prepare_entry_points<L>(project_resource: &Resource<'_, '_, L>) -> PackerResult<EntryPoints> 
+pub async fn prepare_entry_points<L>(project_resource: &Resource<'_, L>) -> PackerResult<EntryPoints> 
 where L: Loader   
 {
     pack::pack_project_entry_points(project_resource).await

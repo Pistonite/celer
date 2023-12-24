@@ -1,6 +1,6 @@
 //! Compatibility Plugin
 
-use crate::api::CompilerMetadata;
+// use crate::api::CompilerMetadata;
 use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::macros::async_trait;

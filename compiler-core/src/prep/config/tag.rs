@@ -3,11 +3,14 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::json::Coerce;
 use crate::res::{Use, Resource, Loader, ResError};
 use crate::env::yield_budget;
 use crate::prop;
 use crate::prep::{PreparedConfig, PrepResult, PrepError};
 use crate::macros::derive_wasm;
+
+use super::{check_map};
 
 impl<L> PreparedConfig<L> where L: Loader {
     /// Process the `tags` property
@@ -15,7 +18,7 @@ impl<L> PreparedConfig<L> where L: Loader {
         &mut self,
         tags: Value,
     ) -> PrepResult<()> {
-        let tags = self.check_map(tags, prop::TAGS)?;
+        let tags = super::check_map!(self, tags, prop::TAGS)?;
         for (key, mut value) in tags.into_iter() {
             yield_budget(16).await;
             let mut tag = DocTag::default();
@@ -29,8 +32,8 @@ impl<L> PreparedConfig<L> where L: Loader {
                     Value::Object(_) => {
                         return Err(PrepError::InvalidConfigPropertyType(
                             self.trace.clone(),
-                            format!("{}.{}.{}", prop::TAGS, key, prop::INCLUDES),
-                            "tag name or array of tag names",
+                            format!("{}.{}.{}", prop::TAGS, key, prop::INCLUDES).into(),
+                            "tag name or array of tag names".into(),
                         ))
                     }
                     other => vec![other],
@@ -40,7 +43,7 @@ impl<L> PreparedConfig<L> where L: Loader {
 
                     let include_tag = match self.tags.get(&include) {
                         None if include != key => {
-                            return Err(PrepError::TagNotFound(self.trace.clone(), include.clone()))
+                            return Err(PrepError::TagNotFound(self.trace.clone(), include.into()))
                         }
                         other => other,
                     };
@@ -52,7 +55,7 @@ impl<L> PreparedConfig<L> where L: Loader {
 
             let last_tag = serde_json::from_value::<DocTag>(value).map_err(|_| {
                 PrepError::InvalidConfigPropertyType(self.trace.clone(), 
-                    format!("{}.{}", prop::TAGS, key), "tag object")
+                    format!("{}.{}", prop::TAGS, key).into(), "tag object".into())
             })?;
             tag.apply_override(&last_tag);
 
