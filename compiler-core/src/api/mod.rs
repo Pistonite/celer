@@ -84,9 +84,13 @@ impl<L> CompilerContext<L> where L: Loader {
 #[derive(Debug, Derivative)]
 #[derivative(Default)]
 pub struct Setting {
-    /// The maximum depth of `use` properties
+    /// The maximum depth of `use` properties in route
     #[derivative(Default(value = "8"))]
     pub max_use_depth: usize,
+
+    /// The maximum depth of `use` properties in config
+    #[derivative(Default(value = "16"))]
+    pub max_config_depth: usize,
 
     /// The maximum depth of object/array levels in the route
     #[derivative(Default(value = "32"))]
@@ -99,4 +103,5 @@ pub struct Setting {
     /// The maximum depth of preset references in route
     #[derivative(Default(value = "8"))]
     pub max_preset_ref_depth: usize,
+
 }

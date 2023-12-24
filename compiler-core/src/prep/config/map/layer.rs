@@ -93,7 +93,7 @@ macro_rules! check_layer_required_property {
     };
 }
 
-impl<L> PreparedConfig<L> where L: Loader {
+impl PreparedConfig {
     pub fn parse_map_layer(&self, value: Value, layer_index: usize) -> PrepResult<MapLayer> {
         let mut obj = config::check_map!(
             self, 
@@ -278,7 +278,7 @@ mod test {
             json!("hello"),
         ];
 
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
 
         for (i, v) in values.into_iter().enumerate() {
             let result = config.parse_map_layer(v, i);
@@ -306,7 +306,7 @@ mod test {
             prop::ATTRIBUTION,
         ];
 
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
 
         let mut value = json!({});
         for p in props {
@@ -337,7 +337,7 @@ mod test {
             "extra": "",
         });
 
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
 
         let result = config.parse_map_layer(value, 0);
         assert_eq!(
@@ -351,7 +351,7 @@ mod test {
 
     #[test]
     fn test_invalid_name() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let values = vec![json!([]), json!({})];
         for v in values {
             let value = json!({
@@ -378,7 +378,7 @@ mod test {
 
     #[test]
     fn test_invalid_template_url() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let values = vec![json!([]), json!({})];
         for v in values {
             let value = json!({
@@ -405,7 +405,7 @@ mod test {
 
     #[test]
     fn test_invalid_size() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let values = vec![
             json!([]),
             json!({}),
@@ -441,7 +441,7 @@ mod test {
 
     #[test]
     fn test_invalid_zoom_bounds() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let values = vec![
             json!([]),
             json!({}),
@@ -477,7 +477,7 @@ mod test {
 
     #[test]
     fn test_invalid_max_native_zoom() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let values = vec![
             json!([]),
             json!({}),
@@ -515,7 +515,7 @@ mod test {
 
     #[test]
     fn test_invalid_transform() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let values = vec![
             json!({}),
             json!(true),
@@ -556,7 +556,7 @@ mod test {
 
     #[test]
     fn test_invalid_start_z() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let values = vec![json!({}), json!([]), json!(true), json!(null)];
         for v in values {
             let value = json!({
@@ -586,7 +586,7 @@ mod test {
 
     #[test]
     fn test_invalid_attribution() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let values = vec![
             json!({}),
             json!([]),
@@ -634,7 +634,7 @@ mod test {
 
     #[test]
     fn test_ok() {
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let value = json!({
             "name": "Test Name",
             "template-url": "Test URL",

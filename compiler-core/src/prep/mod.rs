@@ -38,6 +38,9 @@ pub enum PrepError {
     #[error("Failed to load resource: {0}")]
     Res(#[from] ResError),
 
+    #[error("Project config ({0}) should be a mapping object ")]
+    InvalidConfigType(ConfigTrace),
+
     #[error("Project config ({0}): property `{1}` has an invalid type (expected {2})")]
     InvalidConfigPropertyType(ConfigTrace, Cow<'static, str>, Cow<'static,str>),
 
@@ -52,6 +55,18 @@ pub enum PrepError {
 
     #[error("Project config ({0}): `{1}` is not a valid built-in plugin or reference to a plugin script")]
     InvalidPlugin(ConfigTrace, String),
+
+    #[error("Project config ({0}): config is nesting too deep! Check that you don't have circular dependency, or simplify the config structure")]
+    MaxConfigDepthExceeded(ConfigTrace),
+
+    #[error("Project config ({0}): defining map when a previous config already defines one")]
+    DuplicateMap(ConfigTrace),
+
+    #[error("Max preset namespace depth of {0} levels is reached. There might be a formatting error in your project files. If this is intentional, consider making the namespaces less complex.")]
+    MaxPresetNamespaceDepthExceeded(usize),
+
+    #[error("Project config ({0}): preset {1} is invalid")]
+    InvalidPreset(ConfigTrace, String),
 }
 
 pub type PrepResult<T> = Result<T, PrepError>;

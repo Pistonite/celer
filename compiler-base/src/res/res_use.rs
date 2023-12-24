@@ -112,8 +112,7 @@ impl From<String> for Use {
     }
 }
 
-impl TryFrom<Value> for Use {
-    type Error = Value;
+impl Use {
 
     /// Try converting a json object in the form of `{ "use": "..." }` to a `Use`
     ///
@@ -122,23 +121,17 @@ impl TryFrom<Value> for Use {
     ///
     /// If the object is in the correct form but the path is not, this returns an Ok variant with
     /// [`Use::Invalid`]
-    fn try_from(value: Value) -> Result<Self, Self::Error> {
-        let obj = match value.as_object() {
-            Some(obj) => obj,
-            None => return Err(value),
-        };
+    pub fn from_value(value: &Value) -> Option<Self> {
+        let obj = value.as_object()?;
         let mut iter = obj.iter();
-        let (key, v) = match iter.next() {
-            Some((key, value)) => (key, value),
-            None => return Err(value),
-        };
+        let (key, v) = iter.next()?;
         if iter.next().is_some() {
-            return Err(value);
+            return None;
         }
         if key != prop::USE {
-            return Err(value);
+            return None;
         }
-        Ok(Self::from(v.coerce_to_string()))
+        Some(Self::from(v.coerce_to_string()))
     }
 }
 
@@ -154,8 +147,8 @@ impl ValidUse {
     /// Return the base URL if the variant is a Remote
     pub fn base_url(&self) -> Option<String> {
         match self {
-            ValidUse::Relative(v) => None,
-            ValidUse::Absolute(v) => None,
+            ValidUse::Relative(_) => None,
+            ValidUse::Absolute(_) => None,
             ValidUse::Remote { owner, repo, reference, .. } => {
                 let branch = reference.as_deref().unwrap_or("main");
                 let url = format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/");
@@ -184,7 +177,7 @@ mod test {
         ];
 
         for test in tests {
-            assert_eq!(Use::try_from(test.clone()), Err(test));
+            assert_eq!(Use::from_value(&test), None);
         }
     }
 
@@ -202,55 +195,55 @@ mod test {
         ];
 
         for test in tests {
-            assert_eq!(Use::try_from(test.clone()), Err(test));
+            assert_eq!(Use::from_value(&test), None);
         }
     }
 
     #[test]
     fn test_use_relative() {
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "./hello"
             })),
-            Ok(Use::Valid(ValidUse::Relative("./hello".to_string())))
+            Some(Use::Valid(ValidUse::Relative("./hello".to_string())))
         );
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "../foo/hello"
             })),
-            Ok(Use::Valid(ValidUse::Relative("../foo/hello".to_string())))
+            Some(Use::Valid(ValidUse::Relative("../foo/hello".to_string())))
         );
     }
 
     #[test]
     fn test_use_absolute() {
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "/hello"
             })),
-            Ok(Use::Valid(ValidUse::Absolute("/hello".to_string())))
+            Some(Use::Valid(ValidUse::Absolute("/hello".to_string())))
         );
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "/foo/hello"
             })),
-            Ok(Use::Valid(ValidUse::Absolute("/foo/hello".to_string())))
+            Some(Use::Valid(ValidUse::Absolute("/foo/hello".to_string())))
         );
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "//foo/hello"
             })),
-            Ok(Use::Valid(ValidUse::Absolute("//foo/hello".to_string())))
+            Some(Use::Valid(ValidUse::Absolute("//foo/hello".to_string())))
         );
     }
 
     #[test]
     fn test_use_remote() {
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "foo/hello/bar"
             })),
-            Ok(Use::Valid(ValidUse::Remote {
+            Some(Use::Valid(ValidUse::Remote {
                 owner: "foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar".to_string(),
@@ -258,10 +251,10 @@ mod test {
             }))
         );
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "foo/hello/bar:test"
             })),
-            Ok(Use::Valid(ValidUse::Remote {
+            Some(Use::Valid(ValidUse::Remote {
                 owner: "foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar".to_string(),
@@ -269,10 +262,10 @@ mod test {
             }))
         );
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": ".foo/hello/bar/giz"
             })),
-            Ok(Use::Valid(ValidUse::Remote {
+            Some(Use::Valid(ValidUse::Remote {
                 owner: ".foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar/giz".to_string(),
@@ -280,10 +273,10 @@ mod test {
             }))
         );
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "foo/hello/bar/giz/biz:test"
             })),
-            Ok(Use::Valid(ValidUse::Remote {
+            Some(Use::Valid(ValidUse::Remote {
                 owner: "foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar/giz/biz".to_string(),
@@ -291,10 +284,10 @@ mod test {
             }))
         );
         assert_eq!(
-            Use::try_from(json!({
+            Use::from_value(&json!({
                 "use": "foo/hello/bar/giz/biz:"
             })),
-            Ok(Use::Valid(ValidUse::Remote {
+            Some(Use::Valid(ValidUse::Remote {
                 owner: "foo".to_string(),
                 repo: "hello".to_string(),
                 path: "bar/giz/biz".to_string(),
@@ -326,8 +319,8 @@ mod test {
 
         for test in tests {
             assert_eq!(
-                Use::try_from(make_use(test)),
-                Ok(Use::Invalid(test.to_string()))
+                Use::from_value(&make_use(test)),
+                Some(Use::Invalid(test.to_string()))
             );
         }
     }

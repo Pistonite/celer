@@ -8,11 +8,14 @@ use crate::prop;
 use crate::prep::{PrepError, PreparedConfig, PrepResult};
 use crate::env::yield_budget;
 
-impl<L> PreparedConfig<L> where L: Loader {
+impl PreparedConfig {
     /// Process the `plugins` property
     ///
     /// `use`'s are resolved in the context of `res`
-    async fn load_plugins(&mut self, res: &Resource<'_, L>, value: Value) -> PrepResult<()> {
+    pub async fn load_plugins<L>(&mut self, res: &Resource<'_, L>, value: Value) -> PrepResult<()> 
+    where
+        L: Loader,
+    {
         let plugins = super::check_array!(self, value, prop::PLUGINS)?;
 
         // parse each plugin
@@ -60,7 +63,10 @@ impl<L> PreparedConfig<L> where L: Loader {
     }
 
     /// Parse the `use` property
-    async fn parse_plugin_use(&self, res: &Resource<'_, L>, value: Value) -> PrepResult<Plugin> {
+    async fn parse_plugin_use<L>(&self, res: &Resource<'_, L>, value: Value) -> PrepResult<Plugin> 
+    where
+        L: Loader,
+    {
         let use_path_string = value.coerce_to_string();
         let plugin = match serde_json::from_value::<BuiltInPlugin>(value) {
             Ok(built_in) => Plugin::BuiltIn(built_in),

@@ -8,19 +8,21 @@ use crate::env::yield_budget;
 use crate::prop;
 use crate::prep::{PreparedConfig, PrepResult, PrepError};
 
-impl<L> PreparedConfig<L> where L: Loader {
+impl PreparedConfig {
     /// Process the `icons` property
     ///
     /// `use`'s are resolved in the context of `res`
-    pub async fn load_icons( &mut self, res: &Resource<'_, L>, icons: Value,) -> PrepResult<()>
+    pub async fn load_icons<L>(&mut self, res: &Resource<'_, L>, icons: Value,) -> PrepResult<()>
+    where
+        L: Loader,
     {
 
         let icons = super::check_map!(self, icons, prop::ICONS)?;
 
         for (key, v) in icons.into_iter() {
             yield_budget(16).await;
-            match Use::try_from(v) {
-                Err(v) => {
+            match Use::from_value(&v) {
+                None => {
                     // not a use, just a icon url
                     if v.is_array() || v.is_object() {
                         return Err(PrepError::InvalidConfigPropertyType(
@@ -31,8 +33,8 @@ impl<L> PreparedConfig<L> where L: Loader {
                     }
                     self.icons.insert(key, v.coerce_to_string());
                 }
-                Ok(Use::Invalid(path)) => Err(ResError::InvalidUse(path))?,
-                Ok(Use::Valid(valid_use)) => {
+                Some(Use::Invalid(path)) => Err(ResError::InvalidUse(path))?,
+                Some(Use::Valid(valid_use)) => {
                     let url = res.resolve(&valid_use)?.load_image_url().await?;
                     self.icons.insert(key, url);
                 }

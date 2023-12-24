@@ -50,7 +50,7 @@ pub enum Axis {
 }
 
 
-impl<L> PreparedConfig<L> where L: Loader {
+impl PreparedConfig {
     /// Parse the `coord-map` property in map configs
     pub fn parse_coord_map(&self, coord_map: Value) -> PrepResult<MapCoordMap> {
         
@@ -170,7 +170,7 @@ mod test {
             json!("hello"),
         ];
 
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
 
         for v in values.into_iter() {
             let result = config.parse_coord_map(v);
@@ -188,7 +188,7 @@ mod test {
     #[test]
     fn test_missing_properties() {
         let v = json!({});
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let result = config.parse_coord_map(v);
         assert_eq!(
             result,
@@ -212,7 +212,7 @@ mod test {
     #[test]
     fn test_extra_properties() {
         let v = json!({"2d": {}, "3d": {}, "extra": 1});
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let result = config.parse_coord_map(v);
         assert_eq!(
             result,
@@ -235,7 +235,7 @@ mod test {
             json!("hello"),
         ];
         
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
 
         for v in values.iter() {
             let v = json!({"2d": v.clone(), "3d": {}});
@@ -273,7 +273,7 @@ mod test {
             json!(["h", "1", "2", "3", "x"]),
         ];
 
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
 
         for v in values.iter() {
             let v = json!({"2d": v.clone(), "3d": []});
@@ -332,7 +332,7 @@ mod test {
             (json!(["x", "h"]), 1),
         ];
         
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
 
         for (v, j) in values.into_iter() {
             let v = json!({"2d": v, "3d": ["h", "j", "k"]});
@@ -377,7 +377,7 @@ mod test {
             "2d": ["x", "y"],
             "3d": ["x", "y", "z"],
         });
-        let config = PreparedConfig::<StubLoader>::default();
+        let config = PreparedConfig::default();
         let result = config.parse_coord_map(v);
         assert_eq!(
             result,

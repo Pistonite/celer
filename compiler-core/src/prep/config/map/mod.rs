@@ -48,7 +48,7 @@ macro_rules! check_map_required_property {
 }
 
 
-impl<L> PreparedConfig<L> where L: Loader {
+impl PreparedConfig {
     /// Load the map config into `self.map`
     /// 
     /// This does not check for existing map configs, and replaces the existing map config
@@ -141,7 +141,7 @@ mod test {
             json!("hello"),
         ];
 
-        let mut config = PreparedConfig::<StubLoader>::default();
+        let mut config = PreparedConfig::default();
 
         for v in values.into_iter() {
             let result = config.load_map(v).await;
@@ -168,7 +168,7 @@ mod test {
 
     #[tokio::test]
     async fn test_missing_properties() {
-        let mut config = PreparedConfig::<StubLoader>::default();
+        let mut config = PreparedConfig::default();
 
         let result = config.load_map(json!({})).await;
         assert_missing_property(result, "map.layers");
@@ -210,7 +210,7 @@ mod test {
 
     #[tokio::test]
     async fn test_extra_properties() {
-        let mut config = PreparedConfig::<StubLoader>::default();
+        let mut config = PreparedConfig::default();
         let result = config.load_map(
             json!({
                 "layers": {},
@@ -232,7 +232,7 @@ mod test {
 
     #[tokio::test]
     async fn test_invalid_property_types() {
-        let mut config = PreparedConfig::<StubLoader>::default();
+        let mut config = PreparedConfig::default();
         let result = config.load_map(
             json!({
                 "layers": {},

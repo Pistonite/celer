@@ -44,8 +44,6 @@ pub enum PackerError {
     #[error("Max reference depth of {0} levels is reached. There might be a formatting error in your project files.")]
     MaxRefDepthExceeded(usize),
 
-    #[error("Max preset namespace depth of {0} levels is reached. There might be a formatting error in your project files. If this is intentional, consider making the namespaces less complex.")]
-    MaxPresetNamespaceDepthExceeded(usize),
 
     // #[error("The format of resource {0} cannot be determined")]
     // UnknownFormat(String),
@@ -89,9 +87,9 @@ pub enum PackerError {
     // #[error("Project config ({0}): the `{1}` property is unused")]
     // UnusedConfigProperty(ConfigTrace, String),
 
-    // #[error("Project config ({0}): The preset {1} is invalid")]
-    // InvalidPreset(ConfigTrace, String),
 
+    // #[error("No map defined in project config")]
+    // MissingMap,
     // #[error("Project config ({0}): defining map when a previous config already defines one")]
     // DuplicateMap(ConfigTrace),
     //
@@ -110,8 +108,6 @@ pub enum PackerError {
     // #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
     // InvalidPlugin(String),
 
-    #[error("No map defined in project config")]
-    MissingMap,
 
     #[error("Image resource {0} has exceeded the size limit of {1}")]
     ImageTooBig(String, String),

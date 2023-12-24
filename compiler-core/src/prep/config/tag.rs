@@ -12,9 +12,9 @@ use crate::macros::derive_wasm;
 
 use super::{check_map};
 
-impl<L> PreparedConfig<L> where L: Loader {
+impl PreparedConfig {
     /// Process the `tags` property
-    pub async fn process_tags_config(
+    pub async fn load_tags(
         &mut self,
         tags: Value,
     ) -> PrepResult<()> {
