@@ -107,8 +107,8 @@ pub enum PackerError {
     #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
     MaxEntryPointDepthExceeded(String),
 
-    #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
-    InvalidPlugin(String),
+    // #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
+    // InvalidPlugin(String),
 
     #[error("No map defined in project config")]
     MissingMap,

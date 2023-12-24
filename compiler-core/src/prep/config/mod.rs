@@ -22,6 +22,8 @@ mod tag;
 pub use tag::*;
 mod trace;
 pub use trace::*;
+mod plugin;
+pub use plugin::*;
 
 
 #[derive(Debug)]

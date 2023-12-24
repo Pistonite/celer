@@ -49,6 +49,9 @@ pub enum PrepError {
 
     #[error("Project config ({0}): cannot find tag `{1}`")]
     TagNotFound(ConfigTrace, Cow<'static, str>),
+
+    #[error("Project config ({0}): `{1}` is not a valid built-in plugin or reference to a plugin script")]
+    InvalidPlugin(ConfigTrace, String),
 }
 
 pub type PrepResult<T> = Result<T, PrepError>;
