@@ -1,12 +1,15 @@
 //! Packs json blob into [`MapLayerAttr`]
 
+use serde::{Serialize, Deserialize};
 use serde_json::Value;
 
+use crate::res::Loader;
+use crate::macros::derive_wasm;
 use crate::json::{Cast, Coerce};
+use crate::prep::{config, PreparedConfig, PrepResult, PrepError};
 use crate::prop;
-use crate::types::{MapAttribution, MapLayerAttr, MapTilesetTransform};
 
-use super::{ConfigTrace, PackerError, PackerResult};
+// use super::{ConfigTrace, PrepError, PackerResult};
 
 /// Attribute (definition) of a map layer in the route
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
@@ -76,169 +79,173 @@ pub struct MapAttribution {
     #[serde(default)]
     pub copyright: bool,
 }
+
 macro_rules! check_layer_required_property {
-    ($property:expr, $trace:ident, $layer_index:ident, $obj:ident) => {
-        match $obj.remove($property) {
-            Some(v) => Ok(v),
-            None => Err(PackerError::MissingConfigProperty(
-                $trace.clone(),
-                format!(
-                    "{}.{}[{}].{}",
-                    prop::MAP,
-                    prop::LAYERS,
-                    $layer_index,
-                    $property
-                ),
-            )),
+    ($self:ident, $property:expr, $layer_index:ident, $obj:ident) => {
+        {
+            let property = $property;
+            config::check_required_property!(
+                $self,
+                $obj.remove(property),
+                format!("map.layers[{}].{}", $layer_index, property)
+            )
         }
     };
 }
 
-pub fn pack_map_layer(
-    value: Value,
-    trace: &ConfigTrace,
-    layer_index: usize,
-) -> PackerResult<MapLayerAttr> {
-    let mut obj = value.try_into_object().map_err(|_| {
-        PackerError::InvalidConfigProperty(trace.clone(), format!("map.layers[{layer_index}]"))
-    })?;
+impl<L> PreparedConfig<L> where L: Loader {
+    pub fn parse_map_layer(&self, value: Value, layer_index: usize) -> PrepResult<MapLayer> {
+        let mut obj = config::check_map!(
+            self, 
+            value, 
+            format!("map.layers[{layer_index}]")
+        )?;
 
-    let name = check_layer_required_property!(prop::NAME, trace, layer_index, obj)?;
-    let template_url = check_layer_required_property!(prop::TEMPLATE_URL, trace, layer_index, obj)?;
-    let size = check_layer_required_property!(prop::SIZE, trace, layer_index, obj)?;
-    let zoom_bounds = check_layer_required_property!(prop::ZOOM_BOUNDS, trace, layer_index, obj)?;
-    let max_native_zoom =
-        check_layer_required_property!(prop::MAX_NATIVE_ZOOM, trace, layer_index, obj)?;
-    let transform = check_layer_required_property!(prop::TRANSFORM, trace, layer_index, obj)?;
-    let start_z = check_layer_required_property!(prop::START_Z, trace, layer_index, obj)?;
-    let attribution = check_layer_required_property!(prop::ATTRIBUTION, trace, layer_index, obj)?;
+        let name = 
+        check_layer_required_property!(self, prop::NAME, layer_index, obj)?;
+        let template_url = check_layer_required_property!(self, prop::TEMPLATE_URL, layer_index, obj)?;
+        let size = check_layer_required_property!(self, prop::SIZE,  layer_index, obj)?;
+        let zoom_bounds = check_layer_required_property!(self, prop::ZOOM_BOUNDS, layer_index, obj)?;
+        let max_native_zoom =
+        check_layer_required_property!(self, prop::MAX_NATIVE_ZOOM, layer_index, obj)?;
+        let transform = check_layer_required_property!(self, prop::TRANSFORM,  layer_index, obj)?;
+        let start_z = check_layer_required_property!(self, prop::START_Z,  layer_index, obj)?;
+        let attribution = check_layer_required_property!(self, prop::ATTRIBUTION, layer_index, obj)?;
 
-    if let Some(k) = obj.keys().next() {
-        return Err(PackerError::UnusedConfigProperty(
-            trace.clone(),
-            format!("{}.{}[{}].{}", prop::MAP, prop::LAYERS, layer_index, k),
-        ));
+        self.check_unused_property(obj.keys().next().map(|k|{
+            format!("{}.{}[{}].{}", prop::MAP, prop::LAYERS, layer_index, k)
+        }))?;
+
+        let name = if name.is_array() || name.is_object() {
+            return Err(PrepError::InvalidConfigPropertyType(
+                self.trace.clone(),
+                format!(
+                    "{}.{}[{}].{}",
+                    prop::MAP,
+                    prop::LAYERS,
+                    layer_index,
+                    prop::NAME
+                ).into(),
+                "string".into(),
+            ));
+        } else {
+            name.coerce_to_string()
+        };
+    // let template_url = if template_url.is_array() || template_url.is_object() {
+    //     return Err(PrepError::InvalidConfigProperty(
+    //         trace.clone(),
+    //         format!(
+    //             "{}.{}[{}].{}",
+    //             prop::MAP,
+    //             prop::LAYERS,
+    //             layer_index,
+    //             prop::TEMPLATE_URL
+    //         ),
+    //     ));
+    // } else {
+    //     template_url.coerce_to_string()
+    // };
+    //
+    // let size = parse_array_with_2_elements(size).ok_or_else(|| {
+    //     PrepError::InvalidConfigProperty(
+    //         trace.clone(),
+    //         format!(
+    //             "{}.{}[{}].{}",
+    //             prop::MAP,
+    //             prop::LAYERS,
+    //             layer_index,
+    //             prop::SIZE
+    //         ),
+    //     )
+    // })?;
+    //
+    // let zoom_bounds = parse_array_with_2_elements(zoom_bounds).ok_or_else(|| {
+    //     PrepError::InvalidConfigProperty(
+    //         trace.clone(),
+    //         format!(
+    //             "{}.{}[{}].{}",
+    //             prop::MAP,
+    //             prop::LAYERS,
+    //             layer_index,
+    //             prop::ZOOM_BOUNDS
+    //         ),
+    //     )
+    // })?;
+    //
+    // let max_native_zoom = max_native_zoom.try_coerce_to_u64().ok_or_else(|| {
+    //     PrepError::InvalidConfigProperty(
+    //         trace.clone(),
+    //         format!(
+    //             "{}.{}[{}].{}",
+    //             prop::MAP,
+    //             prop::LAYERS,
+    //             layer_index,
+    //             prop::MAX_NATIVE_ZOOM
+    //         ),
+    //     )
+    // })?;
+    //
+    // let transform = serde_json::from_value::<MapTilesetTransform>(transform).map_err(|_| {
+    //     PrepError::InvalidConfigProperty(
+    //         trace.clone(),
+    //         format!(
+    //             "{}.{}[{}].{}",
+    //             prop::MAP,
+    //             prop::LAYERS,
+    //             layer_index,
+    //             prop::TRANSFORM
+    //         ),
+    //     )
+    // })?;
+    //
+    // let start_z = start_z.try_coerce_to_f64().ok_or_else(|| {
+    //     PrepError::InvalidConfigProperty(
+    //         trace.clone(),
+    //         format!(
+    //             "{}.{}[{}].{}",
+    //             prop::MAP,
+    //             prop::LAYERS,
+    //             layer_index,
+    //             prop::START_Z
+    //         ),
+    //     )
+    // })?;
+    //
+    // let attribution = serde_json::from_value::<MapAttribution>(attribution).map_err(|_| {
+    //     PrepError::InvalidConfigProperty(
+    //         trace.clone(),
+    //         format!(
+    //             "{}.{}[{}].{}",
+    //             prop::MAP,
+    //             prop::LAYERS,
+    //             layer_index,
+    //             prop::ATTRIBUTION
+    //         ),
+    //     )
+    // })?;
+
+    // Ok(MapLayerAttr {
+    //     name,
+    //     template_url,
+    //     size,
+    //     zoom_bounds,
+    //     max_native_zoom,
+    //     transform,
+    //     start_z,
+    //     attribution,
+    // })
+
+        todo!()
     }
-
-    let name = if name.is_array() || name.is_object() {
-        return Err(PackerError::InvalidConfigProperty(
-            trace.clone(),
-            format!(
-                "{}.{}[{}].{}",
-                prop::MAP,
-                prop::LAYERS,
-                layer_index,
-                prop::NAME
-            ),
-        ));
-    } else {
-        name.coerce_to_string()
-    };
-
-    let template_url = if template_url.is_array() || template_url.is_object() {
-        return Err(PackerError::InvalidConfigProperty(
-            trace.clone(),
-            format!(
-                "{}.{}[{}].{}",
-                prop::MAP,
-                prop::LAYERS,
-                layer_index,
-                prop::TEMPLATE_URL
-            ),
-        ));
-    } else {
-        template_url.coerce_to_string()
-    };
-
-    let size = parse_array_with_2_elements(size).ok_or_else(|| {
-        PackerError::InvalidConfigProperty(
-            trace.clone(),
-            format!(
-                "{}.{}[{}].{}",
-                prop::MAP,
-                prop::LAYERS,
-                layer_index,
-                prop::SIZE
-            ),
-        )
-    })?;
-
-    let zoom_bounds = parse_array_with_2_elements(zoom_bounds).ok_or_else(|| {
-        PackerError::InvalidConfigProperty(
-            trace.clone(),
-            format!(
-                "{}.{}[{}].{}",
-                prop::MAP,
-                prop::LAYERS,
-                layer_index,
-                prop::ZOOM_BOUNDS
-            ),
-        )
-    })?;
-
-    let max_native_zoom = max_native_zoom.try_coerce_to_u64().ok_or_else(|| {
-        PackerError::InvalidConfigProperty(
-            trace.clone(),
-            format!(
-                "{}.{}[{}].{}",
-                prop::MAP,
-                prop::LAYERS,
-                layer_index,
-                prop::MAX_NATIVE_ZOOM
-            ),
-        )
-    })?;
-
-    let transform = serde_json::from_value::<MapTilesetTransform>(transform).map_err(|_| {
-        PackerError::InvalidConfigProperty(
-            trace.clone(),
-            format!(
-                "{}.{}[{}].{}",
-                prop::MAP,
-                prop::LAYERS,
-                layer_index,
-                prop::TRANSFORM
-            ),
-        )
-    })?;
-
-    let start_z = start_z.try_coerce_to_f64().ok_or_else(|| {
-        PackerError::InvalidConfigProperty(
-            trace.clone(),
-            format!(
-                "{}.{}[{}].{}",
-                prop::MAP,
-                prop::LAYERS,
-                layer_index,
-                prop::START_Z
-            ),
-        )
-    })?;
-
-    let attribution = serde_json::from_value::<MapAttribution>(attribution).map_err(|_| {
-        PackerError::InvalidConfigProperty(
-            trace.clone(),
-            format!(
-                "{}.{}[{}].{}",
-                prop::MAP,
-                prop::LAYERS,
-                layer_index,
-                prop::ATTRIBUTION
-            ),
-        )
-    })?;
-
-    Ok(MapLayerAttr {
-        name,
-        template_url,
-        size,
-        zoom_bounds,
-        max_native_zoom,
-        transform,
-        start_z,
-        attribution,
-    })
 }
+
+
+// pub fn parse_map_layer(
+//     value: Value,
+//     layer_index: usize,
+// ) -> PackerResult<MapLayerAttr> {
+//
+// }
 
 #[inline]
 fn parse_array_with_2_elements(value: Value) -> Option<(u64, u64)> {
@@ -257,6 +264,8 @@ mod test {
 
     use serde_json::json;
 
+    use crate::res::test_utils::StubLoader;
+
     #[test]
     fn test_invalid_value() {
         let values = vec![
@@ -269,19 +278,18 @@ mod test {
             json!("hello"),
         ];
 
-        let mut trace = ConfigTrace::default();
+        let config = PreparedConfig::<StubLoader>::default();
 
         for (i, v) in values.into_iter().enumerate() {
-            trace.push(i);
-            let result = pack_map_layer(v, &trace, i);
+            let result = config.parse_map_layer(v, i);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
-                    trace.clone(),
-                    format!("map.layers[{i}]")
+                Err(PrepError::InvalidConfigPropertyType(
+                    Default::default(),
+                    format!("map.layers[{i}]").into(),
+                    "mapping object".into(),
                 ))
             );
-            trace.pop();
         }
     }
 
@@ -298,14 +306,16 @@ mod test {
             prop::ATTRIBUTION,
         ];
 
+        let config = PreparedConfig::<StubLoader>::default();
+
         let mut value = json!({});
         for p in props {
-            let result = pack_map_layer(value.clone(), &Default::default(), 0);
+            let result = config.parse_map_layer(value.clone(), 0);
             assert_eq!(
                 result,
-                Err(PackerError::MissingConfigProperty(
+                Err(PrepError::MissingConfigProperty(
                     Default::default(),
-                    format!("map.layers[0].{p}")
+                    format!("map.layers[0].{p}").into()
                 ))
             );
 
@@ -327,18 +337,21 @@ mod test {
             "extra": "",
         });
 
-        let result = pack_map_layer(value, &Default::default(), 0);
+        let config = PreparedConfig::<StubLoader>::default();
+
+        let result = config.parse_map_layer(value, 0);
         assert_eq!(
             result,
-            Err(PackerError::UnusedConfigProperty(
+            Err(PrepError::UnusedConfigProperty(
                 Default::default(),
-                "map.layers[0].extra".to_string()
+                "map.layers[0].extra".into()
             ))
         );
     }
 
     #[test]
     fn test_invalid_name() {
+        let config = PreparedConfig::<StubLoader>::default();
         let values = vec![json!([]), json!({})];
         for v in values {
             let value = json!({
@@ -351,12 +364,13 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, &Default::default(), 0);
+            let result = config.parse_map_layer(value, 0);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.layers[0].name".to_string()
+                    "map.layers[0].name".into(),
+                    "string".into(),
                 ))
             );
         }
@@ -364,6 +378,7 @@ mod test {
 
     #[test]
     fn test_invalid_template_url() {
+        let config = PreparedConfig::<StubLoader>::default();
         let values = vec![json!([]), json!({})];
         for v in values {
             let value = json!({
@@ -376,12 +391,13 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, &Default::default(), 0);
+            let result = config.parse_map_layer(value, 0);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.layers[0].template-url".to_string()
+                    "map.layers[0].template-url".into(),
+                    "string".into(),
                 ))
             );
         }
@@ -389,6 +405,7 @@ mod test {
 
     #[test]
     fn test_invalid_size() {
+        let config = PreparedConfig::<StubLoader>::default();
         let values = vec![
             json!([]),
             json!({}),
@@ -410,12 +427,13 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, &Default::default(), 0);
+            let result = config.parse_map_layer(value, 0);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.layers[0].size".to_string()
+                    "map.layers[0].size".into(),
+                    "array of 2 non-negative integers".into(),
                 ))
             );
         }
@@ -423,6 +441,7 @@ mod test {
 
     #[test]
     fn test_invalid_zoom_bounds() {
+        let config = PreparedConfig::<StubLoader>::default();
         let values = vec![
             json!([]),
             json!({}),
@@ -444,12 +463,13 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, &Default::default(), 0);
+            let result = config.parse_map_layer(value, 0);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.layers[0].zoom-bounds".to_string()
+                    "map.layers[0].zoom-bounds".into(),
+                    "array of 2 non-negative integers".into(),
                 ))
             );
         }
@@ -457,6 +477,7 @@ mod test {
 
     #[test]
     fn test_invalid_max_native_zoom() {
+        let config = PreparedConfig::<StubLoader>::default();
         let values = vec![
             json!([]),
             json!({}),
@@ -480,12 +501,13 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, &Default::default(), 0);
+            let result = config.parse_map_layer(value, 0);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.layers[0].max-native-zoom".to_string()
+                    "map.layers[0].max-native-zoom".into(),
+                    "non-negative integer".into(),
                 ))
             );
         }
@@ -493,6 +515,7 @@ mod test {
 
     #[test]
     fn test_invalid_transform() {
+        let config = PreparedConfig::<StubLoader>::default();
         let values = vec![
             json!({}),
             json!(true),
@@ -519,12 +542,13 @@ mod test {
                 "start-z": "",
                 "attribution": "",
             });
-            let result = pack_map_layer(value, &Default::default(), 0);
+            let result = config.parse_map_layer(value, 0);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.layers[0].transform".to_string()
+                    "map.layers[0].transform".into(),
+                    "transform object".into(),
                 ))
             );
         }
@@ -532,6 +556,7 @@ mod test {
 
     #[test]
     fn test_invalid_start_z() {
+        let config = PreparedConfig::<StubLoader>::default();
         let values = vec![json!({}), json!([]), json!(true), json!(null)];
         for v in values {
             let value = json!({
@@ -547,12 +572,13 @@ mod test {
                 "start-z": v,
                 "attribution": "",
             });
-            let result = pack_map_layer(value, &Default::default(), 0);
+            let result = config.parse_map_layer(value, 0);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.layers[0].start-z".to_string()
+                    "map.layers[0].start-z".into(),
+                    "number".into(),
                 ))
             );
         }
@@ -560,6 +586,7 @@ mod test {
 
     #[test]
     fn test_invalid_attribution() {
+        let config = PreparedConfig::<StubLoader>::default();
         let values = vec![
             json!({}),
             json!([]),
@@ -593,12 +620,13 @@ mod test {
                 "start-z": 0,
                 "attribution": v,
             });
-            let result = pack_map_layer(value, &Default::default(), 0);
+            let result = config.parse_map_layer(value, 0);
             assert_eq!(
                 result,
-                Err(PackerError::InvalidConfigProperty(
+                Err(PrepError::InvalidConfigPropertyType(
                     Default::default(),
-                    "map.layers[0].attribution".to_string()
+                    "map.layers[0].attribution".into(),
+                    "attribution object".into(),
                 ))
             );
         }
@@ -606,6 +634,7 @@ mod test {
 
     #[test]
     fn test_ok() {
+        let config = PreparedConfig::<StubLoader>::default();
         let value = json!({
             "name": "Test Name",
             "template-url": "Test URL",
@@ -622,11 +651,11 @@ mod test {
             },
         });
 
-        let result = pack_map_layer(value, &Default::default(), 0);
+        let result = config.parse_map_layer(value, 0);
 
         assert_eq!(
             result,
-            Ok(MapLayerAttr {
+            Ok(MapLayer {
                 name: "Test Name".to_string(),
                 template_url: "Test URL".to_string(),
                 size: (1, 2),

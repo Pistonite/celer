@@ -121,7 +121,7 @@ macro_rules! check_map {
                 Ok(map) => Ok(map),
                 Err(_) => {
                     let prop_name = $prop_name.into();
-                    Err(PrepError::InvalidConfigPropertyType(
+                    Err($crate::prep::PrepError::InvalidConfigPropertyType(
                         $self.trace.clone(),
                         prop_name,
                         "mapping object".into(),
@@ -145,7 +145,7 @@ macro_rules! check_array {
                 Ok(array) => Ok(array),
                 Err(_) => {
                     let prop_name = $prop_name.into();
-                    Err(PrepError::InvalidConfigPropertyType(
+                    Err($crate::prep::PrepError::InvalidConfigPropertyType(
                         $self.trace.clone(),
                         prop_name,
                         "array".into(),
@@ -169,7 +169,7 @@ macro_rules! check_required_property {
                 Some(v) => Ok(v),
                 None => {
                     let prop_name = $prop_name.into();
-                    Err(PrepError::MissingConfigProperty(
+                    Err($crate::prep::PrepError::MissingConfigProperty(
                         $self.trace.clone(),
                         prop_name,
                     ))
