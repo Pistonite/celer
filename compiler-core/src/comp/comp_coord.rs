@@ -28,7 +28,9 @@ macro_rules! map_coord {
 }
 
 impl<'a> Compiler<'a> {
-    pub fn transform_coord(&self, prop: Value) -> Result<GameCoord, CompError> {
+    /// Transforms the coordinate specified in the route into a game coordinate with the coord map
+    /// specified in the config
+    pub fn transform_coord(&self, prop: &Value) -> Result<GameCoord, CompError> {
         let array = prop
             .try_into_array()
             .map_err(|prop| CompError::InvalidCoordinateType(prop.coerce_to_repl()))?;

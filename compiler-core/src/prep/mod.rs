@@ -22,6 +22,8 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use derivative::Derivative;
+use instant::Instant;
+use serde::{Serialize, Deserialize};
 use serde_json::{Value, Map};
 
 use crate::json::{Cast, Coerce};
@@ -30,16 +32,17 @@ use crate::plugin::PluginInstance;
 use crate::res::{ResError, Loader, Resource, Use, ValidUse};
 use crate::prop;
 use crate::env::join_futures;
+use crate::macros::derive_wasm;
+use crate::util::StringMap;
 
 mod entry_point;
 pub use entry_point::*;
 mod config;
 pub use config::*;
-mod metadata;
-pub use metadata::*;
 mod route;
 pub use route::*;
 
+/// Error during the prep phase
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum PrepError {
     #[error("Failed to load resource: {0}")]
@@ -93,21 +96,52 @@ pub enum PrepError {
 
 pub type PrepResult<T> = Result<T, PrepError>;
 
-
+/// Output of the prep phase
 #[derive(Debug, Clone)]
 pub struct PreparedContext<L> where L: Loader {
     pub project_res: Resource<'static, L>,
     pub config: RouteConfig,
     pub meta: CompilerMetadata,
-    prep_doc: PrepDoc,
+    pub prep_doc: PrepDoc,
+    pub start_time: Instant,
+    pub setting: Setting,
 }
 
+/// The route blob in the output of the prep phase, either built (`use`s resolved or raw (JSON).
 #[derive(Debug, Clone)]
 pub enum PrepDoc {
     Raw(Value),
     Built(RouteBlob),
 }
 
+/// Config of the route project
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub struct RouteConfig {
+    #[serde(flatten)]
+    pub meta: RouteMetadata,
+    pub map: Option<MapMetadata>,
+
+    /// Arbitrary key-value pairs that can be used for statistics or any other value
+    pub stats: StringMap<String>,
+    /// Icon id to url map
+    pub icons: StringMap<String>,
+    /// Tag id to tag
+    pub tags: StringMap<DocTag>,
+    /// Default tags to split
+    pub splits: Vec<String>,
+}
+
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub struct RouteMetadata {
+    /// Source of the route, could be a URL or any string
+    pub source: String,
+    /// Version of the project
+    pub version: String,
+    /// Display title of the project
+    pub title: String,
+}
 
 /// Metadata of the compiler
 ///
@@ -164,6 +198,7 @@ impl<L> ContextBuilder<L> where L: Loader {
 
     /// Load the project and parse config and (optionally) route
     pub async fn build_context(mut self) -> PrepResult<PreparedContext<L>> {
+        let start_time = Instant::now();
         let mut project = self.resolve_entry_point().await?;
         let metadata = self.load_metadata(&mut project)?;
 
@@ -228,6 +263,8 @@ impl<L> ContextBuilder<L> where L: Loader {
             config,
             meta,
             prep_doc,
+            start_time,
+            setting: self.setting,
         })
     }
 

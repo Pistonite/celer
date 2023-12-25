@@ -11,11 +11,9 @@ use derivative::Derivative;
 use instant::Instant;
 use serde_json::Value;
 
-use crate::api::CompilerMetadata;
 use crate::lang::parse_poor;
-use crate::pack::PackerError;
-use crate::types::{DocDiagnostic, GameCoord, RouteMetadata};
-use crate::util;
+use crate::types::{DocDiagnostic};
+use crate::env;
 
 mod comp_coord;
 pub use comp_coord::*;
@@ -36,23 +34,10 @@ use desugar::*;
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
 
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(Derivative))] // TODO: better way to handle this?
-#[cfg_attr(test, derivative(Default))]
-pub struct Compiler<'a> {
-    /// The start time of the compilation (not just comp phase)
-    #[cfg_attr(test, derivative(Default(value = "Instant::now()")))]
-    pub start_time: Instant,
-    pub project: Cow<'a, RouteMetadata>,
-    pub meta: Cow<'a, CompilerMetadata>,
-    /// Current color of the map line
-    pub color: String,
-    /// Current position on the map
-    pub coord: GameCoord,
-    #[cfg_attr(test, derivative(Default(value = "8")))]
-    pub max_preset_depth: usize,
-}
-
+/// Error in comp phase, related to resolving properties in the route
+///
+/// These errors don't cause the compilation to abort, but are displayed in the route itself
+/// through the diagnostics API.
 #[derive(PartialEq, Debug, thiserror::Error)]
 pub enum CompError {
     /// When an array is specified as a line
@@ -136,19 +121,9 @@ pub enum CompError {
     #[error("Section data is not the correct type.")]
     InvalidSectionType,
 
-    /// When packer errors need to be propagated
-    #[error("Packer errors")]
-    PackerErrors(Vec<PackerError>),
-
     /// When the `route` property is invalid
     #[error("Route data is not the correct type.")]
     InvalidRouteType,
-}
-
-impl From<Infallible> for CompError {
-    fn from(_: Infallible) -> Self {
-        unreachable!()
-    }
 }
 
 impl CompError {
@@ -174,7 +149,8 @@ impl CompError {
             CompError::InvalidMovementPreset(_) => "/docs/route/customizing-movements#presets",
             CompError::InvalidMarkerType => "/docs/route/customizing-lines#markers",
             CompError::IsPreface(_) => "/docs/route/route-structure#preface",
-            CompError::PackerErrors(_) | CompError::InvalidSectionType => {
+            // CompError::PackerErrors(_) | 
+                CompError::InvalidSectionType => {
                 "/docs/route/route-structure"
             }
             CompError::InvalidRouteType => "/docs/route/route-structure#entry-point",
@@ -199,7 +175,7 @@ impl CompError {
             | CompError::InvalidMarkerType
             | CompError::IsPreface(_)
             | CompError::InvalidSectionType
-            | CompError::PackerErrors(_)
+            // | CompError::PackerErrors(_)
             | CompError::InvalidRouteType => "error",
 
             CompError::UnusedProperty(_) | CompError::TooManyTagsInCounter => "warn",
@@ -210,13 +186,13 @@ impl CompError {
 
     pub fn add_to_diagnostics(&self, output: &mut Vec<DocDiagnostic>) {
         match self {
-            CompError::PackerErrors(errors) => {
-                for error in errors {
-                    error.add_to_diagnostics(output);
-                }
-            }
+            // CompError::PackerErrors(errors) => {
+            //     for error in errors {
+            //         error.add_to_diagnostics(output);
+            //     }
+            // }
             other_error => {
-                let site_origin = util::get_site_origin();
+                let site_origin = env::get_site_origin();
                 let help_url_path = other_error.get_info_url_path();
                 let msg = format!("{other_error} See {site_origin}{help_url_path} for more info.");
 

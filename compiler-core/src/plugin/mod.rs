@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::prep::{CompilerMetadata};
-use crate::comp::{CompDoc, Compiler};
+use crate::pack::{CompileContext};
+use crate::comp::{CompDoc};
 use crate::lang::{DocPoorText,parse_poor};
 use crate::types::{DocDiagnostic, ExecDoc};
 
@@ -47,11 +48,11 @@ pub trait PluginRuntime {
     }
 
     /// Called before route is compiled, to make changes to the compiler
-    fn on_before_compile<'a>(&mut self, _compiler: &mut Compiler<'a>) -> PluginResult<()> {
+    fn on_before_compile<'a>(&mut self, _ctx: &mut CompileContext<'a>) -> PluginResult<()> {
         Ok(())
     }
     /// Called after the route is compiled, to transform the route
-    fn on_after_compile(&mut self, _meta: &CompilerMetadata, _doc: &mut CompDoc) -> PluginResult<()> {
+    fn on_after_compile(&mut self, _doc: &mut CompDoc) -> PluginResult<()> {
         Ok(())
     }
     /// Called after the route is turned into ExecDoc
@@ -69,10 +70,10 @@ pub struct PluginInstance {
 }
 
 impl PluginInstance {
-    pub fn create_runtime<'a>(&self, compiler: &Compiler<'a>) -> Box<dyn PluginRuntime> {
+    pub fn create_runtime<'a>(&self, ctx: &CompileContext<'a>) -> PluginResult<Box<dyn PluginRuntime>> {
         match &self.plugin {
-            Plugin::BuiltIn(p) => p.create_runtime(compiler, &self.props),
-            Plugin::Script(p) => p.create_runtime(compiler, &self.props),
+            Plugin::BuiltIn(p) => p.create_runtime(ctx, &self.props),
+            Plugin::Script(p) => p.create_runtime(ctx, &self.props),
         }
     }
 }

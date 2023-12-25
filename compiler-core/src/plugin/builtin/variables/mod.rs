@@ -6,11 +6,12 @@ use std::collections::HashMap;
 use serde_json::{json, Map, Value};
 
 use crate::prep::{CompilerMetadata, DocTagColor, DocTag};
-use crate::comp::{CompDoc, Compiler};
+use crate::comp::{CompDoc};
+use crate::pack::{Compiler, CompileContext};
 use crate::json::Coerce;
 use crate::lang::{self, DocRichTextBlock};
 use crate::macros::async_trait;
-use crate::pack::PackerResult;
+use crate::pack::PackResult;
 use crate::prop;
 use crate::types::{DocDiagnostic};
 use crate::plugin::{operation, PluginResult, PluginRuntime};
@@ -283,7 +284,7 @@ impl VariablesPlugin {
 }
 
 impl PluginRuntime for VariablesPlugin {
-    fn on_before_compile<'a>(&mut self, compiler: &mut Compiler<'a>) -> PluginResult<()> {
+    fn on_before_compile<'a>(&mut self, ctx: &mut CompileContext<'a>) -> PluginResult<()> {
         // add the val tag if not defined already
         let tag = DocTag {
             color: Some(DocTagColor::LightDark {
@@ -292,17 +293,17 @@ impl PluginRuntime for VariablesPlugin {
             }),
             ..Default::default()
         };
-        compiler
-            .project
+        ctx
+            .config
             .tags
             .entry(VAL.to_string())
             .and_modify(|t| t.apply_to_default(&tag))
             .or_insert(tag);
-        compiler.project.tags.entry(VAL.to_string()).or_default();
+        ctx.config.tags.entry(VAL.to_string()).or_default();
         Ok(())
     }
 
-    fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PluginResult<()> {
+    fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
         comp_doc.known_props.insert(prop::VARS.to_string());
         comp_doc.known_props.insert(prop::VALS.to_string());
 

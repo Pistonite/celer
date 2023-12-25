@@ -2,8 +2,8 @@
 //!
 //! This plugin looks for the `link` tag and transforms it into a link.
 
-use crate::prep::CompilerMetadata;
-use crate::comp::{CompDoc, Compiler};
+use crate::comp::{CompDoc};
+use crate::pack::{Compiler, CompileContext};
 use crate::prop;
 use crate::lang::DocRichTextBlock;
 use crate::prep::{DocTagColor, DocTag};
@@ -12,7 +12,7 @@ use crate::plugin::{operation, PluginResult, PluginRuntime};
 
 pub struct LinkPlugin;
 impl PluginRuntime for LinkPlugin {
-    fn on_before_compile<'a>(&mut self, ctx: &mut Compiler<'a>) -> PluginResult<()> {
+    fn on_before_compile<'a>(&mut self, ctx: &mut CompileContext<'a>) -> PluginResult<()> {
         // add the link tag if not defined already
         let link_tag = DocTag {
             color: Some(DocTagColor::LightDark {
@@ -25,14 +25,14 @@ impl PluginRuntime for LinkPlugin {
             }),
             ..Default::default()
         };
-        ctx .project
+        ctx .config.to_mut()
             .tags
             .entry(prop::LINK.to_string())
             .and_modify(|tag| tag.apply_to_default(&link_tag))
             .or_insert(link_tag);
         Ok(())
     }
-    fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PluginResult<()> {
+    fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
         for preface in comp_doc.preface.iter_mut() {
             for block in preface.iter_mut() {
                 transform_link_tag(block);

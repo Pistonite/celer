@@ -8,8 +8,6 @@
 //!    - [`exec`] Process the route data into a renderable object
 //!    - [`expo`] Export artifacts from the route
 
-mod api;
-pub use api::*;
 
 pub mod plugin;
 

@@ -5,9 +5,9 @@
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 
-use crate::comp::Compiler;
+use crate::pack::CompileContext;
 
-use super::PluginRuntime;
+use super::{PluginRuntime, PluginResult};
 
 mod variables;
 mod botw_unstable;
@@ -26,20 +26,20 @@ pub enum BuiltInPlugin {
 }
 
 impl BuiltInPlugin {
-    pub fn create_runtime<'a>(&self, compiler: &Compiler<'a>, props: &Value) -> Box<dyn PluginRuntime> {
+    pub fn create_runtime<'a>(&self, ctx: &CompileContext<'a>, props: &Value) -> PluginResult<Box<dyn PluginRuntime>> {
         match &self{
-            BuiltInPlugin::Link => Box::new(link::LinkPlugin),
-            BuiltInPlugin::Metrics => Box::new(metrics::MetricsPlugin::from_props(
+            BuiltInPlugin::Link => Ok(Box::new(link::LinkPlugin)),
+            BuiltInPlugin::Metrics => Ok(Box::new(metrics::MetricsPlugin::from_props(
                 props,
-                &compiler.start_time,
-            )),
+                &ctx.start_time,
+            ))),
             BuiltInPlugin::Variables => {
-                Box::new(variables::VariablesPlugin::from_props(props))
+                Ok(Box::new(variables::VariablesPlugin::from_props(props)))
             }
             // BuiltInPlugin::Compat => Box::new(compat::CompatPlugin),
-            BuiltInPlugin::BotwAbilityUnstable => Box::new(
+            BuiltInPlugin::BotwAbilityUnstable => Ok(Box::new(
                 botw_unstable::BotwAbilityUnstablePlugin::from_props(props),
-            ),
+            )),
         }
     }
 }

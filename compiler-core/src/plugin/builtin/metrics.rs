@@ -50,7 +50,7 @@ impl MetricsPlugin {
 }
 
 impl PluginRuntime for MetricsPlugin {
-    fn on_after_compile(&mut self, _: &CompilerMetadata, _: &mut CompDoc) -> PluginResult<()> {
+    fn on_after_compile(&mut self, _: &mut CompDoc) -> PluginResult<()> {
         // measure time since plugin created = comp phase time
         if self.detailed {
             self.comp_time_ms = self.last_start_time.elapsed().as_millis() as u64;

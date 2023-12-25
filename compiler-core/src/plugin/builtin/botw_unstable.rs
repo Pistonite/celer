@@ -387,7 +387,7 @@ fn estimate_time(text: &DocRichText) -> u32 {
 }
 
 impl PluginRuntime for BotwAbilityUnstablePlugin {
-    fn on_after_compile(&mut self, _: &CompilerMetadata, comp_doc: &mut CompDoc) -> PluginResult<()> {
+    fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
         operation::for_each_line!(line in comp_doc {
             self.process_line(&mut line);
             line
