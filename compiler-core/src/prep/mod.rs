@@ -32,6 +32,10 @@ mod entry_point;
 pub use entry_point::*;
 mod config;
 pub use config::*;
+mod metadata;
+pub use metadata::*;
+mod route;
+pub use route::*;
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum PrepError {
@@ -71,16 +75,17 @@ pub enum PrepError {
 
 pub type PrepResult<T> = Result<T, PrepError>;
 
-pub async fn get_entry_points<L>(project_resource: &Resource<'_, L>) -> PrepResult<EntryPoints> 
-where L: Loader {
-    todo!()
-}
 
 
 pub struct PreparedContext {
     pub config: RouteConfig,
     pub meta: CompilerMetadata,
-    pub route: Value,
+    prep_doc: PrepDoc,
+}
+
+pub enum PrepDoc {
+    Raw(Value),
+    Built(RouteBlob),
 }
 
 
@@ -94,4 +99,27 @@ pub struct CompilerMetadata {
     pub presets: BTreeMap<String, Preset>,
     pub plugins: Vec<PluginInstance>,
     pub default_icon_priority: i64,
+}
+
+// prep phase entry points
+
+
+pub async fn get_entry_points<L>(project_resource: &Resource<'_, L>) -> PrepResult<EntryPoints> 
+where L: Loader {
+    todo!()
+}
+
+pub async fn get_context_with_route<L>(project_resource: &Resource<'_, L>, entry_points: EntryPoints) -> PrepResult<PreparedContext> 
+where L: Loader {
+    todo!()
+}
+
+pub async fn get_context_without_route<L>(project_resource: &Resource<'_, L>, entry_points: EntryPoints) -> PrepResult<PreparedContext> 
+where L: Loader {
+    todo!()
+}
+
+pub async fn get_metadata<L>(project_resource: &Resource<'_, L>) -> PrepResult<RouteMetadata> 
+where L: Loader {
+    todo!()
 }

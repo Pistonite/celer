@@ -63,6 +63,7 @@ impl PreparedConfig {
         TIter: IntoIterator<Item = Value>,
     {
         for (i, config) in configs.into_iter().enumerate() {
+            yield_budget(16).await;
             self.trace.push(i);
             self.load_config(res, config).await?;
             self.trace.pop();
@@ -148,12 +149,8 @@ impl PreparedConfig {
                     self.load_plugins(res, value).await?;
                 }
                 prop::INCLUDES => {
-                    let config = check_array!(self, value, prop::INCLUDES)?;
-                    for (i, config) in config.into_iter().enumerate() {
-                        self.trace.push(i);
-                        self.load_config(res, config).await?;
-                        self.trace.pop();
-                    }
+                    let configs = check_array!(self, value, prop::INCLUDES)?;
+                    self.load_configs(res, configs).await?;
                 }
                 _ => return Err(PrepError::UnusedConfigProperty(self.trace.clone(), key.into())),
             }

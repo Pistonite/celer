@@ -10,58 +10,16 @@ use crate::lang;
 use crate::res::ResError;
 use crate::types::DocDiagnostic;
 
-mod pack_config;
-pub use pack_config::*;
 mod pack_entry_points;
 pub use pack_entry_points::*;
-mod pack_preset;
-pub use pack_preset::*;
 mod pack_project;
 pub use pack_project::*;
-mod pack_route;
-pub use pack_route::*;
-mod pack_value;
-pub use pack_value::*;
 
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum PackerError {
     #[error("Failed to load resource: {0}")]
     Res(#[from] ResError),
-
-    // #[error("Invalid `use` value: {0}. If you are specifying a relative path, make sure to start with ./ or ../")]
-    // InvalidUse(String),
-
-    // #[error("Invalid path: {0}")]
-    // InvalidPath(String),
-    //
-    // #[error("Invalid url: {0}")]
-    // InvalidUrl(String),
-
-    #[error("Max depth of {0} levels of `use` is reached. Please make sure there are no circular dependencies.")]
-    MaxUseDepthExceeded(usize),
-
-    #[error("Max reference depth of {0} levels is reached. There might be a formatting error in your project files.")]
-    MaxRefDepthExceeded(usize),
-
-
-    // #[error("The format of resource {0} cannot be determined")]
-    // UnknownFormat(String),
-
-    // #[error("Cannot load file: {0}")]
-    // LoadFile(String),
-    //
-    // #[error("Cannot load url: {0}")]
-    // LoadUrl(String),
-
-    // #[error("Error when parsing structured data in file {0}: {1}")]
-    // InvalidFormat(String, String),
-    //
-    // #[error("Error when parsing file {0}: file is not UTF-8")]
-    // InvalidUtf8(String),
-
-    // #[error("")]
-    // InvalidIcon,
 
     #[error("Resource type is invalid: {0} should be of type {1}")]
     InvalidResourceType(String, String),
@@ -75,29 +33,6 @@ pub enum PackerError {
     #[error("Project metadata has extra unused property: {0}")]
     UnusedMetadataProperty(String),
 
-    // #[error("Project config ({0}) has an invalid type")]
-    // InvalidConfigType(ConfigTrace),
-
-    // #[error("Project config ({0}): the `{1}` property is invalid")]
-    // InvalidConfigProperty(ConfigTrace, String),
-
-    // #[error("Project config ({0}): the required `{1}` property is missing")]
-    // MissingConfigProperty(ConfigTrace, String),
-    //
-    // #[error("Project config ({0}): the `{1}` property is unused")]
-    // UnusedConfigProperty(ConfigTrace, String),
-
-
-    // #[error("No map defined in project config")]
-    // MissingMap,
-    // #[error("Project config ({0}): defining map when a previous config already defines one")]
-    // DuplicateMap(ConfigTrace),
-    //
-    // #[error("Project config ({0}): config is nesting too deep!")]
-    // MaxConfigDepthExceeded(ConfigTrace),
-
-    // #[error("Project config ({0}): the tag `{1}` is not defined")]
-    // TagNotFound(ConfigTrace, String),
 
     #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
     InvalidEntryPoint(String, String),
@@ -105,8 +40,6 @@ pub enum PackerError {
     #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
     MaxEntryPointDepthExceeded(String),
 
-    // #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
-    // InvalidPlugin(String),
 
 
     #[error("Image resource {0} has exceeded the size limit of {1}")]

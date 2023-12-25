@@ -5,6 +5,7 @@ use crate::prep::{CompilerMetadata};
 
 use super::{PluginRuntime, PluginError, PluginResult};
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct ScriptPlugin {
     pub source: String,
     pub script: String,
