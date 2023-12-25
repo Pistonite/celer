@@ -15,22 +15,13 @@ use crate::lang::parse_poor;
 use crate::types::{DocDiagnostic};
 use crate::env;
 
-mod comp_coord;
-pub use comp_coord::*;
+mod line;
+pub use line::*;
+
 mod comp_doc;
 pub use comp_doc::*;
-mod comp_line;
-pub use comp_line::*;
-mod comp_marker;
-pub use comp_marker::*;
-mod comp_movement;
-pub use comp_movement::*;
-mod comp_preset;
-pub use comp_preset::*;
 mod comp_section;
 pub use comp_section::*;
-mod desugar;
-use desugar::*;
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
 
@@ -125,6 +116,8 @@ pub enum CompError {
     #[error("Route data is not the correct type.")]
     InvalidRouteType,
 }
+
+pub type CompResult<T> = Result<T, CompError>;
 
 impl CompError {
     /// Get the more info url path for a compiler error

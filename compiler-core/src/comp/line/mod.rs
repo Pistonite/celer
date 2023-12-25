@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
@@ -8,13 +9,26 @@ use crate::lang;
 use crate::lang::PresetInst;
 use crate::prop;
 use crate::types::{DocDiagnostic, DocNote, DocRichText, DocRichTextBlock, GameCoord};
+use crate::macros::derive_wasm;
+use crate::util::StringMap;
 
 use super::{
     validate_not_array_or_object, CompError, CompMarker, CompMovement, Compiler, CompilerResult,
 };
 
+mod comp_coord;
+pub use comp_coord::*;
+mod comp_marker;
+pub use comp_marker::*;
+mod comp_movement;
+pub use comp_movement::*;
+mod comp_preset;
+pub use comp_preset::*;
+mod desugar;
+use desugar::*;
+
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct CompLine {
     /// Primary text content of the line
     pub text: DocRichText,
@@ -25,10 +39,8 @@ pub struct CompLine {
     /// Diagnostic messages
     pub diagnostics: Vec<DocDiagnostic>,
     /// Icon id to show on the document
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub doc_icon: Option<String>,
     /// Icon id to show on the map
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub map_icon: Option<String>,
     /// Coordinate of the map icon
     pub map_coord: GameCoord,
@@ -39,19 +51,24 @@ pub struct CompLine {
     /// Secondary text to show below the primary text
     pub secondary_text: DocRichText,
     /// Counter text to display
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub counter_text: Option<DocRichTextBlock>,
     /// The notes
     pub notes: Vec<DocNote>,
     /// The split name, if different from text
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub split_name: Option<DocRichText>,
     /// If the line is a banner
     pub is_banner: bool,
     /// The rest of the properties as json blobs
     ///
     /// These are ignored by ExecDoc, but the plugins can use them
-    pub properties: BTreeMap<String, Value>,
+    pub properties: StringMap<Value>,
+}
+
+#[derive(Debug, Default)]
+pub struct LineContext<'c, 'p> {
+    pub compiler: Cow<'c, Compiler<'p>>,
+    pub line: CompLine,
+    pub errors: Vec<CompError>,
 }
 
 impl<'a> Compiler<'a> {

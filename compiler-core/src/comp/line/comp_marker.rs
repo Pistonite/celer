@@ -2,13 +2,16 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
+use crate::prep::RouteBlob;
 use crate::prop;
 use crate::types::GameCoord;
+use crate::macros::derive_wasm;
 
-use super::{CompError, Compiler};
+use super::{CompError, Compiler, LineContext};
 
+/// Data of a marker specified by the `markers` property
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
+#[derive_wasm]
 pub struct CompMarker {
     /// The coord of the marker
     pub at: GameCoord,
@@ -23,18 +26,19 @@ impl CompMarker {
     }
 }
 
-impl<'a> Compiler<'a> {
-    /// Try compiling a json blob to a marker object
+impl<'c, 'p> LineContext<'c, 'p> {
+    /// Try compiling a json blob to a marker object and add it to the line.
+    ///
+    /// The errors are added to `self.errors`
     ///
     /// The following are valid:
     /// - one coords value (array of 2 or 3)
     /// - object with `at` property, an optionally `color`
-    pub fn comp_marker(
-        &self,
+    pub fn compile_marker(
+        &mut self,
         prop_name: &str,
-        prop: Value,
-        errors: &mut Vec<CompError>,
-    ) -> Option<CompMarker> {
+        prop: &RouteBlob,
+    ) {
         if prop.is_array() {
             return match self.transform_coord(prop) {
                 Ok(coord) => Some(CompMarker::at(coord)),

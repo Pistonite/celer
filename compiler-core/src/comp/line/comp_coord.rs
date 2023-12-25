@@ -1,9 +1,10 @@
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
-use crate::types::{Axis, GameCoord};
+use crate::prep::{Axis, GameCoord, RouteBlob};
+use crate::comp::CompResult;
 
-use super::{CompError, Compiler};
+use super::{CompError, Compiler, LineContext};
 
 macro_rules! map_coord {
     ($mapping:ident, $array:ident, $output:ident, $i:tt) => {{
@@ -27,22 +28,22 @@ macro_rules! map_coord {
     }};
 }
 
-impl<'a> Compiler<'a> {
+impl<'c, 'p> LineContext<'c, 'p> {
     /// Transforms the coordinate specified in the route into a game coordinate with the coord map
     /// specified in the config
-    pub fn transform_coord(&self, prop: &Value) -> Result<GameCoord, CompError> {
+    pub fn parse_coord(&self, prop: &RouteBlob) -> CompResult<GameCoord> {
         let array = prop
             .try_into_array()
             .map_err(|prop| CompError::InvalidCoordinateType(prop.coerce_to_repl()))?;
         let mut output = GameCoord::default();
         match array.len() {
             2 => {
-                let mapping = &self.project.map.coord_map.mapping_2d;
+                let mapping = &self.compiler.config.map.coord_map.mapping_2d;
                 map_coord!(mapping, array, output, 0)?;
                 map_coord!(mapping, array, output, 1)?;
             }
             3 => {
-                let mapping = &self.project.map.coord_map.mapping_3d;
+                let mapping = &self.compiler.config.map.coord_map.mapping_3d;
                 map_coord!(mapping, array, output, 0)?;
                 map_coord!(mapping, array, output, 1)?;
                 map_coord!(mapping, array, output, 2)?;
@@ -56,12 +57,20 @@ impl<'a> Compiler<'a> {
 
 #[cfg(test)]
 mod test {
+    use std::borrow::Cow;
+
     use serde_json::json;
 
     use crate::comp::test_utils::CompilerBuilder;
-    use crate::types::{MapCoordMap, MapMetadata, RouteMetadata};
+    use crate::prep::{MapCoordMap, MapMetadata, RouteMetadata, RouteConfig};
 
     use super::*;
+
+    impl<'c, 'p> LineContext<'c, 'p> {
+        fn test_parse_coord(&self, prop: Value) -> CompResult<GameCoord> {
+            self.parse_coord(&prop.into())
+        }
+    }
 
     #[test]
     fn test_invalid_type() {
@@ -77,43 +86,43 @@ mod test {
             (json!({}), "[object object]"),
         ];
 
-        let compiler = Compiler::default();
+        let ctx = LineContext::default();
 
         for (prop, text) in vals {
-            let res = compiler.transform_coord(prop);
+            let res = ctx.test_parse_coord(prop);
             assert_eq!(res, Err(CompError::InvalidCoordinateType(text.to_string())));
         }
     }
 
     #[test]
     fn test_array_invalid_length() {
-        let compiler = Compiler::default();
-        let res0 = compiler.transform_coord(json!([]));
+        let ctx = LineContext::default();
+        let res0 = ctx.test_parse_coord(json!([]));
         assert_eq!(res0, Err(CompError::InvalidCoordinateArray));
-        let res1 = compiler.transform_coord(json!([1]));
+        let res1 = ctx.test_parse_coord(json!([1]));
         assert_eq!(res1, Err(CompError::InvalidCoordinateArray));
-        let res4 = compiler.transform_coord(json!([1, 2, 3, 4]));
+        let res4 = ctx.test_parse_coord(json!([1, 2, 3, 4]));
         assert_eq!(res4, Err(CompError::InvalidCoordinateArray));
-        let res5 = compiler.transform_coord(json!([1, 2, 3, 4, 5]));
+        let res5 = ctx.test_parse_coord(json!([1, 2, 3, 4, 5]));
         assert_eq!(res5, Err(CompError::InvalidCoordinateArray));
     }
 
     #[test]
     fn test_array_invalid_value() {
-        let compiler = Compiler::default();
-        let res2 = compiler.transform_coord(json!([1, true]));
+        let ctx = LineContext::default();
+        let res2 = ctx.test_parse_coord(json!([1, true]));
         assert_eq!(
             res2,
             Err(CompError::InvalidCoordinateValue("true".to_string()))
         );
-        let res3 = compiler.transform_coord(json!(["1", [], "hello"]));
+        let res3 = ctx.test_parse_coord(json!(["1", [], "hello"]));
         assert_eq!(
             res3,
             Err(CompError::InvalidCoordinateValue(
                 "[object array]".to_string()
             ))
         );
-        let res2 = compiler.transform_coord(json!([null, 0]));
+        let res2 = ctx.test_parse_coord(json!([null, 0]));
         assert_eq!(
             res2,
             Err(CompError::InvalidCoordinateValue("null".to_string()))
@@ -122,38 +131,42 @@ mod test {
 
     #[test]
     fn test_array_valid() {
-        let project = RouteMetadata {
-            map: MapMetadata {
+        let project = RouteConfig {
+            map: Some(MapMetadata {
                 coord_map: MapCoordMap {
                     mapping_2d: (Axis::X, Axis::Z),
                     mapping_3d: (Axis::Z, Axis::Z, Axis::Y),
                 },
                 ..Default::default()
-            },
+            }),
             ..Default::default()
         };
         let builder = CompilerBuilder::new(project, Default::default(), Default::default());
         let compiler = builder.build();
+        let ctx = LineContext {
+            compiler: Cow::Owned(compiler),
+            ..Default::default()
+        };
 
         let input = json!([1, 2]);
         assert_eq!(
             Ok(GameCoord(1.0, 0.0, 2.0)),
-            compiler.transform_coord(input)
+            ctx.test_parse_coord(input)
         );
         let input = json!([1, 2, 3]);
         assert_eq!(
             Ok(GameCoord(0.0, 3.0, 2.0)),
-            compiler.transform_coord(input)
+            ctx.test_parse_coord(input)
         );
         let input = json!(["1", "2.3", 3]);
         assert_eq!(
             Ok(GameCoord(0.0, 3.0, 2.3)),
-            compiler.transform_coord(input)
+            ctx.test_parse_coord(input)
         );
         let input = json!(["-1", "0.000"]);
         assert_eq!(
             Ok(GameCoord(-1.0, 0.0, 0.0)),
-            compiler.transform_coord(input)
+            ctx.test_parse_coord(input)
         );
     }
 }

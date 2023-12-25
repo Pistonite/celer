@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use serde_json::{Map, Value};
 
 use crate::res::{Use, ValidUse, Resource, Loader, ResError};
-use crate::json::Cast;
+use crate::json::{Coerce, Cast};
 use crate::macros::async_recursion;
 use crate::env::yield_budget;
 
@@ -28,6 +28,20 @@ pub enum RouteBlob {
     Object(BTreeMap<String, RouteBlob>),
 }
 
+impl From<Value> for RouteBlob {
+    fn from(x: Value) -> Self {
+        match x {
+            Value::Array(x) => Self::Array(x.into_iter().map(Self::from).collect()),
+            Value::Object(x) => Self::Object(
+                x.into_iter()
+                    .map(|(k, v)| (k, Self::from(v)))
+                    .collect(),
+            ),
+            _ => Self::Prim(x),
+        }
+    }
+}
+
 impl RouteBlob {
     pub fn res_error(e: ResError) -> Self {
         Self::Err(RouteBlobError::ResError(e.to_string()))
@@ -42,14 +56,14 @@ impl RouteBlob {
     }
 
     /// Flatten the value. Returns the inner value or the first error
-    pub fn flatten(self) -> Result<Value, RouteBlobError> {
+    pub fn into_flattened(self) -> Result<Value, RouteBlobError> {
         match self {
             Self::Prim(x) => Ok(x),
             Self::Err(e) => Err(e),
             Self::Array(arr) => {
                 let mut output = Vec::with_capacity(arr.len());
                 for x in arr.into_iter() {
-                    let x = x.flatten()?;
+                    let x = x.into_flattened()?;
                     output.push(x);
                 }
                 Ok(Value::Array(output))
@@ -57,8 +71,32 @@ impl RouteBlob {
             Self::Object(obj) => {
                 let mut output = Map::new();
                 for (key, value) in obj.into_iter() {
-                    let value = value.flatten()?;
+                    let value = value.into_flattened()?;
                     output.insert(key, value);
+                }
+                Ok(Value::Object(output))
+            }
+        }
+    }
+
+    /// Created a flattened copy of the value. Returns the copy or the first error
+    pub fn flattened(&self) -> Result<Value, RouteBlobError> {
+        match self {
+            Self::Prim(x) => Ok(x.clone()),
+            Self::Err(e) => Err(e.clone()),
+            Self::Array(arr) => {
+                let mut output = Vec::with_capacity(arr.len());
+                for x in arr {
+                    let x = x.flattened()?;
+                    output.push(x);
+                }
+                Ok(Value::Array(output))
+            }
+            Self::Object(obj) => {
+                let mut output = Map::new();
+                for (key, value) in obj {
+                    let value = value.flattened()?;
+                    output.insert(key.clone(), value.clone());
                 }
                 Ok(Value::Object(output))
             }
@@ -98,6 +136,68 @@ impl Cast for RouteBlob {
                 }
                 Err(other)
             }
+        }
+    }
+}
+
+impl Coerce for RouteBlob {
+    fn coerce_to_string(&self) -> String {
+        match self {
+            Self::Prim(x) => x.coerce_to_string(),
+            Self::Err(e) => "[object error]".to_string(),
+            Self::Array(_) => "[object array]".to_string(),
+            Self::Object(_) => "[object object]".to_string(),
+        }
+    }
+
+    fn coerce_to_repl(&self) -> String {
+        match self {
+            Self::Prim(x) if x.is_null() => "null".to_string(),
+            _ => self.coerce_to_string(),
+        }
+    }
+
+    fn coerce_truthy(&self) -> bool {
+        match self {
+            Self::Prim(x) => x.coerce_truthy(),
+            Self::Err(_) => false,
+            Self::Array(_) => true,
+            Self::Object(_) => true,
+        }
+    }
+
+    fn try_coerce_to_f64(&self) -> Option<f64> {
+        match self {
+            Self::Prim(x) => x.try_coerce_to_f64(),
+            _ => None,
+        }
+    }
+
+    fn try_coerce_to_u64(&self) -> Option<u64> {
+        match self {
+            Self::Prim(x) => x.try_coerce_to_u64(),
+            _ => None,
+        }
+    }
+
+    fn try_coerce_to_u32(&self) -> Option<u32> {
+        match self {
+            Self::Prim(x) => x.try_coerce_to_u32(),
+            _ => None,
+        }
+    }
+
+    fn try_coerce_to_i64(&self) -> Option<i64> {
+        match self {
+            Self::Prim(x) => x.try_coerce_to_i64(),
+            _ => None,
+        }
+    }
+
+    fn try_coerce_to_bool(&self) -> Option<bool> {
+        match self {
+            Self::Prim(x) => x.try_coerce_to_bool(),
+            _ => None,
         }
     }
 }
