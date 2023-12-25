@@ -332,4 +332,8 @@ impl PluginRuntime for VariablesPlugin {
 
         Ok(())
     }
+
+    fn get_source(&self) -> &str {
+        "variables"
+    }
 }

@@ -1,6 +1,6 @@
 //! Implementation for resolving a `use` from a resource
 
-use crate::util::Path;
+use crate::util::{Path, PathBuf};
 use crate::env::RefCounted;
 
 use super::{ResPath, Loader, Resource, ValidUse, ResResult, ResError};
@@ -9,187 +9,35 @@ impl<'a, L> Resource<'a, L> where L: Loader {
 
     /// Resolve a `use` property from this resource
     pub fn resolve(&self, target: &ValidUse) -> ResResult<Resource<'a, L>> {
-        // See tests
-        todo!()
-    }
-    // reference:
-// pub struct LocalResourceResolver(pub Path);
-//
-// #[async_trait(auto)]
-// impl ResourceResolver for LocalResourceResolver {
-//     async fn resolve<TContext>(
-//         &self, 
-//         source: &Resource<TContext>, 
-//         target: &ValidUse) -> PackerResult<Resource<TContext>> 
-//     {
-//         match target {
-//             ValidUse::Relative(path) => {
-//                 let new_path = self
-//                     .0
-//                     .join(&path)
-//                     .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-//                 if self.0 == new_path {
-//                     return Ok(source.clone());
-//                 }
-//                 let new_parent = new_path
-//                     .parent()
-//                     .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-//                 Ok(source.create_file(new_path, RefCounted::new(Self(new_parent))))
-//             }
-//             ValidUse::Absolute(path) => {
-//                 let new_path =
-//                     Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-//                 if self.0 == new_path {
-//                     return Ok(source.clone());
-//                 }
-//                 let new_parent = new_path
-//                     .parent()
-//                     .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-//                 Ok(source.create_file(new_path, RefCounted::new(Self(new_parent))))
-//             }
-//             ValidUse::Remote {
-//                 owner,
-//                 repo,
-//                 path,
-//                 reference,
-//             } => create_github_resource_from(source, owner, repo, path, reference.as_deref()).await,
-//         }
-//     }
-// }
+        let new_resource = match target {
+            ValidUse::Relative(path) => {
+                // relative paths are resolved relative to the directory of the file
+                let join_part = PathBuf::from("..").join(path);
+                self.path().join_resolve(join_part)
+            }
+            ValidUse::Absolute(path) => {
+                // absolute paths are resolved relative to the root of the file system
+                let rel_path = &path[1..];
+                match self.path() {
+                    ResPath::Local(_) => ResPath::new_local(rel_path),
+                    ResPath::Remote(url, _) => ResPath::new_remote(url.clone(), rel_path)
+                }
+            }
+            remote_use => {
+                target.base_url().and_then(|url| {
+                    ResPath::new_remote(url, remote_use.path())
+                })
+            }
+        };
 
-// pub struct GitHubResourceResolver {
-//     owner: String,
-//     repo: String,
-//     path: Path,
-//     reference: Option<String>,
-// }
-//
-// impl GitHubResourceResolver {
-//     pub fn new(owner: &str, repo: &str, path: Path, reference: Option<&str>) -> Self {
-//         Self {
-//             owner: owner.to_string(),
-//             repo: repo.to_string(),
-//             path,
-//             reference: reference.map(|s| s.to_string()),
-//         }
-//     }
-// }
-//
-// #[async_trait(auto)]
-// impl ResourceResolver for GitHubResourceResolver {
-//     async fn resolve<TContext>(
-//         &self, 
-//         source: &Resource<TContext>,
-//         target: &ValidUse) -> PackerResult<Resource<TContext>> 
-//     {
-//         match target {
-//             ValidUse::Relative(path) => {
-//                 let new_path = self
-//                     .path
-//                     .join(&format!("../{path}"))
-//                     .ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-//                 if self.path == new_path {
-//                     return Ok(source.clone());
-//                 }
-//                 let url = get_github_url(
-//                     &self.owner,
-//                     &self.repo,
-//                     &new_path,
-//                     self.reference.as_deref(),
-//                 )
-//                 .await?;
-//                 Ok(source.create_url(
-//                     url,
-//                     RefCounted::new(Self::new(
-//                         &self.owner,
-//                         &self.repo,
-//                         new_path,
-//                         self.reference.as_deref(),
-//                     )),
-//                 ))
-//             }
-//             ValidUse::Absolute(path) => {
-//                 let new_path =
-//                     Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.clone()))?;
-//                 if self.path == new_path {
-//                     return Ok(source.clone());
-//                 }
-//                 let url = get_github_url(
-//                     &self.owner,
-//                     &self.repo,
-//                     &new_path,
-//                     self.reference.as_deref(),
-//                 )
-//                 .await?;
-//                 Ok(source.create_url(
-//                     url,
-//                     RefCounted::new(Self::new(
-//                         &self.owner,
-//                         &self.repo,
-//                         new_path,
-//                         self.reference.as_deref(),
-//                     )),
-//                 ))
-//             }
-//             ValidUse::Remote {
-//                 owner,
-//                 repo,
-//                 path,
-//                 reference,
-//             } => create_github_resource_from(source, owner, repo, path, reference.as_deref()).await,
-//         }
-//     }
-// }
-//
-// pub async fn create_github_resource<TContext>(
-//     owner: &str,
-//     repo: &str,
-//     path: &str,
-//     reference: Option<&str>,
-//     url_loader: RefCounted<TContext::UrlLoader>,
-// ) -> PackerResult<Resource<TContext>>
-// where
-//     TContext: ResourceContext,
-// {
-//     let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
-//     let url = get_github_url(owner, repo, &path, reference).await?;
-//     Ok(Resource::new_url(
-//         url,
-//         url_loader,
-//         RefCounted::new(GitHubResourceResolver::new(owner, repo, path, reference)),
-//     ))
-// }
-//
-// pub async fn create_github_resource_from<TContext>(
-//     source: &Resource<TContext>,
-//     owner: &str,
-//     repo: &str,
-//     path: &str,
-//     reference: Option<&str>,
-// ) -> PackerResult<Resource<TContext>>
-//     where
-//         TContext: ResourceContext,
-// {
-//     let path = Path::try_from(path).ok_or_else(|| PackerError::InvalidPath(path.to_string()))?;
-//     let url = get_github_url(owner, repo, &path, reference).await?;
-//     Ok(source.create_url(
-//         url,
-//         RefCounted::new(GitHubResourceResolver::new(owner, repo, path, reference)),
-//     ))
-// }
-//
-// /// Get a github URL
-// async fn get_github_url(
-//     owner: &str,
-//     repo: &str,
-//     path: &Path,
-//     reference: Option<&str>,
-// ) -> PackerResult<String> {
-//     let path = path.as_ref();
-//     let branch = reference.unwrap_or("main");
-//     let url = format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}");
-//     Ok(url)
-// }
+        match new_resource {
+            Some(new_resource) => Ok(self.with_path(new_resource)),
+            None => Err(
+                ResError::CannotResolve(self.path.to_string(), target.to_string())
+            ),
+        }
+    }
+
 }
 
 #[cfg(test)]
@@ -202,14 +50,14 @@ mod test {
 
     fn create_local_resource(path: &str) -> Resource<StubLoader> {
         Resource::new(
-            ResPath::new_local(path),
+            ResPath::new_local(path).unwrap(),
             RefCounted::new(StubLoader),
         )
     }
 
     fn create_remote_resource(path: &str) -> Resource<StubLoader> {
         Resource::new(
-            ResPath::new_remote(TEST_URL_PREFIX, path),
+            ResPath::new_remote(TEST_URL_PREFIX, path).unwrap(),
             RefCounted::new(StubLoader),
         )
     }
@@ -232,17 +80,17 @@ mod test {
         let resource = create_local_resource("foo");
         let target = ValidUse::Relative("./bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_local("bar"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_local_unchecked("bar"));
 
         let resource = create_local_resource("foo/bar");
         let target = ValidUse::Relative("./biz".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_local("foo/biz"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_local_unchecked("foo/biz"));
 
         let resource = create_local_resource("foo/bar");
         let target = ValidUse::Relative("../biz".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_local("biz"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_local_unchecked("biz"));
     }
 
     #[test]
@@ -250,17 +98,17 @@ mod test {
         let resource = create_local_resource("foo");
         let target = ValidUse::Absolute("/bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_local("bar"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_local_unchecked("bar"));
 
         let resource = create_local_resource("foo/bar");
         let target = ValidUse::Absolute("/biz".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_local("biz"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_local_unchecked("biz"));
 
         let resource = create_local_resource("foo/bar/woo");
         let target = ValidUse::Absolute("/biz/bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_local("biz/bar"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_local_unchecked("biz/bar"));
     }
 
     #[test]
@@ -273,7 +121,7 @@ mod test {
             reference: None,
         };
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_remote(&target.base_url().unwrap(), "bar"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar"));
 
         let resource = create_local_resource("foo/a");
         let target = ValidUse::Remote {
@@ -283,7 +131,7 @@ mod test {
             reference: Some("branch".into()),
         };
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_remote(&target.base_url().unwrap(), "bar/b"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar/b"));
     }
 
     #[test]
@@ -291,12 +139,12 @@ mod test {
         let resource = create_remote_resource("foo");
         let target = ValidUse::Relative("../bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap_err(), ResError::CannotResolve(format!("{TEST_URL_PREFIX}/foo"), "../bar".into()));
+        assert_eq!(result.unwrap_err(), ResError::CannotResolve(format!("{TEST_URL_PREFIX}foo"), "../bar".into()));
 
         let resource = create_remote_resource("foo/bar/biz");
         let target = ValidUse::Relative("../../../bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap_err(), ResError::CannotResolve(format!("{TEST_URL_PREFIX}/foo/bar/biz"), "../../../bar".into()));
+        assert_eq!(result.unwrap_err(), ResError::CannotResolve(format!("{TEST_URL_PREFIX}foo/bar/biz"), "../../../bar".into()));
     }
 
     #[test]
@@ -345,7 +193,7 @@ mod test {
             reference: None,
         };
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_remote(&target.base_url().unwrap(), "bar"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar"));
 
         let resource = create_remote_resource("foo/a");
         let target = ValidUse::Remote {
@@ -355,7 +203,7 @@ mod test {
             reference: Some("branch".into()),
         };
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_remote(&target.base_url().unwrap(), "bar/b"));
+        assert_eq!(result.unwrap().path(), &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar/b"));
     }
 }
 

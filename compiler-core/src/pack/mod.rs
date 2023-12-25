@@ -10,8 +10,6 @@ use crate::lang;
 use crate::res::ResError;
 use crate::types::DocDiagnostic;
 
-mod pack_entry_points;
-pub use pack_entry_points::*;
 mod pack_project;
 pub use pack_project::*;
 

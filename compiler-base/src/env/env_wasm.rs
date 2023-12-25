@@ -3,10 +3,19 @@
 use std::rc::Rc;
 
 /// Ref counted pointer. Wrapper for Rc
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct RefCounted<T> where T: ?Sized {
     pub(crate) inner: Rc<T>,
+}
+
+impl<T> Clone for RefCounted<T> {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
 }
 
 impl<T> RefCounted<T> {

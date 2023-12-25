@@ -67,7 +67,7 @@ impl PluginRuntime for MetricsPlugin {
         if self.detailed {
             project
                 .stats
-                .insert("Prep Time".to_string(), format!("{}ms", self.prep_time_ms));
+                .insert("Prep Time".to_string(), format!("{}ms", self.before_comp_time_ms));
             project.stats.insert(
                 "Comp Time".to_string(),
                 format!("{}ms", self.comp_time_ms),
@@ -75,7 +75,7 @@ impl PluginRuntime for MetricsPlugin {
             project
                 .stats
                 .insert("Exec Time".to_string(), format!("{exec_time_ms}ms"));
-            let total_ms = self.prep_time_ms + self.comp_time_ms + exec_time_ms;
+            let total_ms = self.before_comp_time_ms + self.comp_time_ms + exec_time_ms;
             project
                 .stats
                 .insert("Compiled In".to_string(), format!("{total_ms}ms"));
@@ -85,5 +85,9 @@ impl PluginRuntime for MetricsPlugin {
                 .insert("Compiled In".to_string(), format!("{exec_time_ms}ms"));
         }
         Ok(())
+    }
+
+    fn get_source(&self) -> &str {
+        "metrics"
     }
 }

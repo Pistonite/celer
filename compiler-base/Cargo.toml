@@ -28,6 +28,9 @@ serde_json = "1.0.108"
 serde_yaml = "0.9.27"
 base64 = "0.21.5"
 regen-lang = "0.0.7"
+tokio = { version = "1.32.0", features = [
+    "macros",
+], optional = true}
 
 # native dependencies
 
@@ -36,7 +39,10 @@ map-macro = "0.2.6"
 
 [features]
 default = ["native"]
-native = []
+native = [
+    "dep:tokio",
+    "tokio/rt-multi-thread",
+]
 wasm = [
     "dep:wasm-bindgen", 
     "dep:wasm-bindgen-futures",

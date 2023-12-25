@@ -24,10 +24,14 @@ pub struct ScriptPluginRuntime {
 }
 
 impl PluginRuntime for ScriptPluginRuntime {
-    fn on_before_compile(&mut self, _: &Compiler<'_>) -> PluginResult<()> {
+    fn on_before_compile(&mut self, _: &mut Compiler<'_>) -> PluginResult<()> {
         // TODO #24 implement JS plugin engine
         Err(PluginError::ScriptException(
             "Script plugins are not implemented yet".to_string(),
         ))
+    }
+
+    fn get_source(&self) -> &str {
+        &self.source
     }
 }

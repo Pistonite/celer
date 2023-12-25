@@ -373,6 +373,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "thiserror",
+ "tokio",
  "tsify",
  "uni-path",
  "wasm-bindgen",

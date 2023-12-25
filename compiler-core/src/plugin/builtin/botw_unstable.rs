@@ -394,4 +394,8 @@ impl PluginRuntime for BotwAbilityUnstablePlugin {
         });
         Ok(())
     }
+
+    fn get_source(&self) -> &str {
+        "botw-ability-unstable"
+    }
 }

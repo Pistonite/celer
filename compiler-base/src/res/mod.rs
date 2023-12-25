@@ -39,7 +39,7 @@ pub enum ResError {
     #[error("Cannot determine the image format for `{0}`.")]
     UnknownImageFormat(String),
 
-    #[error("Cannot resolve resource `{0}` from `{1}`.")]
+    #[error("Cannot resolve resource `{1}` from `{0}`.")]
     CannotResolve(String, String),
 }
 
@@ -69,20 +69,26 @@ pub trait Loader {
 /// A Resource is an absolute reference to a resource that can be loaded.
 /// It can be a local file or a remote URL. It also has an associated ref-counted
 /// [`Loader`] that can be used to load the resource.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Resource<'a, L> where L: Loader {
     path: ResPath<'a>,
     loader: RefCounted<L>,
 }
 
 impl<'a, L> Resource<'a, L> where L: Loader {
-    pub fn new(
-        path: ResPath<'a>,
-        loader: RefCounted<L>,
-    ) -> Self {
+    /// Create a new resource
+    pub fn new( path: ResPath<'a>, loader: RefCounted<L>,) -> Self {
         Self {
             path,
             loader,
+        }
+    }
+
+    /// Create a new resource with the same loader as `self` but with a different path
+    pub fn with_path(&self, path: ResPath<'a>) -> Self {
+        Self {
+            path,
+            loader: RefCounted::clone(&self.loader),
         }
     }
 

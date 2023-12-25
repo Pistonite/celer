@@ -94,13 +94,15 @@ pub enum PrepError {
 pub type PrepResult<T> = Result<T, PrepError>;
 
 
-
-pub struct PreparedContext {
+#[derive(Debug, Clone)]
+pub struct PreparedContext<L> where L: Loader {
+    pub project_res: Resource<'static, L>,
     pub config: RouteConfig,
     pub meta: CompilerMetadata,
     prep_doc: PrepDoc,
 }
 
+#[derive(Debug, Clone)]
 pub enum PrepDoc {
     Raw(Value),
     Built(RouteBlob),
@@ -161,7 +163,7 @@ impl<L> ContextBuilder<L> where L: Loader {
     }
 
     /// Load the project and parse config and (optionally) route
-    pub async fn build_context(mut self) -> PrepResult<PreparedContext> {
+    pub async fn build_context(mut self) -> PrepResult<PreparedContext<L>> {
         let mut project = self.resolve_entry_point().await?;
         let metadata = self.load_metadata(&mut project)?;
 
@@ -222,6 +224,7 @@ impl<L> ContextBuilder<L> where L: Loader {
         let (config, meta) = config_and_meta?;
 
         Ok(PreparedContext {
+            project_res: self.project_res,
             config,
             meta,
             prep_doc,

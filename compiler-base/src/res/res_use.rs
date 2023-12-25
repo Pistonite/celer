@@ -21,9 +21,9 @@ pub enum Use {
 /// Correctly formed `use` property
 #[derive(Debug, PartialEq, Clone)]
 pub enum ValidUse {
-    /// Loading a resource using relative path
+    /// Loading a resource using relative path. The string must start with `./` or `../`
     Relative(String),
-    /// Loading a resource using absolute path
+    /// Loading a resource using absolute path. The string must start with `/`
     Absolute(String),
     /// Loading a resource using remote path
     Remote {

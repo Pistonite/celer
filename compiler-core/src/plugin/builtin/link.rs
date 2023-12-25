@@ -50,6 +50,10 @@ impl PluginRuntime for LinkPlugin {
 
         Ok(())
     }
+
+    fn get_source(&self) -> &str {
+        "link"
+    }
 }
 
 fn transform_link_tag(rich_text: &mut DocRichTextBlock) {

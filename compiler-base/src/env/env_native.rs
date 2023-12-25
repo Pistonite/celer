@@ -3,10 +3,19 @@
 use std::sync::Arc;
 
 /// Ref counted pointer, wrapper for Arc
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 #[repr(transparent)]
 pub struct RefCounted<T> where T: ?Sized {
-    inner: Arc<T>,
+    pub(crate) inner: Arc<T>,
+}
+
+impl<T> Clone for RefCounted<T> {
+    #[inline]
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+        }
+    }
 }
 
 impl<T> RefCounted<T> {

@@ -2,7 +2,7 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 
-use crate::util::{Path, PathBuf};
+use crate::util::{Path, PathBuf, Component};
 
 /// Path of a resource in the context of a certain project, either local or remote (URL)
 ///
@@ -16,7 +16,7 @@ use crate::util::{Path, PathBuf};
 /// The lifetime parameter `'u` is the lifetime of the URL prefix for remote paths.
 /// It may contain a borrowed URL prefix, since the URL prefix is only modified when switching
 /// between remote repositories.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ResPath<'u> {
     /// Local path, represented as a relative path from the "root"
     /// (i.e. without the leading "/")
@@ -31,34 +31,41 @@ impl<'u> ResPath<'u> {
     ///
     /// # Requirements
     /// Path must be relative.
-    pub fn new_local<P>(path: P) -> Self where P: Into<PathBuf> {
+    pub fn new_local<P>(path: P) -> Option<Self> where P: AsRef<Path> {
+        Self::new_local_unchecked("").join_resolve(path)
+    }
+
+    /// Create a new local resource path without normalizing the path.
+    pub fn new_local_unchecked<P>(path: P) -> Self where P: Into<PathBuf> {
         let path = path.into();
         debug_assert!(path.is_relative());
         Self::Local(path)
     }
+
     /// Create a new remote resource path.
     ///
     /// # Requirements
     /// 1. Path must be relative.
     /// 2. Url must end with a trailing "/".
-    pub fn new_remote<U, P>(url: U, path: P) -> Self 
+    pub fn new_remote<U, P>(url: U, path: P) -> Option<Self>
 where 
         U: Into<Cow<'u, str>>,
-        P: Into<PathBuf>{
-        let path = path.into();
-        let url = url.into();
-        debug_assert!(path.is_relative());
-        debug_assert!(url.ends_with('/'));
-
-        Self::Remote(url, path)
+        P: AsRef<Path>{
+        Self::new_remote_unchecked(url, "").join_resolve(path)
     }
 
-    /// Change the path to a new path, while keep the same url prefix (for remote paths)
-    pub fn change_path<P>(&self, path: P) -> Self where P: Into<PathBuf> {
-        match self {
-            Self::Local(_) => Self::new_local(path),
-            Self::Remote(url, _) => Self::new_remote(url.clone(), path),
-        }
+    /// Create a new remote resource path without normalizing the path.
+    pub fn new_remote_unchecked<U, P>(url: U, path: P) -> Self 
+where 
+        U: Into<Cow<'u, str>>,
+        P: Into<PathBuf>
+    {
+        let url = url.into();
+        debug_assert!(url.ends_with('/'));
+        let path = path.into();
+        debug_assert!(path.is_relative());
+
+        Self::Remote(url, path)
     }
 
     /// Get if the path is local
@@ -78,11 +85,38 @@ where
         }
     }
 
-    /// Join a path to the current path, "." and ".."s are normalized away
+    /// Join a path to the current path, "." and ".."s are normalized away. The path must be
+    /// relative
     ///
-    /// Returns `None` if the path tries to get the parent of root at any point
+    /// Returns `None` if the path tries to get the parent of root at any point,
+    /// or if the final path is the root
     pub fn join_resolve<P>(&self, path: P) -> Option<Self> where P: AsRef<Path> {
-        todo!()
+        let path = path.as_ref();
+        debug_assert!(path.is_relative());
+
+        let mut new_path = self.as_path().to_path_buf();
+        for c in path.components() {
+            match c {
+                Component::ParentDir => {
+                    if !new_path.pop() {
+                        return None;
+                    }
+                }
+                Component::Normal(c) => new_path.push(c),
+                _ => {}
+            }
+        }
+
+        if new_path == Path::new("") {
+            return None;
+        }
+
+        let new_path = match self {
+            Self::Local(_) => Self::new_local_unchecked(new_path),
+            Self::Remote(url, _) => Self::new_remote_unchecked(url.clone(), new_path),
+        };
+
+        Some(new_path)
     }
 }
 
@@ -102,34 +136,61 @@ mod test {
     #[test]
     fn test_new_local() {
         let path = "";
-        let path = ResPath::new_local(&path);
+        let path = ResPath::new_local_unchecked(&path);
         assert_eq!(path.to_string(), "");
-
-        let path = "/";
-        let path = ResPath::new_local(&path);
-        assert_eq!(path.to_string(), "");
-
-        let path = "/test/path";
-        let path = ResPath::new_local(&path);
-        assert_eq!(path.to_string(), "test/path");
 
         let path = "test/path";
-        let path = ResPath::new_local(&path);
+        let path = ResPath::new_local_unchecked(&path);
         assert_eq!(path.to_string(), "test/path");
     }
 
     #[test]
     fn test_new_remote() {
         let path = "";
-        let path = ResPath::new_remote("https://hello/", &path);
+        let path = ResPath::new_remote_unchecked("https://hello/", &path);
         assert_eq!(path.to_string(), "https://hello/");
 
-        let path = "foo";
-        let path = ResPath::new_remote("https://hello", &path);
-        assert_eq!(path.to_string(), "https://hello/foo");
-
-        let path = "/test/path";
-        let path = ResPath::new_remote("https://hello/", &path);
+        let path = "test/path";
+        let path = ResPath::new_remote_unchecked("https://hello/", &path);
         assert_eq!(path.to_string(), "https://hello/test/path");
     }
+
+    #[test]
+    fn test_join_empty() {
+        let path = ResPath::new_local_unchecked("");
+        let path = path.join_resolve("");
+        assert_eq!(path, None);
+
+        let path = ResPath::new_local_unchecked("");
+        let path = path.join_resolve("test/path");
+        assert_eq!(path, Some(ResPath::new_local_unchecked("test/path")));
+
+        let path = ResPath::new_local_unchecked("test/path");
+        let path = path.join_resolve("");
+        assert_eq!(path, Some(ResPath::new_local_unchecked("test/path")));
+    }
+
+    #[test]
+    fn test_join_local() {
+        let path = ResPath::new_local_unchecked("test/path");
+        let path = path.join_resolve("test/path");
+        assert_eq!(path, Some(ResPath::new_local_unchecked("test/path/test/path")));
+
+        let path = ResPath::new_local_unchecked("test/path");
+        let path = path.join_resolve("test/path/../.");
+        assert_eq!(path, Some(ResPath::new_local_unchecked("test/path/test")));
+
+        let path = ResPath::new_local_unchecked("test/path");
+        let path = path.join_resolve("test/path/../..");
+        assert_eq!(path, Some(ResPath::new_local_unchecked("test/path")));
+
+        let path = ResPath::new_local_unchecked("test/path");
+        let path = path.join_resolve("test/../../..");
+        assert_eq!(path, None);
+
+        let path = ResPath::new_local_unchecked("test/path");
+        let path = path.join_resolve("test/path/../../..");
+        assert_eq!(path, Some(ResPath::new_local_unchecked("test")));
+    }
+
 }
