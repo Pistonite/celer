@@ -8,7 +8,7 @@ use crate::prop;
 use crate::prep::{PrepError, PreparedConfig, PrepResult};
 use crate::env::yield_budget;
 
-impl PreparedConfig {
+impl<'a> PreparedConfig<'a> {
     /// Process the `plugins` property
     ///
     /// `use`'s are resolved in the context of `res`

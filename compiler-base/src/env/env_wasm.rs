@@ -51,3 +51,17 @@ pub async fn yield_budget(limit: u32) {
         .await;
     }
 }
+
+#[macro_export]
+macro_rules! join_futures {
+    ($($e:expr),* $(,)?) => {
+        // on wasm, since there is only one thread
+        // we will just run the futures sequentially
+        (
+            $(
+                $e.await,
+            )*
+        )
+    };
+}
+pub use join_futures;

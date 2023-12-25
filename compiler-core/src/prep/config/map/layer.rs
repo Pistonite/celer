@@ -3,7 +3,6 @@
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 
-use crate::res::Loader;
 use crate::macros::derive_wasm;
 use crate::json::{Cast, Coerce};
 use crate::prep::{config, PreparedConfig, PrepResult, PrepError};
@@ -93,7 +92,7 @@ macro_rules! check_layer_required_property {
     };
 }
 
-impl PreparedConfig {
+impl<'a> PreparedConfig<'a> {
     pub fn parse_map_layer(&self, value: Value, layer_index: usize) -> PrepResult<MapLayer> {
         let mut obj = config::check_map!(
             self, 

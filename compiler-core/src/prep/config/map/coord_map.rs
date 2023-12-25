@@ -50,7 +50,7 @@ pub enum Axis {
 }
 
 
-impl PreparedConfig {
+impl<'a> PreparedConfig<'a> {
     /// Parse the `coord-map` property in map configs
     pub fn parse_coord_map(&self, coord_map: Value) -> PrepResult<MapCoordMap> {
         
@@ -155,8 +155,6 @@ mod test {
     use super::*;
 
     use serde_json::json;
-
-    use crate::res::test_utils::StubLoader;
 
     #[test]
     fn test_invalid_value() {

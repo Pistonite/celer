@@ -10,7 +10,7 @@ use crate::prep::{PrepResult, PrepError};
 
 use super::PreparedConfig;
 
-impl PreparedConfig {
+impl<'a> PreparedConfig<'a> {
     /// Load the `presets` property
     pub async fn load_presets(&mut self, value: Value) -> PrepResult<()> {
         self.load_presets_internal("", value, 0).await

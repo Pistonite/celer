@@ -8,7 +8,7 @@ use crate::env::yield_budget;
 use crate::prop;
 use crate::prep::{PreparedConfig, PrepResult, PrepError};
 
-impl PreparedConfig {
+impl<'a> PreparedConfig<'a> {
     /// Process the `icons` property
     ///
     /// `use`'s are resolved in the context of `res`

@@ -48,7 +48,7 @@ macro_rules! check_map_required_property {
 }
 
 
-impl PreparedConfig {
+impl<'a> PreparedConfig<'a> {
     /// Load the map config into `self.map`
     /// 
     /// This does not check for existing map configs, and replaces the existing map config

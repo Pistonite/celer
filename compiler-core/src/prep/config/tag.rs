@@ -12,7 +12,7 @@ use crate::macros::derive_wasm;
 
 use super::{check_map};
 
-impl PreparedConfig {
+impl<'a> PreparedConfig<'a> {
     /// Process the `tags` property
     pub async fn load_tags(
         &mut self,

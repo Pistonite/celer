@@ -24,11 +24,12 @@ use std::collections::BTreeMap;
 use derivative::Derivative;
 use serde_json::{Value, Map};
 
-use crate::json::Coerce;
+use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
 use crate::plugin::PluginInstance;
 use crate::res::{ResError, Loader, Resource, Use, ValidUse};
 use crate::prop;
+use crate::env::join_futures;
 
 mod entry_point;
 pub use entry_point::*;
@@ -118,14 +119,12 @@ pub struct CompilerMetadata {
     pub default_icon_priority: i64,
 }
 
-static DEFAULT_SETTING: Setting = Setting::default();
-
 // prep phase entry points
 #[derive(Debug)]
 pub struct ContextBuilder<L> where L: Loader {
     source: String,
     project_res: Resource<'static, L>,
-    setting: Option<Setting>,
+    setting: Setting,
     entry_point: Option<String>,
     build_route: bool,
 }
@@ -135,7 +134,7 @@ impl<L> ContextBuilder<L> where L: Loader {
         Self {
             source,
             project_res,
-            setting: None,
+            setting: Setting::default(),
             entry_point: None,
             build_route: false,
         }
@@ -143,7 +142,7 @@ impl<L> ContextBuilder<L> where L: Loader {
 
     /// Set setting to something different from default
     pub fn setting(mut self, setting: Setting) -> Self {
-        self.setting = Some(setting);
+        self.setting = setting;
         self
     }
 
@@ -162,8 +161,71 @@ impl<L> ContextBuilder<L> where L: Loader {
     }
 
     /// Load the project and parse config and (optionally) route
-    pub async fn build_context(self) -> PrepResult<PreparedContext> {
-        todo!()
+    pub async fn build_context(mut self) -> PrepResult<PreparedContext> {
+        let mut project = self.resolve_entry_point().await?;
+        let metadata = self.load_metadata(&mut project)?;
+
+        let config = match project.remove(prop::CONFIG) {
+            Some(config) => {
+                config.try_into_array()
+                    .map_err(|_| PrepError::InvalidMetadataPropertyType(prop::CONFIG, "array"))?
+            },
+            None => vec![]
+        };
+
+        let route = project.remove(prop::ROUTE).unwrap_or_default();
+
+        if let Some(k) = project.keys().next() {
+            return Err(PrepError::UnusedMetadataProperty(k.clone()));
+        }
+
+        let route_future = async {
+            if self.build_route {
+                let route = route::build_route(&self.project_res, route, &self.setting).await;
+                PrepDoc::Built(route)
+            } else {
+                PrepDoc::Raw(route)
+            }
+        };
+
+        let config_future = async {
+            let mut prep_config = PreparedConfig::new(&self.setting);
+            prep_config.load_configs(&self.project_res, config).await?;
+            let config = RouteConfig {
+                meta: metadata,
+                map: prep_config.map,
+                icons: prep_config.icons.into(),
+                tags: prep_config.tags.into(),
+                splits: prep_config.splits,
+                stats: Default::default(),
+            };
+            // optimize presets
+            let mut unoptimized_presets = prep_config.presets;
+            let mut optimized_presets = BTreeMap::new();
+            while let Some((name, mut preset)) = unoptimized_presets.pop_first() {
+                preset
+                    .optimize(&mut unoptimized_presets, &mut optimized_presets)
+                .await;
+                optimized_presets.insert(name, preset);
+            }
+
+            let meta = CompilerMetadata {
+                presets: optimized_presets,
+                plugins: prep_config.plugins,
+                default_icon_priority: prep_config.default_icon_priority,
+            };
+
+            PrepResult::Ok((config, meta))
+        };
+
+        let (config_and_meta, prep_doc) = join_futures!(config_future, route_future);
+        let (config, meta) = config_and_meta?;
+
+        Ok(PreparedContext {
+            config,
+            meta,
+            prep_doc,
+        })
     }
 
     /// Load the project, but only parse the metadata, not the entire config or the route
@@ -181,7 +243,7 @@ impl<L> ContextBuilder<L> where L: Loader {
             None => return Ok(Default::default()),
         };
 
-        entry_point::load_entry_points(entry_points_value, self.get_setting()).await
+        entry_point::load_entry_points(entry_points_value, &self.setting).await
     }
 
     /// Load the project and switch the project resource to the entry point resource.
@@ -192,7 +254,7 @@ impl<L> ContextBuilder<L> where L: Loader {
         let mut project_obj = self.load_project().await?;
 
         if let Some(entry_points) = project_obj.remove(prop::ENTRY_POINTS) {
-            let setting = self.get_setting();
+            let setting = &self.setting;
             let entry_points = entry_point::load_entry_points(entry_points, setting).await?;
 
             let path = match &self.entry_point {
@@ -273,14 +335,10 @@ impl<L> ContextBuilder<L> where L: Loader {
         })
 
     }
-
-    fn get_setting(&self) -> &Setting {
-        self.setting.as_ref().unwrap_or(&DEFAULT_SETTING)
-    }
 }
 
 /// Compilation settings
-#[derive(Debug, Derivative)]
+#[derive(Debug, Clone, Derivative)]
 #[derivative(Default)]
 pub struct Setting {
     /// The maximum depth of `use` properties in route

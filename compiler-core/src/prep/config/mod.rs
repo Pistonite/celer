@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
+use derivative::Derivative;
 use serde::{Serialize, Deserialize};
 use serde_json::{Value, Map};
 
@@ -29,8 +30,9 @@ pub use plugin::*;
 mod preset;
 pub use preset::*;
 
-#[derive(Default, Debug)]
-pub struct PreparedConfig {
+#[derive(Derivative, Debug)]
+#[derivative(Default)]
+pub struct PreparedConfig<'a> {
     trace: ConfigTrace,
     pub map: Option<MapMetadata>,
     pub icons: BTreeMap<String, String>,
@@ -38,25 +40,20 @@ pub struct PreparedConfig {
     pub presets: BTreeMap<String, Preset>,
     pub plugins: Vec<PluginInstance>,
     pub splits: Vec<String>,
-    pub default_icon_priority: Option<i64>,
-    pub setting: Setting,
+    #[derivative(Default(value = "2"))]
+    pub default_icon_priority: i64,
+    pub setting: Cow<'a, Setting>,
 }
 
-impl PreparedConfig {
-    pub async fn from_iter<L, TIter>(setting: Setting, resource: &Resource<'_, L>, configs: TIter) -> PrepResult<Self> 
-    where
-        L: Loader,
-        TIter: IntoIterator<Item = Value>,
-    {
-        let mut s = Self {
-            setting,
+impl<'a> PreparedConfig<'a> {
+    pub fn new(setting: &Setting) -> Self {
+        Self {
+            setting: Cow::Borrowed(setting),
             ..Default::default()
-        };
-        s.load_configs(resource, configs).await?;
-        Ok(s)
+        }
     }
 
-    async fn load_configs<L, TIter>(&mut self, res: &Resource<'_, L>, configs: TIter) -> PrepResult<()> 
+    pub async fn load_configs<L, TIter>(&mut self, res: &Resource<'_, L>, configs: TIter) -> PrepResult<()> 
     where
         L: Loader,
         TIter: IntoIterator<Item = Value>,
@@ -142,7 +139,7 @@ impl PreparedConfig {
                             prop::DEFAULT_ICON_PRIORITY.into(),
                         )
                     })?;
-                    self.default_icon_priority = Some(priority);
+                    self.default_icon_priority = priority;
                 }
                 prop::PLUGINS => {
                     self.load_plugins(res, value).await?;
