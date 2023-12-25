@@ -24,21 +24,6 @@ pub enum PackerError {
     #[error("Resource type is invalid: {0} should be of type {1}")]
     InvalidResourceType(String, String),
 
-    #[error("Project metadata is missing a required property: {0}")]
-    MissingMetadataProperty(String),
-
-    #[error("Project property {0} has invalid type")]
-    InvalidMetadataPropertyType(String),
-
-    #[error("Project metadata has extra unused property: {0}")]
-    UnusedMetadataProperty(String),
-
-
-    #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
-    InvalidEntryPoint(String, String),
-
-    #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
-    MaxEntryPointDepthExceeded(String),
 
 
 

@@ -384,12 +384,10 @@ dependencies = [
 name = "compiler-core"
 version = "0.0.0"
 dependencies = [
- "base64",
  "compiler-base",
  "derivative",
  "futures",
  "instant",
- "js-sys",
  "log",
  "map-macro",
  "roman",
@@ -398,10 +396,6 @@ dependencies = [
  "serde_yaml",
  "thiserror",
  "tokio",
- "uni-path",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]

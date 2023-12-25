@@ -21,14 +21,6 @@ use crate::prop;
 //     }};
 // }
 //
-// macro_rules! check_metadata_required_property {
-//     ($property:expr, $obj:ident) => {
-//         match $obj.remove($property) {
-//             Some(v) => Ok(v),
-//             None => Err(PackerError::MissingMetadataProperty($property.to_string())),
-//         }
-//     };
-// }
 //
 // /// Result of packing a project
 // pub struct Phase0 {
@@ -135,30 +127,4 @@ use crate::prop;
 //         meta,
 //         route,
 //     })
-// }
-//
-// /// Load the project object and only read the `entry-points` property
-// pub async fn pack_project_entry_points<L>( project_resource: &Resource<'_, '_, L>) -> PackerResult<EntryPoints> 
-// where L: Loader
-// {
-//     let mut project_obj = load_project_object(project_resource).await?;
-//
-//     let entry_points_value = match project_obj.remove(prop::ENTRY_POINTS) {
-//         Some(v) => v,
-//         None => return Ok(Default::default()),
-//     };
-//
-//     super::pack_entry_points(entry_points_value).await
-// }
-//
-// async fn load_project_object<L>(project_resource: &Resource<'_, '_, L>) -> PackerResult<Map<String, Value>> 
-// where L: Loader
-// {
-//     match project_resource.load_structured().await? {
-//         Value::Object(o) => Ok(o),
-//         _ => Err(PackerError::InvalidResourceType(
-//             project_resource.path().to_string(),
-//             "object".to_string(),
-//         )),
-//     }
 // }

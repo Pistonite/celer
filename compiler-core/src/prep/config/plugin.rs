@@ -72,7 +72,7 @@ impl PreparedConfig {
             Ok(built_in) => Plugin::BuiltIn(built_in),
             Err(_) => {
                 // it's a script path, parse as use
-                match Use::from(use_path_string) {
+                match Use::new(use_path_string) {
                     Use::Invalid(path) => return Err(PrepError::InvalidPlugin(self.trace.clone(), path)),
                     Use::Valid(valid_use) => {
                         // load the script

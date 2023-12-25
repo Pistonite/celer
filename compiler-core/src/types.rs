@@ -12,30 +12,6 @@ use crate::prep::{GameCoord, RouteConfig};
 use crate::util::StringMap;
 use crate::lang::{DocPoorText, DocPoorTextBlock, DocRichTextBlock, DocRichText};
 
-/// Compiler entry points (name, path) pairs
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-pub struct EntryPoints(pub StringMap<String>);
-
-impl EntryPoints {
-    /// Remove the aliases. Only keep the entry points that map directly to a path
-    pub fn path_only(mut self) -> Self {
-        self.0.retain(|_, v| v.starts_with('/'));
-        self
-    }
-}
-
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-pub struct EntryPointsSorted(pub Vec<(String, String)>);
-
-impl From<EntryPoints> for EntryPointsSorted {
-    fn from(entry_points: EntryPoints) -> Self {
-        let mut vec = entry_points.0.into_iter().collect::<Vec<_>>();
-        vec.sort_by(|a, b| a.0.cmp(&b.0));
-        Self(vec)
-    }
-}
 
 /// The executed document
 ///

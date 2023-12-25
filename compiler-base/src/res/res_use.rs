@@ -1,5 +1,6 @@
 //! Implementation of the `use` property
 
+use std::borrow::Cow;
 use std::fmt::Display;
 
 use serde_json::Value;
@@ -63,44 +64,45 @@ impl Display for ValidUse {
     }
 }
 
-impl From<String> for Use {
+impl Use {
     /// Convert a path in the `use` property to a Use object
     ///
     /// If the path is malformed, this returns a [`Use::Invalid`]
-    fn from(v: String) -> Self {
+    pub fn new<'a, S>(v: S) -> Self where S: Into<Cow<'a, str>> {
+        let v = v.into();
         if v.starts_with('/') {
             if v.ends_with('/') {
-                Self::Invalid(v)
+                Self::Invalid(v.into_owned())
             } else {
-                Self::Valid(ValidUse::Absolute(v))
+                Self::Valid(ValidUse::Absolute(v.into_owned()))
             }
         } else if v.starts_with("./") || v.starts_with("../") {
             if v.ends_with('/') {
-                Self::Invalid(v)
+                Self::Invalid(v.into_owned())
             } else {
-                Self::Valid(ValidUse::Relative(v))
+                Self::Valid(ValidUse::Relative(v.into_owned()))
             }
         } else {
             let mut reference_split = v.splitn(2, ':');
             // unwrap is safe because we know there is at least one element
             let path = reference_split.next().unwrap();
             if path.ends_with('/') {
-                return Self::Invalid(v);
+                return Self::Invalid(v.into_owned());
             }
 
             let reference = reference_split.next().filter(|s| !s.is_empty());
             let mut path_split = path.splitn(3, '/');
             let owner = match path_split.next() {
                 Some(owner) => owner,
-                None => return Self::Invalid(v),
+                None => return Self::Invalid(v.into_owned()),
             };
             let repo = match path_split.next() {
                 Some(repo) => repo,
-                None => return Self::Invalid(v),
+                None => return Self::Invalid(v.into_owned()),
             };
             let path = match path_split.next() {
                 Some(path) => path,
-                None => return Self::Invalid(v),
+                None => return Self::Invalid(v.into_owned()),
             };
             Self::Valid(ValidUse::Remote {
                 owner: owner.to_string(),
@@ -110,9 +112,6 @@ impl From<String> for Use {
             })
         }
     }
-}
-
-impl Use {
 
     /// Try converting a json object in the form of `{ "use": "..." }` to a `Use`
     ///
@@ -131,7 +130,7 @@ impl Use {
         if key != prop::USE {
             return None;
         }
-        Some(Self::from(v.coerce_to_string()))
+        Some(Self::new(v.coerce_to_string()))
     }
 }
 

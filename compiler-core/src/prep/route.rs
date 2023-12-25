@@ -5,10 +5,11 @@ use std::collections::BTreeMap;
 use serde_json::{Map, Value};
 
 use crate::res::{Use, ValidUse, Resource, Loader, ResError};
-use crate::Setting;
 use crate::json::Cast;
 use crate::macros::async_recursion;
 use crate::env::yield_budget;
+
+use super::Setting;
 
 /// A route JSON blob representing the state after resolving `use`s,
 /// which could contain errors.

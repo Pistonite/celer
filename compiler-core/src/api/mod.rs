@@ -22,20 +22,6 @@ where L: Loader
     Ok(root_resource.resolve(&project_ref)?)
 }
 
-/// Resolve an absolute path from the resource
-///
-/// Returns Err if the path is not a valid absolute path that can be used with a `use` property
-pub async fn resolve_absolute<'a, L>(resource: &Resource<'a, L>, path: String) -> PackerResult<Resource<'a, L>> 
-where L: Loader
-{
-    match Use::from(path) {
-        Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
-            Ok(resource.resolve(&valid)?)
-        }
-        other => Err(PackerError::InvalidPath(other.to_string())),
-    }
-}
-
 // pub fn make_project_for_error(source: &str) -> RouteMetadata {
 //     RouteMetadata {
 //         title: "[compile error]".to_string(),
@@ -80,28 +66,3 @@ impl<L> CompilerContext<L> where L: Loader {
     }
 }
 
-/// Compiler settings
-#[derive(Debug, Derivative)]
-#[derivative(Default)]
-pub struct Setting {
-    /// The maximum depth of `use` properties in route
-    #[derivative(Default(value = "8"))]
-    pub max_use_depth: usize,
-
-    /// The maximum depth of `use` properties in config
-    #[derivative(Default(value = "16"))]
-    pub max_config_depth: usize,
-
-    /// The maximum depth of object/array levels in the route
-    #[derivative(Default(value = "32"))]
-    pub max_ref_depth: usize,
-
-    /// The maximum depth of preset namespaces in config
-    #[derivative(Default(value = "16"))]
-    pub max_preset_namespace_depth: usize,
-
-    /// The maximum depth of preset references in route
-    #[derivative(Default(value = "8"))]
-    pub max_preset_ref_depth: usize,
-
-}

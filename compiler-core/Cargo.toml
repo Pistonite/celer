@@ -18,15 +18,9 @@ thiserror = "1.0.47"
 tokio = { version = "1.32.0", features = [
     "macros",
 ], optional = true}
-wasm-bindgen = { version = "0.2.87", optional = true }
-wasm-bindgen-futures = { version = "0.4.37", optional = true }
-js-sys = { version = "0.3.64", optional = true }
-web-sys = { version = "0.3.64", optional = true }
 instant = "0.1.12"
 log = "0.4.20"
 roman = "0.1.6"
-uni-path = "1.51.1"
-base64 = "0.21.5"
 
 [dev-dependencies]
 map-macro = "0.2.6"
@@ -36,16 +30,10 @@ default = ["native"]
 native = [
     "celerb/native",
     "dep:tokio", 
-    "celerb/native",
     "tokio/rt-multi-thread",
 ]
 wasm = [
     "celerb/wasm",
-    "dep:wasm-bindgen", 
-    "dep:wasm-bindgen-futures",
-    "dep:js-sys",
-    "dep:web-sys",
-    "web-sys/WorkerGlobalScope",
     "instant/wasm-bindgen",
 ]
 
