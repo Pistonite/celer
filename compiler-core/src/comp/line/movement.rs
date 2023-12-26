@@ -226,10 +226,7 @@ mod test {
     #[test]
     fn test_valid_coord() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
-        let mut ctx = LineContext {
-            compiler: Cow::Borrowed(&compiler),
-            ..Default::default()
-        };
+        let mut ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_movement("", json!([1, 2, 4]));
         assert_eq!(
             ctx.line.movements,
@@ -241,10 +238,7 @@ mod test {
     #[test]
     fn test_object() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
-        let mut ctx = LineContext {
-            compiler: Cow::Borrowed(&compiler),
-            ..Default::default()
-        };
+        let mut ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_movement(
             "",
             json!({
@@ -453,10 +447,7 @@ mod test {
     #[test]
     fn test_unused_property() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
-        let mut ctx = LineContext {
-            compiler: Cow::Borrowed(&compiler),
-            ..Default::default()
-        };
+        let mut ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_movement(
             "test",
             json!({

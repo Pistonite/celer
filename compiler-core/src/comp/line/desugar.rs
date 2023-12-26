@@ -44,19 +44,19 @@ pub fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError> {
     }
 }
 
-/// Desugar properties on a line
-///
-/// Some properties like `coord` are simply short-hand for other properties.
-/// They are converted to their long-hand form here.
-pub fn desugar_properties(properties: &mut BTreeMap<String, Value>) {
-    if let Some(value) = properties.remove(prop::COORD) {
-        properties.insert(prop::MOVEMENTS.to_string(), json!([value]));
-    }
-    if let Some(value) = properties.remove(prop::ICON) {
-        properties.insert(prop::ICON_DOC.to_string(), value.clone());
-        properties.insert(prop::ICON_MAP.to_string(), value);
-    }
-}
+// /// Desugar properties on a line
+// ///
+// /// Some properties like `coord` are simply short-hand for other properties.
+// /// They are converted to their long-hand form here.
+// pub fn desugar_properties(properties: &mut BTreeMap<String, Value>) {
+//     if let Some(value) = properties.remove(prop::COORD) {
+//         properties.insert(prop::MOVEMENTS.to_string(), json!([value]));
+//     }
+//     if let Some(value) = properties.remove(prop::ICON) {
+//         properties.insert(prop::ICON_DOC.to_string(), value.clone());
+//         properties.insert(prop::ICON_MAP.to_string(), value);
+//     }
+// }
 
 #[cfg(test)]
 mod test {
@@ -120,29 +120,4 @@ mod test {
         );
     }
 
-    #[test]
-    fn test_properties_empty() {
-        let mut properties = BTreeMap::new();
-        desugar_properties(&mut properties);
-        assert_eq!(properties, BTreeMap::new());
-    }
-
-    #[test]
-    fn test_properties_coord() {
-        let mut properties = BTreeMap::new();
-        properties.insert("coord".to_string(), json!([1, 2]));
-        desugar_properties(&mut properties);
-        assert!(properties.get("coord").is_none());
-        assert_eq!(properties.get("movements").unwrap(), &json!([[1, 2]]));
-    }
-
-    #[test]
-    fn test_properties_icon() {
-        let mut properties = BTreeMap::new();
-        properties.insert("icon".to_string(), json!([1, 2]));
-        desugar_properties(&mut properties);
-        assert!(properties.get("icon").is_none());
-        assert_eq!(properties.get("icon-doc").unwrap(), &json!([1, 2]));
-        assert_eq!(properties.get("icon-map").unwrap(), &json!([1, 2]));
-    }
 }

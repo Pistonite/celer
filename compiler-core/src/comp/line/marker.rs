@@ -146,10 +146,7 @@ mod test {
     #[test]
     fn test_valid_coord() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
-        let ctx = LineContext {
-            compiler: Cow::Borrowed(&compiler),
-            ..Default::default()
-        };
+        let ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_marker("", json!([1, 2, 4]));
         let marker = CompMarker::at(GameCoord(1.0, 2.0, 4.0));
         assert_eq!(ctx.line.markers, vec![marker]);
@@ -159,28 +156,32 @@ mod test {
     #[test]
     fn test_object() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
-        let mut errors = vec![];
+        let mut ctx = LineContext::with_compiler(&compiler);
+        ctx.test_compile_marker("", json!({"at": [1, 2, 4]}));
         assert_eq!(
-            compiler.comp_marker("", json!({"at": [1, 2, 4]}), &mut errors),
-            Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
+            ctx.line.markers,
+            vec![CompMarker::at(GameCoord(1.0, 2.0, 4.0))]
         );
-        assert_eq!(errors, vec![]);
+        assert_eq!(ctx.errors, vec![]);
+        ctx.line.markers.clear();
+        ctx.errors.clear();
 
+        ctx.test_compile_marker("", json!({"at": [1, 2, 4], "color": 123}));
         assert_eq!(
-            compiler.comp_marker("", json!({"at": [1, 2, 4], "color": 123}), &mut errors),
-            Some(CompMarker {
+            ctx.line.markers,
+            vec![CompMarker {
                 at: GameCoord(1.0, 2.0, 4.0),
                 color: Some("123".to_string())
-            })
+            }]
         );
-        assert_eq!(errors, vec![]);
+        assert_eq!(ctx.errors, vec![]);
+        ctx.line.markers.clear();
+        ctx.errors.clear();
 
+        ctx.test_compile_marker("test", json!({"at": {}, "color": {}}));
+        assert_eq!( ctx.line.markers, vec![]);
         assert_eq!(
-            compiler.comp_marker("test", json!({"at": {}, "color": {}}), &mut errors),
-            None
-        );
-        assert_eq!(
-            errors,
+            ctx.errors,
             vec![
                 CompError::InvalidCoordinateType("[object object]".to_string()),
                 CompError::InvalidLinePropertyType("test.color".to_string()),
@@ -192,20 +193,20 @@ mod test {
     #[test]
     fn test_unused_property() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
-        let mut errors = vec![];
-        assert_eq!(
-            compiler.comp_marker(
-                "test",
-                json!({
-                    "at": [1, 2, 4],
-                    "unused": 1,
-                }),
-                &mut errors
-            ),
-            Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
+        let mut ctx = LineContext::with_compiler(&compiler);
+        ctx.test_compile_marker(
+            "test",
+            json!({
+                "at": [1, 2, 4],
+                "unused": 1,
+            }),
         );
         assert_eq!(
-            errors,
+            ctx.line.markers,
+            vec![CompMarker::at(GameCoord(1.0, 2.0, 4.0))]
+        );
+        assert_eq!(
+            ctx.errors,
             vec![CompError::UnusedProperty("test.unused".to_string())]
         );
     }

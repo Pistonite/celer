@@ -1,7 +1,10 @@
 use serde_json::Value;
 
 /// Loosely interpret a json value as a type
-pub trait Coerce {
+pub trait Coerce: Sized {
+    /// Check if self is null
+    fn is_null(&self) -> bool;
+
     /// Interpret a json value as a string, without recursively expanding array or object
     ///
     /// # Rules
@@ -13,8 +16,26 @@ pub trait Coerce {
     /// `Object` -> `[object object]`
     fn coerce_to_string(&self) -> String;
 
+    /// Like `coerce_to_string`, but avoids copying if the value is a string
+    fn coerce_into_string(self) -> String;
+
     /// Same as `coerce_to_string`, but `null` is `"null"` instead of empty string.
-    fn coerce_to_repl(&self) -> String;
+    fn coerce_to_repl(&self) -> String {
+        if self.is_null() {
+            "null".to_string()
+        } else {
+            self.coerce_to_string()
+        }
+    }
+
+    /// Like `coerce_to_repl`, but avoids copying if the value is a string
+    fn coerce_into_repl(self) -> String {
+        if self.is_null() {
+            "null".to_string()
+        } else {
+            self.coerce_into_string()
+        }
+    }
 
     /// Interpret a json value as a boolean based on if it's truthy
     ///
@@ -38,6 +59,10 @@ pub trait Coerce {
 }
 
 impl Coerce for Value {
+    fn is_null(&self) -> bool {
+        Value::is_null(self)
+    }
+
     fn coerce_to_string(&self) -> String {
         match self {
             Value::Null => "".to_string(),
@@ -55,11 +80,10 @@ impl Coerce for Value {
         }
     }
 
-    fn coerce_to_repl(&self) -> String {
-        if self.is_null() {
-            "null".to_string()
-        } else {
-            self.coerce_to_string()
+    fn coerce_into_string(self) -> String {
+        match self {
+            Value::String(s) => s,
+            _ => self.coerce_to_string(),
         }
     }
 

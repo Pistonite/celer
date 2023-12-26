@@ -7,6 +7,7 @@ use serde_json::Value;
 use crate::json::Coerce;
 use crate::lang;
 use crate::lang::{DocRichText, DocRichTextBlock, PresetInst};
+use crate::pack::Compiler;
 use crate::prop;
 use crate::types::{DocDiagnostic, DocNote};
 use crate::macros::derive_wasm;
@@ -23,10 +24,12 @@ mod marker;
 pub use marker::*;
 mod movement;
 pub use movement::*;
-mod comp_preset;
-pub use comp_preset::*;
 mod desugar;
 use desugar::*;
+mod preset;
+pub use preset::*;
+mod prop_map;
+use prop_map::*;
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm]
@@ -65,9 +68,8 @@ pub struct CompLine {
     pub properties: StringMap<Value>,
 }
 
-#[derive(Debug, Default)]
 pub struct LineContext<'c, 'p> {
-    pub compiler: Cow<'c, Compiler<'p>>,
+    pub compiler: &'c Compiler<'p>,
     pub line: CompLine,
     pub errors: Vec<CompError>,
 }

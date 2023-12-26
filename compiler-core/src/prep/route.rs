@@ -5,228 +5,217 @@ use std::collections::BTreeMap;
 use serde_json::{Map, Value};
 
 use crate::res::{Use, ValidUse, Resource, Loader, ResError};
-use crate::json::{Coerce, Cast};
+use crate::json::{RouteBlob, RouteBlobError, Coerce, Cast};
 use crate::macros::async_recursion;
 use crate::env::yield_budget;
 
 use super::Setting;
 
-/// A route JSON blob representing the state after resolving `use`s,
-/// which could contain errors.
-///
-/// This is used to expose errors to the compiler, so it can be displayed
-/// using the diagnostics API
-#[derive(Debug, Clone, PartialEq)]
-pub enum RouteBlob {
-    /// Primitive value (non-array)
-    Prim(Value),
-    /// Error
-    Err(RouteBlobError),
-    /// Array of route blobs
-    Array(Vec<RouteBlob>),
-    /// Object of route blobs
-    Object(BTreeMap<String, RouteBlob>),
-}
+// /// A route JSON blob representing the state after resolving `use`s,
+// /// which could contain errors.
+// ///
+// /// This is used to expose errors to the compiler, so it can be displayed
+// /// using the diagnostics API
+// #[derive(Debug, Clone, PartialEq)]
+// pub enum RouteBlob {
+//     /// Primitive value (non-array)
+//     Prim(Value),
+//     /// Error
+//     Err(RouteBlobError),
+//     /// Array of route blobs
+//     Array(Vec<RouteBlob>),
+//     /// Object of route blobs
+//     Object(BTreeMap<String, RouteBlob>),
+// }
+//
+// impl From<Value> for RouteBlob {
+//     fn from(x: Value) -> Self {
+//         match x {
+//             Value::Array(x) => Self::Array(x.into_iter().map(Self::from).collect()),
+//             Value::Object(x) => Self::Object(
+//                 x.into_iter()
+//                     .map(|(k, v)| (k, Self::from(v)))
+//                     .collect(),
+//             ),
+//             _ => Self::Prim(x),
+//         }
+//     }
+// }
+//
+// impl RouteBlob {
+//     pub fn res_error(e: ResError) -> Self {
+//         Self::Err(RouteBlobError::ResError(e.to_string()))
+//     }
+//
+//     pub fn is_array(&self) -> bool {
+//         self.as_array().is_some()
+//     }
+//
+//     pub fn as_array(&self) -> Option<&Vec<RouteBlob>> {
+//         match self {
+//             Self::Array(x) => Some(x),
+//             _ => None,
+//         }
+//     }
+//
+//     pub fn is_object(&self) -> bool {
+//         self.as_object().is_some()
+//     }
+//
+//     pub fn as_object(&self) -> Option<&BTreeMap<String, RouteBlob>> {
+//         match self {
+//             Self::Object(x) => Some(x),
+//             _ => None,
+//         }
+//     }
+//
+//     /// Flatten the value. Returns the inner value or the first error
+//     pub fn into_flattened(self) -> Result<Value, RouteBlobError> {
+//         match self {
+//             Self::Prim(x) => Ok(x),
+//             Self::Err(e) => Err(e),
+//             Self::Array(arr) => {
+//                 let mut output = Vec::with_capacity(arr.len());
+//                 for x in arr.into_iter() {
+//                     let x = x.into_flattened()?;
+//                     output.push(x);
+//                 }
+//                 Ok(Value::Array(output))
+//             }
+//             Self::Object(obj) => {
+//                 let mut output = Map::new();
+//                 for (key, value) in obj.into_iter() {
+//                     let value = value.into_flattened()?;
+//                     output.insert(key, value);
+//                 }
+//                 Ok(Value::Object(output))
+//             }
+//         }
+//     }
+//
+//     /// Created a flattened copy of the value. Returns the copy or the first error
+//     pub fn flattened(&self) -> Result<Value, RouteBlobError> {
+//         match self {
+//             Self::Prim(x) => Ok(x.clone()),
+//             Self::Err(e) => Err(e.clone()),
+//             Self::Array(arr) => {
+//                 let mut output = Vec::with_capacity(arr.len());
+//                 for x in arr {
+//                     let x = x.flattened()?;
+//                     output.push(x);
+//                 }
+//                 Ok(Value::Array(output))
+//             }
+//             Self::Object(obj) => {
+//                 let mut output = Map::new();
+//                 for (key, value) in obj {
+//                     let value = value.flattened()?;
+//                     output.insert(key.clone(), value.clone());
+//                 }
+//                 Ok(Value::Object(output))
+//             }
+//         }
+//     }
+//
+//
+// }
+//
+// impl Cast for RouteBlob {
+//     type Object = BTreeMap<String, RouteBlob>;
+//
+//     fn try_into_object(self) -> Result<<Self as Cast>::Object, Self> {
+//         match self {
+//             Self::Object(obj) => Ok(obj),
+//             _ => {
+//                 #[cfg(debug_assertions)]
+//                 {
+//                     if let Self::Prim(x) = &other {
+//                         debug_assert!(!x.is_array() && !x.is_object());
+//                     }
+//                 }
+//                 Err(self)
+//             }
+//         }
+//     }
+//
+//     fn try_into_array(self) -> Result<Vec<Self>, Self> {
+//         match self {
+//             Self::Array(obj) => Ok(obj),
+//             _ => {
+//                 #[cfg(debug_assertions)]
+//                 {
+//                     if let Self::Prim(x) = &other {
+//                         debug_assert!(!x.is_array() && !x.is_object());
+//                     }
+//                 }
+//                 Err(self)
+//             }
+//         }
+//     }
+// }
+//
+// impl Coerce for RouteBlob {
+//     fn coerce_to_string(&self) -> String {
+//         match self {
+//             Self::Prim(x) => x.coerce_to_string(),
+//             Self::Err(e) => "[object error]".to_string(),
+//             Self::Array(_) => "[object array]".to_string(),
+//             Self::Object(_) => "[object object]".to_string(),
+//         }
+//     }
+//
+//     fn coerce_to_repl(&self) -> String {
+//         match self {
+//             Self::Prim(x) if x.is_null() => "null".to_string(),
+//             _ => self.coerce_to_string(),
+//         }
+//     }
+//
+//     fn coerce_truthy(&self) -> bool {
+//         match self {
+//             Self::Prim(x) => x.coerce_truthy(),
+//             Self::Err(_) => false,
+//             Self::Array(_) => true,
+//             Self::Object(_) => true,
+//         }
+//     }
+//
+//     fn try_coerce_to_f64(&self) -> Option<f64> {
+//         match self {
+//             Self::Prim(x) => x.try_coerce_to_f64(),
+//             _ => None,
+//         }
+//     }
+//
+//     fn try_coerce_to_u64(&self) -> Option<u64> {
+//         match self {
+//             Self::Prim(x) => x.try_coerce_to_u64(),
+//             _ => None,
+//         }
+//     }
+//
+//     fn try_coerce_to_u32(&self) -> Option<u32> {
+//         match self {
+//             Self::Prim(x) => x.try_coerce_to_u32(),
+//             _ => None,
+//         }
+//     }
+//
+//     fn try_coerce_to_i64(&self) -> Option<i64> {
+//         match self {
+//             Self::Prim(x) => x.try_coerce_to_i64(),
+//             _ => None,
+//         }
+//     }
+//
+//     fn try_coerce_to_bool(&self) -> Option<bool> {
+//         match self {
+//             Self::Prim(x) => x.try_coerce_to_bool(),
+//             _ => None,
+//         }
+//     }
+// }
 
-impl From<Value> for RouteBlob {
-    fn from(x: Value) -> Self {
-        match x {
-            Value::Array(x) => Self::Array(x.into_iter().map(Self::from).collect()),
-            Value::Object(x) => Self::Object(
-                x.into_iter()
-                    .map(|(k, v)| (k, Self::from(v)))
-                    .collect(),
-            ),
-            _ => Self::Prim(x),
-        }
-    }
-}
-
-impl RouteBlob {
-    pub fn res_error(e: ResError) -> Self {
-        Self::Err(RouteBlobError::ResError(e.to_string()))
-    }
-
-    pub fn is_array(&self) -> bool {
-        self.as_array().is_some()
-    }
-
-    pub fn as_array(&self) -> Option<&Vec<RouteBlob>> {
-        match self {
-            Self::Array(x) => Some(x),
-            _ => None,
-        }
-    }
-
-    pub fn is_object(&self) -> bool {
-        self.as_object().is_some()
-    }
-
-    pub fn as_object(&self) -> Option<&BTreeMap<String, RouteBlob>> {
-        match self {
-            Self::Object(x) => Some(x),
-            _ => None,
-        }
-    }
-
-    /// Flatten the value. Returns the inner value or the first error
-    pub fn into_flattened(self) -> Result<Value, RouteBlobError> {
-        match self {
-            Self::Prim(x) => Ok(x),
-            Self::Err(e) => Err(e),
-            Self::Array(arr) => {
-                let mut output = Vec::with_capacity(arr.len());
-                for x in arr.into_iter() {
-                    let x = x.into_flattened()?;
-                    output.push(x);
-                }
-                Ok(Value::Array(output))
-            }
-            Self::Object(obj) => {
-                let mut output = Map::new();
-                for (key, value) in obj.into_iter() {
-                    let value = value.into_flattened()?;
-                    output.insert(key, value);
-                }
-                Ok(Value::Object(output))
-            }
-        }
-    }
-
-    /// Created a flattened copy of the value. Returns the copy or the first error
-    pub fn flattened(&self) -> Result<Value, RouteBlobError> {
-        match self {
-            Self::Prim(x) => Ok(x.clone()),
-            Self::Err(e) => Err(e.clone()),
-            Self::Array(arr) => {
-                let mut output = Vec::with_capacity(arr.len());
-                for x in arr {
-                    let x = x.flattened()?;
-                    output.push(x);
-                }
-                Ok(Value::Array(output))
-            }
-            Self::Object(obj) => {
-                let mut output = Map::new();
-                for (key, value) in obj {
-                    let value = value.flattened()?;
-                    output.insert(key.clone(), value.clone());
-                }
-                Ok(Value::Object(output))
-            }
-        }
-    }
-
-
-}
-
-impl Cast for RouteBlob {
-    type Object = BTreeMap<String, RouteBlob>;
-
-    fn try_into_object(self) -> Result<<Self as Cast>::Object, Self> {
-        match self {
-            Self::Object(obj) => Ok(obj),
-            other => {
-                #[cfg(debug_assertions)]
-                {
-                    if let Self::Prim(x) = &other {
-                        debug_assert!(!x.is_array() && !x.is_object());
-                    }
-                }
-                Err(other)
-            }
-        }
-    }
-
-    fn try_into_array(self) -> Result<Vec<Self>, Self> {
-        match self {
-            Self::Array(obj) => Ok(obj),
-            other => {
-                #[cfg(debug_assertions)]
-                {
-                    if let Self::Prim(x) = &other {
-                        debug_assert!(!x.is_array() && !x.is_object());
-                    }
-                }
-                Err(other)
-            }
-        }
-    }
-}
-
-impl Coerce for RouteBlob {
-    fn coerce_to_string(&self) -> String {
-        match self {
-            Self::Prim(x) => x.coerce_to_string(),
-            Self::Err(e) => "[object error]".to_string(),
-            Self::Array(_) => "[object array]".to_string(),
-            Self::Object(_) => "[object object]".to_string(),
-        }
-    }
-
-    fn coerce_to_repl(&self) -> String {
-        match self {
-            Self::Prim(x) if x.is_null() => "null".to_string(),
-            _ => self.coerce_to_string(),
-        }
-    }
-
-    fn coerce_truthy(&self) -> bool {
-        match self {
-            Self::Prim(x) => x.coerce_truthy(),
-            Self::Err(_) => false,
-            Self::Array(_) => true,
-            Self::Object(_) => true,
-        }
-    }
-
-    fn try_coerce_to_f64(&self) -> Option<f64> {
-        match self {
-            Self::Prim(x) => x.try_coerce_to_f64(),
-            _ => None,
-        }
-    }
-
-    fn try_coerce_to_u64(&self) -> Option<u64> {
-        match self {
-            Self::Prim(x) => x.try_coerce_to_u64(),
-            _ => None,
-        }
-    }
-
-    fn try_coerce_to_u32(&self) -> Option<u32> {
-        match self {
-            Self::Prim(x) => x.try_coerce_to_u32(),
-            _ => None,
-        }
-    }
-
-    fn try_coerce_to_i64(&self) -> Option<i64> {
-        match self {
-            Self::Prim(x) => x.try_coerce_to_i64(),
-            _ => None,
-        }
-    }
-
-    fn try_coerce_to_bool(&self) -> Option<bool> {
-        match self {
-            Self::Prim(x) => x.try_coerce_to_bool(),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, thiserror::Error)]
-pub enum RouteBlobError {
-    #[error("Failed to load resource: {0}")]
-    ResError(String),
-
-    #[error("Max depth of {0} levels of `use` is reached. Please make sure there are no circular dependencies.")]
-    MaxUseDepthExceeded(usize),
-
-    #[error("Max reference depth of {0} levels is reached. There might be a formatting error in your project files.")]
-    MaxRefDepthExceeded(usize),
-}
 
 /// Resolve `use`s inside the route json blob
 ///
@@ -286,7 +275,7 @@ where
         }
         Some(Use::Invalid(path)) => {
             // is `use` but path is invalid
-            RouteBlob::res_error(ResError::InvalidUse(path))
+            ResError::InvalidUse(path).into()
         }
         None => {
             // array case is covered above, so just object or primitive
@@ -351,7 +340,7 @@ where
             }
             Some(Use::Invalid(path)) => {
                 // is `use` but path is invalid
-                output.push(RouteBlob::res_error(ResError::InvalidUse(path)));
+                output.push(ResError::InvalidUse(path).into());
             }
             None => {
                 // not a use
@@ -385,12 +374,12 @@ where
     // Resolve the resource
     let inner_resource = match resource.resolve(&use_prop) {
         Ok(r) => r,
-        Err(e) => return RouteBlob::res_error(e),
+        Err(e) => return e.into()
     };
     // Load the resource
     let data = match inner_resource.load_structured().await {
         Ok(r) => r,
-        Err(e) => return RouteBlob::res_error(e),
+        Err(e) => return e.into()
     };
 
     build_route_internal(

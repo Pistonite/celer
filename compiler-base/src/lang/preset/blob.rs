@@ -1,6 +1,7 @@
 use serde_json::Value;
 
 use crate::lang::TempStr;
+use crate::json::IntoSafeRouteBlob;
 
 use super::{Preset, PresetBlob};
 
@@ -27,7 +28,7 @@ impl PresetBlob {
     pub fn compile(mut value: Value) -> Self {
         match Self::compile_internal(&mut value) {
             Some(blob) => blob,
-            None => Self::NonTemplate(value),
+            None => Self::NonTemplate(value.into_unchecked()),
         }
     }
     /// Recursive compile helper
@@ -63,7 +64,7 @@ impl PresetBlob {
                                 if let Some(sub) = sub {
                                     sub
                                 } else {
-                                    Self::NonTemplate(value.take())
+                                    Self::NonTemplate(value.take().into_unchecked())
                                 }
                             })
                             .collect(),
@@ -90,7 +91,7 @@ impl PresetBlob {
                             if let Some(sub) = sub {
                                 (key, sub)
                             } else {
-                                (key, Self::NonTemplate(value.take()))
+                                (key, Self::NonTemplate(value.take().into_unchecked()))
                             }
                         })
                         .collect();
@@ -136,7 +137,7 @@ mod test {
             "b": "foo$(1)",
         });
         let expected = Some(Preset(vec![
-            (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
+            (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo").into_unchecked())),
             (
                 TempStr::from("b"),
                 PresetBlob::Template(TempStr::from("foo$(1)")),
@@ -181,9 +182,9 @@ mod test {
                     "a": "foo",
                     "b": "foo",
                     "c": ["bar"]
-                }])),
+                }]).into_unchecked()),
             ),
-            (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
+            (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo").into_unchecked())),
             (
                 TempStr::from("b"),
                 PresetBlob::Template(TempStr::from("foo$(1)")),
@@ -191,7 +192,7 @@ mod test {
             (
                 TempStr::from("c"),
                 PresetBlob::Object(vec![
-                    (TempStr::from("d"), PresetBlob::NonTemplate(json!("foo"))),
+                    (TempStr::from("d"), PresetBlob::NonTemplate(json!("foo").into_unchecked())),
                     (
                         TempStr::from("e"),
                         PresetBlob::Template(TempStr::from("foo$(1)")),
@@ -203,24 +204,24 @@ mod test {
                 PresetBlob::NonTemplate(json!({
                     "a": "foo",
                     "b": "foo",
-                })),
+                }).into_unchecked()),
             ),
             (
                 TempStr::from("e"),
-                PresetBlob::NonTemplate(json!(["foo", "foo"])),
+                PresetBlob::NonTemplate(json!(["foo", "foo"]).into_unchecked()),
             ),
             (
                 TempStr::from("f"),
                 PresetBlob::Array(vec![
-                    PresetBlob::NonTemplate(json!("foo")),
-                    PresetBlob::NonTemplate(json!("foo")),
+                    PresetBlob::NonTemplate(json!("foo").into_unchecked()),
+                    PresetBlob::NonTemplate(json!("foo").into_unchecked()),
                     PresetBlob::Object(vec![
-                        (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo"))),
+                        (TempStr::from("a"), PresetBlob::NonTemplate(json!("foo").into_unchecked())),
                         (
                             TempStr::from("b"),
                             PresetBlob::Template(TempStr::from("foo$(1)")),
                         ),
-                        (TempStr::from("c"), PresetBlob::NonTemplate(json!(["bar"]))),
+                        (TempStr::from("c"), PresetBlob::NonTemplate(json!(["bar"]).into_unchecked())),
                     ]),
                 ]),
             ),
@@ -229,9 +230,9 @@ mod test {
                 PresetBlob::Object(vec![
                     (
                         TempStr::from("$(12)"),
-                        PresetBlob::NonTemplate(json!(["bar"])),
+                        PresetBlob::NonTemplate(json!(["bar"]).into_unchecked()),
                     ),
-                    (TempStr::from("b"), PresetBlob::NonTemplate(json!("foo"))),
+                    (TempStr::from("b"), PresetBlob::NonTemplate(json!("foo").into_unchecked())),
                 ]),
             ),
         ]));

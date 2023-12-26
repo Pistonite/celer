@@ -2,51 +2,70 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 
+use crate::json::{SafeRouteBlob, IntoSafeRouteBlob};
+
 use super::{Preset, PresetBlob};
+
+pub struct PresetHydrate<'a, 'b> {
+    preset: &'a PresetBlob,
+    args: &'b [String],
+}
+
+impl<'a, 'b> IntoSafeRouteBlob for PresetHydrate<'a, 'b> {
+    fn into_unchecked<'c>(self) -> SafeRouteBlob<'c> where Self: 'c {
+        match self.preset {
+            PresetBlob::NonTemplate(value) => value.ref_into_unchecked(),
+            PresetBlob::Template(tempstr) => {
+                let str = tempstr.hydrate(self.args);
+                Value::String(str).into_unchecked()
+            }
+            PresetBlob::Array(arr) => {
+                let mut out = vec![];
+                for x in arr {
+                    out.push(x.hydrate(self.args).into_unchecked());
+                }
+                SafeRouteBlob::OwnedArray(out)
+            }
+            PresetBlob::Object(props) => {
+                let mut out = BTreeMap::new();
+                for (key_template, val) in props {
+                    let key = key_template.hydrate(self.args);
+                    let val = val.hydrate(self.args);
+                    out.insert(key, val.into_unchecked());
+                }
+                SafeRouteBlob::OwnedObject(out)
+            }
+        }
+    }
+    fn ref_into_unchecked(&self) -> SafeRouteBlob<'_> {
+        Self {
+            preset: self.preset,
+            args: self.args,
+        }.into_unchecked()
+    }
+}
 
 impl Preset {
     /// Hydrate a preset with the given arguments
     ///
     /// Return a new json blob with all template strings hydrated with the arguments
-    pub fn hydrate<S>(&self, args: &[S]) -> BTreeMap<String, Value>
+    pub fn hydrate<'a, 'b, F>(&'a self, args: &'b [String], mut insert: F) 
     where
-        S: AsRef<str> + Sync,
+        F: FnMut(String, PresetHydrate<'a, 'b>),
     {
-        let mut out = BTreeMap::new();
         for (key, value) in self.0.iter() {
-            out.insert(key.hydrate(args), value.hydrate(args));
+            insert(key.hydrate(args), value.hydrate(args));
         }
-        out
     }
 }
 
 impl PresetBlob {
     /// Hydrate a preset blob with the given arguments
-    pub fn hydrate<S>(&self, args: &[S]) -> Value
-    where
-        S: AsRef<str> + Sync,
+    pub fn hydrate<'a, 'b>(&'a self, args: &'b [String]) -> PresetHydrate<'a, 'b>
     {
-        match self {
-            Self::NonTemplate(value) => value.clone(),
-            Self::Template(tempstr) => {
-                let str = tempstr.hydrate(args);
-                Value::String(str)
-            }
-            Self::Array(arr) => {
-                let mut out = vec![];
-                for x in arr {
-                    out.push(x.hydrate(args));
-                }
-                Value::Array(out)
-            }
-            Self::Object(props) => {
-                let mut out = json!({});
-                for (key_template, val) in props {
-                    let key = key_template.hydrate(args);
-                    out[key] = val.hydrate(args);
-                }
-                out
-            }
+        PresetHydrate {
+            preset: self,
+            args,
         }
     }
 }
@@ -59,11 +78,22 @@ mod test {
 
     const ARGS: &[&str] = &["hello", "world", "temp"];
 
+    impl Preset {
+        fn test_hydrate(&self, args: &[&str]) -> BTreeMap<String, Value> {
+            let args = args.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+            let mut map = BTreeMap::new();
+            self.hydrate(&args, |k, v| {
+                map.insert(k, v.into_unchecked().into());
+            });
+            map
+        }
+    }
+
     #[test]
     fn test_emptyobj() {
         let preset = Preset::compile(json!({})).unwrap();
 
-        assert_eq!(preset.hydrate(ARGS), btree_map! {});
+        assert_eq!(preset.test_hydrate(ARGS), btree_map! {});
     }
 
     #[test]
@@ -76,7 +106,7 @@ mod test {
         .unwrap();
 
         assert_eq!(
-            preset.hydrate(ARGS),
+            preset.test_hydrate(ARGS),
             btree_map! {
                 "a".to_string() => json!("fooworld"),
                 "b".to_string() => json!("world"),
@@ -98,7 +128,7 @@ mod test {
         .unwrap();
 
         assert_eq!(
-            preset.hydrate(ARGS),
+            preset.test_hydrate(ARGS),
             btree_map! {
                 "a".to_string() => json!("fooworld"),
                 "b".to_string() => json!(["worldtemp", {

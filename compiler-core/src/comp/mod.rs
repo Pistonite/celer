@@ -16,7 +16,7 @@ use crate::types::{DocDiagnostic};
 use crate::env;
 
 mod line;
-pub use line::*;
+use line::*;
 
 mod comp_doc;
 pub use comp_doc::*;
@@ -201,10 +201,11 @@ impl CompError {
 
 /// Convenience macro for validating a json value and add error
 macro_rules! validate_not_array_or_object {
-    ($value:expr, $errors:ident, $property:expr) => {{
+    ($value:expr, $errors:expr, $property:expr) => {{
         let v = $value;
         if v.is_array() || v.is_object() {
-            $errors.push(CompError::InvalidLinePropertyType($property));
+            let e = $errors;
+            e.push(CompError::InvalidLinePropertyType($property));
             false
         } else {
             true

@@ -1,25 +1,26 @@
 //! Preset parsing, hydration and pre-compile optimization
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+
+use crate::json::SafeRouteBlob;
 
 use super::TempStr;
 
 mod blob;
 mod grammar;
 mod hydrate;
+pub use hydrate::*;
 mod optimize;
 mod parse;
 
 /// A preset is an arbitrary json object blob that can contain template strings
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Preset(Vec<(TempStr, PresetBlob)>);
 
-#[derive(PartialEq, Debug, Serialize, Deserialize, Clone)]
-#[serde(tag = "type")]
+#[derive(PartialEq, Debug, Clone)]
 pub enum PresetBlob {
     /// A sub-blob that does not contain any template strings
-    NonTemplate(Value),
+    NonTemplate(SafeRouteBlob<'static>),
     /// A template string value
     Template(TempStr),
     /// Array value

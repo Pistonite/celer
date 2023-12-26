@@ -1,46 +1,42 @@
-use std::collections::BTreeMap;
-
-use serde_json::Value;
-
-use crate::json::{Cast, Coerce};
-use crate::lang::PresetInst;
+use crate::json::{Cast, Coerce, SafeRouteBlob, IntoSafeRouteBlob};
+use crate::lang::{PresetInst, PresetHydrate};
 use crate::prop;
 
-use super::{validate_not_array_or_object, CompError, Compiler};
+use super::{validate_not_array_or_object, LinePropMap, CompError, Compiler, LineContext};
 
-impl<'a> Compiler<'a> {
+impl<'c, 'p> LineContext<'c, 'p> {
     /// Apply the preset to the output.
     ///
     /// Presets are applied recursively, including presets in the movements
-    pub fn apply_preset(
-        &self,
+    pub fn apply_preset<'a, 'b>(
+        &'a mut self,
         depth: usize,
-        inst: &PresetInst,
-        output: &mut BTreeMap<String, Value>,
-        errors: &mut Vec<CompError>,
+        inst: &'b PresetInst,
+        output: &mut LinePropMap<'a, PresetHydrate<'a, 'b>>,
     ) {
-        if depth > self.max_preset_depth {
-            errors.push(CompError::MaxPresetDepthExceeded(inst.name.to_string()));
+        if depth > self.compiler.setting.max_preset_ref_depth {
+            self.errors.push(CompError::MaxPresetDepthExceeded(inst.name.to_string()));
             return;
         }
-        let preset = match self.meta.presets.get(&inst.name) {
+        let preset = match self.compiler.meta.presets.get(&inst.name) {
             None => {
-                errors.push(CompError::PresetNotFound(inst.name.to_string()));
+                self.errors.push(CompError::PresetNotFound(inst.name.to_string()));
                 return;
             }
             Some(preset) => preset,
         };
-        let mut properties = preset.hydrate(&inst.args);
+        let mut properties = LinePropMap::new();
+        preset.hydrate(&inst.args, |k, v| {
+            properties.insert(k, v);
+        });
         if let Some(presets) = properties.remove(prop::PRESETS) {
-            self.process_presets(depth, presets, output, errors);
+            self.process_presets(depth, presets, output);
         }
 
-        super::desugar_properties(&mut properties);
-
         if let Some(movements) = properties.remove(prop::MOVEMENTS) {
-            properties.insert(
+            properties.insert_value(
                 prop::MOVEMENTS.to_string(),
-                self.expand_presets_in_movements(depth, movements, errors),
+                self.expand_presets_in_movements(depth, movements),
             );
         }
 
@@ -50,54 +46,68 @@ impl<'a> Compiler<'a> {
     /// Process the "presets" property in the line object
     ///
     /// Saves the properties from the preset to the output map
-    pub fn process_presets(
-        &self,
+    pub fn process_presets<'a>(
+        &'a mut self,
         depth: usize,
-        presets: Value,
-        output: &mut BTreeMap<String, Value>,
-        errors: &mut Vec<CompError>,
+        presets: SafeRouteBlob<'_>,
+        output: &mut LinePropMap<'a, PresetHydrate<'a, '_>>,
     ) {
-        let preset_arr = match presets {
-            Value::Array(arr) => arr,
-            _ => vec![presets],
-        };
-        for (i, preset_value) in preset_arr.into_iter().enumerate() {
+        match presets.try_into_array() {
+            Ok(arr) => {
+                for (i, preset) in arr.into_iter().enumerate() {
+                    self.process_one_preset(Some(i), depth, preset, output);
+                }
+            }
+            Err(preset) => {
+                self.process_one_preset(None, depth, preset, output);
+            }
+        }
+    }
+
+    fn process_one_preset<'a>(
+        &'a mut self,
+        index: Option<usize>,
+        depth: usize,
+        preset: SafeRouteBlob<'_>,
+        output: &mut LinePropMap<'a, PresetHydrate<'a, '_>>,
+    ) {
             if !validate_not_array_or_object!(
-                &preset_value,
-                errors,
-                format!("{p}[{i}]", p = prop::PRESETS)
+                preset,
+                self.errors,
+                match index {
+                    Some(i) => format!("{p}[{i}]", p = prop::PRESETS, i = i),
+                    None => prop::PRESETS.to_string(),
+                }
             ) {
-                continue;
+                return;
             }
 
-            let preset_string = preset_value.coerce_to_string();
+            let preset_string = preset.coerce_into_string();
             if !preset_string.starts_with('_') {
-                errors.push(CompError::InvalidPresetString(preset_string));
-                continue;
+                self.errors.push(CompError::InvalidPresetString(preset_string));
+                return;
             }
 
             let preset_inst = PresetInst::try_parse(&preset_string);
             match preset_inst {
                 None => {
-                    errors.push(CompError::InvalidPresetString(preset_string));
+                    self.errors.push(CompError::InvalidPresetString(preset_string));
                 }
                 Some(inst) => {
-                    self.apply_preset(depth + 1, &inst, output, errors);
+                    self.apply_preset(depth + 1, &inst, output);
                 }
             }
-        }
     }
 
     /// Expand presets in the movements array
     pub fn expand_presets_in_movements(
-        &self,
+        &mut self,
         depth: usize,
-        movements: Value,
-        errors: &mut Vec<CompError>,
-    ) -> Value {
-        let array = match movements {
-            Value::Array(array) => array,
-            _ => return movements,
+        movements: SafeRouteBlob<'_>,
+    ) -> SafeRouteBlob<'_> {
+        let array = match movements.try_into_array() {
+            Ok(array) => array,
+            Err(movements) => return movements,
         };
 
         let mut new_array = vec![];
@@ -111,13 +121,13 @@ impl<'a> Compiler<'a> {
             };
             let preset_inst = match PresetInst::try_parse(preset_str) {
                 None => {
-                    errors.push(CompError::InvalidPresetString(preset_str.to_string()));
+                    self.errors.push(CompError::InvalidPresetString(preset_str.to_string()));
                     continue;
                 }
                 Some(inst) => inst,
             };
-            let mut map = BTreeMap::new();
-            self.apply_preset(depth + 1, &preset_inst, &mut map, errors);
+            let mut map = LinePropMap::new();
+            self.apply_preset(depth + 1, &preset_inst, &mut map);
 
             match map
                 .remove(prop::MOVEMENTS)
@@ -127,22 +137,31 @@ impl<'a> Compiler<'a> {
                     new_array.extend(movements);
                 }
                 _ => {
-                    errors.push(CompError::InvalidMovementPreset(preset_str.to_string()));
+                    self.errors.push(CompError::InvalidMovementPreset(preset_str.to_string()));
                 }
             }
         }
-        Value::Array(new_array)
+        SafeRouteBlob::OwnedArray(new_array)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use serde_json::json;
+    use std::collections::BTreeMap;
+
+    use serde_json::{json, Value};
 
     use crate::comp::test_utils::CompilerBuilder;
     use crate::lang::Preset;
 
     use super::*;
+
+    fn evaluate(output: LinePropMap<PresetHydrate<'_, '_>>) -> BTreeMap<String, Value> {
+        output.evaluate()
+            .into_iter()
+            .map(|(k, v)| (k, v.into()))
+            .collect()
+    }
 
     #[test]
     fn test_one_level() {
@@ -165,21 +184,20 @@ mod test {
                 .unwrap(),
             );
         let compiler = builder.build();
-        let mut output = BTreeMap::new();
-        let mut errors = Vec::new();
+        let mut ctx = LineContext::with_compiler(&compiler);
+        let mut output = LinePropMap::new();
 
-        compiler.apply_preset(
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
         assert_eq!(
-            output,
+            evaluate(output),
             [
                 ("text".to_string(), json!("hello world")),
                 ("comment".to_string(), json!("foo bar")),
@@ -187,22 +205,21 @@ mod test {
             .into_iter()
             .collect()
         );
-        assert_eq!(errors, vec![]);
+        assert_eq!(ctx.errors, vec![]);
 
-        output.clear();
+        let mut output = LinePropMap::new();
 
-        compiler.apply_preset(
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset2".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
         assert_eq!(
-            output,
+            evaluate(output),
             [
                 ("text".to_string(), json!("_preset")),
                 ("comment".to_string(), json!("foo bar")),
@@ -224,22 +241,21 @@ mod test {
             .unwrap(),
         );
         let compiler = builder.build();
-        let mut output = BTreeMap::new();
-        let mut errors = Vec::new();
+        let mut ctx = LineContext::with_compiler(&compiler);
+        let mut output = LinePropMap::new();
 
-        compiler.apply_preset(
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset2".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
-        assert_eq!(output, BTreeMap::new());
+        assert_eq!(evaluate(output), BTreeMap::new());
         assert_eq!(
-            errors,
+            ctx.errors,
             vec![CompError::PresetNotFound("_preset2".to_string())]
         );
     }
@@ -280,22 +296,21 @@ mod test {
                 .unwrap(),
             );
         let compiler = builder.build();
+        let mut ctx = LineContext::with_compiler(&compiler);
 
-        let mut output = BTreeMap::new();
-        let mut errors = Vec::new();
+        let mut output = LinePropMap::new();
 
-        compiler.apply_preset(
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset::three".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
         assert_eq!(
-            output,
+            evaluate(output),
             [
                 ("text".to_string(), json!("preset three")),
                 ("comment".to_string(), json!("preset two")),
@@ -303,20 +318,19 @@ mod test {
             .into_iter()
             .collect()
         );
-        assert_eq!(errors, vec![]);
+        assert_eq!(ctx.errors, vec![]);
 
-        output.clear();
-        compiler.apply_preset(
+        let mut output = LinePropMap::new();
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset::three".to_string(),
                 args: vec!["1".to_string()],
             },
             &mut output,
-            &mut errors,
         );
         assert_eq!(
-            output,
+            evaluate(output),
             [
                 ("text".to_string(), json!("preset three")),
                 ("comment".to_string(), json!("preset two")),
@@ -324,20 +338,19 @@ mod test {
             .into_iter()
             .collect()
         );
-        assert_eq!(errors, vec![]);
+        assert_eq!(ctx.errors, vec![]);
 
-        output.clear();
-        compiler.apply_preset(
+        let mut output = LinePropMap::new();
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset::four".to_string(),
                 args: vec![" abcde ".to_string()],
             },
             &mut output,
-            &mut errors,
         );
         assert_eq!(
-            output,
+            evaluate(output),
             [
                 ("text".to_string(), json!("preset four: arg is  abcde ")),
                 ("comment".to_string(), json!("preset two")),
@@ -345,7 +358,7 @@ mod test {
             .into_iter()
             .collect()
         );
-        assert_eq!(errors, vec![]);
+        assert_eq!(ctx.errors, vec![]);
     }
 
     #[test]
@@ -374,39 +387,37 @@ mod test {
                 .unwrap(),
             );
         let compiler = builder.build();
+        let mut ctx = LineContext::with_compiler(&compiler);
 
-        let mut output = BTreeMap::new();
-        let mut errors = Vec::new();
+        let mut output = LinePropMap::new();
 
-        compiler.apply_preset(
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset::one".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
-        assert_eq!(output, BTreeMap::new());
+        assert_eq!(evaluate(output), BTreeMap::new());
         assert_eq!(
-            errors,
+            ctx.errors,
             vec![CompError::InvalidPresetString("preset one".to_string())]
         );
+        ctx.errors.clear();
 
-        errors.clear();
-
-        compiler.apply_preset(
+        let mut output = LinePropMap::new();
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset::two".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
-        assert_eq!(output, BTreeMap::new());
+        assert_eq!(evaluate(output), BTreeMap::new());
         assert_eq!(
-            errors,
+            ctx.errors,
             vec![
                 CompError::InvalidLinePropertyType("presets[0]".to_string()),
                 CompError::InvalidPresetString("foo".to_string()),
@@ -416,20 +427,20 @@ mod test {
             ]
         );
 
-        errors.clear();
+        ctx.errors.clear();
 
-        compiler.apply_preset(
+        let mut output = LinePropMap::new();
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset::three".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
-        assert_eq!(output, BTreeMap::new());
+        assert_eq!(evaluate(output), BTreeMap::new());
         assert_eq!(
-            errors,
+            ctx.errors,
             vec![CompError::MaxPresetDepthExceeded(
                 "_preset::three".to_string()
             ),]
@@ -466,42 +477,39 @@ mod test {
                 .unwrap(),
             );
         let compiler = builder.build();
+        let mut ctx = LineContext::with_compiler(&compiler);
 
-        let mut output = BTreeMap::new();
-        let mut errors = Vec::new();
+        let mut output = LinePropMap::new();
 
-        compiler.apply_preset(
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset::one".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
         assert_eq!(
-            output,
+            evaluate(output),
             [("movements".to_string(), json!(["push", [1, 2, 3], "pop",])),]
                 .into_iter()
                 .collect()
         );
-        assert_eq!(errors, vec![]);
+        assert_eq!(ctx.errors, vec![]);
 
-        output.clear();
-
-        compiler.apply_preset(
+        let mut output = LinePropMap::new();
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_preset::two".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
         assert_eq!(
-            output,
+            evaluate(output),
             [("movements".to_string(), json!([[1, 2, 3]])),]
                 .into_iter()
                 .collect()
@@ -551,47 +559,44 @@ mod test {
                 .unwrap(),
             );
         let compiler = builder.build();
+        let mut ctx = LineContext::with_compiler(&compiler);
 
-        let mut output = BTreeMap::new();
-        let mut errors = Vec::new();
+        let mut output = LinePropMap::new();
 
-        compiler.apply_preset(
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_invalid::one".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
         assert_eq!(
-            output,
+            evaluate(output),
             [("movements".to_string(), json!(1)),].into_iter().collect()
         );
-        assert_eq!(errors, vec![]);
+        assert_eq!(ctx.errors, vec![]);
 
-        output.clear();
-
-        compiler.apply_preset(
+        let mut output = LinePropMap::new();
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_invalid::two".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
         assert_eq!(
-            output,
+            evaluate(output),
             [("movements".to_string(), json!(["push", [0, 0, 0]]))]
                 .into_iter()
                 .collect()
         );
 
         assert_eq!(
-            errors,
+            ctx.errors,
             vec![
                 CompError::PresetNotFound("_invalid".to_string()),
                 CompError::InvalidMovementPreset("_invalid".to_string()),
@@ -600,24 +605,22 @@ mod test {
                 CompError::InvalidMovementPreset("_invalid::one".to_string()),
             ]
         );
+        ctx.errors.clear();
 
-        output.clear();
-        errors.clear();
-
-        compiler.apply_preset(
+        let mut output = LinePropMap::new();
+        ctx.apply_preset(
             0,
             &PresetInst {
                 name: "_invalid::overflow".to_string(),
                 args: vec![],
             },
             &mut output,
-            &mut errors,
         );
 
         // we don't care what the output is here
 
         assert_eq!(
-            errors,
+            ctx.errors,
             vec![
                 CompError::MaxPresetDepthExceeded("_invalid::overflow".to_string()),
                 CompError::InvalidMovementPreset("_invalid::overflow".to_string()),
