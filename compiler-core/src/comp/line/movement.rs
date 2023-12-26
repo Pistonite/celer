@@ -115,7 +115,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
         let mut should_fail = false;
 
         for (key, value) in props {
-            match key.as_str() {
+            match key.as_ref() {
                 prop::TO => match self.parse_coord(value) {
                     Ok(coord) => to = Some(coord),
                     Err(e) => {

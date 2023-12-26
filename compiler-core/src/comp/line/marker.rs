@@ -66,7 +66,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
         let mut should_fail = false;
 
         for (key, value) in mapping {
-            match key.as_str() {
+            match key.as_ref() {
                 prop::AT => match self.parse_coord(value) {
                     Ok(coord) => at = Some(coord),
                     Err(e) => {

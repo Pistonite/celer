@@ -5,8 +5,9 @@ use std::collections::BTreeMap;
 use instant::Instant;
 use serde_json::Value;
 
+use crate::json::RouteBlob;
 use crate::lang::Preset;
-use crate::prep::{Axis, MapCoordMap, MapMetadata, GameCoord, RouteMetadata, RouteConfig, Setting, CompilerMetadata, RouteBlob};
+use crate::prep::{Axis, MapCoordMap, MapMetadata, GameCoord, RouteMetadata, RouteConfig, Setting, CompilerMetadata};
 use crate::pack::{Compiler, CompileContext};
 
 use super::LineContext;

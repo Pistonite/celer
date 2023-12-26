@@ -11,17 +11,20 @@ use derivative::Derivative;
 use instant::Instant;
 use serde_json::Value;
 
+use crate::json::RouteBlobError;
 use crate::lang::parse_poor;
 use crate::types::{DocDiagnostic};
 use crate::env;
 
 mod line;
-use line::*;
+pub use line::*;
 
 mod comp_doc;
 pub use comp_doc::*;
 mod comp_section;
 pub use comp_section::*;
+mod comp_line;
+pub use comp_line::*;
 
 pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
 
@@ -31,6 +34,9 @@ pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
 /// through the diagnostics API.
 #[derive(PartialEq, Debug, thiserror::Error)]
 pub enum CompError {
+    #[error("Failed to load line: {0}")]
+    InvalidLineBlob(#[from] RouteBlobError),
+
     /// When an array is specified as a line
     #[error("A line cannot be an array. Check the formatting of your route.")]
     ArrayCannotBeLine,
@@ -125,6 +131,7 @@ impl CompError {
     /// The returned path is relative to the site origin (i.e. /docs/...)
     pub fn get_info_url_path(&self) -> &'static str {
         match self {
+            CompError::InvalidLineBlob(_) => todo!(),
             CompError::ArrayCannotBeLine
             | CompError::EmptyObjectCannotBeLine
             | CompError::TooManyKeysInObjectLine
@@ -152,6 +159,7 @@ impl CompError {
 
     pub fn get_type(&self) -> String {
         let s = match self {
+            CompError::InvalidLineBlob(_) => todo!(),
             CompError::ArrayCannotBeLine
             | CompError::EmptyObjectCannotBeLine
             | CompError::TooManyKeysInObjectLine

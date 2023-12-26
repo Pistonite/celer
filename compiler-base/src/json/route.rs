@@ -453,6 +453,11 @@ pub enum SafeRouteObject<'a> {
 }
 
 impl<'a> SafeRouteObject<'a> {
+    /// Create an empty object
+    pub fn new() -> Self {
+        Self::OwnedSafe(BTreeMap::new())
+    }
+
     /// Get the length of the object
     #[inline]
     pub fn len(&self) -> usize {
@@ -481,7 +486,7 @@ impl<'a> SafeRouteObject<'a> {
 }
 
 impl<'a> IntoIterator for SafeRouteObject<'a> {
-    type Item = (Cow<'a, String>, SafeRouteBlob<'a>);
+    type Item = (Cow<'a, str>, SafeRouteBlob<'a>);
     type IntoIter = SafeRouteObjectIntoIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -506,25 +511,25 @@ pub enum SafeRouteObjectIntoIter<'a> {
 }
 
 impl<'a> Iterator for SafeRouteObjectIntoIter<'a> {
-    type Item = (Cow<'a, String>, SafeRouteBlob<'a>);
+    type Item = (Cow<'a, str>, SafeRouteBlob<'a>);
 
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             Self::BorrowedValue(iter) => iter
                 .next()
-                .map(|(k, v)| (Cow::Borrowed(k), v.ref_into_unchecked())),
+                .map(|(k, v)| (Cow::Borrowed(k.as_str()), v.ref_into_unchecked())),
             Self::OwnedValue(iter) => iter
                 .next()
                 .map(|(k, v)| (Cow::Owned(k), v.into_unchecked())),
             Self::BorrowedBlob(iter) => iter
                 .next()
-                .map(|(k, v)| (Cow::Borrowed(k), v.ref_into_unchecked())),
+                .map(|(k, v)| (Cow::Borrowed(k.as_str()), v.ref_into_unchecked())),
             Self::OwnedBlob(iter) => iter
                 .next()
                 .map(|(k, v)| (Cow::Owned(k), v.into_unchecked())),
             Self::BorrowedSafe(iter) => iter
                 .next()
-                .map(|(k, v)| (Cow::Borrowed(k), v.ref_into_unchecked())),
+                .map(|(k, v)| (Cow::Borrowed(k.as_str()), v.ref_into_unchecked())),
             Self::OwnedSafe(iter) => iter.next().map(|(k, v)| (Cow::Owned(k), v)),
         }
     }

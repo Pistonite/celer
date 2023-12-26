@@ -1,14 +1,13 @@
+use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use serde_json::{json, Map, Value};
 
-use crate::json::Coerce;
+use crate::comp::CompResult;
+use crate::json::{SafeRouteObject, SafeRouteBlob, Coerce, Cast};
 use crate::prop;
 
 use super::CompError;
-
-type DesugarLine = (String, Map<String, Value>);
-type DesugarLineError = (String, CompError);
 
 /// Desugar a line as a json blob
 ///
@@ -17,30 +16,32 @@ type DesugarLineError = (String, CompError);
 /// - string (desugared to `{[value]: {}}`)
 /// - null (desugared to `{"": {}}`)
 /// - boolean, number (desugared to string representation)
-pub fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError> {
-    let text = value.coerce_to_string();
-    match value {
-        Value::Array(_) => Err((text, CompError::ArrayCannotBeLine)),
-        Value::Object(obj) => {
+pub fn desugar_line<'a>(value: SafeRouteBlob<'a>) -> (Cow<'a, str>, CompResult<SafeRouteObject<'a>>) {
+    if value.is_array() {
+        return (value.coerce_into_string().into(), Err(CompError::ArrayCannotBeLine));
+    }
+    match value.try_into_object() {
+        Err(value) => (value.coerce_into_string().into(), Ok(SafeRouteObject::new())),
+        Ok(obj) => {
             let mut iter = obj.into_iter();
             let (key, obj) = match iter.next() {
                 None => {
-                    return Err((text, CompError::EmptyObjectCannotBeLine));
+                    return ("[object object]".into(), Err(CompError::EmptyObjectCannotBeLine));
                 }
                 Some(first) => first,
             };
             if iter.next().is_some() {
-                return Err((text, CompError::TooManyKeysInObjectLine));
+                return ("[object object]".into(), Err(CompError::TooManyKeysInObjectLine));
             }
-            let properties = match obj {
-                Value::Object(map) => map,
-                _ => {
-                    return Err((text, CompError::LinePropertiesMustBeObject));
+            match obj.try_into_object() {
+                Ok(obj) => {
+                    (key, Ok(obj))
                 }
-            };
-            Ok((key, properties))
+                Err(value) => {
+                    (value.coerce_into_string().into(), Err(CompError::LinePropertiesMustBeObject))
+                }
+            }
         }
-        _ => Ok((text, Map::new())),
     }
 }
 
@@ -60,31 +61,45 @@ pub fn desugar_line(value: Value) -> Result<DesugarLine, DesugarLineError> {
 
 #[cfg(test)]
 mod test {
+    use crate::json::IntoSafeRouteBlob;
+
     use super::*;
+
+    fn test_desugar_line(value: Value) -> (String, CompResult<Value>) {
+        let (text, result) = desugar_line(value.into_unchecked());
+        let result = result.map(|x| {
+            let mut map = Map::new();
+            for (k, v) in x {
+                map.insert(k.into_owned(), v.into());
+            }
+            Value::Object(map)
+        });
+        (text.to_string(), result)
+    }
 
     #[test]
     fn test_line_primitive() {
-        assert_eq!(desugar_line(json!(null)), Ok(("".to_string(), Map::new())));
+        assert_eq!(test_desugar_line(json!(null)), ("".to_string(), Ok(json!({}))));
         assert_eq!(
-            desugar_line(json!(true)),
-            Ok(("true".to_string(), Map::new()))
+            test_desugar_line(json!(true)),
+            ("true".to_string(), Ok(json!({})))
         );
         assert_eq!(
-            desugar_line(json!(false)),
-            Ok(("false".to_string(), Map::new()))
+            test_desugar_line(json!(false)),
+            ("false".to_string(), Ok(json!({})))
         );
-        assert_eq!(desugar_line(json!("")), Ok(("".to_string(), Map::new())));
+        assert_eq!(test_desugar_line(json!("")), ("".to_string(), Ok(json!({}))));
         assert_eq!(
-            desugar_line(json!("hello world")),
-            Ok(("hello world".to_string(), Map::new()))
+            test_desugar_line(json!("hello world")),
+            ("hello world".to_string(), Ok(json!({})))
         );
     }
 
     #[test]
     fn test_line_array() {
         assert_eq!(
-            desugar_line(json!([])),
-            Err(("[object array]".to_string(), CompError::ArrayCannotBeLine))
+            test_desugar_line(json!([])),
+            ("[object array]".to_string(), Err(CompError::ArrayCannotBeLine))
         );
     }
 
@@ -92,31 +107,33 @@ mod test {
     fn test_line_object_invalid() {
         let str = "[object object]";
         assert_eq!(
-            desugar_line(json!({})),
-            Err((str.to_string(), CompError::EmptyObjectCannotBeLine))
+            test_desugar_line(json!({})),
+            (str.to_string(), Err(CompError::EmptyObjectCannotBeLine))
         );
         assert_eq!(
-            desugar_line(json!({"one":"two", "three":"four" })),
-            Err((str.to_string(), CompError::TooManyKeysInObjectLine))
+            test_desugar_line(json!({"one":"two", "three":"four" })),
+            (str.to_string(), Err(CompError::TooManyKeysInObjectLine))
         );
         assert_eq!(
-            desugar_line(json!({"one": []})),
-            Err((str.to_string(), CompError::LinePropertiesMustBeObject))
+            test_desugar_line(json!({"one": []})),
+            ("[object array]".to_string(), Err(CompError::LinePropertiesMustBeObject))
         );
     }
 
     #[test]
     fn test_line_object_valid() {
         assert_eq!(
-            desugar_line(json!({"one": {
+            test_desugar_line(json!({"one": {
                 "two": "three"
             }})),
-            Ok((
+            (
                 "one".to_string(),
-                [{ ("two".to_string(), json!("three")) }]
-                    .into_iter()
-                    .collect()
-            ))
+                Ok(
+                    [{ ("two".to_string(), json!("three")) }]
+                        .into_iter()
+                        .collect()
+                )
+            )
         );
     }
 

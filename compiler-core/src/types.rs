@@ -11,6 +11,7 @@ use crate::macros::derive_wasm;
 use crate::prep::{GameCoord, RouteConfig};
 use crate::util::StringMap;
 use crate::lang::{DocPoorText, DocPoorTextBlock, DocRichTextBlock, DocRichText};
+use crate::comp::DocNote;
 
 
 /// The executed document
@@ -92,17 +93,6 @@ pub struct DocDiagnostic {
     pub source: String,
 }
 
-
-
-/// Document note block
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-#[serde(tag = "type")]
-pub enum DocNote {
-    Text { content: DocRichText },
-    Image { link: String },
-    Video { link: String },
-}
 
 
 /// Map features for one section
