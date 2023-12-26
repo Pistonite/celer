@@ -48,11 +48,25 @@ impl RouteBlob {
     }
 
     pub fn is_array(&self) -> bool {
-        matches!(self, Self::Array(_))
+        self.as_array().is_some()
+    }
+
+    pub fn as_array(&self) -> Option<&Vec<RouteBlob>> {
+        match self {
+            Self::Array(x) => Some(x),
+            _ => None,
+        }
     }
 
     pub fn is_object(&self) -> bool {
-        matches!(self, Self::Object(_))
+        self.as_object().is_some()
+    }
+
+    pub fn as_object(&self) -> Option<&BTreeMap<String, RouteBlob>> {
+        match self {
+            Self::Object(x) => Some(x),
+            _ => None,
+        }
     }
 
     /// Flatten the value. Returns the inner value or the first error

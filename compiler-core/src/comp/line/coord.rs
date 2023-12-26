@@ -4,7 +4,7 @@ use crate::json::{Cast, Coerce};
 use crate::prep::{Axis, GameCoord, RouteBlob};
 use crate::comp::CompResult;
 
-use super::{CompError, Compiler, LineContext};
+use super::{CompError, LineContext};
 
 macro_rules! map_coord {
     ($mapping:ident, $array:ident, $output:ident, $i:tt) => {{

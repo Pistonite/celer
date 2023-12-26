@@ -2,12 +2,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
-use crate::prep::RouteBlob;
+use crate::prep::{GameCoord, RouteBlob};
 use crate::prop;
-use crate::types::GameCoord;
 use crate::macros::derive_wasm;
 
-use super::{CompError, Compiler, LineContext};
+use super::{CompError, LineContext};
 
 /// Data of a marker specified by the `markers` property
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
@@ -40,18 +39,24 @@ impl<'c, 'p> LineContext<'c, 'p> {
         prop: &RouteBlob,
     ) {
         if prop.is_array() {
-            return match self.transform_coord(prop) {
-                Ok(coord) => Some(CompMarker::at(coord)),
+            match self.parse_coord(prop) {
+                Ok(coord) => {
+                    let marker = CompMarker::at(coord);
+                    self.line.markers.push(marker);
+                }
                 Err(e) => {
-                    errors.push(e);
-                    None
+                    self.errors.push(e);
                 }
             };
+            return;
         }
-        let mapping = prop.try_into_object().ok().or_else(|| {
-            errors.push(CompError::InvalidMarkerType);
-            None
-        })?;
+        let mapping = match prop.as_object() {
+            Some(mapping) => mapping,
+            None => {
+                self.errors.push(CompError::InvalidMarkerType);
+                return;
+            }
+        };
 
         let mut at = None;
         let mut color = None;
@@ -59,16 +64,16 @@ impl<'c, 'p> LineContext<'c, 'p> {
 
         for (key, value) in mapping {
             match key.as_ref() {
-                prop::AT => match self.transform_coord(value) {
+                prop::AT => match self.parse_coord(value) {
                     Ok(coord) => at = Some(coord),
                     Err(e) => {
-                        errors.push(e);
+                        self.errors.push(e);
                         should_fail = true;
                     }
                 },
                 prop::COLOR => {
                     if value.is_array() || value.is_object() {
-                        errors.push(CompError::InvalidLinePropertyType(format!(
+                        self.errors.push(CompError::InvalidLinePropertyType(format!(
                             "{prop_name}.{}",
                             prop::COLOR
                         )))
@@ -76,20 +81,18 @@ impl<'c, 'p> LineContext<'c, 'p> {
                         color = Some(value.coerce_to_string())
                     }
                 }
-                _ => errors.push(CompError::UnusedProperty(format!("{prop_name}.{key}"))),
+                _ => self.errors.push(CompError::UnusedProperty(format!("{prop_name}.{key}"))),
             }
         }
 
         match at {
             None => {
-                errors.push(CompError::InvalidMarkerType);
-                None
+                self.errors.push(CompError::InvalidMarkerType);
             }
             Some(at) => {
-                if should_fail {
-                    None
-                } else {
-                    Some(CompMarker { at, color })
+                if !should_fail {
+                    let marker = CompMarker { at, color };
+                    self.line.markers.push(marker);
                 }
             }
         }
@@ -98,11 +101,19 @@ impl<'c, 'p> LineContext<'c, 'p> {
 
 #[cfg(test)]
 mod test {
+    use std::borrow::Cow;
+
     use serde_json::json;
 
     use crate::comp::test_utils;
 
     use super::*;
+
+    impl<'c, 'p> LineContext<'c, 'p> {
+        fn test_compile_marker(&self, prop_name: &str, prop: Value) {
+            self.compile_marker(prop_name, &prop.into())
+        }
+    }
 
     #[test]
     fn test_value_invalid() {
@@ -116,35 +127,33 @@ mod test {
             json!({}),
         ];
 
-        let compiler = Compiler::default();
+        let mut ctx = LineContext::default();
 
         for v in vals.into_iter() {
-            let mut errors = vec![];
-            assert_eq!(compiler.comp_marker("", v, &mut errors), None,);
-            assert_eq!(errors, vec![CompError::InvalidMarkerType]);
+            ctx.errors.clear();
+            ctx.test_compile_marker("", v);
+            assert_eq!(ctx.errors, vec![CompError::InvalidMarkerType]);
         }
     }
 
-    #[tokio::test]
-    async fn test_propagate_coord_error() {
-        let compiler = Compiler::default();
-        let mut errors = vec![];
-        assert_eq!(
-            compiler.comp_marker("", json!([1, 2, 3, 4]), &mut errors),
-            None
-        );
-        assert_eq!(errors, vec![CompError::InvalidCoordinateArray]);
+    #[test]
+    fn test_propagate_coord_error() {
+        let ctx = LineContext::default();
+        ctx.test_compile_marker("", json!([1, 2, 3, 4]));
+        assert_eq!(ctx.errors, vec![CompError::InvalidCoordinateArray]);
     }
 
     #[test]
     fn test_valid_coord() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
-        let mut errors = vec![];
-        assert_eq!(
-            compiler.comp_marker("", json!([1, 2, 4]), &mut errors),
-            Some(CompMarker::at(GameCoord(1.0, 2.0, 4.0)))
-        );
-        assert_eq!(errors, vec![]);
+        let ctx = LineContext {
+            compiler: Cow::Borrowed(&compiler),
+            ..Default::default()
+        };
+        ctx.test_compile_marker("", json!([1, 2, 4]));
+        let marker = CompMarker::at(GameCoord(1.0, 2.0, 4.0));
+        assert_eq!(ctx.line.markers, vec![marker]);
+        assert_eq!(ctx.errors, vec![]);
     }
 
     #[test]

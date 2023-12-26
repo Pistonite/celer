@@ -6,22 +6,23 @@ use serde_json::Value;
 
 use crate::json::Coerce;
 use crate::lang;
-use crate::lang::PresetInst;
+use crate::lang::{DocRichText, DocRichTextBlock, PresetInst};
 use crate::prop;
-use crate::types::{DocDiagnostic, DocNote, DocRichText, DocRichTextBlock, GameCoord};
+use crate::types::{DocDiagnostic, DocNote};
 use crate::macros::derive_wasm;
 use crate::util::StringMap;
+use crate::prep::GameCoord;
 
 use super::{
-    validate_not_array_or_object, CompError, CompMarker, CompMovement, Compiler, CompilerResult,
+    validate_not_array_or_object, CompError, CompResult,
 };
 
-mod comp_coord;
-pub use comp_coord::*;
-mod comp_marker;
-pub use comp_marker::*;
-mod comp_movement;
-pub use comp_movement::*;
+mod coord;
+pub use coord::*;
+mod marker;
+pub use marker::*;
+mod movement;
+pub use movement::*;
 mod comp_preset;
 pub use comp_preset::*;
 mod desugar;
@@ -74,7 +75,7 @@ pub struct LineContext<'c, 'p> {
 impl<'a> Compiler<'a> {
     /// Compile a line
     ///
-    /// 1. Text line is turned into {line: {}}
+    /// 1. Text line is turned into {<text>: {}}
     /// 2. precedence of the presets (later overides previous)
     ///    - uses
     ///    - self text (if the preset doesn't define text)
