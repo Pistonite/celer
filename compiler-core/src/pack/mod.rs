@@ -22,8 +22,9 @@ use std::ops::{DerefMut, Deref};
 
 use instant::Instant;
 
+use crate::json::RouteBlob;
 use crate::env::{join_futures, yield_budget};
-use crate::prep::{RouteConfig, CompilerMetadata, PreparedContext, PrepDoc, GameCoord, RouteBlob, Setting, self};
+use crate::prep::{RouteConfig, CompilerMetadata, PreparedContext, PrepDoc, GameCoord, Setting, self};
 use crate::plugin::{PluginError, PluginRuntime};
 use crate::res::Loader;
 

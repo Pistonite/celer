@@ -3,7 +3,7 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{json::Coerce, prep::RouteBlob};
+use crate::json::{Cast, Coerce, SafeRouteBlob, SafeRouteObject};
 use crate::prop;
 use crate::prep::GameCoord;
 use crate::macros::derive_wasm;
@@ -62,25 +62,34 @@ impl<'c, 'p> LineContext<'c, 'p> {
     pub fn compile_movement(
         &mut self,
         prop_name: &str,
-        prop: &RouteBlob,
+        prop: SafeRouteBlob<'_>,
     ) {
-        if prop.is_array() {
-            match self.parse_coord(prop) {
-                Ok(coord) => {
-                    let m = CompMovement::to(coord);
-                    self.line.movements.push(m);
-                }
-                Err(e) => {
-                    self.errors.push(e);
-                }
-            };
-            return;
-        }
-        match prop {
-            RouteBlob::Object(props) => {
-                self.compile_movement_obj(prop_name, props);
+        let prop = match prop.try_into_array() {
+            Err(prop) => prop,
+            Ok(array) => {
+                match self.parse_coord_array(array) {
+                    Ok(coord) => {
+                        let m = CompMovement::to(coord);
+                        self.line.movements.push(m);
+                    }
+                    Err(e) => {
+                        self.errors.push(e);
+                    }
+                };
+                return;
             }
-            RouteBlob::Prim(Value::String(s)) => {
+        };
+
+        let prop = match prop.try_into_object() {
+            Err(prop) => prop,
+            Ok(obj) => {
+                self.compile_movement_obj(prop_name, obj);
+                return;
+            }
+        };
+
+        match prop.as_str() {
+            Some(s) => {
                 if s == "push" {
                     self.line.movements.push(CompMovement::Push);
                 } else if s == "pop" {
@@ -89,13 +98,14 @@ impl<'c, 'p> LineContext<'c, 'p> {
                     self.errors.push(CompError::InvalidMovementType);
                 }
             }
-            _ => {
+            None => {
                 self.errors.push(CompError::InvalidMovementType);
             }
         }
+
     }
 
-    fn compile_movement_obj(&mut self, prop_name: &str, props: &BTreeMap<String, RouteBlob>) {
+    fn compile_movement_obj(&mut self, prop_name: &str, props: SafeRouteObject<'_>) {
         let mut to = None;
         let mut warp = false;
         let mut exclude = false;
@@ -105,7 +115,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
         let mut should_fail = false;
 
         for (key, value) in props {
-            match key.as_ref() {
+            match key.as_str() {
                 prop::TO => match self.parse_coord(value) {
                     Ok(coord) => to = Some(coord),
                     Err(e) => {
@@ -133,26 +143,32 @@ impl<'c, 'p> LineContext<'c, 'p> {
                     )));
                     }
                 },
-                prop::COLOR => match value {
-                    RouteBlob::Prim(Value::Null) => color = None,
-                    RouteBlob::Prim(Value::String(s)) => color = Some(s.to_owned()),
-                    _ => {
-                        should_fail = true;
-                        self.errors.push(CompError::InvalidLinePropertyType(format!(
-                        "{prop_name}.{}",
-                        prop::COLOR
-                    )));
+                prop::COLOR =>  {
+                    if value.is_null() {
+                        color = None;
+                    } else {
+                        match value.as_str() {
+                            Some(s) => color = Some(s.to_owned()),
+                            None => {
+                                should_fail = true;
+                                self.errors.push(CompError::InvalidLinePropertyType(format!(
+                                "{prop_name}.{}",
+                                prop::COLOR
+                            )));
+                            }
+                        }
                     }
-                },
-                prop::ICON => match value {
-                    RouteBlob::Array(_) | RouteBlob::Object(_) => {
+                }
+                prop::ICON => {
+                    if value.is_array() || value.is_object() {
                         self.errors.push(CompError::InvalidLinePropertyType(format!(
                         "{prop_name}.{}",
                         prop::ICON
                     )));
+                    } else {
+                        icon = Some(value.coerce_into_string())
                     }
-                    _ => icon = Some(value.coerce_to_string()),
-                },
+                }
                 _ => {
                     self.errors.push(CompError::UnusedProperty(format!("{prop_name}.{key}")));
                 }
@@ -185,13 +201,14 @@ mod test {
 
     use serde_json::json;
 
+    use crate::json::IntoSafeRouteBlob;
     use crate::comp::test_utils;
 
     use super::*;
 
     impl<'c, 'p> LineContext<'c, 'p> {
         fn test_compile_movement(&mut self, prop_name: &str, prop: Value) {
-            self.compile_movement(prop_name, &prop.into())
+            self.compile_movement(prop_name, prop.into_unchecked())
         }
     }
 

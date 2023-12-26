@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::{Cast, Coerce};
-use crate::prep::{GameCoord, RouteBlob};
+use crate::json::{Cast, Coerce, SafeRouteBlob};
+use crate::prep::{GameCoord};
 use crate::prop;
 use crate::macros::derive_wasm;
 
@@ -36,23 +36,26 @@ impl<'c, 'p> LineContext<'c, 'p> {
     pub fn compile_marker(
         &mut self,
         prop_name: &str,
-        prop: &RouteBlob,
+        prop: SafeRouteBlob<'_>,
     ) {
-        if prop.is_array() {
-            match self.parse_coord(prop) {
-                Ok(coord) => {
-                    let marker = CompMarker::at(coord);
-                    self.line.markers.push(marker);
-                }
-                Err(e) => {
-                    self.errors.push(e);
-                }
-            };
-            return;
-        }
-        let mapping = match prop.as_object() {
-            Some(mapping) => mapping,
-            None => {
+        let prop = match prop.try_into_array() {
+            Err(prop) => prop,
+            Ok(array) => {
+                match self.parse_coord_array(array) {
+                    Ok(coord) => {
+                        let marker = CompMarker::at(coord);
+                        self.line.markers.push(marker);
+                    }
+                    Err(e) => {
+                        self.errors.push(e);
+                    }
+                };
+                return;
+            }
+        };
+        let mapping = match prop.try_into_object() {
+            Ok(mapping) => mapping,
+            Err(_) => {
                 self.errors.push(CompError::InvalidMarkerType);
                 return;
             }
@@ -63,7 +66,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
         let mut should_fail = false;
 
         for (key, value) in mapping {
-            match key.as_ref() {
+            match key.as_str() {
                 prop::AT => match self.parse_coord(value) {
                     Ok(coord) => at = Some(coord),
                     Err(e) => {
@@ -78,7 +81,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
                             prop::COLOR
                         )))
                     } else {
-                        color = Some(value.coerce_to_string())
+                        color = Some(value.coerce_into_string())
                     }
                 }
                 _ => self.errors.push(CompError::UnusedProperty(format!("{prop_name}.{key}"))),
@@ -105,13 +108,14 @@ mod test {
 
     use serde_json::json;
 
+    use crate::json::IntoSafeRouteBlob;
     use crate::comp::test_utils;
 
     use super::*;
 
     impl<'c, 'p> LineContext<'c, 'p> {
         fn test_compile_marker(&self, prop_name: &str, prop: Value) {
-            self.compile_marker(prop_name, &prop.into())
+            self.compile_marker(prop_name, prop.into_unchecked())
         }
     }
 

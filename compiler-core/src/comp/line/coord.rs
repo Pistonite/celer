@@ -1,15 +1,12 @@
-use serde_json::Value;
-
-use crate::json::{Cast, Coerce};
-use crate::prep::{Axis, GameCoord, RouteBlob};
+use crate::json::{Cast, Coerce, SafeRouteBlob, SafeRouteArray};
+use crate::prep::{Axis, GameCoord};
 use crate::comp::CompResult;
 
 use super::{CompError, LineContext};
 
 macro_rules! map_coord {
-    ($mapping:ident, $array:ident, $output:ident, $i:tt) => {{
-        let i = $i;
-        match $array[i].try_coerce_to_f64() {
+    ($mapping:ident, $coord:expr, $output:ident, $i:tt) => {{
+        match $coord.try_coerce_to_f64() {
             Some(n) => {
                 match $mapping.$i {
                     Axis::X => $output.0 = n,
@@ -22,37 +19,47 @@ macro_rules! map_coord {
                 Ok(())
             }
             None => Err(CompError::InvalidCoordinateValue(
-                $array[i].coerce_to_repl(),
+                $coord.coerce_to_repl(),
             )),
         }
     }};
 }
 
 impl<'c, 'p> LineContext<'c, 'p> {
-    /// Transforms the coordinate specified in the route into a game coordinate with the coord map
-    /// specified in the config
     pub fn parse_coord(&self, prop: SafeRouteBlob<'_>) -> CompResult<GameCoord> {
         let array = prop
             .try_into_array()
             .map_err(|prop| CompError::InvalidCoordinateType(prop.coerce_to_repl()))?;
+        self.parse_coord_array(array)
+    }
+    /// Transforms the coordinate specified in the route into a game coordinate with the coord map
+    /// specified in the config
+    pub fn parse_coord_array(&self, array: SafeRouteArray<'_>) -> CompResult<GameCoord> {
         let mut output = GameCoord::default();
-        match array.len() {
-            2 => {
-                if let Some(map) = &self.compiler.config.map {
-                    let mapping = &map.coord_map.mapping_2d;
-                    map_coord!(mapping, array, output, 0)?;
-                    map_coord!(mapping, array, output, 1)?;
-                }
-            }
-            3 => {
+
+        let mut iter = array.into_iter();
+        let c1 = iter.next().ok_or(CompError::InvalidCoordinateArray)?;
+        let c2 = iter.next().ok_or(CompError::InvalidCoordinateArray)?;
+        let c3 = iter.next();
+        if iter.next().is_some() {
+            return Err(CompError::InvalidCoordinateArray);
+        }
+        match c3 {
+            Some(c3) => {
                 if let Some(map) = &self.compiler.config.map {
                     let mapping = &map.coord_map.mapping_3d;
-                    map_coord!(mapping, array, output, 0)?;
-                    map_coord!(mapping, array, output, 1)?;
-                    map_coord!(mapping, array, output, 2)?;
+                    map_coord!(mapping, c1, output, 0)?;
+                    map_coord!(mapping, c2, output, 1)?;
+                    map_coord!(mapping, c3, output, 2)?;
+                }
+            },
+            None => {
+                if let Some(map) = &self.compiler.config.map {
+                    let mapping = &map.coord_map.mapping_2d;
+                    map_coord!(mapping, c1, output, 0)?;
+                    map_coord!(mapping, c2, output, 1)?;
                 }
             }
-            _ => return Err(CompError::InvalidCoordinateArray),
         }
 
         Ok(output)
@@ -63,8 +70,9 @@ impl<'c, 'p> LineContext<'c, 'p> {
 mod test {
     use std::borrow::Cow;
 
-    use serde_json::json;
+    use serde_json::{json, Value};
 
+    use crate::json::IntoSafeRouteBlob;
     use crate::comp::test_utils::CompilerBuilder;
     use crate::prep::{MapCoordMap, MapMetadata, RouteConfig};
 
@@ -72,7 +80,7 @@ mod test {
 
     impl<'c, 'p> LineContext<'c, 'p> {
         fn test_parse_coord(&self, prop: Value) -> CompResult<GameCoord> {
-            self.parse_coord(&prop.into())
+            self.parse_coord(prop.into_unchecked())
         }
     }
 
