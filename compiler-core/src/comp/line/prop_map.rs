@@ -1,15 +1,20 @@
 use std::collections::BTreeMap;
 
-
-use crate::prop;
 use crate::json::{IntoSafeRouteBlob, SafeRouteBlob};
+use crate::prop;
 
-pub struct LinePropMap<'a, T> where T: IntoSafeRouteBlob {
+pub struct LinePropMap<'a, T>
+where
+    T: IntoSafeRouteBlob,
+{
     normal: BTreeMap<String, T>,
     desugared: BTreeMap<String, SafeRouteBlob<'a>>,
 }
 
-impl<'a, T> LinePropMap<'a, T> where T: IntoSafeRouteBlob {
+impl<'a, T> LinePropMap<'a, T>
+where
+    T: IntoSafeRouteBlob,
+{
     pub fn new() -> Self {
         Self {
             normal: BTreeMap::new(),
@@ -21,14 +26,18 @@ impl<'a, T> LinePropMap<'a, T> where T: IntoSafeRouteBlob {
         match key.as_ref() {
             prop::COORD => {
                 let value = value.into_unchecked();
-                self.desugared.insert(prop::MOVEMENTS.to_string(), SafeRouteBlob::OwnedArray(vec![value]));
+                self.desugared.insert(
+                    prop::MOVEMENTS.to_string(),
+                    SafeRouteBlob::OwnedArray(vec![value]),
+                );
             }
             prop::MOVEMENTS => {
                 self.desugared.insert(key, value.into_unchecked());
             }
             prop::ICON => {
                 let value = value.into_unchecked();
-                self.desugared.insert(prop::ICON_DOC.to_string(), value.clone());
+                self.desugared
+                    .insert(prop::ICON_DOC.to_string(), value.clone());
                 self.desugared.insert(prop::ICON_MAP.to_string(), value);
             }
             prop::ICON_DOC | prop::ICON_MAP => {
@@ -72,8 +81,8 @@ impl<'a, T> LinePropMap<'a, T> where T: IntoSafeRouteBlob {
 
 #[cfg(test)]
 mod test {
-    use serde_json::{json, Value};
     use super::*;
+    use serde_json::{json, Value};
 
     #[test]
     fn test_properties_coord() {

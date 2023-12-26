@@ -2,21 +2,20 @@
 
 use serde_json::Value;
 
-use crate::json::Coerce;
-use crate::res::{Use, Resource, Loader, ResError};
 use crate::env::yield_budget;
+use crate::json::Coerce;
+use crate::prep::{PrepError, PrepResult, PreparedConfig};
 use crate::prop;
-use crate::prep::{PreparedConfig, PrepResult, PrepError};
+use crate::res::{Loader, ResError, Resource, Use};
 
 impl<'a> PreparedConfig<'a> {
     /// Process the `icons` property
     ///
     /// `use`'s are resolved in the context of `res`
-    pub async fn load_icons<L>(&mut self, res: &Resource<'_, L>, icons: Value,) -> PrepResult<()>
+    pub async fn load_icons<L>(&mut self, res: &Resource<'_, L>, icons: Value) -> PrepResult<()>
     where
         L: Loader,
     {
-
         let icons = super::check_map!(self, icons, prop::ICONS)?;
 
         for (key, v) in icons.into_iter() {

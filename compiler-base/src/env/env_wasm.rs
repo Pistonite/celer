@@ -5,7 +5,10 @@ use std::rc::Rc;
 /// Ref counted pointer. Wrapper for Rc
 #[derive(Debug)]
 #[repr(transparent)]
-pub struct RefCounted<T> where T: ?Sized {
+pub struct RefCounted<T>
+where
+    T: ?Sized,
+{
     pub(crate) inner: Rc<T>,
 }
 
@@ -30,9 +33,7 @@ impl<T> RefCounted<T> {
 impl From<&str> for RefCounted<str> {
     #[inline]
     fn from(s: &str) -> Self {
-        Self {
-            inner: Rc::from(s),
-        }
+        Self { inner: Rc::from(s) }
     }
 }
 

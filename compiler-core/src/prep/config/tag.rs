@@ -3,21 +3,18 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::Coerce;
-use crate::res::{Use, Resource, Loader, ResError};
 use crate::env::yield_budget;
-use crate::prop;
-use crate::prep::{PreparedConfig, PrepResult, PrepError};
+use crate::json::Coerce;
 use crate::macros::derive_wasm;
+use crate::prep::{PrepError, PrepResult, PreparedConfig};
+use crate::prop;
+use crate::res::{Loader, ResError, Resource, Use};
 
-use super::{check_map};
+use super::check_map;
 
 impl<'a> PreparedConfig<'a> {
     /// Process the `tags` property
-    pub async fn load_tags(
-        &mut self,
-        tags: Value,
-    ) -> PrepResult<()> {
+    pub async fn load_tags(&mut self, tags: Value) -> PrepResult<()> {
         let tags = super::check_map!(self, tags, prop::TAGS)?;
         for (key, mut value) in tags.into_iter() {
             yield_budget(16).await;
@@ -54,8 +51,11 @@ impl<'a> PreparedConfig<'a> {
             }
 
             let last_tag = serde_json::from_value::<DocTag>(value).map_err(|_| {
-                PrepError::InvalidConfigPropertyType(self.trace.clone(), 
-                    format!("{}.{}", prop::TAGS, key).into(), "tag object".into())
+                PrepError::InvalidConfigPropertyType(
+                    self.trace.clone(),
+                    format!("{}.{}", prop::TAGS, key).into(),
+                    "tag object".into(),
+                )
             })?;
             tag.apply_override(&last_tag);
 

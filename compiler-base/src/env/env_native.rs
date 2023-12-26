@@ -5,7 +5,10 @@ use std::sync::Arc;
 /// Ref counted pointer, wrapper for Arc
 #[derive(Debug)]
 #[repr(transparent)]
-pub struct RefCounted<T> where T: ?Sized {
+pub struct RefCounted<T>
+where
+    T: ?Sized,
+{
     pub(crate) inner: Arc<T>,
 }
 

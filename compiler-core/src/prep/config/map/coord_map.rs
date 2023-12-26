@@ -1,14 +1,13 @@
 //! Packs map.coord-map into [`MapCoordMap`]
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::macros::derive_wasm;
-use crate::res::Loader;
 use crate::json::Cast;
+use crate::macros::derive_wasm;
 use crate::prep::{config, PrepError, PrepResult, PreparedConfig};
 use crate::prop;
-
+use crate::res::Loader;
 
 /// The mapping if 2 coordinates are specified in the route
 ///
@@ -49,35 +48,39 @@ pub enum Axis {
     NegZ,
 }
 
-
 impl<'a> PreparedConfig<'a> {
     /// Parse the `coord-map` property in map configs
     pub fn parse_coord_map(&self, coord_map: Value) -> PrepResult<MapCoordMap> {
-        
-        let mut obj = config::check_map!(self, coord_map, format!("{}.{}", prop::MAP, prop::COORD_MAP))?;
+        let mut obj = config::check_map!(
+            self,
+            coord_map,
+            format!("{}.{}", prop::MAP, prop::COORD_MAP)
+        )?;
 
         let mapping_2d = config::check_required_property!(
-            self, 
-            obj.remove(prop::MAPPING_2D), 
+            self,
+            obj.remove(prop::MAPPING_2D),
             format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_2D)
         )?;
         let mapping_3d = config::check_required_property!(
-            self, 
-            obj.remove(prop::MAPPING_3D), 
+            self,
+            obj.remove(prop::MAPPING_3D),
             format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_3D)
         )?;
 
-        self.check_unused_property(obj.keys().next().map(|k|{
-            format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, k)
-        }))?;
+        self.check_unused_property(
+            obj.keys()
+                .next()
+                .map(|k| format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, k)),
+        )?;
 
         let mut mapping_2d = config::check_array!(
             self,
-            mapping_2d, 
+            mapping_2d,
             format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_2D)
         )?;
         let mut mapping_3d = config::check_array!(
-            self, 
+            self,
             mapping_3d,
             format!("{}.{}.{}", prop::MAP, prop::COORD_MAP, prop::MAPPING_3D)
         )?;
@@ -122,8 +125,13 @@ impl<'a> PreparedConfig<'a> {
             mapping_3d,
         })
     }
-    
-    fn pop_coord_map_array(&self, vec: &mut Vec<Value>, prop: &str, dim: usize) -> PrepResult<Value> {
+
+    fn pop_coord_map_array(
+        &self,
+        vec: &mut Vec<Value>,
+        prop: &str,
+        dim: usize,
+    ) -> PrepResult<Value> {
         match vec.pop() {
             Some(v) => Ok(v),
             None => Err(self.err_invalid_coord_array(prop, dim)),
@@ -232,7 +240,7 @@ mod test {
             json!(""),
             json!("hello"),
         ];
-        
+
         let config = PreparedConfig::default();
 
         for v in values.iter() {
@@ -329,7 +337,7 @@ mod test {
             (json!(["h", "x"]), 0),
             (json!(["x", "h"]), 1),
         ];
-        
+
         let config = PreparedConfig::default();
 
         for (v, j) in values.into_iter() {

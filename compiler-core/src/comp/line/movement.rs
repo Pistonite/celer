@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce, SafeRouteBlob, SafeRouteObject};
-use crate::prop;
-use crate::prep::GameCoord;
 use crate::macros::derive_wasm;
+use crate::prep::GameCoord;
+use crate::prop;
 
 use super::{CompError, LineContext};
 
@@ -59,11 +59,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
     /// - object with `to` property, and optionally `warp`, `exclude`, `color`
     /// - string `push`
     /// - string `pop`
-    pub fn compile_movement(
-        &mut self,
-        prop_name: &str,
-        prop: SafeRouteBlob<'_>,
-    ) {
+    pub fn compile_movement(&mut self, prop_name: &str, prop: SafeRouteBlob<'_>) {
         let prop = match prop.try_into_array() {
             Err(prop) => prop,
             Ok(array) => {
@@ -102,7 +98,6 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 self.errors.push(CompError::InvalidMovementType);
             }
         }
-
     }
 
     fn compile_movement_obj(&mut self, prop_name: &str, props: SafeRouteObject<'_>) {
@@ -128,9 +123,9 @@ impl<'c, 'p> LineContext<'c, 'p> {
                     None => {
                         should_fail = true;
                         self.errors.push(CompError::InvalidLinePropertyType(format!(
-                        "{prop_name}.{}",
-                        prop::WARP
-                    )));
+                            "{prop_name}.{}",
+                            prop::WARP
+                        )));
                     }
                 },
                 prop::EXCLUDE => match value.try_coerce_to_bool() {
@@ -138,12 +133,12 @@ impl<'c, 'p> LineContext<'c, 'p> {
                     None => {
                         should_fail = true;
                         self.errors.push(CompError::InvalidLinePropertyType(format!(
-                        "{prop_name}.{}",
-                        prop::EXCLUDE
-                    )));
+                            "{prop_name}.{}",
+                            prop::EXCLUDE
+                        )));
                     }
                 },
-                prop::COLOR =>  {
+                prop::COLOR => {
                     if value.is_null() {
                         color = None;
                     } else {
@@ -152,9 +147,9 @@ impl<'c, 'p> LineContext<'c, 'p> {
                             None => {
                                 should_fail = true;
                                 self.errors.push(CompError::InvalidLinePropertyType(format!(
-                                "{prop_name}.{}",
-                                prop::COLOR
-                            )));
+                                    "{prop_name}.{}",
+                                    prop::COLOR
+                                )));
                             }
                         }
                     }
@@ -162,15 +157,16 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 prop::ICON => {
                     if value.is_array() || value.is_object() {
                         self.errors.push(CompError::InvalidLinePropertyType(format!(
-                        "{prop_name}.{}",
-                        prop::ICON
-                    )));
+                            "{prop_name}.{}",
+                            prop::ICON
+                        )));
                     } else {
                         icon = Some(value.coerce_into_string())
                     }
                 }
                 _ => {
-                    self.errors.push(CompError::UnusedProperty(format!("{prop_name}.{key}")));
+                    self.errors
+                        .push(CompError::UnusedProperty(format!("{prop_name}.{key}")));
                 }
             }
         }
@@ -201,8 +197,8 @@ mod test {
 
     use serde_json::json;
 
-    use crate::json::IntoSafeRouteBlob;
     use crate::comp::test_utils;
+    use crate::json::IntoSafeRouteBlob;
 
     use super::*;
 

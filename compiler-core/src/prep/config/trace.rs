@@ -1,7 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::ops::{Deref, DerefMut};
 
-
 /// Data to trace location of a config object to help with debugging.
 #[derive(Default, Debug, Clone, PartialEq)]
 #[repr(transparent)]

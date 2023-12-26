@@ -1,12 +1,11 @@
-
 use serde_json::Value;
 
+use crate::env::yield_budget;
 use crate::json::Cast;
 use crate::lang::Preset;
 use crate::macros::async_recursion;
+use crate::prep::{PrepError, PrepResult};
 use crate::prop;
-use crate::env::yield_budget;
-use crate::prep::{PrepResult, PrepError};
 
 use super::PreparedConfig;
 
@@ -25,15 +24,17 @@ impl<'a> PreparedConfig<'a> {
         depth: usize,
     ) -> PrepResult<()> {
         if depth > self.setting.max_preset_namespace_depth {
-            return Err(PrepError::MaxPresetNamespaceDepthExceeded(self.setting.max_preset_namespace_depth));
+            return Err(PrepError::MaxPresetNamespaceDepthExceeded(
+                self.setting.max_preset_namespace_depth,
+            ));
         }
 
         let obj = value.try_into_object().map_err(|_| {
             if preset_name.is_empty() {
                 PrepError::InvalidConfigPropertyType(
-                    self.trace.clone(), 
+                    self.trace.clone(),
                     prop::PRESETS.into(),
-                    prop::PRESETS.into()
+                    prop::PRESETS.into(),
                 )
             } else {
                 PrepError::InvalidPreset(self.trace.clone(), preset_name.to_string())
@@ -45,12 +46,14 @@ impl<'a> PreparedConfig<'a> {
             if let Some(namespace) = key.strip_prefix('_') {
                 // sub namespace
                 let full_key = format_preset_str(preset_name, namespace);
-                self.load_presets_internal(&full_key, value, depth + 1).await?;
+                self.load_presets_internal(&full_key, value, depth + 1)
+                    .await?;
             } else {
                 // preset
                 let full_key = format_preset_str(preset_name, &key);
-                let preset = Preset::compile(value)
-                    .ok_or_else(|| PrepError::InvalidPreset(self.trace.clone(), full_key.clone()))?;
+                let preset = Preset::compile(value).ok_or_else(|| {
+                    PrepError::InvalidPreset(self.trace.clone(), full_key.clone())
+                })?;
                 self.presets.insert(full_key, preset);
             }
         }

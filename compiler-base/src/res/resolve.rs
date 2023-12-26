@@ -1,12 +1,14 @@
 //! Implementation for resolving a `use` from a resource
 
-use crate::util::{Path, PathBuf};
 use crate::env::RefCounted;
+use crate::util::{Path, PathBuf};
 
-use super::{ResPath, Loader, Resource, ValidUse, ResResult, ResError};
+use super::{Loader, ResError, ResPath, ResResult, Resource, ValidUse};
 
-impl<'a, L> Resource<'a, L> where L: Loader {
-
+impl<'a, L> Resource<'a, L>
+where
+    L: Loader,
+{
     /// Resolve a `use` property from this resource
     pub fn resolve(&self, target: &ValidUse) -> ResResult<Resource<'a, L>> {
         let new_resource = match target {
@@ -20,24 +22,22 @@ impl<'a, L> Resource<'a, L> where L: Loader {
                 let rel_path = &path[1..];
                 match self.path() {
                     ResPath::Local(_) => ResPath::new_local(rel_path),
-                    ResPath::Remote(url, _) => ResPath::new_remote(url.clone(), rel_path)
+                    ResPath::Remote(url, _) => ResPath::new_remote(url.clone(), rel_path),
                 }
             }
-            remote_use => {
-                target.base_url().and_then(|url| {
-                    ResPath::new_remote(url, remote_use.path())
-                })
-            }
+            remote_use => target
+                .base_url()
+                .and_then(|url| ResPath::new_remote(url, remote_use.path())),
         };
 
         match new_resource {
             Some(new_resource) => Ok(self.with_path(new_resource)),
-            None => Err(
-                ResError::CannotResolve(self.path.to_string(), target.to_string())
-            ),
+            None => Err(ResError::CannotResolve(
+                self.path.to_string(),
+                target.to_string(),
+            )),
         }
     }
-
 }
 
 #[cfg(test)]
@@ -67,12 +67,18 @@ mod test {
         let resource = create_local_resource("foo");
         let target = ValidUse::Relative("../bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap_err(), ResError::CannotResolve("foo".into(), "../bar".into()));
+        assert_eq!(
+            result.unwrap_err(),
+            ResError::CannotResolve("foo".into(), "../bar".into())
+        );
 
         let resource = create_local_resource("foo/bar");
         let target = ValidUse::Relative("../../bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap_err(), ResError::CannotResolve("foo/bar".into(), "../../bar".into()));
+        assert_eq!(
+            result.unwrap_err(),
+            ResError::CannotResolve("foo/bar".into(), "../../bar".into())
+        );
     }
 
     #[test]
@@ -85,7 +91,10 @@ mod test {
         let resource = create_local_resource("foo/bar");
         let target = ValidUse::Relative("./biz".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_local_unchecked("foo/biz"));
+        assert_eq!(
+            result.unwrap().path(),
+            &ResPath::new_local_unchecked("foo/biz")
+        );
 
         let resource = create_local_resource("foo/bar");
         let target = ValidUse::Relative("../biz".into());
@@ -108,7 +117,10 @@ mod test {
         let resource = create_local_resource("foo/bar/woo");
         let target = ValidUse::Absolute("/biz/bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_local_unchecked("biz/bar"));
+        assert_eq!(
+            result.unwrap().path(),
+            &ResPath::new_local_unchecked("biz/bar")
+        );
     }
 
     #[test]
@@ -121,7 +133,10 @@ mod test {
             reference: None,
         };
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar"));
+        assert_eq!(
+            result.unwrap().path(),
+            &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar")
+        );
 
         let resource = create_local_resource("foo/a");
         let target = ValidUse::Remote {
@@ -131,7 +146,10 @@ mod test {
             reference: Some("branch".into()),
         };
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar/b"));
+        assert_eq!(
+            result.unwrap().path(),
+            &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar/b")
+        );
     }
 
     #[test]
@@ -139,12 +157,21 @@ mod test {
         let resource = create_remote_resource("foo");
         let target = ValidUse::Relative("../bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap_err(), ResError::CannotResolve(format!("{TEST_URL_PREFIX}foo"), "../bar".into()));
+        assert_eq!(
+            result.unwrap_err(),
+            ResError::CannotResolve(format!("{TEST_URL_PREFIX}foo"), "../bar".into())
+        );
 
         let resource = create_remote_resource("foo/bar/biz");
         let target = ValidUse::Relative("../../../bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap_err(), ResError::CannotResolve(format!("{TEST_URL_PREFIX}foo/bar/biz"), "../../../bar".into()));
+        assert_eq!(
+            result.unwrap_err(),
+            ResError::CannotResolve(
+                format!("{TEST_URL_PREFIX}foo/bar/biz"),
+                "../../../bar".into()
+            )
+        );
     }
 
     #[test]
@@ -157,7 +184,10 @@ mod test {
         let resource = create_remote_resource("foo/biz");
         let target = ValidUse::Relative("./bar".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), create_remote_resource("foo/bar").path());
+        assert_eq!(
+            result.unwrap().path(),
+            create_remote_resource("foo/bar").path()
+        );
 
         let resource = create_remote_resource("foo/biz");
         let target = ValidUse::Relative("../bar".into());
@@ -167,7 +197,10 @@ mod test {
         let resource = create_remote_resource("foo/biz/bar");
         let target = ValidUse::Relative("../a/../b".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), create_remote_resource("foo/b").path());
+        assert_eq!(
+            result.unwrap().path(),
+            create_remote_resource("foo/b").path()
+        );
     }
 
     #[test]
@@ -180,7 +213,10 @@ mod test {
         let resource = create_remote_resource("foo/zar");
         let target = ValidUse::Absolute("/bar/biz/../a".into());
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), create_remote_resource("bar/a").path());
+        assert_eq!(
+            result.unwrap().path(),
+            create_remote_resource("bar/a").path()
+        );
     }
 
     #[test]
@@ -193,7 +229,10 @@ mod test {
             reference: None,
         };
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar"));
+        assert_eq!(
+            result.unwrap().path(),
+            &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar")
+        );
 
         let resource = create_remote_resource("foo/a");
         let target = ValidUse::Remote {
@@ -203,7 +242,9 @@ mod test {
             reference: Some("branch".into()),
         };
         let result = resource.resolve(&target);
-        assert_eq!(result.unwrap().path(), &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar/b"));
+        assert_eq!(
+            result.unwrap().path(),
+            &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar/b")
+        );
     }
 }
-

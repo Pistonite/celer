@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use crate::macros::derive_wasm;
 use crate::lang::DocRichText;
+use crate::macros::derive_wasm;
 
 /// Document note block
 #[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
@@ -12,5 +12,3 @@ pub enum DocNote {
     Image { link: String },
     Video { link: String },
 }
-
-

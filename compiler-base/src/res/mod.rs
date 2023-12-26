@@ -70,18 +70,21 @@ pub trait Loader {
 /// It can be a local file or a remote URL. It also has an associated ref-counted
 /// [`Loader`] that can be used to load the resource.
 #[derive(Debug, Clone)]
-pub struct Resource<'a, L> where L: Loader {
+pub struct Resource<'a, L>
+where
+    L: Loader,
+{
     path: ResPath<'a>,
     loader: RefCounted<L>,
 }
 
-impl<'a, L> Resource<'a, L> where L: Loader {
+impl<'a, L> Resource<'a, L>
+where
+    L: Loader,
+{
     /// Create a new resource
-    pub fn new( path: ResPath<'a>, loader: RefCounted<L>,) -> Self {
-        Self {
-            path,
-            loader,
-        }
+    pub fn new(path: ResPath<'a>, loader: RefCounted<L>) -> Self {
+        Self { path, loader }
     }
 
     /// Create a new resource with the same loader as `self` but with a different path
@@ -105,18 +108,14 @@ impl<'a, L> Resource<'a, L> where L: Loader {
     pub async fn load_utf8(&self) -> ResResult<Cow<'_, str>> {
         let bytes = self.loader.load_raw(&self.path).await?;
         match bytes {
-            Cow::Borrowed(bytes) => {
-                match std::str::from_utf8(bytes) {
-                    Ok(v) => Ok(Cow::from(v)),
-                    Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
-                }
-            }
-            Cow::Owned(bytes) => {
-                match String::from_utf8(bytes) {
-                    Ok(v) => Ok(Cow::from(v)),
-                    Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
-                }
-            }
+            Cow::Borrowed(bytes) => match std::str::from_utf8(bytes) {
+                Ok(v) => Ok(Cow::from(v)),
+                Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
+            },
+            Cow::Owned(bytes) => match String::from_utf8(bytes) {
+                Ok(v) => Ok(Cow::from(v)),
+                Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
+            },
         }
     }
 

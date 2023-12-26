@@ -4,9 +4,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::macros::derive_wasm;
+use crate::prep::PrepResult;
 use crate::prop;
 use crate::res::Loader;
-use crate::prep::PrepResult;
 
 use super::PreparedConfig;
 
@@ -39,18 +39,19 @@ pub struct MapMetadata {
 pub struct GameCoord(pub f64, pub f64, pub f64);
 
 macro_rules! check_map_required_property {
-    ($self:ident, $map_config:ident, $prop:expr) => {
-        {
-            let prop = $prop;
-            super::check_required_property!($self, $map_config.remove(prop), format!("{}.{}", prop::MAP, prop))
-        }
-    };
+    ($self:ident, $map_config:ident, $prop:expr) => {{
+        let prop = $prop;
+        super::check_required_property!(
+            $self,
+            $map_config.remove(prop),
+            format!("{}.{}", prop::MAP, prop)
+        )
+    }};
 }
-
 
 impl<'a> PreparedConfig<'a> {
     /// Load the map config into `self.map`
-    /// 
+    ///
     /// This does not check for existing map configs, and replaces the existing map config
     pub async fn load_map(&mut self, map_config: Value) -> PrepResult<()> {
         // ensure config is object
@@ -59,66 +60,68 @@ impl<'a> PreparedConfig<'a> {
         let layers = check_map_required_property!(self, map_config, prop::LAYERS)?;
         let coord_map = check_map_required_property!(self, map_config, prop::COORD_MAP)?;
         let initial_coord = check_map_required_property!(self, map_config, prop::INITIAL_COORD)?;
-        let initial_zoom = check_map_required_property!(self, map_config, prop::INITIAL_ZOOM)?; 
-        let initial_color = check_map_required_property!(self, map_config, prop::INITIAL_COLOR)?; 
+        let initial_zoom = check_map_required_property!(self, map_config, prop::INITIAL_ZOOM)?;
+        let initial_color = check_map_required_property!(self, map_config, prop::INITIAL_COLOR)?;
         // disallow additional properties
-        self.check_unused_property(map_config.keys().next().map(|k|{
-            format!("{}.{}", prop::MAP, k)
-        }))?;
+        self.check_unused_property(
+            map_config
+                .keys()
+                .next()
+                .map(|k| format!("{}.{}", prop::MAP, k)),
+        )?;
 
         // type checking
         let layers = super::check_array!(self, layers, format!("{}.{}", prop::MAP, prop::LAYERS))?;
-    //     let coord_map = super::pack_coord_map(coord_map, trace)?;
-    // let initial_coord = match serde_json::from_value::<GameCoord>(initial_coord) {
-    //     Ok(c) => c,
-    //     Err(_) => {
-    //         return Err(PackerError::InvalidConfigProperty(
-    //             trace.clone(),
-    //             format!("{}.{}", prop::MAP, prop::INITIAL_COORD),
-    //         ))
-    //     }
-    // };
-    //
-    // let initial_zoom = match initial_zoom.as_u64() {
-    //     Some(z) => z,
-    //     None => {
-    //         return Err(PackerError::InvalidConfigProperty(
-    //             trace.clone(),
-    //             format!("{}.{}", prop::MAP, prop::INITIAL_ZOOM),
-    //         ))
-    //     }
-    // };
-    //
-    // let initial_color = if initial_color.is_array() || initial_color.is_object() {
-    //     return Err(PackerError::InvalidConfigProperty(
-    //         trace.clone(),
-    //         format!("{}.{}", prop::MAP, prop::INITIAL_COLOR),
-    //     ));
-    // } else {
-    //     initial_color.coerce_to_string()
-    // };
-    //
-    //     // parse layers
-    // let layers = {
-    //     let mut packed_layers = Vec::with_capacity(layers.len());
-    //     for (i, layer) in layers.into_iter().enumerate() {
-    //         packed_layers.push(super::config.load_map_layer(layer, trace, i)?);
-    //     }
-    //     packed_layers
-    // };
-    // Ok(MapMetadata {
-    //     layers,
-    //     coord_map,
-    //     initial_coord,
-    //     initial_zoom,
-    //     initial_color,
-    // });
+        //     let coord_map = super::pack_coord_map(coord_map, trace)?;
+        // let initial_coord = match serde_json::from_value::<GameCoord>(initial_coord) {
+        //     Ok(c) => c,
+        //     Err(_) => {
+        //         return Err(PackerError::InvalidConfigProperty(
+        //             trace.clone(),
+        //             format!("{}.{}", prop::MAP, prop::INITIAL_COORD),
+        //         ))
+        //     }
+        // };
+        //
+        // let initial_zoom = match initial_zoom.as_u64() {
+        //     Some(z) => z,
+        //     None => {
+        //         return Err(PackerError::InvalidConfigProperty(
+        //             trace.clone(),
+        //             format!("{}.{}", prop::MAP, prop::INITIAL_ZOOM),
+        //         ))
+        //     }
+        // };
+        //
+        // let initial_color = if initial_color.is_array() || initial_color.is_object() {
+        //     return Err(PackerError::InvalidConfigProperty(
+        //         trace.clone(),
+        //         format!("{}.{}", prop::MAP, prop::INITIAL_COLOR),
+        //     ));
+        // } else {
+        //     initial_color.coerce_to_string()
+        // };
+        //
+        //     // parse layers
+        // let layers = {
+        //     let mut packed_layers = Vec::with_capacity(layers.len());
+        //     for (i, layer) in layers.into_iter().enumerate() {
+        //         packed_layers.push(super::config.load_map_layer(layer, trace, i)?);
+        //     }
+        //     packed_layers
+        // };
+        // Ok(MapMetadata {
+        //     layers,
+        //     coord_map,
+        //     initial_coord,
+        //     initial_zoom,
+        //     initial_color,
+        // });
 
-            // todo: set self.map
-            todo!()
+        // todo: set self.map
+        todo!()
     }
 }
-
 
 #[cfg(test)]
 mod test {
@@ -173,54 +176,54 @@ mod test {
         let result = config.load_map(json!({})).await;
         assert_missing_property(result, "map.layers");
 
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": {}
-            })
-        ).await;
+            }))
+            .await;
         assert_missing_property(result, "map.coord-map");
 
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": {},
                 "coord-map": {}
-            }),
-        ).await;
+            }))
+            .await;
         assert_missing_property(result, "map.initial-coord");
 
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": {},
                 "coord-map": {},
                 "initial-coord": {}
-            }),
-        ).await;
+            }))
+            .await;
         assert_missing_property(result, "map.initial-zoom");
 
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": {},
                 "coord-map": {},
                 "initial-coord": {},
                 "initial-zoom": {},
-            }),
-        ).await;
+            }))
+            .await;
         assert_missing_property(result, "map.initial-color");
     }
 
     #[tokio::test]
     async fn test_extra_properties() {
         let mut config = PreparedConfig::default();
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": {},
                 "coord-map": {},
                 "initial-coord": {},
                 "initial-zoom": {},
                 "initial-color": {},
                 "extra": {},
-            }),
-        ).await;
+            }))
+            .await;
         assert_eq!(
             result,
             Err(PrepError::UnusedConfigProperty(
@@ -233,15 +236,15 @@ mod test {
     #[tokio::test]
     async fn test_invalid_property_types() {
         let mut config = PreparedConfig::default();
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": {},
                 "coord-map": {},
                 "initial-coord": {},
                 "initial-zoom": {},
                 "initial-color": {},
-            }),
-        ).await;
+            }))
+            .await;
         assert_eq!(
             result,
             Err(PrepError::InvalidConfigPropertyType(
@@ -251,15 +254,15 @@ mod test {
             ))
         );
 
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": [],
                 "coord-map": [],
                 "initial-coord": {},
                 "initial-zoom": {},
                 "initial-color": {},
-            }),
-        ).await;
+            }))
+            .await;
         assert_eq!(
             result,
             Err(PrepError::InvalidConfigPropertyType(
@@ -269,8 +272,8 @@ mod test {
             ))
         );
 
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": [],
                 "coord-map": {
                     "2d": ["x", "x"],
@@ -279,8 +282,8 @@ mod test {
                 "initial-coord": {},
                 "initial-zoom": {},
                 "initial-color": {},
-            }),
-        ).await;
+            }))
+            .await;
         assert_eq!(
             result,
             Err(PrepError::InvalidConfigPropertyType(
@@ -290,8 +293,8 @@ mod test {
             ))
         );
 
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": [],
                 "coord-map": {
                     "2d": ["x", "x"],
@@ -300,8 +303,8 @@ mod test {
                 "initial-coord": [0, 0, 0],
                 "initial-zoom": {},
                 "initial-color": {},
-            }),
-        ).await;
+            }))
+            .await;
         assert_eq!(
             result,
             Err(PrepError::InvalidConfigPropertyType(
@@ -311,8 +314,8 @@ mod test {
             ))
         );
 
-        let result = config.load_map(
-            json!({
+        let result = config
+            .load_map(json!({
                 "layers": [],
                 "coord-map": {
                     "2d": ["x", "x"],
@@ -321,8 +324,8 @@ mod test {
                 "initial-coord": [0, 0, 0],
                 "initial-zoom": 0,
                 "initial-color": {},
-            }),
-        ).await;
+            }))
+            .await;
         assert_eq!(
             result,
             Err(PrepError::InvalidConfigPropertyType(

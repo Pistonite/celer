@@ -18,14 +18,16 @@
 //! The output is a [`Compiler`]
 
 use std::borrow::Cow;
-use std::ops::{DerefMut, Deref};
+use std::ops::{Deref, DerefMut};
 
 use instant::Instant;
 
-use crate::json::RouteBlob;
 use crate::env::{join_futures, yield_budget};
-use crate::prep::{RouteConfig, CompilerMetadata, PreparedContext, PrepDoc, GameCoord, Setting, self};
+use crate::json::RouteBlob;
 use crate::plugin::{PluginError, PluginRuntime};
+use crate::prep::{
+    self, CompilerMetadata, GameCoord, PrepDoc, PreparedContext, RouteConfig, Setting,
+};
 use crate::res::Loader;
 
 #[derive(Debug, thiserror::Error)]
@@ -93,16 +95,19 @@ impl<'p> CompileContext<'p> {
         let mut output = Vec::with_capacity(self.meta.plugins.len());
         for plugin in &self.meta.plugins {
             yield_budget(4).await;
-            let runtime = plugin.create_runtime(&self).map_err(PackError::PluginInitError)?;
+            let runtime = plugin
+                .create_runtime(&self)
+                .map_err(PackError::PluginInitError)?;
             output.push(runtime);
         }
         Ok(output)
     }
 }
 
-
-impl<L> PreparedContext<L> where L: Loader {
-
+impl<L> PreparedContext<L>
+where
+    L: Loader,
+{
     /// Entry point to the pack phase. Creates a [`Compiler`] that can be used to compile the route
     /// JSON to a document
     pub async fn create_compiler(&self, reset_start_time: bool) -> PackResult<Compiler<'_>> {
@@ -116,7 +121,8 @@ impl<L> PreparedContext<L> where L: Loader {
             match &self.prep_doc {
                 PrepDoc::Built(route) => Cow::Borrowed(route),
                 PrepDoc::Raw(route) => {
-                    let route = prep::build_route(&self.project_res, route.clone(), &self.setting).await;
+                    let route =
+                        prep::build_route(&self.project_res, route.clone(), &self.setting).await;
                     Cow::Owned(route)
                 }
             }
@@ -140,12 +146,20 @@ impl<L> PreparedContext<L> where L: Loader {
             ctx,
             route,
             plugin_runtimes,
-            color: self.config.map.as_ref().map(|m| m.initial_color.clone()).unwrap_or("#fff".to_string()),
-            coord: self.config.map.as_ref().map(|m| m.initial_coord.clone()).unwrap_or_default(),
+            color: self
+                .config
+                .map
+                .as_ref()
+                .map(|m| m.initial_color.clone())
+                .unwrap_or("#fff".to_string()),
+            coord: self
+                .config
+                .map
+                .as_ref()
+                .map(|m| m.initial_coord.clone())
+                .unwrap_or_default(),
         };
 
         Ok(compiler)
-
     }
-
 }

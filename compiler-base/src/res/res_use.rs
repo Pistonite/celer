@@ -68,7 +68,10 @@ impl Use {
     /// Convert a path in the `use` property to a Use object
     ///
     /// If the path is malformed, this returns a [`Use::Invalid`]
-    pub fn new<'a, S>(v: S) -> Self where S: Into<Cow<'a, str>> {
+    pub fn new<'a, S>(v: S) -> Self
+    where
+        S: Into<Cow<'a, str>>,
+    {
         let v = v.into();
         if v.starts_with('/') {
             if v.ends_with('/') {
@@ -148,7 +151,12 @@ impl ValidUse {
         match self {
             ValidUse::Relative(_) => None,
             ValidUse::Absolute(_) => None,
-            ValidUse::Remote { owner, repo, reference, .. } => {
+            ValidUse::Remote {
+                owner,
+                repo,
+                reference,
+                ..
+            } => {
                 let branch = reference.as_deref().unwrap_or("main");
                 let url = format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/");
                 Some(url)

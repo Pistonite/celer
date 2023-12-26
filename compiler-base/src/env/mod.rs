@@ -1,8 +1,8 @@
 //! Environment setup or things that depend on the execution environment (server vs WASM).
 
 use std::cell::RefCell;
-use std::sync::OnceLock;
 use std::ops::Deref;
+use std::sync::OnceLock;
 
 #[cfg(feature = "wasm")]
 pub mod env_wasm;
@@ -38,7 +38,10 @@ pub fn get_site_domain() -> &'static str {
     }
 }
 
-impl<T> Deref for RefCounted<T> where T: ?Sized{
+impl<T> Deref for RefCounted<T>
+where
+    T: ?Sized,
+{
     type Target = T;
 
     #[inline]

@@ -8,7 +8,7 @@ pub enum ResType {
     Png,
     Jpeg,
     Gif,
-    Webp
+    Webp,
 }
 
 impl ResType {

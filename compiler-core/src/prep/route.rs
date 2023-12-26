@@ -4,10 +4,10 @@ use std::collections::BTreeMap;
 
 use serde_json::{Map, Value};
 
-use crate::res::{Use, ValidUse, Resource, Loader, ResError};
-use crate::json::{RouteBlob, RouteBlobError, Coerce, Cast};
-use crate::macros::async_recursion;
 use crate::env::yield_budget;
+use crate::json::{Cast, Coerce, RouteBlob, RouteBlobError};
+use crate::macros::async_recursion;
+use crate::res::{Loader, ResError, Resource, Use, ValidUse};
 
 use super::Setting;
 
@@ -216,7 +216,6 @@ use super::Setting;
 //     }
 // }
 
-
 /// Resolve `use`s inside the route json blob
 ///
 /// The following rule is used when seeing a `use`:
@@ -230,8 +229,9 @@ pub async fn build_route<L>(
     project_resource: &Resource<'_, L>,
     route: Value,
     setting: &Setting,
-) -> RouteBlob 
-where L: Loader
+) -> RouteBlob
+where
+    L: Loader,
 {
     build_route_internal(project_resource, route, 0, 0, setting).await
 }
@@ -266,12 +266,7 @@ where
     match Use::from_value(&route) {
         Some(Use::Valid(valid_use)) => {
             // `use` not inside an array, just resolve it and return
-            build_route_from_use(
-                resource, 
-                valid_use, 
-                use_depth, 
-                setting,
-            ).await
+            build_route_from_use(resource, valid_use, use_depth, setting).await
         }
         Some(Use::Invalid(path)) => {
             // is `use` but path is invalid
@@ -322,13 +317,7 @@ where
         match Use::from_value(&value) {
             Some(Use::Valid(valid_use)) => {
                 // for `use` inside array, we need to flatten the resulting array (if it is one)
-                let result = build_route_from_use(
-                    resource,
-                    valid_use,
-                    use_depth,
-                    setting
-                )
-                .await;
+                let result = build_route_from_use(resource, valid_use, use_depth, setting).await;
                 match result {
                     RouteBlob::Array(arr) => {
                         output.extend(arr);
@@ -344,14 +333,8 @@ where
             }
             None => {
                 // not a use
-                let result = build_route_internal(
-                    resource,
-                    value,
-                    use_depth,
-                    ref_depth + 1,
-                    setting,
-                )
-                .await;
+                let result =
+                    build_route_internal(resource, value, use_depth, ref_depth + 1, setting).await;
                 output.push(result);
             }
         }
@@ -374,12 +357,12 @@ where
     // Resolve the resource
     let inner_resource = match resource.resolve(&use_prop) {
         Ok(r) => r,
-        Err(e) => return e.into()
+        Err(e) => return e.into(),
     };
     // Load the resource
     let data = match inner_resource.load_structured().await {
         Ok(r) => r,
-        Err(e) => return e.into()
+        Err(e) => return e.into(),
     };
 
     build_route_internal(
@@ -387,7 +370,7 @@ where
         data,
         use_depth + 1,
         0, // ref depth should be reset inside a new `use`
-        setting
+        setting,
     )
     .await
 }

@@ -4,8 +4,12 @@ use serde_json::{Map, Value};
 pub trait Cast: Sized {
     type Array;
     type Object;
-    type AsArray<'a>: 'a where Self: 'a;
-    type AsObject<'a>: 'a where Self: 'a;
+    type AsArray<'a>: 'a
+    where
+        Self: 'a;
+    type AsObject<'a>: 'a
+    where
+        Self: 'a;
     fn try_into_array(self) -> Result<Self::Array, Self>;
     fn try_into_object(self) -> Result<Self::Object, Self>;
     fn as_array(&self) -> Option<Self::AsArray<'_>>;

@@ -1,9 +1,9 @@
 use instant::Instant;
 use serde_json::Value;
 
-use crate::prep::CompilerMetadata;
 use crate::comp::CompDoc;
 use crate::json::Coerce;
+use crate::prep::CompilerMetadata;
 use crate::prop;
 use crate::types::ExecDoc;
 
@@ -58,20 +58,20 @@ impl PluginRuntime for MetricsPlugin {
         }
         Ok(())
     }
-    fn on_after_execute<'a>( &mut self, doc: &mut ExecDoc<'a>,) -> PluginResult<()> {
+    fn on_after_execute<'a>(&mut self, doc: &mut ExecDoc<'a>) -> PluginResult<()> {
         // measure time since comp finished = exec time
         let exec_time_ms = self.last_start_time.elapsed().as_millis() as u64;
         let project = doc.project.to_mut();
 
         // add time to statistics
         if self.detailed {
+            project.stats.insert(
+                "Prep Time".to_string(),
+                format!("{}ms", self.before_comp_time_ms),
+            );
             project
                 .stats
-                .insert("Prep Time".to_string(), format!("{}ms", self.before_comp_time_ms));
-            project.stats.insert(
-                "Comp Time".to_string(),
-                format!("{}ms", self.comp_time_ms),
-            );
+                .insert("Comp Time".to_string(), format!("{}ms", self.comp_time_ms));
             project
                 .stats
                 .insert("Exec Time".to_string(), format!("{exec_time_ms}ms"));

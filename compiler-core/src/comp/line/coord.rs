@@ -1,6 +1,6 @@
-use crate::json::{Cast, Coerce, SafeRouteBlob, SafeRouteArray};
-use crate::prep::{Axis, GameCoord};
 use crate::comp::CompResult;
+use crate::json::{Cast, Coerce, SafeRouteArray, SafeRouteBlob};
+use crate::prep::{Axis, GameCoord};
 
 use super::{CompError, LineContext};
 
@@ -18,9 +18,7 @@ macro_rules! map_coord {
                 }
                 Ok(())
             }
-            None => Err(CompError::InvalidCoordinateValue(
-                $coord.coerce_to_repl(),
-            )),
+            None => Err(CompError::InvalidCoordinateValue($coord.coerce_to_repl())),
         }
     }};
 }
@@ -52,7 +50,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
                     map_coord!(mapping, c2, output, 1)?;
                     map_coord!(mapping, c3, output, 2)?;
                 }
-            },
+            }
             None => {
                 if let Some(map) = &self.compiler.config.map {
                     let mapping = &map.coord_map.mapping_2d;
@@ -72,8 +70,8 @@ mod test {
 
     use serde_json::{json, Value};
 
-    use crate::json::IntoSafeRouteBlob;
     use crate::comp::test_utils::CompilerBuilder;
+    use crate::json::IntoSafeRouteBlob;
     use crate::prep::{MapCoordMap, MapMetadata, RouteConfig};
 
     use super::*;
@@ -167,24 +165,12 @@ mod test {
         let ctx = LineContext::with_compiler(&compiler);
 
         let input = json!([1, 2]);
-        assert_eq!(
-            Ok(GameCoord(1.0, 0.0, 2.0)),
-            ctx.test_parse_coord(input)
-        );
+        assert_eq!(Ok(GameCoord(1.0, 0.0, 2.0)), ctx.test_parse_coord(input));
         let input = json!([1, 2, 3]);
-        assert_eq!(
-            Ok(GameCoord(0.0, 3.0, 2.0)),
-            ctx.test_parse_coord(input)
-        );
+        assert_eq!(Ok(GameCoord(0.0, 3.0, 2.0)), ctx.test_parse_coord(input));
         let input = json!(["1", "2.3", 3]);
-        assert_eq!(
-            Ok(GameCoord(0.0, 3.0, 2.3)),
-            ctx.test_parse_coord(input)
-        );
+        assert_eq!(Ok(GameCoord(0.0, 3.0, 2.3)), ctx.test_parse_coord(input));
         let input = json!(["-1", "0.000"]);
-        assert_eq!(
-            Ok(GameCoord(-1.0, 0.0, 0.0)),
-            ctx.test_parse_coord(input)
-        );
+        assert_eq!(Ok(GameCoord(-1.0, 0.0, 0.0)), ctx.test_parse_coord(input));
     }
 }

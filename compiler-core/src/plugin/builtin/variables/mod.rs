@@ -5,16 +5,16 @@ use std::collections::HashMap;
 
 use serde_json::{json, Map, Value};
 
-use crate::prep::{CompilerMetadata, DocTagColor, DocTag};
-use crate::comp::{CompDoc};
-use crate::pack::{Compiler, CompileContext};
+use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::lang::{self, DocRichTextBlock};
 use crate::macros::async_trait;
 use crate::pack::PackResult;
-use crate::prop;
-use crate::types::{DocDiagnostic};
+use crate::pack::{CompileContext, Compiler};
 use crate::plugin::{operation, PluginResult, PluginRuntime};
+use crate::prep::{CompilerMetadata, DocTag, DocTagColor};
+use crate::prop;
+use crate::types::DocDiagnostic;
 
 mod convert;
 mod transform;
@@ -293,8 +293,7 @@ impl PluginRuntime for VariablesPlugin {
             }),
             ..Default::default()
         };
-        ctx
-            .config
+        ctx.config
             .tags
             .entry(VAL.to_string())
             .and_modify(|t| t.apply_to_default(&tag))

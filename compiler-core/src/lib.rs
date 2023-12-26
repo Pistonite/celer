@@ -1,4 +1,3 @@
-
 //! # Celer Compiler Core
 //!
 //! Implementation of the core compiler phases:
@@ -8,14 +7,13 @@
 //!    - [`exec`] Process the route data into a renderable object
 //!    - [`expo`] Export artifacts from the route
 
-
 pub mod plugin;
 
-pub mod prep;
-pub mod pack;
 pub mod comp;
-pub mod exec;    // executor, depends on: comp
-//pub mod expo;  // export phase (todo)
+pub mod exec;
+pub mod pack;
+pub mod prep; // executor, depends on: comp
+              //pub mod expo;  // export phase (todo)
 
 // public API re-exports
 pub use prep::{ContextBuilder, PreparedContext};

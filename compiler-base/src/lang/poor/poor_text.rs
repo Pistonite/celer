@@ -1,6 +1,6 @@
 //! Implementations for extended utils of [`DocPoorText`]
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::macros::derive_wasm;
 

@@ -2,12 +2,12 @@
 
 use serde_json::Value;
 
-use crate::prep::{CompilerMetadata, GameCoord};
 use crate::comp::{CompDoc, CompLine};
 use crate::json::Coerce;
-use crate::types::{DocDiagnostic};
 use crate::lang::{self, DocRichText, DocRichTextBlock};
 use crate::plugin::{operation, PluginResult, PluginRuntime};
+use crate::prep::{CompilerMetadata, GameCoord};
+use crate::types::DocDiagnostic;
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";

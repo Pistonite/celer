@@ -1,19 +1,17 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::{SafeRouteBlob, RouteBlob, IntoSafeRouteBlob, Coerce, Cast};
+use crate::json::{Cast, Coerce, IntoSafeRouteBlob, RouteBlob, SafeRouteBlob};
 use crate::lang;
 use crate::lang::{DocRichText, DocRichTextBlock, PresetInst};
-use crate::pack::Compiler;
-use crate::prop;
-use crate::types::{DocDiagnostic};
 use crate::macros::derive_wasm;
-use crate::util::StringMap;
+use crate::pack::Compiler;
 use crate::prep::GameCoord;
+use crate::prop;
+use crate::types::DocDiagnostic;
+use crate::util::StringMap;
 
-use super::{
-    validate_not_array_or_object, CompError, CompResult,
-};
+use super::{validate_not_array_or_object, CompError, CompResult};
 
 mod coord;
 pub use coord::*;
@@ -132,13 +130,16 @@ impl<'c, 'p> LineContext<'c, 'p> {
         if let Some(movements) = properties.remove(prop::MOVEMENTS) {
             properties.insert_value(
                 prop::MOVEMENTS.to_string(),
-                self.expand_presets_in_movements(0, movements)
+                self.expand_presets_in_movements(0, movements),
             );
         }
 
         // if the line doesn't have the text property yet, use the outer text
         if properties.get(prop::TEXT).is_none() {
-            properties.insert_value(prop::TEXT.to_string(), Value::String(text.into_owned()).into_unchecked());
+            properties.insert_value(
+                prop::TEXT.to_string(),
+                Value::String(text.into_owned()).into_unchecked(),
+            );
         }
 
         // apply each property
@@ -147,11 +148,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
         }
     }
 
-    fn apply_property(
-        &mut self,
-        key: String,
-        value: SafeRouteBlob<'_>,
-    ) {
+    fn apply_property(&mut self, key: String, value: SafeRouteBlob<'_>) {
         match key.as_str() {
             prop::TEXT => {
                 validate_not_array_or_object!(&value, self.errors, prop::TEXT.to_string());
@@ -187,7 +184,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 // output.notes = notes;
             }
             prop::SPLIT_NAME => {
-                if validate_not_array_or_object!(&value, self.errors, prop::SPLIT_NAME.to_string()) {
+                if validate_not_array_or_object!(&value, self.errors, prop::SPLIT_NAME.to_string())
+                {
                     self.line.split_name = Some(lang::parse_rich(&value.coerce_to_string()));
                 }
             }
@@ -210,7 +208,11 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::ICON_PRIORITY => {
-                if validate_not_array_or_object!(&value, self.errors, prop::ICON_PRIORITY.to_string()) {
+                if validate_not_array_or_object!(
+                    &value,
+                    self.errors,
+                    prop::ICON_PRIORITY.to_string()
+                ) {
                     if let Some(i) = value.try_coerce_to_i64() {
                         self.line.map_icon_priority = i;
                     } else {
@@ -240,22 +242,19 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::MOVEMENTS => {
-                let array = match value.try_into_array()  {
+                let array = match value.try_into_array() {
                     Err(_) => {
                         self.errors.push(CompError::InvalidLinePropertyType(
                             prop::MOVEMENTS.to_string(),
                         ));
                         return;
                     }
-                    Ok(array) => array
+                    Ok(array) => array,
                 };
-                        // // need to track the coordinate of the final position with a stack
-                        // let mut ref_stack = vec![];
+                // // need to track the coordinate of the final position with a stack
+                // let mut ref_stack = vec![];
                 for (i, v) in array.into_iter().enumerate() {
-                    self.compile_movement(
-                        &format!("{p}[{i}]", p = prop::MOVEMENTS),
-                        v,
-                    );
+                    self.compile_movement(&format!("{p}[{i}]", p = prop::MOVEMENTS), v);
                 }
                 //     {
                 //                 match &m {
@@ -301,7 +300,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
             prop::BANNER => match value.try_coerce_to_bool() {
                 Some(value) => self.line.is_banner = value,
                 None => {
-                    self.errors.push(CompError::InvalidLinePropertyType(prop::BANNER.to_string()));
+                    self.errors
+                        .push(CompError::InvalidLinePropertyType(prop::BANNER.to_string()));
                 }
             },
             _ => {
@@ -310,4 +310,3 @@ impl<'c, 'p> LineContext<'c, 'p> {
         }
     }
 }
-

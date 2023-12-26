@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::prep::{CompilerMetadata};
-use crate::pack::{CompileContext};
-use crate::comp::{CompDoc};
-use crate::lang::{DocPoorText,parse_poor};
+use crate::comp::CompDoc;
+use crate::lang::{parse_poor, DocPoorText};
+use crate::pack::CompileContext;
+use crate::prep::CompilerMetadata;
 use crate::types::{DocDiagnostic, ExecDoc};
 
 mod builtin;
@@ -56,7 +56,7 @@ pub trait PluginRuntime {
         Ok(())
     }
     /// Called after the route is turned into ExecDoc
-    fn on_after_execute<'a>( &mut self, _doc: &mut ExecDoc<'a>,) -> PluginResult<()> {
+    fn on_after_execute<'a>(&mut self, _doc: &mut ExecDoc<'a>) -> PluginResult<()> {
         Ok(())
     }
 }
@@ -70,7 +70,10 @@ pub struct PluginInstance {
 }
 
 impl PluginInstance {
-    pub fn create_runtime<'a>(&self, ctx: &CompileContext<'a>) -> PluginResult<Box<dyn PluginRuntime>> {
+    pub fn create_runtime<'a>(
+        &self,
+        ctx: &CompileContext<'a>,
+    ) -> PluginResult<Box<dyn PluginRuntime>> {
         match &self.plugin {
             Plugin::BuiltIn(p) => p.create_runtime(ctx, &self.props),
             Plugin::Script(p) => p.create_runtime(ctx, &self.props),
@@ -80,11 +83,9 @@ impl PluginInstance {
 
 /// The source of a plugin, from which a [`PluginInstance`] can be created
 #[derive(Debug, Clone)]
-pub enum Plugin{
+pub enum Plugin {
     /// A built-in plugin
     BuiltIn(BuiltInPlugin),
     /// A script that is downloaded but not parsed.
     Script(ScriptPlugin),
 }
-
-

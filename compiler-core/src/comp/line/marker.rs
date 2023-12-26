@@ -2,9 +2,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce, SafeRouteBlob};
-use crate::prep::{GameCoord};
-use crate::prop;
 use crate::macros::derive_wasm;
+use crate::prep::GameCoord;
+use crate::prop;
 
 use super::{CompError, LineContext};
 
@@ -33,11 +33,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
     /// The following are valid:
     /// - one coords value (array of 2 or 3)
     /// - object with `at` property, an optionally `color`
-    pub fn compile_marker(
-        &mut self,
-        prop_name: &str,
-        prop: SafeRouteBlob<'_>,
-    ) {
+    pub fn compile_marker(&mut self, prop_name: &str, prop: SafeRouteBlob<'_>) {
         let prop = match prop.try_into_array() {
             Err(prop) => prop,
             Ok(array) => {
@@ -84,7 +80,9 @@ impl<'c, 'p> LineContext<'c, 'p> {
                         color = Some(value.coerce_into_string())
                     }
                 }
-                _ => self.errors.push(CompError::UnusedProperty(format!("{prop_name}.{key}"))),
+                _ => self
+                    .errors
+                    .push(CompError::UnusedProperty(format!("{prop_name}.{key}"))),
             }
         }
 
@@ -108,8 +106,8 @@ mod test {
 
     use serde_json::json;
 
-    use crate::json::IntoSafeRouteBlob;
     use crate::comp::test_utils;
+    use crate::json::IntoSafeRouteBlob;
 
     use super::*;
 
@@ -183,7 +181,7 @@ mod test {
         ctx.errors.clear();
 
         ctx.test_compile_marker("test", json!({"at": {}, "color": {}}));
-        assert_eq!( ctx.line.markers, vec![]);
+        assert_eq!(ctx.line.markers, vec![]);
         assert_eq!(
             ctx.errors,
             vec![

@@ -23,16 +23,16 @@ use std::collections::BTreeMap;
 
 use derivative::Derivative;
 use instant::Instant;
-use serde::{Serialize, Deserialize};
-use serde_json::{Value, Map};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 
-use crate::json::{RouteBlob, Cast, Coerce};
-use crate::lang::Preset;
-use crate::plugin::PluginInstance;
-use crate::res::{ResError, Loader, Resource, Use, ValidUse};
-use crate::prop;
 use crate::env::join_futures;
+use crate::json::{Cast, Coerce, RouteBlob};
+use crate::lang::Preset;
 use crate::macros::derive_wasm;
+use crate::plugin::PluginInstance;
+use crate::prop;
+use crate::res::{Loader, ResError, Resource, Use, ValidUse};
 use crate::util::StringMap;
 
 mod entry_point;
@@ -55,11 +55,11 @@ pub enum PrepError {
     InvalidConfigType(ConfigTrace),
 
     #[error("Project config ({0}): property `{1}` has an invalid type (expected {2})")]
-    InvalidConfigPropertyType(ConfigTrace, Cow<'static, str>, Cow<'static,str>),
+    InvalidConfigPropertyType(ConfigTrace, Cow<'static, str>, Cow<'static, str>),
 
     #[error("Project config ({0}): property `{1}` is missing")]
     MissingConfigProperty(ConfigTrace, Cow<'static, str>),
-    
+
     #[error("Project config ({0}): the `{1}` property is unused")]
     UnusedConfigProperty(ConfigTrace, Cow<'static, str>),
 
@@ -98,7 +98,10 @@ pub type PrepResult<T> = Result<T, PrepError>;
 
 /// Output of the prep phase
 #[derive(Debug, Clone)]
-pub struct PreparedContext<L> where L: Loader {
+pub struct PreparedContext<L>
+where
+    L: Loader,
+{
     pub project_res: Resource<'static, L>,
     pub config: RouteConfig,
     pub meta: CompilerMetadata,
@@ -157,7 +160,10 @@ pub struct CompilerMetadata {
 
 // prep phase entry points
 #[derive(Debug)]
-pub struct ContextBuilder<L> where L: Loader {
+pub struct ContextBuilder<L>
+where
+    L: Loader,
+{
     source: String,
     project_res: Resource<'static, L>,
     setting: Setting,
@@ -165,7 +171,10 @@ pub struct ContextBuilder<L> where L: Loader {
     build_route: bool,
 }
 
-impl<L> ContextBuilder<L> where L: Loader {
+impl<L> ContextBuilder<L>
+where
+    L: Loader,
+{
     pub fn new(source: String, project_res: Resource<'static, L>) -> Self {
         Self {
             source,
@@ -203,11 +212,10 @@ impl<L> ContextBuilder<L> where L: Loader {
         let metadata = self.load_metadata(&mut project)?;
 
         let config = match project.remove(prop::CONFIG) {
-            Some(config) => {
-                config.try_into_array()
-                    .map_err(|_| PrepError::InvalidMetadataPropertyType(prop::CONFIG, "array"))?
-            },
-            None => vec![]
+            Some(config) => config
+                .try_into_array()
+                .map_err(|_| PrepError::InvalidMetadataPropertyType(prop::CONFIG, "array"))?,
+            None => vec![],
         };
 
         let route = project.remove(prop::ROUTE).unwrap_or_default();
@@ -242,7 +250,7 @@ impl<L> ContextBuilder<L> where L: Loader {
             while let Some((name, mut preset)) = unoptimized_presets.pop_first() {
                 preset
                     .optimize(&mut unoptimized_presets, &mut optimized_presets)
-                .await;
+                    .await;
                 optimized_presets.insert(name, preset);
             }
 
@@ -320,7 +328,10 @@ impl<L> ContextBuilder<L> where L: Loader {
                     _ => {
                         // this shouldn't happen
                         // since load_entry_points checks for if the path is valid
-                        return Err(PrepError::InvalidEntryPoint(self.entry_point.as_ref().cloned().unwrap_or_default(), "unreachable".to_string()));
+                        return Err(PrepError::InvalidEntryPoint(
+                            self.entry_point.as_ref().cloned().unwrap_or_default(),
+                            "unreachable".to_string(),
+                        ));
                     }
                 }
             }
@@ -330,8 +341,7 @@ impl<L> ContextBuilder<L> where L: Loader {
         Ok(project_obj)
     }
 
-    async fn load_project(&self) -> PrepResult<Map<String, Value>> 
-    {
+    async fn load_project(&self) -> PrepResult<Map<String, Value>> {
         match self.project_res.load_structured().await? {
             Value::Object(o) => Ok(o),
             _ => Err(PrepError::InvalidProjectResourceType(
@@ -339,7 +349,6 @@ impl<L> ContextBuilder<L> where L: Loader {
             )),
         }
     }
-
 
     /// Load the metadata from the project value. The metadata properties are removed
     fn load_metadata(&self, project: &mut Map<String, Value>) -> PrepResult<RouteMetadata> {
@@ -352,7 +361,7 @@ impl<L> ContextBuilder<L> where L: Loader {
                     ));
                 }
                 title.coerce_to_string()
-            },
+            }
             None => "Untitled Project".into(),
         };
         let version = match project.remove(prop::VERSION) {
@@ -364,7 +373,7 @@ impl<L> ContextBuilder<L> where L: Loader {
                     ));
                 }
                 version.coerce_to_string()
-            },
+            }
             None => "(unspecified)".into(),
         };
 
@@ -373,7 +382,6 @@ impl<L> ContextBuilder<L> where L: Loader {
             title,
             version,
         })
-
     }
 }
 
@@ -404,5 +412,4 @@ pub struct Setting {
     /// The maximum aliasing depth of entry points
     #[derivative(Default(value = "16"))]
     pub max_entry_point_depth: usize,
-
 }

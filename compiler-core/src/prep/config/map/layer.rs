@@ -1,11 +1,11 @@
 //! Packs json blob into [`MapLayerAttr`]
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::macros::derive_wasm;
 use crate::json::{Cast, Coerce};
-use crate::prep::{config, PreparedConfig, PrepResult, PrepError};
+use crate::macros::derive_wasm;
+use crate::prep::{config, PrepError, PrepResult, PreparedConfig};
 use crate::prop;
 
 // use super::{ConfigTrace, PrepError, PackerResult};
@@ -80,40 +80,38 @@ pub struct MapAttribution {
 }
 
 macro_rules! check_layer_required_property {
-    ($self:ident, $property:expr, $layer_index:ident, $obj:ident) => {
-        {
-            let property = $property;
-            config::check_required_property!(
-                $self,
-                $obj.remove(property),
-                format!("map.layers[{}].{}", $layer_index, property)
-            )
-        }
-    };
+    ($self:ident, $property:expr, $layer_index:ident, $obj:ident) => {{
+        let property = $property;
+        config::check_required_property!(
+            $self,
+            $obj.remove(property),
+            format!("map.layers[{}].{}", $layer_index, property)
+        )
+    }};
 }
 
 impl<'a> PreparedConfig<'a> {
     pub fn parse_map_layer(&self, value: Value, layer_index: usize) -> PrepResult<MapLayer> {
-        let mut obj = config::check_map!(
-            self, 
-            value, 
-            format!("map.layers[{layer_index}]")
-        )?;
+        let mut obj = config::check_map!(self, value, format!("map.layers[{layer_index}]"))?;
 
-        let name = 
-        check_layer_required_property!(self, prop::NAME, layer_index, obj)?;
-        let template_url = check_layer_required_property!(self, prop::TEMPLATE_URL, layer_index, obj)?;
-        let size = check_layer_required_property!(self, prop::SIZE,  layer_index, obj)?;
-        let zoom_bounds = check_layer_required_property!(self, prop::ZOOM_BOUNDS, layer_index, obj)?;
+        let name = check_layer_required_property!(self, prop::NAME, layer_index, obj)?;
+        let template_url =
+            check_layer_required_property!(self, prop::TEMPLATE_URL, layer_index, obj)?;
+        let size = check_layer_required_property!(self, prop::SIZE, layer_index, obj)?;
+        let zoom_bounds =
+            check_layer_required_property!(self, prop::ZOOM_BOUNDS, layer_index, obj)?;
         let max_native_zoom =
-        check_layer_required_property!(self, prop::MAX_NATIVE_ZOOM, layer_index, obj)?;
-        let transform = check_layer_required_property!(self, prop::TRANSFORM,  layer_index, obj)?;
-        let start_z = check_layer_required_property!(self, prop::START_Z,  layer_index, obj)?;
-        let attribution = check_layer_required_property!(self, prop::ATTRIBUTION, layer_index, obj)?;
+            check_layer_required_property!(self, prop::MAX_NATIVE_ZOOM, layer_index, obj)?;
+        let transform = check_layer_required_property!(self, prop::TRANSFORM, layer_index, obj)?;
+        let start_z = check_layer_required_property!(self, prop::START_Z, layer_index, obj)?;
+        let attribution =
+            check_layer_required_property!(self, prop::ATTRIBUTION, layer_index, obj)?;
 
-        self.check_unused_property(obj.keys().next().map(|k|{
-            format!("{}.{}[{}].{}", prop::MAP, prop::LAYERS, layer_index, k)
-        }))?;
+        self.check_unused_property(
+            obj.keys()
+                .next()
+                .map(|k| format!("{}.{}[{}].{}", prop::MAP, prop::LAYERS, layer_index, k)),
+        )?;
 
         let name = if name.is_array() || name.is_object() {
             return Err(PrepError::InvalidConfigPropertyType(
@@ -124,120 +122,120 @@ impl<'a> PreparedConfig<'a> {
                     prop::LAYERS,
                     layer_index,
                     prop::NAME
-                ).into(),
+                )
+                .into(),
                 "string".into(),
             ));
         } else {
             name.coerce_to_string()
         };
-    // let template_url = if template_url.is_array() || template_url.is_object() {
-    //     return Err(PrepError::InvalidConfigProperty(
-    //         trace.clone(),
-    //         format!(
-    //             "{}.{}[{}].{}",
-    //             prop::MAP,
-    //             prop::LAYERS,
-    //             layer_index,
-    //             prop::TEMPLATE_URL
-    //         ),
-    //     ));
-    // } else {
-    //     template_url.coerce_to_string()
-    // };
-    //
-    // let size = parse_array_with_2_elements(size).ok_or_else(|| {
-    //     PrepError::InvalidConfigProperty(
-    //         trace.clone(),
-    //         format!(
-    //             "{}.{}[{}].{}",
-    //             prop::MAP,
-    //             prop::LAYERS,
-    //             layer_index,
-    //             prop::SIZE
-    //         ),
-    //     )
-    // })?;
-    //
-    // let zoom_bounds = parse_array_with_2_elements(zoom_bounds).ok_or_else(|| {
-    //     PrepError::InvalidConfigProperty(
-    //         trace.clone(),
-    //         format!(
-    //             "{}.{}[{}].{}",
-    //             prop::MAP,
-    //             prop::LAYERS,
-    //             layer_index,
-    //             prop::ZOOM_BOUNDS
-    //         ),
-    //     )
-    // })?;
-    //
-    // let max_native_zoom = max_native_zoom.try_coerce_to_u64().ok_or_else(|| {
-    //     PrepError::InvalidConfigProperty(
-    //         trace.clone(),
-    //         format!(
-    //             "{}.{}[{}].{}",
-    //             prop::MAP,
-    //             prop::LAYERS,
-    //             layer_index,
-    //             prop::MAX_NATIVE_ZOOM
-    //         ),
-    //     )
-    // })?;
-    //
-    // let transform = serde_json::from_value::<MapTilesetTransform>(transform).map_err(|_| {
-    //     PrepError::InvalidConfigProperty(
-    //         trace.clone(),
-    //         format!(
-    //             "{}.{}[{}].{}",
-    //             prop::MAP,
-    //             prop::LAYERS,
-    //             layer_index,
-    //             prop::TRANSFORM
-    //         ),
-    //     )
-    // })?;
-    //
-    // let start_z = start_z.try_coerce_to_f64().ok_or_else(|| {
-    //     PrepError::InvalidConfigProperty(
-    //         trace.clone(),
-    //         format!(
-    //             "{}.{}[{}].{}",
-    //             prop::MAP,
-    //             prop::LAYERS,
-    //             layer_index,
-    //             prop::START_Z
-    //         ),
-    //     )
-    // })?;
-    //
-    // let attribution = serde_json::from_value::<MapAttribution>(attribution).map_err(|_| {
-    //     PrepError::InvalidConfigProperty(
-    //         trace.clone(),
-    //         format!(
-    //             "{}.{}[{}].{}",
-    //             prop::MAP,
-    //             prop::LAYERS,
-    //             layer_index,
-    //             prop::ATTRIBUTION
-    //         ),
-    //     )
-    // })?;
+        // let template_url = if template_url.is_array() || template_url.is_object() {
+        //     return Err(PrepError::InvalidConfigProperty(
+        //         trace.clone(),
+        //         format!(
+        //             "{}.{}[{}].{}",
+        //             prop::MAP,
+        //             prop::LAYERS,
+        //             layer_index,
+        //             prop::TEMPLATE_URL
+        //         ),
+        //     ));
+        // } else {
+        //     template_url.coerce_to_string()
+        // };
+        //
+        // let size = parse_array_with_2_elements(size).ok_or_else(|| {
+        //     PrepError::InvalidConfigProperty(
+        //         trace.clone(),
+        //         format!(
+        //             "{}.{}[{}].{}",
+        //             prop::MAP,
+        //             prop::LAYERS,
+        //             layer_index,
+        //             prop::SIZE
+        //         ),
+        //     )
+        // })?;
+        //
+        // let zoom_bounds = parse_array_with_2_elements(zoom_bounds).ok_or_else(|| {
+        //     PrepError::InvalidConfigProperty(
+        //         trace.clone(),
+        //         format!(
+        //             "{}.{}[{}].{}",
+        //             prop::MAP,
+        //             prop::LAYERS,
+        //             layer_index,
+        //             prop::ZOOM_BOUNDS
+        //         ),
+        //     )
+        // })?;
+        //
+        // let max_native_zoom = max_native_zoom.try_coerce_to_u64().ok_or_else(|| {
+        //     PrepError::InvalidConfigProperty(
+        //         trace.clone(),
+        //         format!(
+        //             "{}.{}[{}].{}",
+        //             prop::MAP,
+        //             prop::LAYERS,
+        //             layer_index,
+        //             prop::MAX_NATIVE_ZOOM
+        //         ),
+        //     )
+        // })?;
+        //
+        // let transform = serde_json::from_value::<MapTilesetTransform>(transform).map_err(|_| {
+        //     PrepError::InvalidConfigProperty(
+        //         trace.clone(),
+        //         format!(
+        //             "{}.{}[{}].{}",
+        //             prop::MAP,
+        //             prop::LAYERS,
+        //             layer_index,
+        //             prop::TRANSFORM
+        //         ),
+        //     )
+        // })?;
+        //
+        // let start_z = start_z.try_coerce_to_f64().ok_or_else(|| {
+        //     PrepError::InvalidConfigProperty(
+        //         trace.clone(),
+        //         format!(
+        //             "{}.{}[{}].{}",
+        //             prop::MAP,
+        //             prop::LAYERS,
+        //             layer_index,
+        //             prop::START_Z
+        //         ),
+        //     )
+        // })?;
+        //
+        // let attribution = serde_json::from_value::<MapAttribution>(attribution).map_err(|_| {
+        //     PrepError::InvalidConfigProperty(
+        //         trace.clone(),
+        //         format!(
+        //             "{}.{}[{}].{}",
+        //             prop::MAP,
+        //             prop::LAYERS,
+        //             layer_index,
+        //             prop::ATTRIBUTION
+        //         ),
+        //     )
+        // })?;
 
-    // Ok(MapLayerAttr {
-    //     name,
-    //     template_url,
-    //     size,
-    //     zoom_bounds,
-    //     max_native_zoom,
-    //     transform,
-    //     start_z,
-    //     attribution,
-    // })
+        // Ok(MapLayerAttr {
+        //     name,
+        //     template_url,
+        //     size,
+        //     zoom_bounds,
+        //     max_native_zoom,
+        //     transform,
+        //     start_z,
+        //     attribution,
+        // })
 
         todo!()
     }
 }
-
 
 // pub fn parse_map_layer(
 //     value: Value,

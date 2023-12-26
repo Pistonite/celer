@@ -1,12 +1,12 @@
-use std::collections::BTreeMap;
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::prop;
 use crate::json::Cast;
 use crate::macros::derive_wasm;
+use crate::prop;
 use crate::util::StringMap;
 
 use super::{PrepError, PrepResult, Setting};
@@ -32,8 +32,7 @@ impl EntryPoints {
     }
 
     pub fn get_default(&self) -> Option<&str> {
-        self.0.get(prop::DEFAULT)
-            .map(|v| v.as_str())
+        self.0.get(prop::DEFAULT).map(|v| v.as_str())
     }
 }
 
@@ -49,12 +48,11 @@ impl From<EntryPoints> for EntryPointsSorted {
     }
 }
 
-
 /// Converts the entry point map property value to [`EntryPoints`] object
 pub async fn load_entry_points(value: Value, setting: &Setting) -> PrepResult<EntryPoints> {
-    let obj = value
-        .try_into_object()
-        .map_err(|_| PrepError::InvalidMetadataPropertyType(prop::ENTRY_POINTS, "mapping object"))?;
+    let obj = value.try_into_object().map_err(|_| {
+        PrepError::InvalidMetadataPropertyType(prop::ENTRY_POINTS, "mapping object")
+    })?;
 
     // let mut map = BTreeMap::new();
     // for (key, value) in obj {

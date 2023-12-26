@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 use serde_json::{json, Map, Value};
 
 use crate::comp::CompResult;
-use crate::json::{SafeRouteObject, SafeRouteBlob, Coerce, Cast};
+use crate::json::{Cast, Coerce, SafeRouteBlob, SafeRouteObject};
 use crate::prop;
 
 use super::CompError;
@@ -16,30 +16,43 @@ use super::CompError;
 /// - string (desugared to `{[value]: {}}`)
 /// - null (desugared to `{"": {}}`)
 /// - boolean, number (desugared to string representation)
-pub fn desugar_line<'a>(value: SafeRouteBlob<'a>) -> (Cow<'a, str>, CompResult<SafeRouteObject<'a>>) {
+pub fn desugar_line<'a>(
+    value: SafeRouteBlob<'a>,
+) -> (Cow<'a, str>, CompResult<SafeRouteObject<'a>>) {
     if value.is_array() {
-        return (value.coerce_into_string().into(), Err(CompError::ArrayCannotBeLine));
+        return (
+            value.coerce_into_string().into(),
+            Err(CompError::ArrayCannotBeLine),
+        );
     }
     match value.try_into_object() {
-        Err(value) => (value.coerce_into_string().into(), Ok(SafeRouteObject::new())),
+        Err(value) => (
+            value.coerce_into_string().into(),
+            Ok(SafeRouteObject::new()),
+        ),
         Ok(obj) => {
             let mut iter = obj.into_iter();
             let (key, obj) = match iter.next() {
                 None => {
-                    return ("[object object]".into(), Err(CompError::EmptyObjectCannotBeLine));
+                    return (
+                        "[object object]".into(),
+                        Err(CompError::EmptyObjectCannotBeLine),
+                    );
                 }
                 Some(first) => first,
             };
             if iter.next().is_some() {
-                return ("[object object]".into(), Err(CompError::TooManyKeysInObjectLine));
+                return (
+                    "[object object]".into(),
+                    Err(CompError::TooManyKeysInObjectLine),
+                );
             }
             match obj.try_into_object() {
-                Ok(obj) => {
-                    (key, Ok(obj))
-                }
-                Err(value) => {
-                    (value.coerce_into_string().into(), Err(CompError::LinePropertiesMustBeObject))
-                }
+                Ok(obj) => (key, Ok(obj)),
+                Err(value) => (
+                    value.coerce_into_string().into(),
+                    Err(CompError::LinePropertiesMustBeObject),
+                ),
             }
         }
     }
@@ -79,7 +92,10 @@ mod test {
 
     #[test]
     fn test_line_primitive() {
-        assert_eq!(test_desugar_line(json!(null)), ("".to_string(), Ok(json!({}))));
+        assert_eq!(
+            test_desugar_line(json!(null)),
+            ("".to_string(), Ok(json!({})))
+        );
         assert_eq!(
             test_desugar_line(json!(true)),
             ("true".to_string(), Ok(json!({})))
@@ -88,7 +104,10 @@ mod test {
             test_desugar_line(json!(false)),
             ("false".to_string(), Ok(json!({})))
         );
-        assert_eq!(test_desugar_line(json!("")), ("".to_string(), Ok(json!({}))));
+        assert_eq!(
+            test_desugar_line(json!("")),
+            ("".to_string(), Ok(json!({})))
+        );
         assert_eq!(
             test_desugar_line(json!("hello world")),
             ("hello world".to_string(), Ok(json!({})))
@@ -99,7 +118,10 @@ mod test {
     fn test_line_array() {
         assert_eq!(
             test_desugar_line(json!([])),
-            ("[object array]".to_string(), Err(CompError::ArrayCannotBeLine))
+            (
+                "[object array]".to_string(),
+                Err(CompError::ArrayCannotBeLine)
+            )
         );
     }
 
@@ -116,7 +138,10 @@ mod test {
         );
         assert_eq!(
             test_desugar_line(json!({"one": []})),
-            ("[object array]".to_string(), Err(CompError::LinePropertiesMustBeObject))
+            (
+                "[object array]".to_string(),
+                Err(CompError::LinePropertiesMustBeObject)
+            )
         );
     }
 
@@ -128,13 +153,10 @@ mod test {
             }})),
             (
                 "one".to_string(),
-                Ok(
-                    [{ ("two".to_string(), json!("three")) }]
-                        .into_iter()
-                        .collect()
-                )
+                Ok([{ ("two".to_string(), json!("three")) }]
+                    .into_iter()
+                    .collect())
             )
         );
     }
-
 }

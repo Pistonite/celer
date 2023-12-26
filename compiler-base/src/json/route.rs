@@ -99,9 +99,11 @@ impl<'a> From<SafeRouteBlob<'a>> for Value {
             SafeRouteBlob::OwnedArray(arr) => {
                 Value::Array(arr.into_iter().map(|x| Value::from(x)).collect())
             }
-            SafeRouteBlob::BorrowedObject(obj) => {
-                Value::Object(obj.iter().map(|(k, v)| (k.clone(), Value::from(v.clone()))).collect())
-            }
+            SafeRouteBlob::BorrowedObject(obj) => Value::Object(
+                obj.iter()
+                    .map(|(k, v)| (k.clone(), Value::from(v.clone())))
+                    .collect(),
+            ),
             SafeRouteBlob::OwnedObject(obj) => {
                 Value::Object(obj.into_iter().map(|(k, v)| (k, Value::from(v))).collect())
             }

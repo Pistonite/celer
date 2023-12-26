@@ -1,8 +1,8 @@
-use crate::json::{Cast, Coerce, SafeRouteBlob, IntoSafeRouteBlob};
-use crate::lang::{PresetInst, PresetHydrate};
+use crate::json::{Cast, Coerce, IntoSafeRouteBlob, SafeRouteBlob};
+use crate::lang::{PresetHydrate, PresetInst};
 use crate::prop;
 
-use super::{validate_not_array_or_object, LinePropMap, CompError, Compiler, LineContext};
+use super::{validate_not_array_or_object, CompError, Compiler, LineContext, LinePropMap};
 
 impl<'c, 'p> LineContext<'c, 'p> {
     /// Apply the preset to the output.
@@ -15,12 +15,14 @@ impl<'c, 'p> LineContext<'c, 'p> {
         output: &mut LinePropMap<'a, PresetHydrate<'a, 'b>>,
     ) {
         if depth > self.compiler.setting.max_preset_ref_depth {
-            self.errors.push(CompError::MaxPresetDepthExceeded(inst.name.to_string()));
+            self.errors
+                .push(CompError::MaxPresetDepthExceeded(inst.name.to_string()));
             return;
         }
         let preset = match self.compiler.meta.presets.get(&inst.name) {
             None => {
-                self.errors.push(CompError::PresetNotFound(inst.name.to_string()));
+                self.errors
+                    .push(CompError::PresetNotFound(inst.name.to_string()));
                 return;
             }
             Some(preset) => preset,
@@ -71,32 +73,34 @@ impl<'c, 'p> LineContext<'c, 'p> {
         preset: SafeRouteBlob<'_>,
         output: &mut LinePropMap<'a, PresetHydrate<'a, '_>>,
     ) {
-            if !validate_not_array_or_object!(
-                preset,
-                self.errors,
-                match index {
-                    Some(i) => format!("{p}[{i}]", p = prop::PRESETS, i = i),
-                    None => prop::PRESETS.to_string(),
-                }
-            ) {
-                return;
+        if !validate_not_array_or_object!(
+            preset,
+            self.errors,
+            match index {
+                Some(i) => format!("{p}[{i}]", p = prop::PRESETS, i = i),
+                None => prop::PRESETS.to_string(),
             }
+        ) {
+            return;
+        }
 
-            let preset_string = preset.coerce_into_string();
-            if !preset_string.starts_with('_') {
-                self.errors.push(CompError::InvalidPresetString(preset_string));
-                return;
-            }
+        let preset_string = preset.coerce_into_string();
+        if !preset_string.starts_with('_') {
+            self.errors
+                .push(CompError::InvalidPresetString(preset_string));
+            return;
+        }
 
-            let preset_inst = PresetInst::try_parse(&preset_string);
-            match preset_inst {
-                None => {
-                    self.errors.push(CompError::InvalidPresetString(preset_string));
-                }
-                Some(inst) => {
-                    self.apply_preset(depth + 1, &inst, output);
-                }
+        let preset_inst = PresetInst::try_parse(&preset_string);
+        match preset_inst {
+            None => {
+                self.errors
+                    .push(CompError::InvalidPresetString(preset_string));
             }
+            Some(inst) => {
+                self.apply_preset(depth + 1, &inst, output);
+            }
+        }
     }
 
     /// Expand presets in the movements array
@@ -121,7 +125,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
             };
             let preset_inst = match PresetInst::try_parse(preset_str) {
                 None => {
-                    self.errors.push(CompError::InvalidPresetString(preset_str.to_string()));
+                    self.errors
+                        .push(CompError::InvalidPresetString(preset_str.to_string()));
                     continue;
                 }
                 Some(inst) => inst,
@@ -137,7 +142,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
                     new_array.extend(movements);
                 }
                 _ => {
-                    self.errors.push(CompError::InvalidMovementPreset(preset_str.to_string()));
+                    self.errors
+                        .push(CompError::InvalidMovementPreset(preset_str.to_string()));
                 }
             }
         }
@@ -157,7 +163,8 @@ mod test {
     use super::*;
 
     fn evaluate(output: LinePropMap<PresetHydrate<'_, '_>>) -> BTreeMap<String, Value> {
-        output.evaluate()
+        output
+            .evaluate()
             .into_iter()
             .map(|(k, v)| (k, v.into()))
             .collect()

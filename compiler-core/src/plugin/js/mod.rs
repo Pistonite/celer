@@ -1,10 +1,10 @@
 use serde_json::Value;
 
-use crate::comp::{CompDoc};
-use crate::pack::{CompileContext};
-use crate::prep::{CompilerMetadata};
+use crate::comp::CompDoc;
+use crate::pack::CompileContext;
+use crate::prep::CompilerMetadata;
 
-use super::{PluginRuntime, PluginError, PluginResult};
+use super::{PluginError, PluginResult, PluginRuntime};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ScriptPlugin {
@@ -13,7 +13,11 @@ pub struct ScriptPlugin {
 }
 
 impl ScriptPlugin {
-    pub fn create_runtime<'a>(&self, _ctx: &CompileContext<'a>, props: &Value) -> PluginResult<Box<dyn PluginRuntime>> {
+    pub fn create_runtime<'a>(
+        &self,
+        _ctx: &CompileContext<'a>,
+        props: &Value,
+    ) -> PluginResult<Box<dyn PluginRuntime>> {
         // TODO #24 implement JS plugin engine
         Err(PluginError::ScriptException(
             "Script plugins are not implemented yet".to_string(),

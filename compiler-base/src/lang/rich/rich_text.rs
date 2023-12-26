@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::macros::derive_wasm;
 
@@ -24,7 +24,6 @@ pub struct DocRichTextBlock {
     /// The hyperlink of the text.
     pub link: Option<String>,
 }
-
 
 impl DocRichText {
     /// Create a new [`DocRichText`] with a single [`DocRichTextBlock`] with the text content and

@@ -7,12 +7,11 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
+use crate::comp::DocNote;
+use crate::lang::{DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock};
 use crate::macros::derive_wasm;
 use crate::prep::{GameCoord, RouteConfig};
 use crate::util::StringMap;
-use crate::lang::{DocPoorText, DocPoorTextBlock, DocRichTextBlock, DocRichText};
-use crate::comp::DocNote;
-
 
 /// The executed document
 ///
@@ -30,8 +29,6 @@ pub struct ExecDoc<'a> {
     /// Overall diagnostics (that don't apply to any line)
     pub diagnostics: Vec<DocDiagnostic>,
 }
-
-
 
 /// A section in the executed document
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
@@ -93,8 +90,6 @@ pub struct DocDiagnostic {
     pub source: String,
 }
 
-
-
 /// Map features for one section
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm]
@@ -148,4 +143,3 @@ pub struct MapLine {
     /// Points on the line
     pub points: Vec<GameCoord>,
 }
-

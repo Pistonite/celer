@@ -11,10 +11,10 @@ use derivative::Derivative;
 use instant::Instant;
 use serde_json::Value;
 
+use crate::env;
 use crate::json::RouteBlobError;
 use crate::lang::parse_poor;
-use crate::types::{DocDiagnostic};
-use crate::env;
+use crate::types::DocDiagnostic;
 
 mod line;
 pub use line::*;
@@ -149,10 +149,8 @@ impl CompError {
             CompError::InvalidMovementPreset(_) => "/docs/route/customizing-movements#presets",
             CompError::InvalidMarkerType => "/docs/route/customizing-lines#markers",
             CompError::IsPreface(_) => "/docs/route/route-structure#preface",
-            // CompError::PackerErrors(_) | 
-                CompError::InvalidSectionType => {
-                "/docs/route/route-structure"
-            }
+            // CompError::PackerErrors(_) |
+            CompError::InvalidSectionType => "/docs/route/route-structure",
             CompError::InvalidRouteType => "/docs/route/route-structure#entry-point",
         }
     }

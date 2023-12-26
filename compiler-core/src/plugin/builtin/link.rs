@@ -2,11 +2,11 @@
 //!
 //! This plugin looks for the `link` tag and transforms it into a link.
 
-use crate::comp::{CompDoc};
-use crate::pack::{Compiler, CompileContext};
-use crate::prop;
+use crate::comp::CompDoc;
 use crate::lang::DocRichTextBlock;
-use crate::prep::{DocTagColor, DocTag};
+use crate::pack::{CompileContext, Compiler};
+use crate::prep::{DocTag, DocTagColor};
+use crate::prop;
 
 use crate::plugin::{operation, PluginResult, PluginRuntime};
 
@@ -25,7 +25,8 @@ impl PluginRuntime for LinkPlugin {
             }),
             ..Default::default()
         };
-        ctx .config.to_mut()
+        ctx.config
+            .to_mut()
             .tags
             .entry(prop::LINK.to_string())
             .and_modify(|tag| tag.apply_to_default(&link_tag))

@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use serde_json::{json, Value};
 
-use crate::json::{SafeRouteBlob, IntoSafeRouteBlob};
+use crate::json::{IntoSafeRouteBlob, SafeRouteBlob};
 
 use super::{Preset, PresetBlob};
 
@@ -12,7 +12,10 @@ pub struct PresetHydrate<'a, 'b> {
 }
 
 impl<'a, 'b> IntoSafeRouteBlob for PresetHydrate<'a, 'b> {
-    fn into_unchecked<'c>(self) -> SafeRouteBlob<'c> where Self: 'c {
+    fn into_unchecked<'c>(self) -> SafeRouteBlob<'c>
+    where
+        Self: 'c,
+    {
         match self.preset {
             PresetBlob::NonTemplate(value) => value.ref_into_unchecked(),
             PresetBlob::Template(tempstr) => {
@@ -41,7 +44,8 @@ impl<'a, 'b> IntoSafeRouteBlob for PresetHydrate<'a, 'b> {
         Self {
             preset: self.preset,
             args: self.args,
-        }.into_unchecked()
+        }
+        .into_unchecked()
     }
 }
 
@@ -49,7 +53,7 @@ impl Preset {
     /// Hydrate a preset with the given arguments
     ///
     /// Return a new json blob with all template strings hydrated with the arguments
-    pub fn hydrate<'a, 'b, F>(&'a self, args: &'b [String], mut insert: F) 
+    pub fn hydrate<'a, 'b, F>(&'a self, args: &'b [String], mut insert: F)
     where
         F: FnMut(String, PresetHydrate<'a, 'b>),
     {
@@ -61,12 +65,8 @@ impl Preset {
 
 impl PresetBlob {
     /// Hydrate a preset blob with the given arguments
-    pub fn hydrate<'a, 'b>(&'a self, args: &'b [String]) -> PresetHydrate<'a, 'b>
-    {
-        PresetHydrate {
-            preset: self,
-            args,
-        }
+    pub fn hydrate<'a, 'b>(&'a self, args: &'b [String]) -> PresetHydrate<'a, 'b> {
+        PresetHydrate { preset: self, args }
     }
 }
 

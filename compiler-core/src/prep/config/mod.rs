@@ -1,21 +1,21 @@
-use std::marker::PhantomData;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::marker::PhantomData;
 
 use derivative::Derivative;
-use serde::{Serialize, Deserialize};
-use serde_json::{Value, Map};
+use serde::{Deserialize, Serialize};
+use serde_json::{Map, Value};
 
-use crate::json::{Cast, Coerce};
-use crate::res::{Use, Resource, Loader, ResError};
-use crate::macros::{async_recursion, derive_wasm};
-use crate::util::{StringMap};
-use crate::lang::{Preset};
-use crate::plugin::{PluginInstance};
-use crate::prop;
 use crate::env::yield_budget;
+use crate::json::{Cast, Coerce};
+use crate::lang::Preset;
+use crate::macros::{async_recursion, derive_wasm};
+use crate::plugin::PluginInstance;
+use crate::prop;
+use crate::res::{Loader, ResError, Resource, Use};
+use crate::util::StringMap;
 
-use super::{Setting, PrepResult, PrepError};
+use super::{PrepError, PrepResult, Setting};
 
 mod icon;
 pub use icon::*;
@@ -53,7 +53,11 @@ impl<'a> PreparedConfig<'a> {
         }
     }
 
-    pub async fn load_configs<L, TIter>(&mut self, res: &Resource<'_, L>, configs: TIter) -> PrepResult<()> 
+    pub async fn load_configs<L, TIter>(
+        &mut self,
+        res: &Resource<'_, L>,
+        configs: TIter,
+    ) -> PrepResult<()>
     where
         L: Loader,
         TIter: IntoIterator<Item = Value>,
@@ -68,7 +72,7 @@ impl<'a> PreparedConfig<'a> {
     }
 
     #[async_recursion(auto)]
-    async fn load_config<L>(&mut self, res: &Resource<'_, L>, config: Value) -> PrepResult<()> 
+    async fn load_config<L>(&mut self, res: &Resource<'_, L>, config: Value) -> PrepResult<()>
     where
         L: Loader,
     {
@@ -82,7 +86,7 @@ impl<'a> PreparedConfig<'a> {
             }
             Some(Use::Valid(valid_use)) => {
                 // load a config from top-level use object
-                let config_res= res.resolve(&valid_use)?;
+                let config_res = res.resolve(&valid_use)?;
                 let config = config_res.load_structured().await?;
                 // process this config with the config resource context instead of the project context
                 // so `use`'s inside are resolved correctly
@@ -97,7 +101,11 @@ impl<'a> PreparedConfig<'a> {
     }
 
     /// Load individual config properties in the config JSON blob
-    async fn load_config_properties<L>(&mut self, res: &Resource<'_, L>, config: Value) -> PrepResult<()> 
+    async fn load_config_properties<L>(
+        &mut self,
+        res: &Resource<'_, L>,
+        config: Value,
+    ) -> PrepResult<()>
     where
         L: Loader,
     {
@@ -148,7 +156,12 @@ impl<'a> PreparedConfig<'a> {
                     let configs = check_array!(self, value, prop::INCLUDES)?;
                     self.load_configs(res, configs).await?;
                 }
-                _ => return Err(PrepError::UnusedConfigProperty(self.trace.clone(), key.into())),
+                _ => {
+                    return Err(PrepError::UnusedConfigProperty(
+                        self.trace.clone(),
+                        key.into(),
+                    ))
+                }
             }
         }
 
@@ -157,7 +170,9 @@ impl<'a> PreparedConfig<'a> {
 
     /// Check if `prop_name` is `None`, otherwise returns [`PrepError::UnusedConfigProperty`] with the
     /// current trace.
-    pub fn check_unused_property<S>(&self, prop_name: Option<S>) -> PrepResult<()> where S: Into<Cow<'static, str>> 
+    pub fn check_unused_property<S>(&self, prop_name: Option<S>) -> PrepResult<()>
+    where
+        S: Into<Cow<'static, str>>,
     {
         match prop_name {
             None => Ok(()),
@@ -167,30 +182,27 @@ impl<'a> PreparedConfig<'a> {
             )),
         }
     }
-
 }
 
 /// Convert `prop` into a Map, otherwise returns [`PrepError::InvalidConfigPropertyType`]
 ///
 /// Note this is a macro so that `prop_name` is only evaluated when an error occurs.
 macro_rules! check_map {
-    ($self:ident, $prop:expr, $prop_name:expr) => {
-        {
-            use $crate::json::Cast;
-            let prop = $prop;
-            match prop.try_into_object() {
-                Ok(map) => Ok(map),
-                Err(_) => {
-                    let prop_name = $prop_name.into();
-                    Err($crate::prep::PrepError::InvalidConfigPropertyType(
-                        $self.trace.clone(),
-                        prop_name,
-                        "mapping object".into(),
-                    ))
-                }
+    ($self:ident, $prop:expr, $prop_name:expr) => {{
+        use $crate::json::Cast;
+        let prop = $prop;
+        match prop.try_into_object() {
+            Ok(map) => Ok(map),
+            Err(_) => {
+                let prop_name = $prop_name.into();
+                Err($crate::prep::PrepError::InvalidConfigPropertyType(
+                    $self.trace.clone(),
+                    prop_name,
+                    "mapping object".into(),
+                ))
             }
         }
-    };
+    }};
 }
 pub(crate) use check_map;
 
@@ -198,23 +210,21 @@ pub(crate) use check_map;
 ///
 /// Note this is a macro so that `prop_name` is only evaluated when an error occurs.
 macro_rules! check_array {
-    ($self:ident, $prop:expr, $prop_name:expr) => {
-        {
-            use $crate::json::Cast;
-            let prop = $prop;
-            match prop.try_into_array() {
-                Ok(array) => Ok(array),
-                Err(_) => {
-                    let prop_name = $prop_name.into();
-                    Err($crate::prep::PrepError::InvalidConfigPropertyType(
-                        $self.trace.clone(),
-                        prop_name,
-                        "array".into(),
-                    ))
-                }
+    ($self:ident, $prop:expr, $prop_name:expr) => {{
+        use $crate::json::Cast;
+        let prop = $prop;
+        match prop.try_into_array() {
+            Ok(array) => Ok(array),
+            Err(_) => {
+                let prop_name = $prop_name.into();
+                Err($crate::prep::PrepError::InvalidConfigPropertyType(
+                    $self.trace.clone(),
+                    prop_name,
+                    "array".into(),
+                ))
             }
         }
-    };
+    }};
 }
 pub(crate) use check_array;
 
@@ -223,21 +233,18 @@ pub(crate) use check_array;
 ///
 /// Note this is a macro so that `prop_name` is only evaluated when an error occurs.
 macro_rules! check_required_property {
-    ($self:ident, $prop:expr, $prop_name:expr) => {
-        {
-            let prop = $prop;
-            match prop {
-                Some(v) => Ok(v),
-                None => {
-                    let prop_name = $prop_name.into();
-                    Err($crate::prep::PrepError::MissingConfigProperty(
-                        $self.trace.clone(),
-                        prop_name,
-                    ))
-                }
+    ($self:ident, $prop:expr, $prop_name:expr) => {{
+        let prop = $prop;
+        match prop {
+            Some(v) => Ok(v),
+            None => {
+                let prop_name = $prop_name.into();
+                Err($crate::prep::PrepError::MissingConfigProperty(
+                    $self.trace.clone(),
+                    prop_name,
+                ))
             }
         }
-    };
+    }};
 }
 pub(crate) use check_required_property;
-

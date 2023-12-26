@@ -2,7 +2,7 @@
 use std::borrow::Cow;
 use std::fmt::{Display, Formatter};
 
-use crate::util::{Path, PathBuf, Component};
+use crate::util::{Component, Path, PathBuf};
 
 /// Path of a resource in the context of a certain project, either local or remote (URL)
 ///
@@ -31,12 +31,18 @@ impl<'u> ResPath<'u> {
     ///
     /// # Requirements
     /// Path must be relative.
-    pub fn new_local<P>(path: P) -> Option<Self> where P: AsRef<Path> {
+    pub fn new_local<P>(path: P) -> Option<Self>
+    where
+        P: AsRef<Path>,
+    {
         Self::new_local_unchecked("").join_resolve(path)
     }
 
     /// Create a new local resource path without normalizing the path.
-    pub fn new_local_unchecked<P>(path: P) -> Self where P: Into<PathBuf> {
+    pub fn new_local_unchecked<P>(path: P) -> Self
+    where
+        P: Into<PathBuf>,
+    {
         let path = path.into();
         debug_assert!(path.is_relative());
         Self::Local(path)
@@ -48,17 +54,18 @@ impl<'u> ResPath<'u> {
     /// 1. Path must be relative.
     /// 2. Url must end with a trailing "/".
     pub fn new_remote<U, P>(url: U, path: P) -> Option<Self>
-where 
+    where
         U: Into<Cow<'u, str>>,
-        P: AsRef<Path>{
+        P: AsRef<Path>,
+    {
         Self::new_remote_unchecked(url, "").join_resolve(path)
     }
 
     /// Create a new remote resource path without normalizing the path.
-    pub fn new_remote_unchecked<U, P>(url: U, path: P) -> Self 
-where 
+    pub fn new_remote_unchecked<U, P>(url: U, path: P) -> Self
+    where
         U: Into<Cow<'u, str>>,
-        P: Into<PathBuf>
+        P: Into<PathBuf>,
     {
         let url = url.into();
         debug_assert!(url.ends_with('/'));
@@ -90,7 +97,10 @@ where
     ///
     /// Returns `None` if the path tries to get the parent of root at any point,
     /// or if the final path is the root
-    pub fn join_resolve<P>(&self, path: P) -> Option<Self> where P: AsRef<Path> {
+    pub fn join_resolve<P>(&self, path: P) -> Option<Self>
+    where
+        P: AsRef<Path>,
+    {
         let path = path.as_ref();
         debug_assert!(path.is_relative());
 
@@ -174,7 +184,10 @@ mod test {
     fn test_join_local() {
         let path = ResPath::new_local_unchecked("test/path");
         let path = path.join_resolve("test/path");
-        assert_eq!(path, Some(ResPath::new_local_unchecked("test/path/test/path")));
+        assert_eq!(
+            path,
+            Some(ResPath::new_local_unchecked("test/path/test/path"))
+        );
 
         let path = ResPath::new_local_unchecked("test/path");
         let path = path.join_resolve("test/path/../.");
@@ -192,5 +205,4 @@ mod test {
         let path = path.join_resolve("test/path/../../..");
         assert_eq!(path, Some(ResPath::new_local_unchecked("test")));
     }
-
 }

@@ -5,7 +5,7 @@ use crate::json::{IntoSafeRouteBlob, RouteBlob};
 
 use crate::pack::Compiler;
 
-use super::{CompLine, LineContext, CompResult};
+use super::{CompLine, CompResult, LineContext};
 
 impl<'p> Compiler<'p> {
     /// Parse the line (parallel pass)
@@ -58,9 +58,9 @@ mod test {
 
     use crate::comp::line::DocNote;
     use crate::comp::test_utils::{self, CompilerBuilder};
-    use crate::comp::{CompMarker, CompMovement, CompError};
-    use crate::lang::{self, Preset, DocRichText};
-    use crate::prep::{Axis, GameCoord, MapCoordMap, MapMetadata, RouteMetadata, RouteConfig};
+    use crate::comp::{CompError, CompMarker, CompMovement};
+    use crate::lang::{self, DocRichText, Preset};
+    use crate::prep::{Axis, GameCoord, MapCoordMap, MapMetadata, RouteConfig, RouteMetadata};
 
     use super::*;
 
@@ -70,7 +70,12 @@ mod test {
         assert_eq!(line, expected);
     }
 
-    fn test_comp_err(compiler: &mut Compiler<'static>, input: Value, mut expected: CompLine, errors: Vec<CompError>) {
+    fn test_comp_err(
+        compiler: &mut Compiler<'static>,
+        input: Value,
+        mut expected: CompLine,
+        errors: Vec<CompError>,
+    ) {
         let mut line = compiler.parse_line(&RouteBlob::Prim(input));
         line.sequential_pass(compiler);
         for error in errors {
@@ -714,7 +719,8 @@ mod test {
                 text: DocRichText::text("icon is object"),
                 properties: btree_map! {
                     "icon-boo".to_string() => json!("foo"),
-                }.into(),
+                }
+                .into(),
                 ..Default::default()
             },
             vec![
@@ -1143,7 +1149,8 @@ mod test {
                 text: DocRichText::text("test"),
                 properties: btree_map! {
                     "unused".to_string() => json!("property"),
-                }.into(),
+                }
+                .into(),
                 ..Default::default()
             },
         );

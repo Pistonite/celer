@@ -1,18 +1,17 @@
+use serde_json::{json, Value};
 
-use serde_json::{Value, json};
-
-use crate::json::Coerce;
-use crate::plugin::{BuiltInPlugin, Plugin, ScriptPlugin, PluginInstance};
-use crate::res::{Use, Resource, Loader};
-use crate::prop;
-use crate::prep::{PrepError, PreparedConfig, PrepResult};
 use crate::env::yield_budget;
+use crate::json::Coerce;
+use crate::plugin::{BuiltInPlugin, Plugin, PluginInstance, ScriptPlugin};
+use crate::prep::{PrepError, PrepResult, PreparedConfig};
+use crate::prop;
+use crate::res::{Loader, Resource, Use};
 
 impl<'a> PreparedConfig<'a> {
     /// Process the `plugins` property
     ///
     /// `use`'s are resolved in the context of `res`
-    pub async fn load_plugins<L>(&mut self, res: &Resource<'_, L>, value: Value) -> PrepResult<()> 
+    pub async fn load_plugins<L>(&mut self, res: &Resource<'_, L>, value: Value) -> PrepResult<()>
     where
         L: Loader,
     {
@@ -53,17 +52,14 @@ impl<'a> PreparedConfig<'a> {
                 )
             })?;
 
-            self.plugins.push(PluginInstance {
-                plugin,
-                props,
-            });
+            self.plugins.push(PluginInstance { plugin, props });
         }
 
         Ok(())
     }
 
     /// Parse the `use` property
-    async fn parse_plugin_use<L>(&self, res: &Resource<'_, L>, value: Value) -> PrepResult<Plugin> 
+    async fn parse_plugin_use<L>(&self, res: &Resource<'_, L>, value: Value) -> PrepResult<Plugin>
     where
         L: Loader,
     {
@@ -73,7 +69,9 @@ impl<'a> PreparedConfig<'a> {
             Err(_) => {
                 // it's a script path, parse as use
                 match Use::new(use_path_string) {
-                    Use::Invalid(path) => return Err(PrepError::InvalidPlugin(self.trace.clone(), path)),
+                    Use::Invalid(path) => {
+                        return Err(PrepError::InvalidPlugin(self.trace.clone(), path))
+                    }
                     Use::Valid(valid_use) => {
                         // load the script
                         let script_resource = res.resolve(&valid_use)?;
@@ -89,7 +87,5 @@ impl<'a> PreparedConfig<'a> {
         };
 
         Ok(plugin)
-        
     }
 }
-
