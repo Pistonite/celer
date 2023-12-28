@@ -13,6 +13,7 @@ use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
 
+use crate::env;
 use crate::macros::derive_wasm;
 use crate::lang::{self, DocPoorText};
 
@@ -67,10 +68,23 @@ pub trait IntoDiagnostic: Display + Sized {
     /// Convert self into a diagnostic message, by using
     /// the string representation as the message
     fn into_diagnostic(self) -> DocDiagnostic {
+        let message = match self.help_path() {
+            Some(path) => {
+                let site_origin = env::get_site_origin();
+                let mut msg = format!("{self} See {site_origin}");
+                if !path.starts_with('/') {
+                    msg.push('/');
+                }
+                msg.push_str(&path);
+                msg.push_str(" for more info.");
+                msg
+            }
+            None => self.to_string(),
+        };
         if self.is_error() {
-            DocDiagnostic::error(&self.to_string(), self.source())
+            DocDiagnostic::error(&message, self.source())
         } else {
-            DocDiagnostic::warning(&self.to_string(), self.source())
+            DocDiagnostic::warning(&message, self.source())
         }
     }
 
@@ -79,6 +93,9 @@ pub trait IntoDiagnostic: Display + Sized {
 
     /// If the error is an error (or warning otherwise)
     fn is_error(&self) -> bool;
+
+    /// An optional path to a help page, should be 
+    fn help_path(&self) -> Option<Cow<'static, str>>;
 }
 
 // impl From<PrepError> for DocDiagnostic {

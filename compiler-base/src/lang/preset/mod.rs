@@ -1,7 +1,5 @@
 //! Preset parsing, hydration and pre-compile optimization
 
-use serde::{Deserialize, Serialize};
-
 use crate::json::SafeRouteBlob;
 
 use super::TempStr;

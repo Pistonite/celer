@@ -1,7 +1,6 @@
 //! Implementation for resolving a `use` from a resource
 
-use crate::env::RefCounted;
-use crate::util::{Path, PathBuf};
+use crate::util::PathBuf;
 
 use super::{Loader, ResError, ResPath, ResResult, Resource, ValidUse};
 
@@ -45,6 +44,7 @@ mod test {
     use super::*;
 
     use crate::res::test_utils::StubLoader;
+    use crate::env::RefCounted;
 
     static TEST_URL_PREFIX: &str = "https://hello/";
 

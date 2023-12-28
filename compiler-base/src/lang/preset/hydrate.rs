@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use crate::json::{IntoSafeRouteBlob, SafeRouteBlob};
 
@@ -73,6 +73,7 @@ impl PresetBlob {
 #[cfg(test)]
 mod test {
     use map_macro::btree_map;
+    use serde_json::json;
 
     use super::*;
 

@@ -102,3 +102,48 @@ impl<'a> Compiler<'a> {
         }
     }
 }
+
+impl<'a> Compiler<'a> {
+
+
+    async fn add_section_or_preface(
+        &mut self,
+        preface: &mut Vec<DocRichText>,
+        route: &mut Vec<CompSection>,
+        value: PackerValue,
+    ) -> Result<(), CompError> {
+        match self.comp_section(value).await {
+            Ok(section) => route.push(section),
+            Err(e) => {
+                if let CompError::IsPreface(v) = &e {
+                    if route.is_empty() {
+                        let text = v.coerce_to_string();
+                        preface.push(parse_rich(&text));
+                        return Ok(());
+                    }
+                }
+                let section = self.create_empty_section_for_error(&[e]);
+                route.push(section);
+            }
+        }
+        Ok(())
+    }
+
+    fn create_empty_section_for_error(&self, errors: &[CompError]) -> CompSection {
+        let mut diagnostics = vec![];
+        for error in errors {
+            error.add_to_diagnostics(&mut diagnostics);
+        }
+        let line = CompLine {
+            line_color: self.color.clone(),
+            diagnostics,
+            map_coord: self.coord.clone(),
+            ..Default::default()
+        };
+        CompSection {
+            name: "[compiler error]".to_string(),
+            lines: vec![line],
+        }
+    }
+
+}

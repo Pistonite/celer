@@ -30,13 +30,8 @@ use crate::prep::{
 };
 use crate::res::Loader;
 
-#[derive(Debug, thiserror::Error)]
-pub enum PackError {
-    #[error("Failed to initialize plugins: {0}")]
-    PluginInitError(PluginError),
-}
-
-pub type PackResult<T> = Result<T, PackError>;
+mod error;
+pub use error::*;
 
 /// Output of the pack phase.
 ///
@@ -45,7 +40,7 @@ pub type PackResult<T> = Result<T, PackError>;
 ///
 /// The compiler is also stateful, as it tracks the current location and color of the route
 pub struct Compiler<'p> {
-    ctx: CompileContext<'p>,
+    pub ctx: CompileContext<'p>,
 
     /// Reference to the built route
     pub route: Cow<'p, RouteBlob>,
@@ -74,6 +69,12 @@ impl<'p> DerefMut for Compiler<'p> {
 impl<'p> AsRef<CompileContext<'p>> for Compiler<'p> {
     fn as_ref(&self) -> &CompileContext<'p> {
         &self.ctx
+    }
+}
+
+impl<'p> AsMut<CompileContext<'p>> for Compiler<'p> {
+    fn as_mut(&mut self) -> &mut CompileContext<'p> {
+        &mut self.ctx
     }
 }
 

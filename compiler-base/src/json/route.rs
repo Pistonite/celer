@@ -34,6 +34,107 @@ pub enum RouteBlob {
     Object(BTreeMap<String, RouteBlob>),
 }
 
+/// Helper to traverse a route blob
+pub enum RouteBlobRef<'a> {
+    Value(&'a Value),
+    Blob(&'a RouteBlob),
+}
+impl<'a> From<&'a RouteBlob> for RouteBlobRef<'a> {
+    fn from(x: &'a RouteBlob) -> Self {
+        Self::Blob(x)
+    }
+}
+
+impl<'a> RouteBlobRef<'a> {
+    /// Try to iterate this blob as an array. Returns an error if this is a RouteBlob::Err,
+    /// or None if this is not an array
+    pub fn try_as_array_iter(&self) -> RouteBlobArrayIterResult<'a> {
+        match self {
+            Self::Value(Value::Array(arr)) | Self::Blob(RouteBlob::Prim(Value::Array(arr))) => {
+                RouteBlobArrayIterResult::Ok(RouteBlobArrayIter::Value(arr.iter()))
+            }
+            Self::Blob(RouteBlob::Array(arr)) => {
+                RouteBlobArrayIterResult::Ok(RouteBlobArrayIter::Blob(arr.iter()))
+            }
+            Self::Blob(RouteBlob::Err(e)) => RouteBlobArrayIterResult::Err(e.clone()),
+            _ => RouteBlobArrayIterResult::NotArray,
+        }
+    }
+
+    /// Try to view this blob as an object that has a single key and value.
+    ///
+    /// Returns an error if this is a RouteBlob::Err, or None if this is not an object
+    pub fn try_as_single_key_object(&self) -> RouteBlobSingleKeyObjectResult<'a> {
+        match self {
+            Self::Value(Value::Object(obj)) | Self::Blob(RouteBlob::Prim(Value::Object(obj))) => {
+                let mut iter = obj.iter();
+                let (k, v) = match iter.next() {
+                    Some(x) => x,
+                    None => return RouteBlobSingleKeyObjectResult::Empty,
+                };
+                if iter.next().is_some() {
+                    return RouteBlobSingleKeyObjectResult::TooManyKeys;
+                }
+                RouteBlobSingleKeyObjectResult::Ok(k, RouteBlobRef::Value(v))
+            }
+            Self::Blob(RouteBlob::Object(obj)) => {
+                let mut iter = obj.iter();
+                let (k, v) = match iter.next() {
+                    Some(x) => x,
+                    None => return RouteBlobSingleKeyObjectResult::Empty,
+                };
+                if iter.next().is_some() {
+                    return RouteBlobSingleKeyObjectResult::TooManyKeys;
+                }
+                RouteBlobSingleKeyObjectResult::Ok(k, RouteBlobRef::Blob(v))
+            }
+            Self::Blob(RouteBlob::Err(e)) => {
+                RouteBlobSingleKeyObjectResult::Err(e.clone())
+            }
+            _ => RouteBlobSingleKeyObjectResult::NotObject
+        }
+    }
+
+    /// Check if this blob contains error recursively
+    pub fn checked(&self) -> Result<SafeRouteBlob<'_>, RouteBlobError> {
+        match self {
+            Self::Value(v) => Ok(v.ref_into_unchecked()),
+            Self::Blob(b) => b.checked(),
+        }
+    }
+}
+
+pub enum RouteBlobArrayIterResult<'a> {
+    Ok(RouteBlobArrayIter<'a>),
+    Err(RouteBlobError),
+    NotArray,
+}
+
+pub enum RouteBlobSingleKeyObjectResult<'a> {
+    Ok(&'a str, RouteBlobRef<'a>),
+    Err(RouteBlobError),
+    Empty,
+    TooManyKeys,
+    NotObject,
+}
+
+/// View of a RouteBlob as an array
+pub enum RouteBlobArrayIter<'a> {
+    Value(std::slice::Iter<'a, Value>),
+    Blob(std::slice::Iter<'a, RouteBlob>),
+}
+
+impl<'a> Iterator for RouteBlobArrayIter<'a> {
+    type Item = RouteBlobRef<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Self::Value(iter) => iter.next().map(RouteBlobRef::Value),
+            Self::Blob(iter) => iter.next().map(RouteBlobRef::Blob),
+        }
+    }
+}
+
 impl From<Value> for RouteBlob {
     fn from(v: Value) -> Self {
         Self::Prim(v)

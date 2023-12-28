@@ -35,6 +35,8 @@ use crate::prop;
 use crate::res::{Loader, ResError, Resource, Use, ValidUse};
 use crate::util::StringMap;
 
+mod error;
+pub use error::*;
 mod entry_point;
 pub use entry_point::*;
 mod config;
@@ -42,59 +44,6 @@ pub use config::*;
 mod route;
 pub use route::*;
 
-/// Error during the prep phase
-#[derive(Debug, PartialEq, thiserror::Error)]
-pub enum PrepError {
-    #[error("Failed to load resource: {0}")]
-    Res(#[from] ResError),
-
-    #[error("The project file `{0}` should be a mapping object")]
-    InvalidProjectResourceType(String),
-
-    #[error("Project config ({0}) should be a mapping object")]
-    InvalidConfigType(ConfigTrace),
-
-    #[error("Project config ({0}): property `{1}` has an invalid type (expected {2})")]
-    InvalidConfigPropertyType(ConfigTrace, Cow<'static, str>, Cow<'static, str>),
-
-    #[error("Project config ({0}): property `{1}` is missing")]
-    MissingConfigProperty(ConfigTrace, Cow<'static, str>),
-
-    #[error("Project config ({0}): the `{1}` property is unused")]
-    UnusedConfigProperty(ConfigTrace, Cow<'static, str>),
-
-    #[error("Project config ({0}): cannot find tag `{1}`")]
-    TagNotFound(ConfigTrace, Cow<'static, str>),
-
-    #[error("Project config ({0}): `{1}` is not a valid built-in plugin or reference to a plugin script")]
-    InvalidPlugin(ConfigTrace, String),
-
-    #[error("Project config ({0}): config is nesting too deep! Check that you don't have circular dependency, or simplify the config structure")]
-    MaxConfigDepthExceeded(ConfigTrace),
-
-    #[error("Project config ({0}): defining map when a previous config already defines one")]
-    DuplicateMap(ConfigTrace),
-
-    #[error("Max preset namespace depth of {0} levels is reached. There might be a formatting error in your project files. If this is intentional, consider making the namespaces less complex.")]
-    MaxPresetNamespaceDepthExceeded(usize),
-
-    #[error("Project config ({0}): preset {1} is invalid")]
-    InvalidPreset(ConfigTrace, String),
-
-    #[error("Project metadata property `{0}` has invalid type (expecting {1})")]
-    InvalidMetadataPropertyType(&'static str, &'static str),
-
-    #[error("Project metadata has extra unused property: {0}")]
-    UnusedMetadataProperty(String),
-
-    #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
-    InvalidEntryPoint(String, String),
-
-    #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
-    MaxEntryPointDepthExceeded(String),
-}
-
-pub type PrepResult<T> = Result<T, PrepError>;
 
 /// Output of the prep phase
 #[derive(Debug, Clone)]
