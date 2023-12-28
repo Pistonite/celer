@@ -159,29 +159,25 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 self.line.secondary_text = lang::parse_rich(&value.coerce_into_string());
             }
             prop::NOTES => {
-                // move to note.rs
-                todo!()
-                // let iter = match value {
-                //     Value::Array(arr) => arr.into_iter(),
-                //     Value::Object(_) => {
-                //         errors.push(CompError::InvalidLinePropertyType(prop::NOTES.to_string()));
-                //         vec![].into_iter()
-                //     }
-                //     _ => vec![value].into_iter(),
-                // };
-                //
-                // let mut notes = vec![];
-                // for (i, note_value) in iter.enumerate() {
-                //     validate_not_array_or_object!(
-                //         &note_value,
-                //         self.errors,
-                //         format!("{p}[{i}]", p = prop::NOTES)
-                //     );
-                //     notes.push(DocNote::Text {
-                //         content: lang::parse_rich(&note_value.coerce_to_string()),
-                //     });
-                // }
-                // output.notes = notes;
+                let value = match value.try_into_object() {
+                    Ok(_) => {
+                        self.errors.push(CompError::InvalidLinePropertyType(
+                            prop::NOTES.to_string(),
+                        ));
+                        return;
+                    }
+                    Err(value) => value,
+                };
+                match value.try_into_array() {
+                    Ok(array) => {
+                        for (i, v) in array.into_iter().enumerate() {
+                            self.compile_note(&format!("{p}[{i}]", p = prop::NOTES), v);
+                        }
+                    }
+                    Err(_) => {
+                        self.compile_note(prop::NOTES, value);
+                    }
+                }
             }
             prop::SPLIT_NAME => {
                 if validate_not_array_or_object!(&value, self.errors, prop::SPLIT_NAME.to_string())

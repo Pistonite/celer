@@ -1,19 +1,24 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
+use std::ops::{Deref, DerefMut};
 
+use instant::Instant;
 use serde::{Deserialize, Serialize};
 
 use crate::json::{Cast, Coerce};
 use crate::lang::parse_rich;
-use crate::pack::{PackerError, PackerValue};
+use crate::lang;
+use crate::res::Loader;
+use crate::pack::{PackerError, PackerValue, CompileContext, PackError};
+use crate::prep::{PrepError, RouteConfig, RouteMetadata, CompilerMetadata, PreparedContext};
 use crate::types::{DocDiagnostic, DocRichText};
 use crate::util::yield_budget;
 
 use super::{CompError, CompLine, CompSection, Compiler};
 
 /// Compiled Document
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CompDoc {
+pub struct CompDoc<'p> {
+    ctx: CompileContext<'p>,
     /// The preface
     pub preface: Vec<DocRichText>,
     /// The route
@@ -24,37 +29,80 @@ pub struct CompDoc {
     pub known_props: HashSet<String>,
 }
 
-impl<'a> Compiler<'a> {
-    pub async fn comp_doc(&mut self, route: PackerValue) -> Result<CompDoc, CompError> {
-        let mut route_vec = vec![];
-        let mut preface = vec![];
+impl<'p> Deref for CompDoc<'p> {
+    type Target = CompileContext<'p>;
 
-        let mut errors: Vec<CompError> = vec![];
+    fn deref(&self) -> &Self::Target {
+        &self.ctx
+    }
+}
 
-        match route.try_into_array() {
-            Ok(sections) => {
-                for value in sections.into_iter() {
-                    yield_budget(64).await;
-                    self.add_section_or_preface(&mut preface, &mut route_vec, value)
-                        .await?;
+impl<'p> DerefMut for CompDoc<'p> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.ctx
+    }
+}
+
+impl<'p> AsRef<CompileContext<'p>> for CompDoc<'p> {
+    fn as_ref(&self) -> &CompileContext<'p> {
+        &self.ctx
+    }
+}
+
+impl CompDoc<'static> {
+    /// Create a new document showing an error from the prep phase.
+    pub fn from_prep_error(error: PrepError, start_time: Instant) -> Self {
+        let config = RouteConfig {
+            meta: RouteMetadata {
+                title: "[compile error]".to_string(),
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        Self {
+            ctx: CompileContext {
+                start_time,
+                config: Cow::Owned(config),
+                meta: Cow::Owned(CompilerMetadata::default()),
+                setting: &super::DEFAULT_SETTING,
+            },
+            preface: Default::default(),
+            route: Default::default(),
+            diagnostics: vec![
+                DocDiagnostic {
+                    msg: lang::parse_poor(&error.to_string()),
+                    msg_type: "error".to_string(),
+                    source: "celerc/prep".to_string(),
                 }
-            }
-            Err(_) => {
-                errors.push(CompError::InvalidRouteType);
-            }
-        }
-
-        if errors.is_empty() {
-            Ok(CompDoc {
-                preface,
-                route: route_vec,
-                diagnostics: vec![],
-                known_props: Default::default(),
-            })
-        } else {
-            Ok(self.create_empty_doc_for_error(&errors))
+            ],
+            known_props: Default::default(),
         }
     }
+}
+
+impl<'p> CompDoc<'p> {
+    /// Create a new document showing an error from the pack phase.
+    pub fn from_pack_error(error: PackError, ctx: CompileContext<'p>) -> Self
+    {
+        Self {
+            ctx,
+            preface: Default::default(),
+            route: Default::default(),
+            diagnostics: vec![
+                DocDiagnostic {
+                    msg: lang::parse_poor(&error.to_string()),
+                    msg_type: "error".to_string(),
+                    source: "celerc/pack".to_string(),
+                }
+            ],
+            known_props: Default::default(),
+        }
+    }
+}
+
+
+impl<'a> Compiler<'a> {
+
 
     async fn add_section_or_preface(
         &mut self,
@@ -96,16 +144,4 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    pub fn create_empty_doc_for_packer_error(&self, error: PackerError) -> CompDoc {
-        self.create_empty_doc_for_error(&[CompError::PackerErrors(vec![error])])
-    }
-
-    pub fn create_empty_doc_for_error(&self, errors: &[CompError]) -> CompDoc {
-        CompDoc {
-            route: vec![self.create_empty_section_for_error(errors)],
-            preface: vec![],
-            diagnostics: vec![],
-            known_props: Default::default(),
-        }
-    }
 }

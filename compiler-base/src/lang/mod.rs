@@ -1,3 +1,5 @@
+mod diagnostics;
+pub use diagnostics::*;
 mod tempstr;
 pub use tempstr::*;
 mod rich;

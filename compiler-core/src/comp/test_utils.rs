@@ -13,9 +13,7 @@ use crate::prep::{
     Setting,
 };
 
-use super::LineContext;
-
-static DEFAULT_SETTING: Setting = Setting::default();
+use super::{DEFAULT_SETTING, LineContext};
 
 impl Default for Compiler<'static> {
     /// Create a default/stub compiler for testing

@@ -14,11 +14,14 @@ use serde_json::Value;
 use crate::env;
 use crate::json::RouteBlobError;
 use crate::lang::parse_poor;
+use crate::pack::Compiler;
+use crate::prep::Setting;
 use crate::types::DocDiagnostic;
 
+mod diagnostics;
+pub use diagnostics::*;
 mod line;
 pub use line::*;
-
 mod comp_doc;
 pub use comp_doc::*;
 mod comp_section;
@@ -26,7 +29,8 @@ pub use comp_section::*;
 mod comp_line;
 pub use comp_line::*;
 
-pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
+#[cfg(test)]
+mod test_utils;
 
 /// Error in comp phase, related to resolving properties in the route
 ///
@@ -220,5 +224,40 @@ macro_rules! validate_not_array_or_object {
 }
 pub(crate) use validate_not_array_or_object;
 
-#[cfg(test)]
-mod test_utils;
+
+static DEFAULT_SETTING: Setting = Setting::default();
+
+impl<'p> Compiler<'p> {
+    /// Entry point for the comp phase
+    pub async fn compile(self) -> CompDoc<'p> {
+        todo!()
+        // let mut route_vec = vec![];
+    //     let mut preface = vec![];
+    //
+    //     let mut errors: Vec<CompError> = vec![];
+    //
+    //     match route.try_into_array() {
+    //         Ok(sections) => {
+    //             for value in sections.into_iter() {
+    //                 yield_budget(64).await;
+    //                 self.add_section_or_preface(&mut preface, &mut route_vec, value)
+    //                     .await?;
+    //             }
+    //         }
+    //         Err(_) => {
+    //             errors.push(CompError::InvalidRouteType);
+    //         }
+    //     }
+    //
+    //     if errors.is_empty() {
+    //         Ok(CompDoc {
+    //             preface,
+    //             route: route_vec,
+    //             diagnostics: vec![],
+    //             known_props: Default::default(),
+    //         })
+    //     } else {
+    //         Ok(self.create_empty_doc_for_error(&errors))
+    //     }
+    }
+}
