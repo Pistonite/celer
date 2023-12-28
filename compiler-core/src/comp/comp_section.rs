@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::json::Cast;
-use crate::lang::parse_rich;
-use crate::pack::PackerValue;
+use crate::json::{RouteBlobRef, Cast, RouteBlobError, IntoDiagnostic, DocDiagnostic, RouteBlobSingleKeyObjectResult};
+use crate::lang::{DocRichText};
+use crate::pack::{PackerValue, PackError};
 use crate::util::yield_budget;
 
-use super::{CompError, CompLine, Compiler};
+use super::{CompError, CompLine, Compiler, CompResult};
 
 /// Compiled Section
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -17,36 +17,76 @@ pub struct CompSection {
     pub lines: Vec<CompLine>,
 }
 
-impl<'a> Compiler<'a> {
-    pub async fn comp_section(&mut self, value: PackerValue) -> Result<CompSection, CompError> {
-        if let PackerValue::Err(e) = value {
-            return Err(CompError::PackerErrors(vec![e]));
+impl CompSection {
+    pub fn from_diagnostic<T>(error: T) -> Self 
+    where
+        T: IntoDiagnostic
+    {
+        let mut line = CompLine {
+            diagnostics: vec![error.into_diagnostic()],
+            ..Default::default()
+        };
+        Self {
+            name: "[error]".to_string(),
+            lines: vec![line],
         }
-        if value.is_array() {
-            return Err(CompError::InvalidSectionType);
-        }
+    }
+}
 
-        let section_obj = match value.try_into_object() {
-            Ok(v) => v,
-            Err(v) => {
-                // If not an array or object and is valid, treat as a preface value
-                if let PackerValue::Ok(v) = v {
-                    return Err(CompError::IsPreface(v));
+impl<'p> Compiler<'p> {
+    pub async fn compile_preface(
+        &self,
+        value: RouteBlobRef<'p>,
+    ) -> Result<DocRichText, RouteBlobError> {
+        let value = value.checked()?;
+        let text = value.coerce_into_string();
+        Ok(lang::parse_rich(&text))
+    }
+    /// Compile a blob into a section and add to the route
+    ///
+    /// If value is a preface, returns `None`
+    pub async fn compile_section(&self, value: RouteBlobRef<'p>, route: &mut Vec<CompSection>, diagnostics: &mut Vec<DocDiagnostic>) -> Option<CompSection> {
+        let result = match value.try_as_single_key_object() {
+            RouteBlobSingleKeyObjectResult::Ok(key, value) => {
+                Ok((key, value))
+            }
+            RouteBlobSingleKeyObjectResult::Err(error) => {
+                Err(PackError::BuildRouteSectionError(error).into_diagnostic())
+            }
+            RouteBlobSingleKeyObjectResult::Empty => {
+                if route.is_empty() {
+                    return None;
                 } else {
-                    unreachable!();
+                    Err(CompError::EmptyObjectCannotBeSection.into_diagnostic())
+                }
+            }
+            RouteBlobSingleKeyObjectResult::TooManyKeys => {
+                if route.is_empty() {
+                    return None;
+                } else {
+                    Err(CompError::TooManyKeysCannotBeSection.into_diagnostic())
+                }
+            }
+            RouteBlobSingleKeyObjectResult::NotObject => {
+                if route.is_empty() {
+                    return None;
+                } else {
+                    Err(CompError::InvalidSectionType.into_diagnostic())
                 }
             }
         };
+        let (name, value) = match result {
+            Ok(v) => v,
+            Err(e) => {
+                return Some(CompSection::from_diagnostic(e));
+            }
+        };
 
-        let mut iter = section_obj.into_iter();
-        let (section_name, section_value) = iter.next().ok_or(CompError::InvalidSectionType)?;
-        if iter.next().is_some() {
-            return Err(CompError::InvalidSectionType);
-        }
         let mut section = CompSection {
-            name: section_name,
+            name,
             lines: vec![],
         };
+
         if let PackerValue::Err(e) = section_value {
             section
                 .lines
@@ -106,28 +146,6 @@ impl<'a> Compiler<'a> {
 impl<'a> Compiler<'a> {
 
 
-    async fn add_section_or_preface(
-        &mut self,
-        preface: &mut Vec<DocRichText>,
-        route: &mut Vec<CompSection>,
-        value: PackerValue,
-    ) -> Result<(), CompError> {
-        match self.comp_section(value).await {
-            Ok(section) => route.push(section),
-            Err(e) => {
-                if let CompError::IsPreface(v) = &e {
-                    if route.is_empty() {
-                        let text = v.coerce_to_string();
-                        preface.push(parse_rich(&text));
-                        return Ok(());
-                    }
-                }
-                let section = self.create_empty_section_for_error(&[e]);
-                route.push(section);
-            }
-        }
-        Ok(())
-    }
 
     fn create_empty_section_for_error(&self, errors: &[CompError]) -> CompSection {
         let mut diagnostics = vec![];

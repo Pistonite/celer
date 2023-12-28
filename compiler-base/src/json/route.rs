@@ -44,6 +44,14 @@ impl<'a> From<&'a RouteBlob> for RouteBlobRef<'a> {
         Self::Blob(x)
     }
 }
+impl Clone for RouteBlobRef<'_> {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Value(v) => Self::Value(v),
+            Self::Blob(b) => Self::Blob(b),
+        }
+    }
+}
 
 impl<'a> RouteBlobRef<'a> {
     /// Try to iterate this blob as an array. Returns an error if this is a RouteBlob::Err,

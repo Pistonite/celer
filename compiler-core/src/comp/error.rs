@@ -20,6 +20,14 @@ pub enum CompError {
     #[error("Multiple keys for a line found. Did you forget to indent the properties?")]
     TooManyKeysInObjectLine,
 
+    /// When an empty object is specified as a section
+    #[error("A section cannot be an empty object.")]
+    EmptyObjectCannotBeSection,
+
+    /// When a section object has more than 2 keys
+    #[error("Multiple keys for a section found. Did you forget to indent the properties?")]
+    TooManyKeysInObjectSection,
+
     /// When line_object[key] is not an object
     ///
     /// For example:

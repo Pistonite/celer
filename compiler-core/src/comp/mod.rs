@@ -12,10 +12,9 @@ use derivative::Derivative;
 use instant::Instant;
 use serde_json::Value;
 
-use crate::lang::IntoDiagnostic;
+use crate::lang::{DocRichText, DocDiagnostic, IntoDiagnostic};
 use crate::env;
 use crate::json::{RouteBlobError, RouteBlobArrayIterResult, RouteBlobRef};
-use crate::lang::parse_poor;
 use crate::pack::{Compiler, PackError};
 use crate::prep::Setting;
 use crate::env::yield_budget;
@@ -82,12 +81,10 @@ impl<'p> Compiler<'p> {
 
         // route entry point must be an array
         match route_blob.try_as_array_iter() {
-            RouteBlobArrayIterResult::Ok(mut sections) => {
+            RouteBlobArrayIterResult::Ok(sections) => {
                 for section in sections {
                     yield_budget(64).await;
-                    todo!()
-    //                 self.add_section_or_preface(&mut preface, &mut route_vec, value)
-    //                     .await?;
+                    self.compile_section_or_preface(section, &mut route, &mut preface, &mut diagnostics).await;
                 }
             },
             RouteBlobArrayIterResult::NotArray => {
@@ -107,6 +104,29 @@ impl<'p> Compiler<'p> {
             // will be filled in after plugin after compile is called
             // due to mutable borrow constraint
             plugin_runtimes: Default::default(),
+        }
+    }
+
+    async fn compile_section_or_preface(
+        &self, 
+        section_ref: RouteBlobRef<'p>,
+        route: &mut Vec<CompSection>,
+        preface: &mut Vec<DocRichText>,
+        diagnostics: &mut Vec<DocDiagnostic>,
+    ) {
+        match self.compile_section(section_ref.clone(), route, diagnostics).await {
+            Some(section) => route.push(section),
+            None => {
+                match self.compile_preface(section_ref) {
+                    Ok(preface) => preface.push(preface),
+                    Err(e) => {
+                        let e = PackError::BuildRouteSectionError(e);
+                        // since error is in the preface
+                        // add to overall diagnostics
+                        diagnostics.push(e.into_diagnostic());
+                    }
+                }
+            }
         }
     }
 }

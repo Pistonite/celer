@@ -11,7 +11,7 @@ use crate::prop;
 use crate::types::DocDiagnostic;
 use crate::util::StringMap;
 
-use super::{validate_not_array_or_object, CompError, CompResult};
+use super::{CompLine, LineContext, validate_not_array_or_object, CompError, CompResult};
 
 mod coord;
 pub use coord::*;
@@ -27,48 +27,9 @@ pub use preset::*;
 mod prop_map;
 use prop_map::*;
 
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-pub struct CompLine {
-    /// Primary text content of the line
-    pub text: DocRichText,
-    /// Main line color
-    pub line_color: String,
-    /// Main movements of this line
-    pub movements: Vec<CompMovement>,
-    /// Diagnostic messages
-    pub diagnostics: Vec<DocDiagnostic>,
-    /// Icon id to show on the document
-    pub doc_icon: Option<String>,
-    /// Icon id to show on the map
-    pub map_icon: Option<String>,
-    /// Coordinate of the map icon
-    pub map_coord: GameCoord,
-    /// Map icon priority. 0=primary, 1=secondary, >2=other
-    pub map_icon_priority: i64,
-    /// Map markers
-    pub markers: Vec<CompMarker>,
-    /// Secondary text to show below the primary text
-    pub secondary_text: DocRichText,
-    /// Counter text to display
-    pub counter_text: Option<DocRichTextBlock>,
-    /// The notes
-    pub notes: Vec<DocNote>,
-    /// The split name, if different from text
-    pub split_name: Option<DocRichText>,
-    /// If the line is a banner
-    pub is_banner: bool,
-    /// The rest of the properties as json blobs
-    ///
-    /// These are ignored by ExecDoc, but the plugins can use them
-    pub properties: StringMap<Value>,
-}
 
-pub struct LineContext<'c, 'p> {
-    pub compiler: &'c Compiler<'p>,
-    pub line: CompLine,
-    pub errors: Vec<CompError>,
-}
+
+
 
 impl<'c, 'p> LineContext<'c, 'p> {
     /// Compile a line

@@ -72,24 +72,6 @@ pub struct ExecLine {
     pub is_banner: bool,
 }
 
-/// Diagnostic message
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
-pub struct DocDiagnostic {
-    /// The diagnostic message
-    pub msg: DocPoorText,
-    /// Type of the diagnostic
-    ///
-    /// The builtin ones are "error" and "warn", but this can be any value.
-    /// Custom themes might utilize this for displaying extra messages.
-    #[serde(rename = "type")]
-    pub msg_type: String,
-    /// Source of the diagnostic
-    ///
-    /// User can filter diagnostics by source
-    pub source: String,
-}
-
 /// Map features for one section
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm]
