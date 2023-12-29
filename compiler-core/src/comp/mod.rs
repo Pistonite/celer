@@ -1,19 +1,21 @@
-//! Compiler core logic
+//! # Compile (comp) phase
 //!
-//! The compiler takes in the raw route JSON blob and extracts the known properties
-//! into native structures. It also computes temporal properties like the current coordinates
-//! and color at any given point in the route.
-
-use std::borrow::Cow;
-use std::convert::Infallible;
-use std::ops::Deref;
-
-use derivative::Derivative;
-use instant::Instant;
-use serde_json::Value;
+//! This phase transforms the route from raw JSON into structured data (a [`CompDoc`]).
+//! It also may handle errors from earlier phases and show them in the document.
+//!
+//! # Input
+//! The input is [`Compiler`] from pack phase
+//!
+//! # Work
+//! 1. Call plugin onBeforeCompile
+//! 2. Traverse the route and compile route structure
+//! 3. Propagate coordinates
+//! 4. Call plugin onAfterCompile
+//!
+//! # Output
+//! The output is a [`CompDoc`]
 
 use crate::lang::{DocRichText, DocDiagnostic, IntoDiagnostic};
-use crate::env;
 use crate::json::{RouteBlobError, RouteBlobArrayIterResult, RouteBlobRef};
 use crate::pack::{Compiler, PackError};
 use crate::prep::Setting;
@@ -79,6 +81,8 @@ impl<'p> Compiler<'p> {
         let mut route = vec![];
         let mut diagnostics = vec![];
 
+        // pass 1 (parallel): route structure is formed
+
         // route entry point must be an array
         match route_blob.try_as_array_iter() {
             RouteBlobArrayIterResult::Ok(sections) => {
@@ -93,6 +97,12 @@ impl<'p> Compiler<'p> {
             RouteBlobArrayIterResult::Err(e) => {
                 diagnostics.push(PackError::BuildRouteError(e).into_diagnostic());
             },
+        }
+
+        // pass 2 (sequential) - coordinates are propagated
+        for section in &mut route {
+            yield_budget(64).await;
+            section.sequential_pass(&mut self);
         }
 
         CompDoc {
@@ -111,14 +121,14 @@ impl<'p> Compiler<'p> {
         &self, 
         section_ref: RouteBlobRef<'p>,
         route: &mut Vec<CompSection>,
-        preface: &mut Vec<DocRichText>,
+        prefaces: &mut Vec<DocRichText>,
         diagnostics: &mut Vec<DocDiagnostic>,
     ) {
         match self.compile_section(section_ref.clone(), route, diagnostics).await {
             Some(section) => route.push(section),
             None => {
                 match self.compile_preface(section_ref) {
-                    Ok(preface) => preface.push(preface),
+                    Ok(preface) => prefaces.push(preface),
                     Err(e) => {
                         let e = PackError::BuildRouteSectionError(e);
                         // since error is in the preface

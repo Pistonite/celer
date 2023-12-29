@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::json::{RouteBlobRef, Cast, RouteBlobError, IntoDiagnostic, DocDiagnostic, RouteBlobSingleKeyObjectResult};
-use crate::lang::{DocRichText};
-use crate::pack::{PackerValue, PackError};
-use crate::util::yield_budget;
+use crate::json::{Coerce, RouteBlobRef, Cast, RouteBlobError, RouteBlobSingleKeyObjectResult, RouteBlobArrayIterResult};
+use crate::lang::{self, DocRichText, DocDiagnostic, IntoDiagnostic};
+use crate::pack::{PackError};
+use crate::env::{iter_futures, yield_budget};
 
 use super::{CompError, CompLine, Compiler, CompResult};
 
@@ -31,10 +31,17 @@ impl CompSection {
             lines: vec![line],
         }
     }
+
+    pub async fn sequential_pass(&mut self, compiler: &mut Compiler<'_>) {
+        for line in &mut self.lines {
+            yield_budget(64).await;
+            line.sequential_pass(compiler);
+        }
+    }
 }
 
 impl<'p> Compiler<'p> {
-    pub async fn compile_preface(
+    pub fn compile_preface(
         &self,
         value: RouteBlobRef<'p>,
     ) -> Result<DocRichText, RouteBlobError> {
@@ -64,7 +71,7 @@ impl<'p> Compiler<'p> {
                 if route.is_empty() {
                     return None;
                 } else {
-                    Err(CompError::TooManyKeysCannotBeSection.into_diagnostic())
+                    Err(CompError::TooManyKeysInObjectSection.into_diagnostic())
                 }
             }
             RouteBlobSingleKeyObjectResult::NotObject => {
@@ -75,6 +82,7 @@ impl<'p> Compiler<'p> {
                 }
             }
         };
+
         let (name, value) = match result {
             Ok(v) => v,
             Err(e) => {
@@ -82,86 +90,60 @@ impl<'p> Compiler<'p> {
             }
         };
 
-        let mut section = CompSection {
-            name,
-            lines: vec![],
-        };
-
-        if let PackerValue::Err(e) = section_value {
-            section
-                .lines
-                .push(self.create_empty_line_for_error(&[CompError::PackerErrors(vec![e])]));
-            return Ok(section);
-        }
-        let section_lines = match section_value.try_into_array() {
-            Ok(v) => v,
-            Err(_) => {
-                section
-                    .lines
-                    .push(self.create_empty_line_for_error(&[CompError::InvalidSectionType]));
-                return Ok(section);
+        let array = match value.try_as_array_iter() {
+            RouteBlobArrayIterResult::Ok(v) => v,
+            RouteBlobArrayIterResult::Err(e) => {
+                return Some(CompSection::from_diagnostic(PackError::BuildRouteSectionError(e)));
+            }
+            RouteBlobArrayIterResult::NotArray => {
+                return Some(CompSection::from_diagnostic(CompError::InvalidSectionType));
             }
         };
-        for line in section_lines {
-            yield_budget(64).await;
-            match line.flatten() {
-                Ok(v) => {
-                    let line = match self.comp_line(v) {
-                        Ok(l) => l,
-                        Err((mut l, errors)) => {
-                            for error in errors {
-                                error.add_to_diagnostics(&mut l.diagnostics);
-                            }
-                            l
-                        }
-                    };
-                    section.lines.push(line);
-                }
-                Err(errors) => {
-                    section
-                        .lines
-                        .push(self.create_empty_line_for_error(&[CompError::PackerErrors(errors)]));
-                }
-            }
-        }
-
-        Ok(section)
-    }
-
-    fn create_empty_line_for_error(&self, errors: &[CompError]) -> CompLine {
-        let mut diagnostics = vec![];
-        for error in errors {
-            error.add_to_diagnostics(&mut diagnostics);
-        }
-        CompLine {
-            text: parse_rich("[compile error]"),
-            line_color: self.color.clone(),
-            diagnostics,
-            map_coord: self.coord.clone(),
-            ..Default::default()
-        }
-    }
-}
-
-impl<'a> Compiler<'a> {
 
 
-
-    fn create_empty_section_for_error(&self, errors: &[CompError]) -> CompSection {
-        let mut diagnostics = vec![];
-        for error in errors {
-            error.add_to_diagnostics(&mut diagnostics);
-        }
-        let line = CompLine {
-            line_color: self.color.clone(),
-            diagnostics,
-            map_coord: self.coord.clone(),
-            ..Default::default()
+        let lines = iter_futures(64, array.map(|line| async { self.parse_line(line) })).await;
+        let section = CompSection {
+            name: name.to_owned(),
+            lines
         };
-        CompSection {
-            name: "[compiler error]".to_string(),
-            lines: vec![line],
-        }
+
+        Some(section)
     }
 
+    // fn create_empty_line_for_error(&self, errors: &[CompError]) -> CompLine {
+    //     let mut diagnostics = vec![];
+    //     for error in errors {
+    //         error.add_to_diagnostics(&mut diagnostics);
+    //     }
+    //     CompLine {
+    //         text: parse_rich("[compile error]"),
+    //         line_color: self.color.clone(),
+    //         diagnostics,
+    //         map_coord: self.coord.clone(),
+    //         ..Default::default()
+    //     }
+    // }
 }
+//
+// impl<'a> Compiler<'a> {
+//
+//
+//
+//     fn create_empty_section_for_error(&self, errors: &[CompError]) -> CompSection {
+//         let mut diagnostics = vec![];
+//         for error in errors {
+//             error.add_to_diagnostics(&mut diagnostics);
+//         }
+//         let line = CompLine {
+//             line_color: self.color.clone(),
+//             diagnostics,
+//             map_coord: self.coord.clone(),
+//             ..Default::default()
+//         };
+//         CompSection {
+//             name: "[compiler error]".to_string(),
+//             lines: vec![line],
+//         }
+//     }
+//
+// }

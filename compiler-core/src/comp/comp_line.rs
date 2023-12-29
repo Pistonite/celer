@@ -1,11 +1,15 @@
-//!
-//!
+use celerb::lang::IntoDiagnostic;
+use serde::{Serialize, Deserialize};
+use serde_json::Value;
 
-use crate::json::{IntoSafeRouteBlob, RouteBlob};
+use crate::macros::derive_wasm;
+use crate::json::{IntoSafeRouteBlob, RouteBlob, RouteBlobRef};
+use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
+use crate::util::StringMap;
+use crate::pack::{Compiler, PackError};
+use crate::prep::GameCoord;
 
-use crate::pack::Compiler;
-
-use super::{CompResult};
+use super::{CompResult, CompError, CompMovement, CompMarker, DocNote};
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm]
 pub struct CompLine {
@@ -50,19 +54,19 @@ pub struct LineContext<'c, 'p> {
 
 impl<'p> Compiler<'p> {
     /// Parse the line (parallel pass)
-    pub fn parse_line(&self, value: &'p RouteBlob) -> CompLine {
+    pub fn parse_line(&self, value: RouteBlobRef<'p>) -> CompLine {
         let mut ctx = self.create_line_context();
         let value = match value.checked() {
             Ok(value) => {
                 ctx.parse_line(value);
+                for error in ctx.errors {
+                    ctx.line.diagnostics.push(error.into_diagnostic());
+                }
             }
             Err(e) => {
-                ctx.errors.push(e.into());
+                ctx.line.diagnostics.push(PackError::BuildRouteLineError(e).into_diagnostic());
             }
         };
-        for error in ctx.errors {
-            error.add_to_diagnostics(&mut ctx.line.diagnostics);
-        }
 
         ctx.line
     }
@@ -91,22 +95,19 @@ impl CompLine {
 
 #[cfg(test)]
 mod test {
-    use std::collections::BTreeMap;
-
-    use celerb::lang::DocRichTextBlock;
     use map_macro::btree_map;
     use serde_json::{json, Value};
 
     use crate::comp::line::DocNote;
     use crate::comp::test_utils::{self, CompilerBuilder};
     use crate::comp::{CompError, CompMarker, CompMovement};
-    use crate::lang::{self, DocRichText, Preset};
+    use crate::lang::{self, DocRichTextBlock, DocRichText, Preset};
     use crate::prep::{Axis, GameCoord, MapCoordMap, MapMetadata, RouteConfig, RouteMetadata};
 
     use super::*;
 
     fn test_comp_ok(compiler: &mut Compiler<'static>, input: Value, expected: CompLine) {
-        let mut line = compiler.parse_line(&RouteBlob::Prim(input));
+        let mut line = compiler.parse_line(RouteBlobRef::Value(&input));
         line.sequential_pass(compiler);
         assert_eq!(line, expected);
     }
@@ -117,11 +118,11 @@ mod test {
         mut expected: CompLine,
         errors: Vec<CompError>,
     ) {
-        let mut line = compiler.parse_line(&RouteBlob::Prim(input));
-        line.sequential_pass(compiler);
         for error in errors {
-            error.add_to_diagnostics(&mut expected.diagnostics);
+            expected.diagnostics.push(error.into_diagnostic());
         }
+        let mut line = compiler.parse_line(RouteBlobRef::Value(&input));
+        line.sequential_pass(compiler);
         assert_eq!(line, expected);
     }
 

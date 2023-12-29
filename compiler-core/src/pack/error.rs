@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use crate::json::RouteBlobError;
-use crate::lang::IntoDiagnostic;
+use crate::lang::BaseError;
 use crate::plugin::PluginError;
 
 
@@ -23,7 +23,7 @@ pub enum PackError {
 
 pub type PackResult<T> = Result<T, PackError>;
 
-impl IntoDiagnostic for PackError {
+impl BaseError for PackError {
     fn source(&self) -> Cow<'static, str> {
         "celerc/pack".into()
     }

@@ -1,4 +1,4 @@
-//! Pack phase
+//! # Pack phase
 //!
 //! This phase ensures the `use`s in the route are resolved, and creates
 //! the plugin runtimes and the compiler

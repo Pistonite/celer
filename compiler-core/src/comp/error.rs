@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 
-use crate::{lang::IntoDiagnostic, plugin::PluginError};
+use crate::lang::BaseError;
+use crate::plugin::PluginError;
 
 /// Error in comp phase, related to resolving properties in the route
 ///
@@ -110,7 +111,7 @@ pub enum CompError {
 
 pub type CompResult<T> = Result<T, CompError>;
 
-impl IntoDiagnostic for CompError {
+impl BaseError for CompError {
     fn source(&self) -> Cow<'static, str> {
         "celerc/comp".into()
     }
@@ -144,7 +145,10 @@ impl IntoDiagnostic for CompError {
             | CompError::InvalidMovementPreset(_) => "route/customizing-movements",
             CompError::InvalidMarkerType => "route/customizing-movements#markers",
             CompError::IsPreface => "route/route-structure#preface",
-            CompError::InvalidSectionType => "route/route-structure#sections",
+
+            CompError::EmptyObjectCannotBeSection
+            | CompError::TooManyKeysInObjectSection
+            | CompError::InvalidSectionType => "route/route-structure#sections",
             CompError::InvalidRouteType => "route/route-structure#entry-point",
         };
         Some(format!("/docs/{path}").into())

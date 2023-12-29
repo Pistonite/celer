@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::lang::IntoDiagnostic;
+use crate::lang::BaseError;
 use crate::res::ResError;
 
 use super::ConfigTrace;
@@ -59,7 +59,7 @@ pub enum PrepError {
 
 pub type PrepResult<T> = Result<T, PrepError>;
 
-impl IntoDiagnostic for PrepError {
+impl BaseError for PrepError {
     fn source(&self) -> Cow<'static, str> {
         "celerc/prep".into()
     }

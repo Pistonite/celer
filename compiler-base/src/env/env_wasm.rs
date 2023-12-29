@@ -1,6 +1,6 @@
 //! WASM environment implementation
 
-use std::rc::Rc;
+use std::{rc::Rc, future::Future};
 
 /// Ref counted pointer. Wrapper for Rc
 #[derive(Debug)]
@@ -62,6 +62,7 @@ pub async fn yield_budget(limit: u32) {
     }
 }
 
+/// Wait for multiple futures to complete
 #[macro_export]
 macro_rules! join_futures {
     ($($e:expr),* $(,)?) => {
@@ -75,3 +76,20 @@ macro_rules! join_futures {
     };
 }
 pub use join_futures;
+
+/// Wait for multiple futures to complete and collect their results
+/// in the same order
+///
+/// On WASM, futures are simply executed sequentially
+pub async fn iter_futures<I, T>(budget: u32, iter: I) -> Vec<T>
+where
+    I: IntoIterator,
+    I::Item: Future<Output = T>,
+{
+    let mut results = Vec::new();
+    for future in iter {
+        yield_budget(budget).await;
+        results.push(future.await);
+    }
+    results
+}

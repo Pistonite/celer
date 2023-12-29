@@ -1,4 +1,4 @@
-//! Prepare (prep) phase
+//! # Prepare (prep) phase
 //!
 //! # Input
 //! This is the 0-th phase of the compiler that prepares the metadata for the compilation.

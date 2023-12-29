@@ -8,7 +8,7 @@ use std::borrow::Cow;
 use serde::{Deserialize, Serialize};
 
 use crate::comp::DocNote;
-use crate::lang::{DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock};
+use crate::lang::{DocDiagnostic, DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock};
 use crate::macros::derive_wasm;
 use crate::prep::{GameCoord, RouteConfig};
 use crate::util::StringMap;

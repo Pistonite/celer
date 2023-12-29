@@ -64,7 +64,22 @@ impl DocDiagnostic {
     }
 }
 
-pub trait IntoDiagnostic: Display + Sized {
+pub trait IntoDiagnostic {
+    fn into_diagnostic(self) -> DocDiagnostic;
+}
+
+pub trait BaseError: Display {
+    /// Get the source
+    fn source(&self) -> Cow<'static, str>;
+
+    /// If the error is an error (or warning otherwise)
+    fn is_error(&self) -> bool;
+
+    /// An optional path to a help page, should be 
+    fn help_path(&self) -> Option<Cow<'static, str>>;
+}
+
+impl<T> IntoDiagnostic for T where T: BaseError {
     /// Convert self into a diagnostic message, by using
     /// the string representation as the message
     fn into_diagnostic(self) -> DocDiagnostic {
@@ -87,25 +102,11 @@ pub trait IntoDiagnostic: Display + Sized {
             DocDiagnostic::warning(&message, self.source())
         }
     }
-
-    /// Get the source
-    fn source(&self) -> Cow<'static, str>;
-
-    /// If the error is an error (or warning otherwise)
-    fn is_error(&self) -> bool;
-
-    /// An optional path to a help page, should be 
-    fn help_path(&self) -> Option<Cow<'static, str>>;
 }
 
-// impl From<PrepError> for DocDiagnostic {
-//     fn from(error: PrepError) -> Self {
-//         Self::error(&error.to_string(), "celerc/prep")
-//     }
-// }
-//
-// impl From<PackError> for DocDiagnostic {
-//     fn from(error: PackError) -> Self {
-//         Self::error(&error.to_string(), "celerc/pack")
-//     }
-// }
+impl IntoDiagnostic for DocDiagnostic {
+    fn into_diagnostic(self) -> Self {
+        self
+    }
+}
+
