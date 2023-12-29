@@ -44,10 +44,10 @@ pub struct Compiler<'p> {
 
     /// Reference to the built route
     pub route: Cow<'p, RouteBlob>,
-    /// Current color of the map line
-    pub color: String,
-    /// Current position on the map
-    pub coord: GameCoord,
+    // /// Current color of the map line
+    // pub color: String,
+    // /// Current position on the map
+    // pub coord: GameCoord,
     /// Runtime of the plugins
     pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
 }
@@ -147,18 +147,18 @@ where
             ctx,
             route,
             plugin_runtimes,
-            color: self
-                .config
-                .map
-                .as_ref()
-                .map(|m| m.initial_color.clone())
-                .unwrap_or("#fff".to_string()),
-            coord: self
-                .config
-                .map
-                .as_ref()
-                .map(|m| m.initial_coord.clone())
-                .unwrap_or_default(),
+            // color: self
+            //     .config
+            //     .map
+            //     .as_ref()
+            //     .map(|m| m.initial_color.clone())
+            //     .unwrap_or("#fff".to_string()),
+            // coord: self
+            //     .config
+            //     .map
+            //     .as_ref()
+            //     .map(|m| m.initial_coord.clone())
+            //     .unwrap_or_default(),
         };
 
         Ok(compiler)

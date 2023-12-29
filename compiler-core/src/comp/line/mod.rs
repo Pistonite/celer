@@ -3,12 +3,11 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce, IntoSafeRouteBlob, RouteBlob, SafeRouteBlob};
 use crate::lang;
-use crate::lang::{DocRichText, DocRichTextBlock, PresetInst};
+use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock, PresetInst};
 use crate::macros::derive_wasm;
 use crate::pack::Compiler;
 use crate::prep::GameCoord;
 use crate::prop;
-use crate::types::DocDiagnostic;
 use crate::util::StringMap;
 
 use super::{CompLine, LineContext, validate_not_array_or_object, CompError, CompResult};
@@ -195,7 +194,11 @@ impl<'c, 'p> LineContext<'c, 'p> {
             }
             prop::COLOR => {
                 if validate_not_array_or_object!(&value, self.errors, prop::COLOR.to_string()) {
-                    self.line.line_color = value.coerce_into_string();
+                    if !value.coerce_truthy() {
+                        self.line.line_color = None;
+                    } else {
+                        self.line.line_color = Some(value.coerce_into_string());
+                    }
                 }
             }
             prop::MOVEMENTS => {

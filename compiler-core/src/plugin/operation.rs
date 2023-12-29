@@ -23,7 +23,7 @@ macro_rules! for_each_rich_text_except_counter {
         }
         for note in $comp_line.notes.iter_mut() {
             match note {
-                $crate::types::DocNote::Text { content } => {
+                $crate::comp::DocNote::Text { content } => {
                     for $t in content.iter_mut() {
                         $fun;
                     }

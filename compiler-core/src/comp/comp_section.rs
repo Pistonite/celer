@@ -32,12 +32,12 @@ impl CompSection {
         }
     }
 
-    pub async fn sequential_pass(&mut self, compiler: &mut Compiler<'_>) {
-        for line in &mut self.lines {
-            yield_budget(64).await;
-            line.sequential_pass(compiler);
-        }
-    }
+    // pub async fn sequential_pass(&mut self, compiler: &mut Compiler<'_>) {
+    //     for line in &mut self.lines {
+    //         yield_budget(64).await;
+    //         line.sequential_pass(compiler);
+    //     }
+    // }
 }
 
 impl<'p> Compiler<'p> {

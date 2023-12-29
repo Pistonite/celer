@@ -16,7 +16,7 @@ pub struct CompLine {
     /// Primary text content of the line
     pub text: DocRichText,
     /// Main line color
-    pub line_color: String,
+    pub line_color: Option<String>,
     /// Main movements of this line
     pub movements: Vec<CompMovement>,
     /// Diagnostic messages
@@ -25,8 +25,8 @@ pub struct CompLine {
     pub doc_icon: Option<String>,
     /// Icon id to show on the map
     pub map_icon: Option<String>,
-    /// Coordinate of the map icon
-    pub map_coord: GameCoord,
+    // /// Coordinate of the map icon
+    // pub map_coord: GameCoord,
     /// Map icon priority. 0=primary, 1=secondary, >2=other
     pub map_icon_priority: i64,
     /// Map markers
@@ -84,14 +84,34 @@ impl<'p> Compiler<'p> {
     }
 }
 
-impl CompLine {
-    /// Execute the sequential pass of line compilation
-    ///
-    /// This updates the coordinate and color of the line and the compiler
-    pub fn sequential_pass(&mut self, compiler: &mut Compiler<'_>) {
-        todo!()
-    }
-}
+// impl CompLine {
+//     /// Execute the sequential pass of line compilation
+//     ///
+//     /// This updates the coordinate and color of the line and the compiler
+//     pub fn sequential_pass(&mut self, compiler: &mut Compiler<'_>) {
+//         if self.line_color.is_empty() {
+//             self.line_color = compiler.color.to_owned();
+//         }
+//         // track movements backward
+//         let mut stack = 0usize;
+//         for m in self.movements.iter().rev() {
+//             match m {
+//                 CompMovement::To { to, .. } => {
+//                     // when tracking backwards and stack is empty
+//                     // this is where the coord should be when movement ends
+//                     if stack == 0 {
+//                         compiler.coord = to.clone();
+//                         break;
+//                     }
+//                 }
+//                 CompMovement::Pop => {
+//                     // if we see a pop, we need to find the previous push
+//                     stack += 1;
+//                 }
+//             }
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod test {
@@ -107,8 +127,7 @@ mod test {
     use super::*;
 
     fn test_comp_ok(compiler: &mut Compiler<'static>, input: Value, expected: CompLine) {
-        let mut line = compiler.parse_line(RouteBlobRef::Value(&input));
-        line.sequential_pass(compiler);
+        let line = compiler.parse_line(RouteBlobRef::Value(&input));
         assert_eq!(line, expected);
     }
 
@@ -121,8 +140,7 @@ mod test {
         for error in errors {
             expected.diagnostics.push(error.into_diagnostic());
         }
-        let mut line = compiler.parse_line(RouteBlobRef::Value(&input));
-        line.sequential_pass(compiler);
+        let line = compiler.parse_line(RouteBlobRef::Value(&input));
         assert_eq!(line, expected);
     }
 
@@ -930,26 +948,26 @@ mod test {
         );
     }
 
-    #[test]
-    fn test_inherit_color_coord() {
-        let builder = CompilerBuilder::new(
-            Default::default(),
-            "color".to_string(),
-            GameCoord(1.0, 2.0, 3.0),
-        );
-        let mut compiler = builder.build();
-
-        test_comp_ok(
-            &mut compiler,
-            json!("no color or coord"),
-            CompLine {
-                text: DocRichText::text("no color or coord"),
-                line_color: "color".to_string(),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
-                ..Default::default()
-            },
-        );
-    }
+    // #[test]
+    // fn test_inherit_color_coord() {
+    //     let builder = CompilerBuilder::new(
+    //         Default::default(),
+    //         "color".to_string(),
+    //         GameCoord(1.0, 2.0, 3.0),
+    //     );
+    //     let mut compiler = builder.build();
+    //
+    //     test_comp_ok(
+    //         &mut compiler,
+    //         json!("no color or coord"),
+    //         CompLine {
+    //             text: DocRichText::text("no color or coord"),
+    //             line_color: Some("color".to_string()),
+    //             map_coord: GameCoord(1.0, 2.0, 3.0),
+    //             ..Default::default()
+    //         },
+    //     );
+    // }
 
     #[test]
     fn test_change_color() {

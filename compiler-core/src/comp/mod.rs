@@ -9,8 +9,7 @@
 //! # Work
 //! 1. Call plugin onBeforeCompile
 //! 2. Traverse the route and compile route structure
-//! 3. Propagate coordinates
-//! 4. Call plugin onAfterCompile
+//! 3. Call plugin onAfterCompile
 //!
 //! # Output
 //! The output is a [`CompDoc`]
@@ -81,8 +80,6 @@ impl<'p> Compiler<'p> {
         let mut route = vec![];
         let mut diagnostics = vec![];
 
-        // pass 1 (parallel): route structure is formed
-
         // route entry point must be an array
         match route_blob.try_as_array_iter() {
             RouteBlobArrayIterResult::Ok(sections) => {
@@ -99,11 +96,11 @@ impl<'p> Compiler<'p> {
             },
         }
 
-        // pass 2 (sequential) - coordinates are propagated
-        for section in &mut route {
-            yield_budget(64).await;
-            section.sequential_pass(&mut self);
-        }
+        // // pass 2 (sequential) - coordinates are propagated
+        // for section in &mut route {
+        //     yield_budget(64).await;
+        //     section.sequential_pass(&mut self);
+        // }
 
         CompDoc {
             ctx: self.ctx,
