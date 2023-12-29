@@ -4,7 +4,6 @@ use crate::json::RouteBlobError;
 use crate::lang::BaseError;
 use crate::plugin::PluginError;
 
-
 /// Error during the pack phase
 #[derive(Debug, thiserror::Error)]
 pub enum PackError {

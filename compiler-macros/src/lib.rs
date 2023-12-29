@@ -1,5 +1,4 @@
 use proc_macro::TokenStream;
-type TokenStream2 = proc_macro2::TokenStream;
 
 mod util;
 
@@ -26,10 +25,7 @@ mod util;
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn async_trait(
-    attr: TokenStream,
-    input: TokenStream,
-) -> TokenStream {
+pub fn async_trait(attr: TokenStream, input: TokenStream) -> TokenStream {
     async_impl::expand("async_trait", attr, input)
 }
 
@@ -57,10 +53,7 @@ pub fn async_trait(
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn async_recursion(
-    attr: TokenStream,
-    input: TokenStream,
-) -> TokenStream {
+pub fn async_recursion(attr: TokenStream, input: TokenStream) -> TokenStream {
     async_impl::expand("async_recursion", attr, input)
 }
 mod async_impl;
@@ -86,10 +79,7 @@ mod async_impl;
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn derive_wasm(
-    _attr: TokenStream,
-    input: TokenStream,
-) -> TokenStream {
+pub fn derive_wasm(_attr: TokenStream, input: TokenStream) -> TokenStream {
     derive_wasm_impl::expand(input)
 }
 mod derive_wasm_impl;

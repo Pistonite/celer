@@ -1,15 +1,15 @@
 use celerb::lang::IntoDiagnostic;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::macros::derive_wasm;
 use crate::json::{IntoSafeRouteBlob, RouteBlob, RouteBlobRef};
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
-use crate::util::StringMap;
+use crate::macros::derive_wasm;
 use crate::pack::{Compiler, PackError};
 use crate::prep::GameCoord;
+use crate::util::StringMap;
 
-use super::{CompResult, CompError, CompMovement, CompMarker, DocNote};
+use super::{CompError, CompMarker, CompMovement, CompResult, DocNote};
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm]
 pub struct CompLine {
@@ -64,7 +64,9 @@ impl<'p> Compiler<'p> {
                 }
             }
             Err(e) => {
-                ctx.line.diagnostics.push(PackError::BuildRouteLineError(e).into_diagnostic());
+                ctx.line
+                    .diagnostics
+                    .push(PackError::BuildRouteLineError(e).into_diagnostic());
             }
         };
 
@@ -121,7 +123,7 @@ mod test {
     use crate::comp::line::DocNote;
     use crate::comp::test_utils::{self, CompilerBuilder};
     use crate::comp::{CompError, CompMarker, CompMovement};
-    use crate::lang::{self, DocRichTextBlock, DocRichText, Preset};
+    use crate::lang::{self, DocRichText, DocRichTextBlock, Preset};
     use crate::prep::{Axis, GameCoord, MapCoordMap, MapMetadata, RouteConfig, RouteMetadata};
 
     use super::*;

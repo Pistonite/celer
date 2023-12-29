@@ -1,18 +1,14 @@
 use proc_macro::TokenStream;
-use proc_macro2::{Span, Ident};
-use syn::{
-    Attribute, Data, DataEnum, DataStruct, DeriveInput, Field, Fields, Meta, Type, parse::{ParseStream, Parse}, PathArguments,
-};
+use proc_macro2::{Ident, Span};
+use syn::parse::{Parse, ParseStream};
+use syn::{Attribute, Data, DataEnum, DataStruct, DeriveInput, Field, Fields, Meta, Type};
 
 use crate::util;
 
 type TokenStream2 = proc_macro2::TokenStream;
 
 /// Implementation of [`derive_wasm`](crate::derive_wasm) macro
-pub fn expand(
-    input: TokenStream,
-) -> TokenStream {
-
+pub fn expand(input: TokenStream) -> TokenStream {
     let is_compiler = util::compiler_crate().is_none();
     let celerc = util::compiler_crate_ident();
     let wasm = quote::quote! {
@@ -49,13 +45,9 @@ pub fn expand(
         }
     };
 
-    let derive_wasm_mod = Ident::new(
-        &format!("__derive_wasm_{}", name),
-        Span::call_site(),
-    );
+    let derive_wasm_mod = Ident::new(&format!("__derive_wasm_{}", name), Span::call_site());
 
     let vis = &parsed.vis;
-
 
     let expanded = quote::quote! {
         #[automatically_derived]
@@ -63,7 +55,7 @@ pub fn expand(
             use super::*;
             #cfg_feature_wasm
             use #wasm::{tsify, wasm_bindgen, serde_wasm_bindgen};
-            
+
             #derive_tsify
             #[serde(rename_all(serialize = "camelCase", deserialize = "kebab-case"))]
             #parsed
@@ -154,7 +146,8 @@ fn transform_input_field(field: &mut Field, add_cfg_wasm: bool) {
                 let attr_tokens = quote::quote! {
                     #[serde(skip_serializing_if = "Option::is_none")]
                 };
-                let attr = syn::parse2::<AttrInner>(attr_tokens).expect("syn::parse2 failed to parse attr_tokens");
+                let attr = syn::parse2::<AttrInner>(attr_tokens)
+                    .expect("syn::parse2 failed to parse attr_tokens");
                 field.attrs.push(attr.0);
             } else if !allow_map {
                 if seg.ident == "BTreeMap" || seg.ident == "HashMap" {
@@ -184,7 +177,11 @@ fn add_cfg_wasm_to_tsify(attr: &mut Attribute) {
 struct AttrInner(pub(crate) Attribute);
 impl Parse for AttrInner {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let attr: Attribute = input.call(Attribute::parse_outer)?.into_iter().next().expect("no attribute!");
+        let attr: Attribute = input
+            .call(Attribute::parse_outer)?
+            .into_iter()
+            .next()
+            .expect("no attribute!");
         Ok(AttrInner(attr))
     }
 }

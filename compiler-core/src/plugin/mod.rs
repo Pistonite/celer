@@ -5,7 +5,7 @@ use crate::comp::CompDoc;
 use crate::lang::{parse_poor, DocDiagnostic, DocPoorText};
 use crate::pack::CompileContext;
 use crate::prep::CompilerMetadata;
-use crate::types::{ExecDoc};
+use crate::types::ExecDoc;
 
 mod builtin;
 mod js;

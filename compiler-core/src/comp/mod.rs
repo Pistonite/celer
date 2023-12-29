@@ -14,11 +14,11 @@
 //! # Output
 //! The output is a [`CompDoc`]
 
-use crate::lang::{DocRichText, DocDiagnostic, IntoDiagnostic};
-use crate::json::{RouteBlobError, RouteBlobArrayIterResult, RouteBlobRef};
+use crate::env::yield_budget;
+use crate::json::{RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef};
+use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
 use crate::pack::{Compiler, PackError};
 use crate::prep::Setting;
-use crate::env::yield_budget;
 
 mod error;
 pub use error::*;
@@ -48,7 +48,6 @@ macro_rules! validate_not_array_or_object {
     }};
 }
 pub(crate) use validate_not_array_or_object;
-
 
 static DEFAULT_SETTING: Setting = Setting::default();
 
@@ -85,15 +84,21 @@ impl<'p> Compiler<'p> {
             RouteBlobArrayIterResult::Ok(sections) => {
                 for section in sections {
                     yield_budget(64).await;
-                    self.compile_section_or_preface(section, &mut route, &mut preface, &mut diagnostics).await;
+                    self.compile_section_or_preface(
+                        section,
+                        &mut route,
+                        &mut preface,
+                        &mut diagnostics,
+                    )
+                    .await;
                 }
-            },
+            }
             RouteBlobArrayIterResult::NotArray => {
                 diagnostics.push(CompError::InvalidRouteType.into_diagnostic());
             }
             RouteBlobArrayIterResult::Err(e) => {
                 diagnostics.push(PackError::BuildRouteError(e).into_diagnostic());
-            },
+            }
         }
 
         // // pass 2 (sequential) - coordinates are propagated
@@ -115,13 +120,13 @@ impl<'p> Compiler<'p> {
     }
 
     async fn compile_section_or_preface(
-        &self, 
+        &self,
         section_ref: RouteBlobRef<'p>,
         route: &mut Vec<CompSection>,
         prefaces: &mut Vec<DocRichText>,
         diagnostics: &mut Vec<DocDiagnostic>,
     ) {
-        match self.compile_section(section_ref.clone(), route, diagnostics).await {
+        match self.compile_section(section_ref.clone(), route).await {
             Some(section) => route.push(section),
             None => {
                 match self.compile_preface(section_ref) {

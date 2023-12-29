@@ -33,14 +33,16 @@ impl<'c, 'p> LineContext<'c, 'p> {
         let value = match value.try_into_array() {
             Err(value) => value,
             Ok(_) => {
-                self.errors.push(CompError::InvalidLinePropertyType(prop_name.to_string()));
+                self.errors
+                    .push(CompError::InvalidLinePropertyType(prop_name.to_string()));
                 return;
             }
         };
         let value = match value.try_into_object() {
             Err(value) => value,
             Ok(_) => {
-                self.errors.push(CompError::InvalidLinePropertyType(prop_name.to_string()));
+                self.errors
+                    .push(CompError::InvalidLinePropertyType(prop_name.to_string()));
                 return;
             }
         };
@@ -95,7 +97,6 @@ mod test {
         ctx.test_compile_note(json!(""));
         ctx.assert_notes(DocNote::text(""));
         ctx.line.notes.clear();
-
     }
 
     #[test]
@@ -103,17 +104,19 @@ mod test {
         let mut ctx = LineContext::default();
         ctx.test_compile_note(json!([]));
         ctx.assert_notes(DocNote::text("[object array]"));
-        assert_eq!(ctx.errors, vec![
-            CompError::InvalidLinePropertyType("test".to_string())
-        ]);
+        assert_eq!(
+            ctx.errors,
+            vec![CompError::InvalidLinePropertyType("test".to_string())]
+        );
         ctx.line.notes.clear();
         ctx.errors.clear();
 
         ctx.test_compile_note(json!({}));
         ctx.assert_notes(DocNote::text("[object object]"));
-        assert_eq!(ctx.errors, vec![
-            CompError::InvalidLinePropertyType("test".to_string())
-        ]);
+        assert_eq!(
+            ctx.errors,
+            vec![CompError::InvalidLinePropertyType("test".to_string())]
+        );
         ctx.line.notes.clear();
         ctx.errors.clear();
     }

@@ -1,19 +1,16 @@
 use std::borrow::Cow;
 use std::collections::BTreeMap;
-use std::marker::PhantomData;
 
 use derivative::Derivative;
-use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 use crate::env::yield_budget;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
-use crate::macros::{async_recursion, derive_wasm};
+use crate::macros::async_recursion;
 use crate::plugin::PluginInstance;
 use crate::prop;
 use crate::res::{Loader, ResError, Resource, Use};
-use crate::util::StringMap;
 
 use super::{PrepError, PrepResult, Setting};
 

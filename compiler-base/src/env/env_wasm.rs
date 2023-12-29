@@ -1,6 +1,6 @@
 //! WASM environment implementation
 
-use std::{rc::Rc, future::Future};
+use std::{future::Future, rc::Rc};
 
 /// Ref counted pointer. Wrapper for Rc
 #[derive(Debug)]

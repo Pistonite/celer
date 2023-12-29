@@ -14,8 +14,8 @@ use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 
 use crate::env;
-use crate::macros::derive_wasm;
 use crate::lang::{self, DocPoorText};
+use crate::macros::derive_wasm;
 
 /// One diagnostic message
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
@@ -40,7 +40,7 @@ pub struct DocDiagnostic {
 
 impl DocDiagnostic {
     /// Create a diagnostic message with "error" type
-    pub fn error<TSource>(msg: &str, source: TSource) -> Self 
+    pub fn error<TSource>(msg: &str, source: TSource) -> Self
     where
         TSource: Into<Cow<'static, str>>,
     {
@@ -52,7 +52,7 @@ impl DocDiagnostic {
     }
 
     /// Create a diagnostic message with "warning" type
-    pub fn warning<TSource>(msg: &str, source: TSource) -> Self 
+    pub fn warning<TSource>(msg: &str, source: TSource) -> Self
     where
         TSource: Into<Cow<'static, str>>,
     {
@@ -75,11 +75,14 @@ pub trait BaseError: Display {
     /// If the error is an error (or warning otherwise)
     fn is_error(&self) -> bool;
 
-    /// An optional path to a help page, should be 
+    /// An optional path to a help page, should be
     fn help_path(&self) -> Option<Cow<'static, str>>;
 }
 
-impl<T> IntoDiagnostic for T where T: BaseError {
+impl<T> IntoDiagnostic for T
+where
+    T: BaseError,
+{
     /// Convert self into a diagnostic message, by using
     /// the string representation as the message
     fn into_diagnostic(self) -> DocDiagnostic {
@@ -109,4 +112,3 @@ impl IntoDiagnostic for DocDiagnostic {
         self
     }
 }
-

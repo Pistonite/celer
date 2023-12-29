@@ -261,8 +261,6 @@ mod test {
 
     use serde_json::json;
 
-    use crate::res::test_utils::StubLoader;
-
     #[test]
     fn test_invalid_value() {
         let values = vec![

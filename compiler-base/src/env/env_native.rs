@@ -57,9 +57,7 @@ where
     let mut set = JoinSet::new();
     let mut results = Vec::new();
     for (i, future) in iter.into_iter().enumerate() {
-        set.spawn(async move {
-            (i, future.await)
-        });
+        set.spawn(async move { (i, future.await) });
         results.push(None);
     }
     let mut joined: usize = 0;
@@ -82,4 +80,3 @@ where
     }
     results.into_iter().map(|r| r.unwrap())
 }
-

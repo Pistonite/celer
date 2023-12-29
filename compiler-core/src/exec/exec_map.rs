@@ -41,6 +41,10 @@ impl MapSectionBuilder {
         }
     }
 
+    pub fn color(&self) -> Option<&str> {
+        self.line_stack.last().map(|line| line.color.as_str())
+    }
+
     /// Finish the current line. Add it if there is more than one point
     ///
     /// If `continue_current`, the current line will be reset

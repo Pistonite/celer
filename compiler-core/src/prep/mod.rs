@@ -18,7 +18,6 @@
 //! The output of this phase is a [`PreparedContext`] object that can be used to create
 //! the compiler with additional (and optional) plugins.
 
-use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 use derivative::Derivative;
@@ -32,7 +31,7 @@ use crate::lang::Preset;
 use crate::macros::derive_wasm;
 use crate::plugin::PluginInstance;
 use crate::prop;
-use crate::res::{Loader, ResError, Resource, Use, ValidUse};
+use crate::res::{Loader, Resource, Use, ValidUse};
 use crate::util::StringMap;
 
 mod error;
@@ -43,7 +42,6 @@ mod config;
 pub use config::*;
 mod route;
 pub use route::*;
-
 
 /// Output of the prep phase
 #[derive(Debug, Clone)]

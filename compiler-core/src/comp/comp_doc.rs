@@ -6,12 +6,12 @@ use instant::Instant;
 use serde::{Deserialize, Serialize};
 
 use crate::json::{Cast, Coerce};
-use crate::lang::{DocRichText, DocDiagnostic, IntoDiagnostic};
 use crate::lang;
-use crate::plugin::PluginRuntime;
-use crate::res::Loader;
+use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
 use crate::pack::{CompileContext, PackError};
-use crate::prep::{PrepError, RouteConfig, RouteMetadata, CompilerMetadata, PreparedContext};
+use crate::plugin::PluginRuntime;
+use crate::prep::{CompilerMetadata, PrepError, PreparedContext, RouteConfig, RouteMetadata};
+use crate::res::Loader;
 
 use super::{CompError, CompLine, CompSection, Compiler};
 
@@ -63,11 +63,11 @@ impl CompDoc<'static> {
             ..Default::default()
         };
         let ctx = CompileContext {
-                start_time,
-                config: Cow::Owned(config),
-                meta: Cow::Owned(CompilerMetadata::default()),
-                setting: &super::DEFAULT_SETTING,
-            };
+            start_time,
+            config: Cow::Owned(config),
+            meta: Cow::Owned(CompilerMetadata::default()),
+            setting: &super::DEFAULT_SETTING,
+        };
 
         Self::from_diagnostic(error, ctx)
     }
@@ -76,18 +76,16 @@ impl CompDoc<'static> {
 impl<'p> CompDoc<'p> {
     /// Create a new document showing an error from the pack phase.
     pub fn from_diagnostic<T>(error: T, ctx: CompileContext<'p>) -> Self
-    where T: IntoDiagnostic
+    where
+        T: IntoDiagnostic,
     {
         Self {
             ctx,
             preface: Default::default(),
             route: Default::default(),
-            diagnostics: vec![
-                error.into_diagnostic()
-            ],
+            diagnostics: vec![error.into_diagnostic()],
             known_props: Default::default(),
             plugin_runtimes: Default::default(),
         }
     }
 }
-

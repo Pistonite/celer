@@ -10,18 +10,12 @@ type TokenStream2 = proc_macro2::TokenStream;
 pub fn compiler_crate() -> Option<String> {
     let compiler_core = match proc_macro_crate::crate_name("compiler-core") {
         Ok(name) => name,
-        Err(_) => {
-            return None
-        }
+        Err(_) => return None,
     };
 
     match compiler_core {
-        FoundCrate::Itself => {
-            None
-        },
-        FoundCrate::Name(name) => {
-            Some(name)
-        }
+        FoundCrate::Itself => None,
+        FoundCrate::Name(name) => Some(name),
     }
 }
 
@@ -33,7 +27,7 @@ pub fn compiler_crate_ident() -> TokenStream2 {
             quote::quote! {
                 #name
             }
-        },
+        }
         None => {
             quote::quote! {
                 crate

@@ -2,10 +2,10 @@
 
 use std::collections::BTreeMap;
 
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 use crate::env::yield_budget;
-use crate::json::{Cast, Coerce, RouteBlob, RouteBlobError};
+use crate::json::{Cast, RouteBlob, RouteBlobError};
 use crate::macros::async_recursion;
 use crate::res::{Loader, ResError, Resource, Use, ValidUse};
 

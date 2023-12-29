@@ -96,10 +96,8 @@ impl<'a> RouteBlobRef<'a> {
                 }
                 RouteBlobSingleKeyObjectResult::Ok(k, RouteBlobRef::Blob(v))
             }
-            Self::Blob(RouteBlob::Err(e)) => {
-                RouteBlobSingleKeyObjectResult::Err(e.clone())
-            }
-            _ => RouteBlobSingleKeyObjectResult::NotObject
+            Self::Blob(RouteBlob::Err(e)) => RouteBlobSingleKeyObjectResult::Err(e.clone()),
+            _ => RouteBlobSingleKeyObjectResult::NotObject,
         }
     }
 

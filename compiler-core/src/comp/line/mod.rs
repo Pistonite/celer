@@ -10,7 +10,7 @@ use crate::prep::GameCoord;
 use crate::prop;
 use crate::util::StringMap;
 
-use super::{CompLine, LineContext, validate_not_array_or_object, CompError, CompResult};
+use super::{validate_not_array_or_object, CompError, CompLine, CompResult, LineContext};
 
 mod coord;
 pub use coord::*;
@@ -25,10 +25,6 @@ mod preset;
 pub use preset::*;
 mod prop_map;
 use prop_map::*;
-
-
-
-
 
 impl<'c, 'p> LineContext<'c, 'p> {
     /// Compile a line
@@ -121,9 +117,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
             prop::NOTES => {
                 let value = match value.try_into_object() {
                     Ok(_) => {
-                        self.errors.push(CompError::InvalidLinePropertyType(
-                            prop::NOTES.to_string(),
-                        ));
+                        self.errors
+                            .push(CompError::InvalidLinePropertyType(prop::NOTES.to_string()));
                         return;
                     }
                     Err(value) => value,

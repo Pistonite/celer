@@ -3,15 +3,13 @@
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::ToTokens;
-use syn::{Meta, ItemTrait};
+use syn::{ItemTrait, Meta};
 
 use crate::util;
 
 type TokenStream2 = proc_macro2::TokenStream;
 pub fn expand(trait_name: &str, attr: TokenStream, input: TokenStream) -> TokenStream {
-
     let trait_ident = Ident::new(trait_name, Span::call_site());
-
 
     // add Send + Sync super traits
     let (input, input_send_sync): (TokenStream2, TokenStream2) = if trait_ident == "async_trait" {
@@ -20,14 +18,13 @@ pub fn expand(trait_name: &str, attr: TokenStream, input: TokenStream) -> TokenS
                 trait_syn.supertraits.push(syn::parse_quote!(Send));
                 trait_syn.supertraits.push(syn::parse_quote!(Sync));
                 (TokenStream2::from(input), trait_syn.into_token_stream())
-            },
+            }
             _ => {
                 // an impl block, probably
                 let input = TokenStream2::from(input);
                 (input.clone(), input)
             }
         }
-
     } else {
         let input = TokenStream2::from(input);
         (input.clone(), input)

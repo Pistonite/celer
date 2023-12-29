@@ -43,8 +43,8 @@ where
 mod test {
     use super::*;
 
-    use crate::res::test_utils::StubLoader;
     use crate::env::RefCounted;
+    use crate::res::test_utils::StubLoader;
 
     static TEST_URL_PREFIX: &str = "https://hello/";
 

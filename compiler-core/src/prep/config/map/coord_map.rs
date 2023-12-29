@@ -3,11 +3,9 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::Cast;
 use crate::macros::derive_wasm;
 use crate::prep::{config, PrepError, PrepResult, PreparedConfig};
 use crate::prop;
-use crate::res::Loader;
 
 /// The mapping if 2 coordinates are specified in the route
 ///

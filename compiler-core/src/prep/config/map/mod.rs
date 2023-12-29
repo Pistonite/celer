@@ -6,7 +6,6 @@ use serde_json::Value;
 use crate::macros::derive_wasm;
 use crate::prep::PrepResult;
 use crate::prop;
-use crate::res::Loader;
 
 use super::PreparedConfig;
 
