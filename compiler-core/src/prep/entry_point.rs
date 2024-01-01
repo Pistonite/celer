@@ -24,7 +24,7 @@ impl EntryPoints {
     }
 
     /// Resolve the alias to get the path
-    pub fn resolve_alias(&self, key: &str, setting: &Setting) -> PrepResult<Cow<'_, str>> {
+    pub fn resolve_alias<'a>(&self, key: &'a str, setting: &Setting) -> PrepResult<Cow<'a, str>> {
         if key.starts_with('/') {
             return Ok(key.into());
         }
@@ -42,7 +42,8 @@ pub struct EntryPointsSorted(pub Vec<(String, String)>);
 
 impl From<EntryPoints> for EntryPointsSorted {
     fn from(entry_points: EntryPoints) -> Self {
-        let mut vec = entry_points.0.into_iter().collect::<Vec<_>>();
+        let map: BTreeMap<String, String> = entry_points.0.into();
+        let mut vec = map.into_iter().collect::<Vec<_>>();
         vec.sort_by(|a, b| a.0.cmp(&b.0));
         Self(vec)
     }

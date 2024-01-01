@@ -284,12 +284,12 @@ impl PluginRuntime for VariablesPlugin {
             }),
             ..Default::default()
         };
-        ctx.config
-            .tags
+        let tags = &mut ctx.config.to_mut().tags;
+            tags
             .entry(VAL.to_string())
             .and_modify(|t| t.apply_to_default(&tag))
             .or_insert(tag);
-        ctx.config.tags.entry(VAL.to_string()).or_default();
+        tags.entry(VAL.to_string()).or_default();
         Ok(())
     }
 
@@ -324,7 +324,7 @@ impl PluginRuntime for VariablesPlugin {
         Ok(())
     }
 
-    fn get_source(&self) -> &str {
-        "plugin/variables"
+    fn get_source(&self) -> Cow<'static, str> {
+        "plugin/variables".into()
     }
 }

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde_json::Value;
 
 use crate::comp::CompDoc;
@@ -37,7 +39,7 @@ impl PluginRuntime for ScriptPluginRuntime {
         ))
     }
 
-    fn get_source(&self) -> &str {
-        &self.source
+    fn get_source(&self) -> Cow<'static, str> {
+        Cow::Owned(self.source.clone())
     }
 }

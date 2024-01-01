@@ -59,6 +59,7 @@ mod test {
     use serde_json::{json, Value};
 
     use crate::json::IntoSafeRouteBlob;
+    use crate::pack::Compiler;
 
     impl<'c, 'p> LineContext<'c, 'p> {
         pub fn test_compile_note(&mut self, value: Value) {
@@ -73,7 +74,8 @@ mod test {
 
     #[test]
     pub fn test_primitive() {
-        let mut ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let mut ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_note(json!(1));
         ctx.assert_notes(DocNote::text("1"));
         ctx.line.notes.clear();
@@ -101,7 +103,8 @@ mod test {
 
     #[test]
     pub fn test_invalid_type() {
-        let mut ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let mut ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_note(json!([]));
         ctx.assert_notes(DocNote::text("[object array]"));
         assert_eq!(

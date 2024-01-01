@@ -74,8 +74,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
         output: &mut LinePropMap<'a, PresetHydrate<'a, '_>>,
     ) {
         if !validate_not_array_or_object!(
-            preset,
-            self.errors,
+            &preset,
+            &mut self.errors,
             match index {
                 Some(i) => format!("{p}[{i}]", p = prop::PRESETS, i = i),
                 None => prop::PRESETS.to_string(),

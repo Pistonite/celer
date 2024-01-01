@@ -13,7 +13,7 @@ where
 
 impl<'a, T> LinePropMap<'a, T>
 where
-    T: IntoSafeRouteBlob,
+    T: IntoSafeRouteBlob + 'a,
 {
     pub fn new() -> Self {
         Self {
@@ -59,7 +59,7 @@ where
             None => self.desugared.get(key).map(|x| x.ref_into_unchecked()),
         }
     }
-    pub fn remove(&self, key: &str) -> Option<SafeRouteBlob<'_>> {
+    pub fn remove(&mut self, key: &str) -> Option<SafeRouteBlob<'_>> {
         match self.normal.remove(key) {
             Some(x) => Some(x.into_unchecked()),
             None => self.desugared.remove(key).map(|x| x.into_unchecked()),

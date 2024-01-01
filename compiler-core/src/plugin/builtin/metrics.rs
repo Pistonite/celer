@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use instant::Instant;
 use serde_json::Value;
 
@@ -87,7 +89,7 @@ impl PluginRuntime for MetricsPlugin {
         Ok(())
     }
 
-    fn get_source(&self) -> &str {
-        "plugin/metrics"
+    fn get_source(&self) -> Cow<'static, str> {
+        "plugin/metrics".into()
     }
 }

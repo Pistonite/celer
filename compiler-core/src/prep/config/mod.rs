@@ -43,7 +43,7 @@ pub struct PreparedConfig<'a> {
 }
 
 impl<'a> PreparedConfig<'a> {
-    pub fn new(setting: &Setting) -> Self {
+    pub fn new(setting: &'a Setting) -> Self {
         Self {
             setting: Cow::Borrowed(setting),
             ..Default::default()

@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::json::{Cast, Coerce, SafeRouteBlob};
 use crate::macros::derive_wasm;
@@ -102,17 +101,16 @@ impl<'c, 'p> LineContext<'c, 'p> {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::Cow;
+    use serde_json::{json, Value};
 
-    use serde_json::json;
-
-    use crate::comp::test_utils;
     use crate::json::IntoSafeRouteBlob;
+    use crate::comp::test_utils;
+    use crate::pack::Compiler;
 
     use super::*;
 
     impl<'c, 'p> LineContext<'c, 'p> {
-        fn test_compile_marker(&self, prop_name: &str, prop: Value) {
+        fn test_compile_marker(&mut self, prop_name: &str, prop: Value) {
             self.compile_marker(prop_name, prop.into_unchecked())
         }
     }
@@ -129,7 +127,8 @@ mod test {
             json!({}),
         ];
 
-        let mut ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let mut ctx = LineContext::with_compiler(&compiler);
 
         for v in vals.into_iter() {
             ctx.errors.clear();
@@ -140,7 +139,8 @@ mod test {
 
     #[test]
     fn test_propagate_coord_error() {
-        let ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let mut ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_marker("", json!([1, 2, 3, 4]));
         assert_eq!(ctx.errors, vec![CompError::InvalidCoordinateArray]);
     }
@@ -148,7 +148,7 @@ mod test {
     #[test]
     fn test_valid_coord() {
         let compiler = test_utils::create_test_compiler_with_coord_transform();
-        let ctx = LineContext::with_compiler(&compiler);
+        let mut ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_marker("", json!([1, 2, 4]));
         let marker = CompMarker::at(GameCoord(1.0, 2.0, 4.0));
         assert_eq!(ctx.line.markers, vec![marker]);

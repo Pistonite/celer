@@ -49,7 +49,7 @@ macro_rules! validate_not_array_or_object {
 }
 pub(crate) use validate_not_array_or_object;
 
-static DEFAULT_SETTING: Setting = Setting::default();
+static DEFAULT_SETTING: Setting = Setting::const_default();
 
 impl<'p> Compiler<'p> {
     /// Entry point for the comp phase
@@ -72,7 +72,7 @@ impl<'p> Compiler<'p> {
         comp_doc
     }
 
-    async fn compile_document(mut self) -> CompDoc<'p> {
+    async fn compile_document(self) -> CompDoc<'p> {
         let route_blob = RouteBlobRef::Blob(self.route.as_ref());
 
         let mut preface = vec![];

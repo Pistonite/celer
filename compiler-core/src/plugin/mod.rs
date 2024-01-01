@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -39,7 +41,7 @@ pub type PluginResult<T> = Result<T, PluginError>;
 /// Each compilation will spawn a new runtime with [`PluginInstance::create_runtime`]
 pub trait PluginRuntime {
     /// Get a string representing the source of the plugin.
-    fn get_source(&self) -> &str;
+    fn get_source(&self) -> Cow<'static, str>;
     fn add_diagnostics(&self, msg: DocPoorText, msg_type: String, output: &mut Vec<DocDiagnostic>) {
         todo!()
         // output.push(DocDiagnostic {

@@ -28,6 +28,16 @@ where
     }
 }
 
+impl<T> Into<BTreeMap<String, T>> for StringMap<T>
+where
+    T: Serialize,
+{
+    #[inline]
+    fn into(self) -> BTreeMap<String, T> {
+        self.0
+    }
+}
+
 impl<T> Deref for StringMap<T>
 where
     T: Serialize,

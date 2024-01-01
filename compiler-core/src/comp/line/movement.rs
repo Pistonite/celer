@@ -1,7 +1,4 @@
-use std::collections::BTreeMap;
-
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::json::{Cast, Coerce, SafeRouteBlob, SafeRouteObject};
 use crate::macros::derive_wasm;
@@ -193,12 +190,12 @@ impl<'c, 'p> LineContext<'c, 'p> {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::Cow;
 
-    use serde_json::json;
+    use serde_json::{json, Value};
 
     use crate::comp::test_utils;
     use crate::json::IntoSafeRouteBlob;
+    use crate::pack::Compiler;
 
     use super::*;
 
@@ -220,7 +217,8 @@ mod test {
             json!({}),
         ];
 
-        let mut ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let mut ctx = LineContext::with_compiler(&compiler);
 
         for v in vals.into_iter() {
             ctx.errors.clear();
@@ -231,7 +229,8 @@ mod test {
 
     #[test]
     fn test_propagate_coord_error() {
-        let mut ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let mut ctx = LineContext::with_compiler(&compiler);
         ctx.test_compile_movement("", json!([1, 2, 3, 4]));
         assert_eq!(ctx.errors, vec![CompError::InvalidCoordinateArray]);
     }
@@ -446,7 +445,8 @@ mod test {
 
     #[test]
     fn test_push_pop() {
-        let mut ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let mut ctx = LineContext::with_compiler(&compiler);
 
         ctx.test_compile_movement("", json!("push"));
         ctx.test_compile_movement("", json!("pop"));

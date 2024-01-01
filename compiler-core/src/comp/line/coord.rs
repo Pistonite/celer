@@ -70,6 +70,7 @@ mod test {
 
     use crate::comp::test_utils::CompilerBuilder;
     use crate::json::IntoSafeRouteBlob;
+    use crate::pack::Compiler;
     use crate::prep::{MapCoordMap, MapMetadata, RouteConfig};
 
     use super::*;
@@ -94,7 +95,8 @@ mod test {
             (json!({}), "[object object]"),
         ];
 
-        let ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let ctx = LineContext::with_compiler(&compiler);
 
         for (prop, text) in vals {
             let res = ctx.test_parse_coord(prop);
@@ -104,7 +106,8 @@ mod test {
 
     #[test]
     fn test_no_map() {
-        let ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let ctx = LineContext::with_compiler(&compiler);
         let res = ctx.test_parse_coord(json!([1, 2, 3]));
         assert_eq!(res, Ok(GameCoord(0.0, 0.0, 0.0)));
         let res = ctx.test_parse_coord(json!([2, 3]));
@@ -113,7 +116,8 @@ mod test {
 
     #[test]
     fn test_array_invalid_length() {
-        let ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let ctx = LineContext::with_compiler(&compiler);
         let res0 = ctx.test_parse_coord(json!([]));
         assert_eq!(res0, Err(CompError::InvalidCoordinateArray));
         let res1 = ctx.test_parse_coord(json!([1]));
@@ -126,7 +130,8 @@ mod test {
 
     #[test]
     fn test_array_invalid_value() {
-        let ctx = LineContext::default();
+        let compiler = Compiler::default();
+        let ctx = LineContext::with_compiler(&compiler);
         let res2 = ctx.test_parse_coord(json!([1, true]));
         assert_eq!(
             res2,

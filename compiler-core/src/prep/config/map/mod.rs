@@ -158,7 +158,7 @@ mod test {
         }
     }
 
-    fn assert_missing_property(result: PrepResult<()>, p: &str) {
+    fn assert_missing_property(result: PrepResult<()>, p: &'static str) {
         assert_eq!(
             result,
             Err(PrepError::MissingConfigProperty(

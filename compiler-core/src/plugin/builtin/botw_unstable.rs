@@ -1,5 +1,7 @@
 //! Temporary solution for botw specific plugin features before JS plugin engine can be implemented
 
+use std::borrow::Cow;
+
 use serde_json::Value;
 
 use crate::comp::{CompDoc, CompLine, CompMovement};
@@ -399,7 +401,7 @@ impl PluginRuntime for BotwAbilityUnstablePlugin {
         Ok(())
     }
 
-    fn get_source(&self) -> &str {
-        "plugin/botw-ability-unstable"
+    fn get_source(&self) -> Cow<'static, str> {
+        "plugin/botw-ability-unstable".into()
     }
 }

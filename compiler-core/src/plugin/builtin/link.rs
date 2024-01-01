@@ -2,6 +2,8 @@
 //!
 //! This plugin looks for the `link` tag and transforms it into a link.
 
+use std::borrow::Cow;
+
 use crate::comp::CompDoc;
 use crate::lang::DocRichTextBlock;
 use crate::pack::{CompileContext, Compiler};
@@ -52,8 +54,8 @@ impl PluginRuntime for LinkPlugin {
         Ok(())
     }
 
-    fn get_source(&self) -> &str {
-        "plugin/link"
+    fn get_source(&self) -> Cow<'static, str> {
+        "plugin/link".into()
     }
 }
 

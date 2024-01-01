@@ -334,29 +334,41 @@ where
 
 /// Compilation settings
 #[derive(Debug, Clone, Derivative)]
-#[derivative(Default)]
 pub struct Setting {
     /// The maximum depth of `use` properties in route
-    #[derivative(Default(value = "8"))]
     pub max_use_depth: usize,
 
     /// The maximum depth of `use` properties in config
-    #[derivative(Default(value = "16"))]
     pub max_config_depth: usize,
 
     /// The maximum depth of object/array levels in the route
-    #[derivative(Default(value = "32"))]
     pub max_ref_depth: usize,
 
     /// The maximum depth of preset namespaces in config
-    #[derivative(Default(value = "16"))]
     pub max_preset_namespace_depth: usize,
 
     /// The maximum depth of preset references in route
-    #[derivative(Default(value = "8"))]
     pub max_preset_ref_depth: usize,
 
     /// The maximum aliasing depth of entry points
-    #[derivative(Default(value = "16"))]
     pub max_entry_point_depth: usize,
+}
+
+impl Setting {
+    pub const fn const_default() -> Self {
+        Self {
+            max_use_depth: 8,
+            max_config_depth: 16,
+            max_ref_depth: 32,
+            max_preset_namespace_depth: 16,
+            max_preset_ref_depth: 8,
+            max_entry_point_depth: 16,
+        }
+    }
+}
+
+impl Default for Setting {
+    fn default() -> Self {
+        Self::const_default()
+    }
 }

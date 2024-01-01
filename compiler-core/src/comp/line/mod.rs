@@ -1,16 +1,12 @@
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::{Cast, Coerce, IntoSafeRouteBlob, RouteBlob, SafeRouteBlob};
+use crate::json::{Cast, Coerce, IntoSafeRouteBlob, SafeRouteBlob};
 use crate::lang;
-use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock, PresetInst};
-use crate::macros::derive_wasm;
+use crate::lang::PresetInst;
 use crate::pack::Compiler;
-use crate::prep::GameCoord;
 use crate::prop;
-use crate::util::StringMap;
 
-use super::{validate_not_array_or_object, CompError, CompLine, CompResult, LineContext};
+use super::{validate_not_array_or_object, CompError, LineContext};
 
 mod coord;
 pub use coord::*;
@@ -53,14 +49,20 @@ impl<'c, 'p> LineContext<'c, 'p> {
         // preprocess the `presets` property
         let mut properties = LinePropMap::new();
         let mut line_properties = Vec::with_capacity(line_obj.len());
-        for (k, v) in line_obj {
-            match k.as_ref() {
-                prop::PRESETS => {
-                    self.process_presets(0, v, &mut properties);
+        {
+            let mut preset_value = None;
+            for (k, v) in line_obj {
+                match k.as_ref() {
+                    prop::PRESETS => {
+                        preset_value = Some(v);
+                    }
+                    _ => {
+                        line_properties.push((k, v));
+                    }
                 }
-                _ => {
-                    line_properties.push((k, v));
-                }
+            }
+            if let Some(v) = preset_value {
+                self.process_presets(0, v, &mut properties);
             }
         }
 
@@ -107,11 +109,11 @@ impl<'c, 'p> LineContext<'c, 'p> {
     fn apply_property(&mut self, key: String, value: SafeRouteBlob<'_>) {
         match key.as_str() {
             prop::TEXT => {
-                validate_not_array_or_object!(&value, self.errors, prop::TEXT.to_string());
+                validate_not_array_or_object!(&value, &mut self.errors, prop::TEXT.to_string());
                 self.line.text = lang::parse_rich(&value.coerce_into_string());
             }
             prop::COMMENT => {
-                validate_not_array_or_object!(&value, self.errors, prop::COMMENT.to_string());
+                validate_not_array_or_object!(&value, &mut self.errors, prop::COMMENT.to_string());
                 self.line.secondary_text = lang::parse_rich(&value.coerce_into_string());
             }
             prop::NOTES => {
@@ -135,13 +137,13 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::SPLIT_NAME => {
-                if validate_not_array_or_object!(&value, self.errors, prop::SPLIT_NAME.to_string())
+                if validate_not_array_or_object!(&value, &mut self.errors, prop::SPLIT_NAME.to_string())
                 {
                     self.line.split_name = Some(lang::parse_rich(&value.coerce_to_string()));
                 }
             }
             prop::ICON_DOC => {
-                if validate_not_array_or_object!(&value, self.errors, prop::ICON_DOC.to_string()) {
+                if validate_not_array_or_object!(&value, &mut self.errors, prop::ICON_DOC.to_string()) {
                     if value.coerce_truthy() {
                         self.line.doc_icon = Some(value.coerce_into_string());
                     } else {
@@ -150,7 +152,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::ICON_MAP => {
-                if validate_not_array_or_object!(&value, self.errors, prop::ICON_MAP.to_string()) {
+                if validate_not_array_or_object!(&value, &mut self.errors, prop::ICON_MAP.to_string()) {
                     if value.coerce_truthy() {
                         self.line.map_icon = Some(value.coerce_to_string());
                     } else {
@@ -161,7 +163,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
             prop::ICON_PRIORITY => {
                 if validate_not_array_or_object!(
                     &value,
-                    self.errors,
+                    &mut self.errors,
                     prop::ICON_PRIORITY.to_string()
                 ) {
                     if let Some(i) = value.try_coerce_to_i64() {
@@ -174,7 +176,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::COUNTER => {
-                if validate_not_array_or_object!(&value, self.errors, prop::COUNTER.to_string()) {
+                if validate_not_array_or_object!(&value, &mut self.errors, prop::COUNTER.to_string()) {
                     let text = value.coerce_into_string();
                     if !text.is_empty() {
                         let mut blocks = lang::parse_rich(&text).into_iter();
@@ -188,7 +190,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::COLOR => {
-                if validate_not_array_or_object!(&value, self.errors, prop::COLOR.to_string()) {
+                if validate_not_array_or_object!(&value, &mut self.errors, prop::COLOR.to_string()) {
                     if !value.coerce_truthy() {
                         self.line.line_color = None;
                     } else {

@@ -31,25 +31,12 @@ impl Default for Compiler<'static> {
     }
 }
 
-thread_local! {
-    static DEFAULT_COMPILER: Compiler<'static> = Compiler::default();
-}
-
-impl Default for LineContext<'static, 'static> {
-    fn default() -> Self {
-        LineContext {
-            compiler: DEFAULT_COMPILER.with(|c| c),
-            line: Default::default(),
-            errors: Default::default(),
-        }
-    }
-}
-
 impl<'c, 'p> LineContext<'c, 'p> {
     pub fn with_compiler(compiler: &'c Compiler<'p>) -> Self {
         LineContext {
             compiler: &compiler,
-            ..Default::default()
+            line: Default::default(),
+            errors: Default::default(),
         }
     }
 }
