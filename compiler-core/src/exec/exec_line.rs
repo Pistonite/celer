@@ -1,12 +1,41 @@
-use crate::comp::{CompLine, CompMovement};
-use crate::types::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
+use serde::{Serialize, Deserialize};
+
+use crate::macros::derive_wasm;
+use crate::comp::{CompLine, CompMovement, DocNote};
+use crate::prep::{GameCoord, RouteConfig};
+use crate::lang::{DocRichText, DocRichTextBlock, DocDiagnostic, IntoDiagnostic};
 use crate::util;
 
-use super::{add_engine_diagnostics, ExecResult, MapBuilder};
+use super::{MapBuilder, ExecError, MapIcon, MapMarker};
 
-fn add_missing_icon_diagnostics(diagnostics: &mut Vec<DocDiagnostic>, icon: &str) {
-    let site_origin = util::get_site_origin();
-    add_engine_diagnostics(diagnostics, "warning", &format!("Cannot find icon `{icon}`. Icons need to be defined in the config. See {site_origin}/docs/route/config/icons for more details"));
+/// A line in the executed document
+#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive_wasm]
+pub struct ExecLine {
+    /// Section number
+    pub section: usize,
+    /// Line index in section
+    pub index: usize,
+    /// Primary text content of the line
+    pub text: DocRichText,
+    /// Line color
+    pub line_color: String,
+    /// Corresponding map coordinates
+    pub map_coords: Vec<GameCoord>,
+    /// Diagnostic messages
+    pub diagnostics: Vec<DocDiagnostic>,
+    /// The icon id to show on the document
+    pub icon: Option<String>,
+    /// Secondary text to show below the primary text
+    pub secondary_text: DocRichText,
+    /// Counter text to display
+    pub counter_text: Option<DocRichTextBlock>,
+    /// The notes
+    pub notes: Vec<DocNote>,
+    /// The split name, if different from text
+    pub split_name: Option<String>,
+    /// If the line text is a banner
+    pub is_banner: bool,
 }
 
 impl CompLine {
@@ -15,95 +44,104 @@ impl CompLine {
     /// Map features will be added to the builder
     pub fn exec(
         mut self,
-        project: &RouteMetadata,
+        project: &RouteConfig,
         section_number: usize,
         line_number: usize,
-        map_builder: &mut MapSectionBuilder,
-    ) -> ExecResult<ExecLine> {
+        map_builder: &mut MapBuilder,
+    ) -> ExecLine {
+        let line_color = self.line_color.unwrap_or_else(|| map_builder.color().to_string());
+        // trace coordinates
+        let mut map_coords = vec![];
+        for movement in self.movements {
+            match movement {
+                CompMovement::To { to, warp, exclude, color, icon, } => {
+                    // update builder properties
+                    if let Some(color) = color {
+                        map_builder.change_color(color);
+                    }
+                    if !exclude {
+                        map_coords.push(to.clone());
+                    }
+                    // perform the movement
+                    if warp {
+                        map_builder.warp_to(to);
+                    } else {
+                        map_builder.move_to(to);
+                    }
+                    // add the icon at the end of the movement
+                    if let Some(icon) = icon {
+                        if !project.icons.contains_key(&icon) {
+                            self.diagnostics.push(ExecError::IconNotFound(icon).into_diagnostic())
+                        } else {
+                            map_builder.icons.push(MapIcon {
+                                id: icon,
+                                coord: map_builder.coord().clone(),
+                                line_index: line_number,
+                                section_index: section_number,
+                                priority: self.map_icon_priority,
+                            });
+                        }
+                    }
+
+                }
+                CompMovement::Push => {
+                    map_builder.push();
+                }
+                CompMovement::Pop => {
+                    map_builder.pop();
+                }
+            }
+        }
+        // change color back if it was changed in movements temporarily
+        map_builder.change_color(line_color.clone());
+
+        // add the main icon to map
         if let Some(icon) = self.map_icon {
             if !project.icons.contains_key(&icon) {
-                add_missing_icon_diagnostics(&mut self.diagnostics, &icon);
+                self.diagnostics.push(ExecError::IconNotFound(icon).into_diagnostic())
+            } else {
+                map_builder.icons.push(MapIcon {
+                    id: icon,
+                    coord: map_builder.coord().clone(),
+                    line_index: line_number,
+                    section_index: section_number,
+                    priority: self.map_icon_priority,
+                });
             }
-            map_builder.icons.push(MapIcon {
-                id: icon,
-                coord: self.map_coord,
-                line_index: line_number,
-                section_index: section_number,
-                priority: self.map_icon_priority,
-            });
         }
 
+        // add markers
         for marker in self.markers {
             map_builder.markers.push(MapMarker {
                 coord: marker.at,
                 line_index: line_number,
                 section_index: section_number,
-                color: marker.color.unwrap_or_else(|| self.line_color.clone()),
+                color: marker.color.unwrap_or_else(|| line_color.clone()),
             });
         }
 
-        // need to trace coord here
-        todo!()
-        // let mut map_coords = vec![];
-        // for movement in self.movements {
-        //     match movement {
-        //         CompMovement::To {
-        //             to,
-        //             warp,
-        //             exclude,
-        //             color,
-        //             icon,
-        //         } => {
-        //             if warp {
-        //                 map_builder.commit(false);
-        //             }
-        //             map_builder.add_coord(color.as_ref().unwrap_or(&self.line_color), &to);
-        //             if let Some(icon) = icon {
-        //                 if !project.icons.contains_key(&icon) {
-        //                     add_missing_icon_diagnostics(&mut self.diagnostics, &icon);
-        //                 }
-        //                 map_builder.icons.push(MapIcon {
-        //                     id: icon,
-        //                     coord: to.clone(),
-        //                     line_index: line_number,
-        //                     section_index: section_number,
-        //                     priority: self.map_icon_priority,
-        //                 })
-        //             }
-        //
-        //             if !exclude {
-        //                 map_coords.push(to);
-        //             }
-        //         }
-        //         CompMovement::Push => {
-        //             map_builder.push();
-        //         }
-        //         CompMovement::Pop => {
-        //             map_builder.commit(false);
-        //         }
-        //     }
-        // }
-        //
-        // let split_name = self.split_name.map(|x| x.to_string());
-        // ExecLine {
-        //     is_banner: self.is_banner,
-        //     section: section_number,
-        //     index: line_number,
-        //     text: self.text,
-        //     line_color: self.line_color,
-        //     diagnostics: self.diagnostics,
-        //     icon: self.doc_icon,
-        //     secondary_text: self.secondary_text,
-        //     counter_text: self.counter_text,
-        //     notes: self.notes,
-        //     map_coords,
-        //     split_name,
-        // }
+        let split_name = self.split_name.map(|x| x.to_string());
+        ExecLine {
+            is_banner: self.is_banner,
+            section: section_number,
+            index: line_number,
+            text: self.text,
+            line_color,
+            diagnostics: self.diagnostics,
+            icon: self.doc_icon,
+            secondary_text: self.secondary_text,
+            counter_text: self.counter_text,
+            notes: self.notes,
+            map_coords,
+            split_name,
+        }
     }
 }
 
 #[cfg(test)]
 mod test {
+    use map_macro::btree_map;
+
     use crate::comp::{CompMarker, CompMovement, DocNote};
     use crate::lang::{DocDiagnostic, DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock};
     use crate::exec::MapLine;
@@ -233,10 +271,10 @@ mod test {
             is_banner: true,
             ..Default::default()
         };
-        let project = RouteMetadata {
-            icons: vec![("test-icon".to_string(), "".to_string())]
-                .into_iter()
-                .collect(),
+        let project = RouteConfig {
+            icons: btree_map! {
+                "test-icon".to_string() => "".to_string(),
+            }.into(),
             ..Default::default()
         };
         let exec_line = line.exec(&project, 3, 4, &mut map_section);
@@ -288,14 +326,12 @@ mod test {
             ..Default::default()
         };
         let mut builder = Default::default();
-        let project = RouteMetadata {
-            icons: vec![
-                ("test icon".to_string(), "".to_string()),
-                ("test icon 1".to_string(), "".to_string()),
-                ("test icon 2".to_string(), "".to_string()),
-            ]
-            .into_iter()
-            .collect(),
+        let project = RouteConfig {
+            icons: btree_map! {
+                "test icon".to_string() =>  "".to_string(),
+                "test icon 1".to_string() => "".to_string(),
+                "test icon 2".to_string() => "".to_string(),
+            }.into(),
             ..Default::default()
         };
         test_line.exec(&project, 4, 5, &mut builder);

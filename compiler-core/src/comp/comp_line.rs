@@ -973,12 +973,7 @@ mod test {
 
     #[test]
     fn test_change_color() {
-        let builder = CompilerBuilder::new(
-            Default::default(),
-            "color".to_string(),
-            GameCoord(1.0, 2.0, 3.0),
-        );
-        let mut compiler = builder.build();
+        let mut compiler = Compiler::default();
 
         test_comp_ok(
             &mut compiler,
@@ -1025,8 +1020,6 @@ mod test {
                 }),
                 ..Default::default()
             },
-            "".to_string(),
-            GameCoord(1.0, 2.0, 3.0),
         );
         let mut compiler = builder.clone().build();
 
@@ -1100,8 +1093,6 @@ mod test {
                 }),
                 ..Default::default()
             },
-            "".to_string(),
-            GameCoord(1.0, 2.0, 3.0),
         );
         builder.add_preset(
             "_preset::one",

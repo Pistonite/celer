@@ -18,6 +18,4 @@ pub mod prep; // executor, depends on: comp
 // public API re-exports
 pub use prep::{ContextBuilder, PreparedContext};
 
-pub mod types;
-
 pub use celerb::*;

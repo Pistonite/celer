@@ -26,8 +26,6 @@ impl Default for Compiler<'static> {
                 setting: &DEFAULT_SETTING,
             },
             route: Cow::Owned(RouteBlob::Prim(Value::Null)),
-            color: Default::default(),
-            coord: Default::default(),
             plugin_runtimes: Default::default(),
         }
     }
@@ -66,10 +64,8 @@ pub struct CompilerBuilder {
 }
 
 impl CompilerBuilder {
-    pub fn new(project: RouteConfig, color: String, coord: GameCoord) -> Self {
+    pub fn new(project: RouteConfig) -> Self {
         CompilerBuilder {
-            color,
-            coord,
             config: project,
             ..Default::default()
         }
@@ -96,8 +92,6 @@ impl CompilerBuilder {
                 }),
                 setting: &DEFAULT_SETTING,
             },
-            color: self.color,
-            coord: self.coord,
             ..Default::default()
         }
     }
@@ -114,6 +108,6 @@ pub fn create_test_compiler_with_coord_transform() -> Compiler<'static> {
         }),
         ..Default::default()
     };
-    let builder = CompilerBuilder::new(config, Default::default(), Default::default());
+    let builder = CompilerBuilder::new(config);
     builder.build()
 }

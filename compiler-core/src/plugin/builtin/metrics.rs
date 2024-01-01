@@ -5,7 +5,7 @@ use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::prep::CompilerMetadata;
 use crate::prop;
-use crate::types::ExecDoc;
+use crate::exec::ExecDoc;
 
 use crate::plugin::{PluginResult, PluginRuntime};
 

@@ -66,8 +66,6 @@ impl<'c, 'p> LineContext<'c, 'p> {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::Cow;
-
     use serde_json::{json, Value};
 
     use crate::comp::test_utils::CompilerBuilder;
@@ -160,7 +158,7 @@ mod test {
             }),
             ..Default::default()
         };
-        let builder = CompilerBuilder::new(project, Default::default(), Default::default());
+        let builder = CompilerBuilder::new(project);
         let compiler = builder.build();
         let ctx = LineContext::with_compiler(&compiler);
 
