@@ -11,6 +11,8 @@ mod exec_line;
 pub use exec_line::*;
 mod exec_map;
 pub use exec_map::*;
+mod map;
+pub use map::*;
 mod exec_section;
 pub use exec_section::*;
 mod exec_doc;

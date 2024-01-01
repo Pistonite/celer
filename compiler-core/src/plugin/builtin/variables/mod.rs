@@ -7,14 +7,11 @@ use serde_json::{json, Map, Value};
 
 use crate::comp::CompDoc;
 use crate::json::Coerce;
-use crate::lang::{self, DocRichTextBlock};
-use crate::macros::async_trait;
-use crate::pack::PackResult;
+use crate::lang::{self, DocDiagnostic, DocRichTextBlock};
 use crate::pack::{CompileContext, Compiler};
 use crate::plugin::{operation, PluginResult, PluginRuntime};
 use crate::prep::{CompilerMetadata, DocTag, DocTagColor};
 use crate::prop;
-use crate::types::DocDiagnostic;
 
 mod convert;
 mod transform;
@@ -155,11 +152,8 @@ impl VariablesPlugin {
         new_tag: &str,
     ) {
         if let Err(e) = self.transform_text_with_tag(text, new_tag) {
-            diagnostics.push(DocDiagnostic {
-                msg: lang::parse_poor(&e),
-                msg_type: "error".to_string(),
-                source: "plugin/variables".to_string(),
-            });
+            let error = DocDiagnostic::error(&e, self.get_source());
+            diagnostics.push(error);
         }
     }
 
@@ -219,11 +213,8 @@ impl VariablesPlugin {
 
     pub fn update_vars(&mut self, diagnostics: &mut Vec<DocDiagnostic>, vars: &Value) {
         if let Err(e) = self.update_vars_internal(vars) {
-            diagnostics.push(DocDiagnostic {
-                msg: lang::parse_poor(&e),
-                msg_type: "error".to_string(),
-                source: "plugin/variables".to_string(),
-            });
+            let error = DocDiagnostic::error(&e, self.get_source());
+            diagnostics.push(error);
         }
     }
 
@@ -334,6 +325,6 @@ impl PluginRuntime for VariablesPlugin {
     }
 
     fn get_source(&self) -> &str {
-        "variables"
+        "plugin/variables"
     }
 }

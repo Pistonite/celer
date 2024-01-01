@@ -989,8 +989,8 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("change color"),
-                line_color: "new-color".to_string(),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
+                line_color: Some("new-color".to_string()),
+                // map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
         );
@@ -1004,8 +1004,8 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("change color 2"),
-                line_color: "new-color".to_string(),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
+                line_color: Some("new-color".to_string()),
+                // map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("color".to_string())],
@@ -1039,12 +1039,12 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("change coord"),
-                map_coord: GameCoord(4.0, 5.0, 6.0),
+                // map_coord: GameCoord(4.0, 5.0, 6.0),
                 movements: vec![CompMovement::to(GameCoord(4.0, 5.0, 6.0))],
                 ..Default::default()
             },
         );
-        assert_eq!(compiler.coord, GameCoord(4.0, 5.0, 6.0));
+        // assert_eq!(compiler.coord, GameCoord(4.0, 5.0, 6.0));
 
         let mut compiler = builder.clone().build();
         test_comp_ok(
@@ -1060,7 +1060,7 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("push pop"),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
+                // map_coord: GameCoord(1.0, 2.0, 3.0),
                 movements: vec![
                     CompMovement::Push,
                     CompMovement::to(GameCoord(4.0, 5.0, 6.0)),
@@ -1080,7 +1080,7 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("invalid"),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
+                // map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("movements".to_string())],
@@ -1127,7 +1127,7 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("preset"),
-                map_coord: GameCoord(7.0, 8.0, 9.0),
+                // map_coord: GameCoord(7.0, 8.0, 9.0),
                 movements: vec![
                     CompMovement::to(GameCoord(3.0, 4.0, 5.0)),
                     CompMovement::to(GameCoord(7.0, 8.0, 9.0)),

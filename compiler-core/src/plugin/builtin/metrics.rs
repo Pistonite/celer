@@ -88,6 +88,6 @@ impl PluginRuntime for MetricsPlugin {
     }
 
     fn get_source(&self) -> &str {
-        "metrics"
+        "plugin/metrics"
     }
 }

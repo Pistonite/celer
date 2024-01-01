@@ -53,7 +53,7 @@ impl PluginRuntime for LinkPlugin {
     }
 
     fn get_source(&self) -> &str {
-        "link"
+        "plugin/link"
     }
 }
 

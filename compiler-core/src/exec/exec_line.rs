@@ -2,7 +2,7 @@ use crate::comp::{CompLine, CompMovement};
 use crate::types::{DocDiagnostic, ExecLine, MapIcon, MapMarker, RouteMetadata};
 use crate::util;
 
-use super::{add_engine_diagnostics, ExecResult, MapSectionBuilder};
+use super::{add_engine_diagnostics, ExecResult, MapBuilder};
 
 fn add_missing_icon_diagnostics(diagnostics: &mut Vec<DocDiagnostic>, icon: &str) {
     let site_origin = util::get_site_origin();
@@ -104,11 +104,10 @@ impl CompLine {
 
 #[cfg(test)]
 mod test {
-    use crate::comp::{CompMarker, CompMovement};
-    use crate::types::{
-        DocDiagnostic, DocNote, DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock,
-        GameCoord, MapLine,
-    };
+    use crate::comp::{CompMarker, CompMovement, DocNote};
+    use crate::lang::{DocDiagnostic, DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock};
+    use crate::exec::MapLine;
+    use crate::prep::GameCoord;
 
     use super::*;
 
@@ -179,8 +178,8 @@ mod test {
                 DocPoorTextBlock::Text("test msg1".to_string()),
                 DocPoorTextBlock::Link("test link".to_string()),
             ]),
-            msg_type: "test msg type".to_string(),
-            source: "test msg source".to_string(),
+            msg_type: "test msg type".into(),
+            source: "test msg source".into(),
         }];
         let test_doc_icon = Some("test-icon".to_string());
         let test_secondary_text = DocRichText(vec![
@@ -225,7 +224,7 @@ mod test {
 
         let line = CompLine {
             text: test_text.clone(),
-            line_color: test_color.clone(),
+            line_color: Some(test_color.clone()),
             diagnostics: test_diagnostics.clone(),
             doc_icon: test_doc_icon.clone(),
             secondary_text: test_secondary_text.clone(),
@@ -275,7 +274,7 @@ mod test {
     #[test]
     fn test_add_map_icon_and_markers() {
         let test_line = CompLine {
-            line_color: "test color".to_string(),
+            line_color: Some("test color".to_string()),
             map_icon: Some("test icon".to_string()),
             map_icon_priority: 3,
             markers: vec![
@@ -285,7 +284,6 @@ mod test {
                     color: Some("test marker override".to_string()),
                 },
             ],
-            map_coord: GameCoord(1.2, 55.0, 87.8),
             movements: create_test_movements(),
             ..Default::default()
         };
@@ -305,13 +303,6 @@ mod test {
             builder.icons,
             vec![
                 MapIcon {
-                    id: "test icon".to_string(),
-                    coord: GameCoord(1.2, 55.0, 87.8),
-                    line_index: 5,
-                    section_index: 4,
-                    priority: 3,
-                },
-                MapIcon {
                     id: "test icon 1".to_string(),
                     coord: GameCoord(3.4, 7.0, 6.0),
                     line_index: 5,
@@ -321,6 +312,13 @@ mod test {
                 MapIcon {
                     id: "test icon 2".to_string(),
                     coord: GameCoord(3.5, 7.4, 6.2),
+                    line_index: 5,
+                    section_index: 4,
+                    priority: 3,
+                },
+                MapIcon {
+                    id: "test icon".to_string(),
+                    coord: GameCoord(1.2, 55.0, 37.8),
                     line_index: 5,
                     section_index: 4,
                     priority: 3,
@@ -349,14 +347,13 @@ mod test {
     #[test]
     fn test_map_lines() {
         let test_line = CompLine {
-            line_color: "test color".to_string(),
+            line_color: Some("test color".to_string()),
             movements: create_test_movements(),
             ..Default::default()
         };
-        let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("blue", &GameCoord::default());
+        let mut map_builder = MapBuilder::new("blue".to_string(), GameCoord::default());
         test_line.exec(&Default::default(), 0, 0, &mut map_builder);
-        let map_section = map_builder.build();
+        let map_section = map_builder.build_section();
         assert_eq!(
             map_section.lines,
             vec![
@@ -391,16 +388,15 @@ mod test {
     #[test]
     fn test_change_color_no_movement() {
         let test_line = CompLine {
-            line_color: "test color".to_string(),
+            line_color: Some("test color".to_string()),
             ..Default::default()
         };
-        let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("blue", &GameCoord::default());
-        map_builder.add_coord("blue", &GameCoord::default());
+        let mut map_builder = MapBuilder::new("blue".to_string(), GameCoord::default());
+        map_builder.move_to(GameCoord::default());
         test_line.exec(&Default::default(), 0, 0, &mut map_builder);
 
-        map_builder.add_coord("test color", &GameCoord::default());
-        let map = map_builder.build();
+        map_builder.move_to(GameCoord::default());
+        let map = map_builder.build_section();
         assert_eq!(
             map.lines,
             vec![
@@ -442,7 +438,7 @@ mod test {
         };
 
         let exec_line =
-            test_line.exec(&Default::default(), 0, 0, &mut MapSectionBuilder::default());
+            test_line.exec(&Default::default(), 0, 0, &mut MapBuilder::default());
         assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
     }
 
@@ -450,7 +446,6 @@ mod test {
     fn test_missing_icons() {
         let test_line = CompLine {
             map_icon: Some("test icon".to_string()),
-            map_coord: GameCoord(1.2, 55.0, 87.8),
             movements: create_test_movements(),
             ..Default::default()
         };
