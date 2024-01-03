@@ -1,10 +1,6 @@
 use instant::Instant;
-#[cfg(feature = "native")]
-use tokio::task::LocalSet;
-
-#[cfg(feature = "native")]
-use crate::pack::PackerError;
-use crate::pack::{self, PackerResult, Resource};
+use crate::pack::{self, PackerResult};
+use crate::res::{Resource, Loader};
 use crate::types::EntryPoints;
 
 use super::{CompilerContext, Setting};
@@ -17,12 +13,14 @@ use super::{CompilerContext, Setting};
 /// is used for further compilation. The compiler does not consume
 /// the pack phase 0 output, so the output can be cached to speed up
 /// future iterations
-pub async fn prepare_compiler(
+pub async fn prepare_compiler<L>(
     source: &str,
-    project_resource: Resource,
+    project_resource: Resource<'static, L>,
     setting: Setting,
     redirect_to_default_entry_point: bool,
-) -> PackerResult<CompilerContext> {
+) -> PackerResult<CompilerContext<L>> 
+where L: Loader
+{
     let start_time = Instant::now();
     let mut phase0 = pack::pack_phase0(
         source,
@@ -62,7 +60,7 @@ pub async fn prepare_compiler(
     }
     #[cfg(feature = "native")]
     let mut context = {
-        let local = LocalSet::new();
+        let local = tokio::task::LocalSet::new();
         let runtimes = plugins
             .iter()
             .map(|plugin| plugin.create_runtime(&context))
@@ -72,7 +70,7 @@ pub async fn prepare_compiler(
                 for mut rt in runtimes {
                     rt.on_pre_compile(&mut context).await?;
                 }
-                Ok::<CompilerContext, PackerError>(context)
+                Ok::<CompilerContext, crate::pack::PackerError>(context)
             })
             .await?
     };
@@ -87,6 +85,8 @@ pub async fn prepare_compiler(
 /// or if the `entry-points` property is empty, returns `EntryPoints` with 0 entries.
 ///
 /// If the project object or the `entry-points` property is invalid, returns error.
-pub async fn prepare_entry_points(project_resource: &Resource) -> PackerResult<EntryPoints> {
+pub async fn prepare_entry_points<L>(project_resource: &Resource<'_, L>) -> PackerResult<EntryPoints> 
+where L: Loader   
+{
     pack::pack_project_entry_points(project_resource).await
 }

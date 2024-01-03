@@ -1,27 +1,12 @@
 version: '3'
 
 tasks:
-  grammar:
-    desc: Generate grammar parser
-    cmds:
-    - regen emit src/lang/tempstr/tempstr.grammar -t rust -o src/lang/tempstr/grammar.rs
-    - regen emit src/lang/rich/rich.grammar -t rust -o src/lang/rich/grammar.rs
-    - regen emit src/lang/preset/preset.grammar -t rust -o src/lang/preset/grammar.rs
-    sources:
-    - src/**/*.grammar
-    - src/lang/tempstr/grammar.rs.pp
-    generates:
-    - src/lang/tempstr/grammar.rs
-    - src/lang/rich/grammar.rs
-    - src/lang/preset/grammar.rs
-
   watch:
     desc: Run compiler core tests in watch mode
     cmds:
-    - cargo watch -x test --features native,test
+    - cargo watch -x test
 
   test:
-    deps: [grammar]
     desc: Run compiler core tests
     cmds:
-    - cargo test --features native,test {{.CLI_ARGS}}
+    - cargo test {{.CLI_ARGS}}

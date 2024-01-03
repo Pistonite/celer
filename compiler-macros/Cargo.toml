@@ -5,11 +5,16 @@ description = "(Proc) Macros for the compiler core"
 edition = "2021"
 
 [dependencies]
+proc-macro-crate = "2.0.1"
 proc-macro2 = "1.0.69"
 quote = "1.0.33"
 syn = "2.0.38"
 
+# used for testing
+# [features]
+# wasm = []
+
 [lib]
 proc-macro = true
-name = "celercmacros"
+name = "celerm"
 path = "src/lib.rs"
