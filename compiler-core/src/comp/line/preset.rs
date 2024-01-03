@@ -1,5 +1,5 @@
 use crate::json::{Cast, Coerce, IntoSafeRouteBlob, SafeRouteBlob};
-use crate::lang::{PresetHydrate, PresetInst};
+use crate::lang::{PresetInst};
 use crate::prop;
 
 use super::{validate_not_array_or_object, CompError, Compiler, LineContext, LinePropMap};
@@ -8,11 +8,11 @@ impl<'c, 'p> LineContext<'c, 'p> {
     /// Apply the preset to the output.
     ///
     /// Presets are applied recursively, including presets in the movements
-    pub fn apply_preset<'a, 'b>(
-        &'a mut self,
+    pub fn apply_preset(
+        &mut self,
         depth: usize,
-        inst: &'b PresetInst,
-        output: &mut LinePropMap<'a, PresetHydrate<'a, 'b>>,
+        inst: &PresetInst,
+        output: &mut LinePropMap<'c>,
     ) {
         if depth > self.compiler.setting.max_preset_ref_depth {
             self.errors
@@ -28,31 +28,29 @@ impl<'c, 'p> LineContext<'c, 'p> {
             Some(preset) => preset,
         };
         let mut properties = LinePropMap::new();
-        preset.hydrate(&inst.args, |k, v| {
-            properties.insert(k, v);
-        });
+        preset.hydrate(&inst.args, &mut properties);
         if let Some(presets) = properties.remove(prop::PRESETS) {
             self.process_presets(depth, presets, output);
         }
 
         if let Some(movements) = properties.remove(prop::MOVEMENTS) {
-            properties.insert_value(
+            properties.insert(
                 prop::MOVEMENTS.to_string(),
                 self.expand_presets_in_movements(depth, movements),
             );
         }
 
-        output.extend(properties);
+        output.extend(properties.evaluate());
     }
 
     /// Process the "presets" property in the line object
     ///
     /// Saves the properties from the preset to the output map
-    pub fn process_presets<'a>(
-        &'a mut self,
+    pub fn process_presets(
+        &mut self,
         depth: usize,
-        presets: SafeRouteBlob<'_>,
-        output: &mut LinePropMap<'a, PresetHydrate<'a, '_>>,
+        presets: SafeRouteBlob<'c>,
+        output: &mut LinePropMap<'c>,
     ) {
         match presets.try_into_array() {
             Ok(arr) => {
@@ -66,12 +64,12 @@ impl<'c, 'p> LineContext<'c, 'p> {
         }
     }
 
-    fn process_one_preset<'a>(
-        &'a mut self,
+    fn process_one_preset(
+        &mut self,
         index: Option<usize>,
         depth: usize,
-        preset: SafeRouteBlob<'_>,
-        output: &mut LinePropMap<'a, PresetHydrate<'a, '_>>,
+        preset: SafeRouteBlob<'c>,
+        output: &mut LinePropMap<'c>,
     ) {
         if !validate_not_array_or_object!(
             &preset,
@@ -107,8 +105,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
     pub fn expand_presets_in_movements(
         &mut self,
         depth: usize,
-        movements: SafeRouteBlob<'_>,
-    ) -> SafeRouteBlob<'_> {
+        movements: SafeRouteBlob<'c>,
+    ) -> SafeRouteBlob<'c> {
         let array = match movements.try_into_array() {
             Ok(array) => array,
             Err(movements) => return movements,
@@ -162,7 +160,7 @@ mod test {
 
     use super::*;
 
-    fn evaluate(output: LinePropMap<PresetHydrate<'_, '_>>) -> BTreeMap<String, Value> {
+    fn evaluate(output: LinePropMap<'_>) -> BTreeMap<String, Value> {
         output
             .evaluate()
             .into_iter()

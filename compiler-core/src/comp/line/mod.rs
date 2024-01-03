@@ -34,7 +34,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
     ///
     /// Errors are returned as an Err variant with the line and the errors.
     /// Diagnostics are not added to the line.
-    pub fn parse_line(&mut self, value: SafeRouteBlob) {
+    pub fn parse_line(&mut self, value: SafeRouteBlob<'p>) {
         // Convert line into object form
         let (text, line_obj) = desugar::desugar_line(value);
         let line_obj = match line_obj {
@@ -81,12 +81,12 @@ impl<'c, 'p> LineContext<'c, 'p> {
         // merge the line properties into preset properties
         // LinePropMap will auto desugar the properties
         for (k, v) in line_properties {
-            properties.insert_value(k.into_owned(), v);
+            properties.insert(k.into_owned(), v);
         }
 
         // expand presets in movements
         if let Some(movements) = properties.remove(prop::MOVEMENTS) {
-            properties.insert_value(
+            properties.insert(
                 prop::MOVEMENTS.to_string(),
                 self.expand_presets_in_movements(0, movements),
             );
@@ -94,7 +94,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
 
         // if the line doesn't have the text property yet, use the outer text
         if properties.get(prop::TEXT).is_none() {
-            properties.insert_value(
+            properties.insert(
                 prop::TEXT.to_string(),
                 Value::String(text.into_owned()).into_unchecked(),
             );
@@ -131,7 +131,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
                             self.compile_note(&format!("{p}[{i}]", p = prop::NOTES), v);
                         }
                     }
-                    Err(_) => {
+                    Err(value) => {
                         self.compile_note(prop::NOTES, value);
                     }
                 }

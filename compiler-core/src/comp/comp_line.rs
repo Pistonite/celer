@@ -9,7 +9,7 @@ use crate::pack::{Compiler, PackError};
 use crate::prep::GameCoord;
 use crate::util::StringMap;
 
-use super::{CompError, CompMarker, CompMovement, CompResult, DocNote};
+use super::{CompError, CompMarker, CompMovement, CompResult, DocNote, CompilerInternal};
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm]
 pub struct CompLine {
@@ -46,13 +46,19 @@ pub struct CompLine {
     /// These are ignored by ExecDoc, but the plugins can use them
     pub properties: StringMap<Value>,
 }
+
+/// Context for parsing a line
+///
+/// # Lifetime
+/// The context works with 2 lifetimes: `'c` the lifetime of the compiler reference and `'p` the
+/// lifetime of the prepared context.
 pub struct LineContext<'c, 'p> {
     pub compiler: &'c Compiler<'p>,
     pub line: CompLine,
     pub errors: Vec<CompError>,
 }
 
-impl<'p> Compiler<'p> {
+impl<'p> CompilerInternal<'p> {
     /// Parse the line (parallel pass)
     pub fn parse_line(&self, value: RouteBlobRef<'p>) -> CompLine {
         let mut ctx = self.create_line_context();

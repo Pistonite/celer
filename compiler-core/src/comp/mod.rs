@@ -14,10 +14,12 @@
 //! # Output
 //! The output is a [`CompDoc`]
 
+use std::ops::{DerefMut, Deref};
+
 use crate::env::yield_budget;
 use crate::json::{RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef};
 use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
-use crate::pack::{Compiler, PackError};
+use crate::pack::{Compiler, PackError, CompileContext};
 use crate::prep::Setting;
 
 mod error;
@@ -48,6 +50,40 @@ macro_rules! validate_not_array_or_object {
     }};
 }
 pub(crate) use validate_not_array_or_object;
+
+/// The internal data of the compiler held during compilation
+///
+/// This is necessary because [`Compiler`] holds reference to plugins,
+/// which cannot be sent between threads
+pub struct CompilerInternal<'p> {
+    pub ctx: CompileContext<'p>,
+}
+
+impl<'p> Deref for CompilerInternal<'p> {
+    type Target = CompileContext<'p>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.ctx
+    }
+}
+
+impl<'p> DerefMut for CompilerInternal<'p> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.ctx
+    }
+}
+
+impl<'p> AsRef<CompileContext<'p>> for CompilerInternal<'p> {
+    fn as_ref(&self) -> &CompileContext<'p> {
+        &self.ctx
+    }
+}
+
+impl<'p> AsMut<CompileContext<'p>> for CompilerInternal<'p> {
+    fn as_mut(&mut self) -> &mut CompileContext<'p> {
+        &mut self.ctx
+    }
+}
 
 static DEFAULT_SETTING: Setting = Setting::const_default();
 

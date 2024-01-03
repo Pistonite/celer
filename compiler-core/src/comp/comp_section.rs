@@ -8,7 +8,7 @@ use crate::json::{
 use crate::lang::{self, DocDiagnostic, DocRichText, IntoDiagnostic};
 use crate::pack::PackError;
 
-use super::{CompError, CompLine, CompResult, Compiler};
+use super::{CompError, CompLine, CompResult, Compiler, CompilerInternal};
 
 /// Compiled Section
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -43,7 +43,7 @@ impl CompSection {
     // }
 }
 
-impl<'p> Compiler<'p> {
+impl<'p> CompilerInternal<'p> {
     pub fn compile_preface(&self, value: RouteBlobRef<'p>) -> Result<DocRichText, RouteBlobError> {
         let value = value.checked()?;
         let text = value.coerce_into_string();

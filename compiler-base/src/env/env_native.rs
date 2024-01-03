@@ -1,6 +1,7 @@
 //! Native environment implementation
 
 use std::sync::Arc;
+use std::future::Future;
 use tokio::task::JoinSet;
 
 /// Ref counted pointer, wrapper for Arc
@@ -49,10 +50,11 @@ pub async fn yield_budget(limit: u32) {
 /// Wait for multiple futures to complete
 pub use tokio::join as join_futures;
 
-pub fn iter_futures<I, T>(budget: u32, iter: I) -> Vec<T>
+pub async fn iter_futures<I, T>(budget: u32, iter: I) -> Vec<T>
 where
     I: IntoIterator,
-    I::Item: Future<Output = T>,
+    I::Item: Future<Output = T> + Send + 'static,
+    T: Send + 'static
 {
     let mut set = JoinSet::new();
     let mut results = Vec::new();
@@ -65,7 +67,7 @@ where
         joined += 1;
         match result {
             Ok((i, result)) => {
-                results.get_mut(i).unwrap() = Some(result);
+                *results.get_mut(i).unwrap() = Some(result);
             }
             Err(e) => {
                 if e.is_panic() {
@@ -78,5 +80,5 @@ where
     if joined != results.len() {
         panic!("Not all futures joined");
     }
-    results.into_iter().map(|r| r.unwrap())
+    results.into_iter().map(|r| r.unwrap()).collect()
 }
