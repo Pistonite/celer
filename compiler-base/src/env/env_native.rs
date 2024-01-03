@@ -49,36 +49,3 @@ pub async fn yield_budget(limit: u32) {
 
 /// Wait for multiple futures to complete
 pub use tokio::join as join_futures;
-
-pub async fn iter_futures<I, T>(budget: u32, iter: I) -> Vec<T>
-where
-    I: IntoIterator,
-    I::Item: Future<Output = T> + Send + 'static,
-    T: Send + 'static
-{
-    let mut set = JoinSet::new();
-    let mut results = Vec::new();
-    for (i, future) in iter.into_iter().enumerate() {
-        set.spawn(async move { (i, future.await) });
-        results.push(None);
-    }
-    let mut joined: usize = 0;
-    while let Some(result) = set.join_next().await {
-        joined += 1;
-        match result {
-            Ok((i, result)) => {
-                *results.get_mut(i).unwrap() = Some(result);
-            }
-            Err(e) => {
-                if e.is_panic() {
-                    panic!("Panic in async task: {:?}", e);
-                }
-            }
-        }
-        yield_budget(budget).await;
-    }
-    if joined != results.len() {
-        panic!("Not all futures joined");
-    }
-    results.into_iter().map(|r| r.unwrap()).collect()
-}

@@ -48,8 +48,11 @@ pub async fn yield_budget(limit: u32) {
             use wasm_bindgen_futures::JsFuture;
             use web_sys::WorkerGlobalScope;
 
-            let global_self: WorkerGlobalScope =
-                Reflect::get(&global(), &JsValue::from("self"))?.dyn_into()?;
+            let self_value = JsValue::from("self");
+            let global_obj = global();
+            let global_self: WorkerGlobalScope = unsafe {
+                Reflect::get(&global_obj, &self_value)
+            }?.dyn_into()?;
             let promise = Promise::new(&mut |resolve, _| {
                 let _ =
                     global_self.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);
@@ -76,20 +79,3 @@ macro_rules! join_futures {
     };
 }
 pub use join_futures;
-
-/// Wait for multiple futures to complete and collect their results
-/// in the same order
-///
-/// On WASM, futures are simply executed sequentially
-pub async fn iter_futures<I, T>(budget: u32, iter: I) -> Vec<T>
-where
-    I: IntoIterator,
-    I::Item: Future<Output = T>,
-{
-    let mut results = Vec::new();
-    for future in iter {
-        yield_budget(budget).await;
-        results.push(future.await);
-    }
-    results
-}

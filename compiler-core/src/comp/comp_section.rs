@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::env::{iter_futures, yield_budget};
+use crate::env::{yield_budget};
 use crate::json::{
     Cast, Coerce, RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef,
     RouteBlobSingleKeyObjectResult,
@@ -8,7 +8,7 @@ use crate::json::{
 use crate::lang::{self, DocDiagnostic, DocRichText, IntoDiagnostic};
 use crate::pack::PackError;
 
-use super::{CompError, CompLine, CompResult, Compiler, CompilerInternal};
+use super::{CompError, CompLine, CompResult, Compiler};
 
 /// Compiled Section
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -43,7 +43,7 @@ impl CompSection {
     // }
 }
 
-impl<'p> CompilerInternal<'p> {
+impl<'p> Compiler<'p> {
     pub fn compile_preface(&self, value: RouteBlobRef<'p>) -> Result<DocRichText, RouteBlobError> {
         let value = value.checked()?;
         let text = value.coerce_into_string();
@@ -104,7 +104,12 @@ impl<'p> CompilerInternal<'p> {
             }
         };
 
-        let lines = iter_futures(64, array.map(|line| async { self.parse_line(line) })).await;
+        let mut lines = vec![];
+        for line in array {
+            yield_budget(64).await;
+            lines.push(self.parse_line(line));
+        }
+
         let section = CompSection {
             name: name.to_owned(),
             lines,

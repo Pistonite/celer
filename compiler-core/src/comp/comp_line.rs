@@ -9,7 +9,7 @@ use crate::pack::{Compiler, PackError};
 use crate::prep::GameCoord;
 use crate::util::StringMap;
 
-use super::{CompError, CompMarker, CompMovement, CompResult, DocNote, CompilerInternal};
+use super::{CompError, CompMarker, CompMovement, CompResult, DocNote};
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm]
 pub struct CompLine {
@@ -58,7 +58,7 @@ pub struct LineContext<'c, 'p> {
     pub errors: Vec<CompError>,
 }
 
-impl<'p> CompilerInternal<'p> {
+impl<'p> Compiler<'p> {
     /// Parse the line (parallel pass)
     pub fn parse_line(&self, value: RouteBlobRef<'p>) -> CompLine {
         let mut ctx = self.create_line_context();
