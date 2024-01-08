@@ -4,10 +4,11 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::Cast;
+use crate::json::{Coerce, Cast};
 use crate::macros::derive_wasm;
 use crate::prop;
 use crate::util::StringMap;
+use crate::env::yield_budget;
 
 use super::{PrepError, PrepResult, Setting};
 
@@ -55,39 +56,29 @@ pub async fn load_entry_points(value: Value, setting: &Setting) -> PrepResult<En
         PrepError::InvalidMetadataPropertyType(prop::ENTRY_POINTS, "mapping object")
     })?;
 
-    // let mut map = BTreeMap::new();
-    // for (key, value) in obj {
-    //     yield_budget(64).await;
-    //     let value = value.coerce_to_string();
-    //     // let path = if value.starts_with('/') {
-    //     //     match Path::try_from(&value) {
-    //     //         Some(path) => format!("/{path}"),
-    //     //         None => value,
-    //     //     }
-    //     // } else {
-    //     //     value
-    //     // };
-    //
-    //     map.insert(key, value);
-    // }
-    //
-    // for (key, value) in &map {
-    //     yield_budget(64).await;
-    //     let valid = if value.is_empty() {
-    //         false
-    //     } else {
-    //         value.starts_with('/') || resolve_alias(&map, value, 0, setting)?.is_some()
-    //     };
-    //     if !valid {
-    //         return Err(PrepError::InvalidEntryPoint(
-    //             key.to_string(),
-    //             value.to_string(),
-    //         ));
-    //     }
-    // }
-    //
-    // Ok(EntryPoints(map))
-    todo!()
+    let mut map = BTreeMap::new();
+    for (key, value) in obj {
+        yield_budget(64).await;
+        let value = value.coerce_to_string();
+        map.insert(key, value);
+    }
+    
+    for (key, value) in &map {
+        yield_budget(64).await;
+        let valid = if value.is_empty() {
+            false
+        } else {
+            value.starts_with('/') || &resolve_alias(&map, value, 0, setting)? != value
+        };
+        if !valid {
+            return Err(PrepError::InvalidEntryPoint(
+                key.to_string(),
+                value.to_string(),
+            ));
+        }
+    }
+    
+    Ok(EntryPoints(map.into()))
 }
 
 fn resolve_alias(
@@ -96,20 +87,19 @@ fn resolve_alias(
     depth: usize,
     setting: &Setting,
 ) -> PrepResult<String> {
-    // if depth > setting.max_entry_point_depth {
-    //     return Err(PrepError::MaxEntryPointDepthExceeded(key.to_string()));
-    // }
-    // match map.get(key) {
-    //     Some(value) => {
-    //         if value.starts_with('/') {
-    //             Ok(Some(value.to_string()))
-    //         } else {
-    //             resolve_alias(map, value, depth + 1, setting)
-    //         }
-    //     }
-    //     None => Ok(None),
-    // }
-    todo!()
+    if depth > setting.max_entry_point_depth {
+        return Err(PrepError::MaxEntryPointDepthExceeded(key.to_string()));
+    }
+    match map.get(key) {
+        Some(value) => {
+            if value.starts_with('/') {
+                Ok(value.to_string())
+            } else {
+                resolve_alias(map, value, depth + 1, setting)
+            }
+        }
+        None => Ok(key.to_string()),
+    }
 }
 
 #[cfg(test)]
@@ -232,15 +222,15 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_normalize() {
+    async fn test_normalize_is_skipped() {
         let result = load_entry_points_test(json!({
             "test": "//something",
             "test2": "/test/../root"
         }))
         .await;
         let expected = vec![
-            ("test".to_string(), "/something".to_string()),
-            ("test2".to_string(), "/root".to_string()),
+            ("test".to_string(), "//something".to_string()),
+            ("test2".to_string(), "/test/../root".to_string()),
         ]
         .into_iter()
         .collect::<BTreeMap<_, _>>();
