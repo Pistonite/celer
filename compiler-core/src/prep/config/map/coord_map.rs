@@ -30,10 +30,13 @@ pub struct MapCoordMap {
 pub enum Axis {
     /// Horizontal axis
     #[default]
+    #[serde(rename = "x")]
     X,
     /// Vertical axis
+    #[serde(rename = "y")]
     Y,
     /// Height axis
+    #[serde(rename = "z")]
     Z,
     /// Negative Horizontal axis
     #[serde(rename = "-x")]

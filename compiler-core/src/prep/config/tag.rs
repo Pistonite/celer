@@ -8,9 +8,6 @@ use crate::json::Coerce;
 use crate::macros::derive_wasm;
 use crate::prep::{PrepError, PrepResult, PreparedConfig};
 use crate::prop;
-use crate::res::{Loader, ResError, Resource, Use};
-
-use super::check_map;
 
 impl<'a> PreparedConfig<'a> {
     /// Process the `tags` property

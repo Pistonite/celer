@@ -173,7 +173,7 @@ impl<'a> PreparedConfig<'a> {
     {
         match prop_name {
             None => Ok(()),
-            Some(name) => Err(PrepError::MissingConfigProperty(
+            Some(name) => Err(PrepError::UnusedConfigProperty(
                 self.trace.clone(),
                 name.into(),
             )),
