@@ -114,135 +114,60 @@ impl<'a> PreparedConfig<'a> {
         )?;
 
         let name = if name.is_array() || name.is_object() {
-            return Err(PrepError::InvalidConfigPropertyType(
-                self.trace.clone(),
-                format!(
-                    "{}.{}[{}].{}",
-                    prop::MAP,
-                    prop::LAYERS,
-                    layer_index,
-                    prop::NAME
-                )
-                .into(),
-                "string".into(),
-            ));
+            Err(self.err_invalid_property_type(prop::NAME, layer_index, "string"))?
         } else {
             name.coerce_to_string()
         };
-        // let template_url = if template_url.is_array() || template_url.is_object() {
-        //     return Err(PrepError::InvalidConfigProperty(
-        //         trace.clone(),
-        //         format!(
-        //             "{}.{}[{}].{}",
-        //             prop::MAP,
-        //             prop::LAYERS,
-        //             layer_index,
-        //             prop::TEMPLATE_URL
-        //         ),
-        //     ));
-        // } else {
-        //     template_url.coerce_to_string()
-        // };
-        //
-        // let size = parse_array_with_2_elements(size).ok_or_else(|| {
-        //     PrepError::InvalidConfigProperty(
-        //         trace.clone(),
-        //         format!(
-        //             "{}.{}[{}].{}",
-        //             prop::MAP,
-        //             prop::LAYERS,
-        //             layer_index,
-        //             prop::SIZE
-        //         ),
-        //     )
-        // })?;
-        //
-        // let zoom_bounds = parse_array_with_2_elements(zoom_bounds).ok_or_else(|| {
-        //     PrepError::InvalidConfigProperty(
-        //         trace.clone(),
-        //         format!(
-        //             "{}.{}[{}].{}",
-        //             prop::MAP,
-        //             prop::LAYERS,
-        //             layer_index,
-        //             prop::ZOOM_BOUNDS
-        //         ),
-        //     )
-        // })?;
-        //
-        // let max_native_zoom = max_native_zoom.try_coerce_to_u64().ok_or_else(|| {
-        //     PrepError::InvalidConfigProperty(
-        //         trace.clone(),
-        //         format!(
-        //             "{}.{}[{}].{}",
-        //             prop::MAP,
-        //             prop::LAYERS,
-        //             layer_index,
-        //             prop::MAX_NATIVE_ZOOM
-        //         ),
-        //     )
-        // })?;
-        //
-        // let transform = serde_json::from_value::<MapTilesetTransform>(transform).map_err(|_| {
-        //     PrepError::InvalidConfigProperty(
-        //         trace.clone(),
-        //         format!(
-        //             "{}.{}[{}].{}",
-        //             prop::MAP,
-        //             prop::LAYERS,
-        //             layer_index,
-        //             prop::TRANSFORM
-        //         ),
-        //     )
-        // })?;
-        //
-        // let start_z = start_z.try_coerce_to_f64().ok_or_else(|| {
-        //     PrepError::InvalidConfigProperty(
-        //         trace.clone(),
-        //         format!(
-        //             "{}.{}[{}].{}",
-        //             prop::MAP,
-        //             prop::LAYERS,
-        //             layer_index,
-        //             prop::START_Z
-        //         ),
-        //     )
-        // })?;
-        //
-        // let attribution = serde_json::from_value::<MapAttribution>(attribution).map_err(|_| {
-        //     PrepError::InvalidConfigProperty(
-        //         trace.clone(),
-        //         format!(
-        //             "{}.{}[{}].{}",
-        //             prop::MAP,
-        //             prop::LAYERS,
-        //             layer_index,
-        //             prop::ATTRIBUTION
-        //         ),
-        //     )
-        // })?;
+        let template_url = if template_url.is_array() || template_url.is_object() {
+            Err(self.err_invalid_property_type(prop::TEMPLATE_URL, layer_index, "string"))?
+        } else {
+            template_url.coerce_to_string()
+        };
+        let size = parse_array_with_2_elements(size).ok_or_else(|| {
+            self.err_invalid_property_type(prop::SIZE, layer_index, "array of 2 non-negative integers")
+        })?;
+        let zoom_bounds = parse_array_with_2_elements(zoom_bounds).ok_or_else(|| {
+            self.err_invalid_property_type(prop::ZOOM_BOUNDS, layer_index, "array of 2 non-negative integers")
+        })?;
+        let max_native_zoom = max_native_zoom.try_coerce_to_u64().ok_or_else(|| {
+            self.err_invalid_property_type(prop::MAX_NATIVE_ZOOM, layer_index, "non-negative integer")
+        })?;
+        let transform = serde_json::from_value::<MapTilesetTransform>(transform).map_err(|_| {
+            self.err_invalid_property_type(prop::TRANSFORM, layer_index, "transform object")
+        })?;
+        let start_z = start_z.try_coerce_to_f64().ok_or_else(|| {
+            self.err_invalid_property_type(prop::START_Z, layer_index, "number")
+        })?;
+        let attribution = serde_json::from_value::<MapAttribution>(attribution).map_err(|_| {
+            self.err_invalid_property_type(prop::ATTRIBUTION, layer_index, "attribution object")
+        })?;
 
-        // Ok(MapLayerAttr {
-        //     name,
-        //     template_url,
-        //     size,
-        //     zoom_bounds,
-        //     max_native_zoom,
-        //     transform,
-        //     start_z,
-        //     attribution,
-        // })
+        Ok(MapLayer {
+            name,
+            template_url,
+            size,
+            zoom_bounds,
+            max_native_zoom,
+            transform,
+            start_z,
+            attribution,
+        })
+    }
 
-        todo!()
+    fn err_invalid_property_type(&self, prop: &str, layer_index: usize, expected_type: &'static str) -> PrepError {
+        PrepError::InvalidConfigPropertyType(
+            self.trace.clone(),
+            format!(
+                "{}.{}[{}].{}",
+                prop::MAP,
+                prop::LAYERS,
+                layer_index,
+                prop,
+            ).into(),
+            expected_type.into(),
+        )
     }
 }
-
-// pub fn parse_map_layer(
-//     value: Value,
-//     layer_index: usize,
-// ) -> PackerResult<MapLayerAttr> {
-//
-// }
 
 #[inline]
 fn parse_array_with_2_elements(value: Value) -> Option<(u64, u64)> {
