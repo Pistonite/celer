@@ -114,32 +114,32 @@ impl<'a> PreparedConfig<'a> {
         )?;
 
         let name = if name.is_array() || name.is_object() {
-            Err(self.err_invalid_property_type(prop::NAME, layer_index, "string"))?
+            Err(self.err_invalid_map_layer_property_type(prop::NAME, layer_index, "string"))?
         } else {
             name.coerce_to_string()
         };
         let template_url = if template_url.is_array() || template_url.is_object() {
-            Err(self.err_invalid_property_type(prop::TEMPLATE_URL, layer_index, "string"))?
+            Err(self.err_invalid_map_layer_property_type(prop::TEMPLATE_URL, layer_index, "string"))?
         } else {
             template_url.coerce_to_string()
         };
         let size = parse_array_with_2_elements(size).ok_or_else(|| {
-            self.err_invalid_property_type(prop::SIZE, layer_index, "array of 2 non-negative integers")
+            self.err_invalid_map_layer_property_type(prop::SIZE, layer_index, "array of 2 non-negative integers")
         })?;
         let zoom_bounds = parse_array_with_2_elements(zoom_bounds).ok_or_else(|| {
-            self.err_invalid_property_type(prop::ZOOM_BOUNDS, layer_index, "array of 2 non-negative integers")
+            self.err_invalid_map_layer_property_type(prop::ZOOM_BOUNDS, layer_index, "array of 2 non-negative integers")
         })?;
         let max_native_zoom = max_native_zoom.try_coerce_to_u64().ok_or_else(|| {
-            self.err_invalid_property_type(prop::MAX_NATIVE_ZOOM, layer_index, "non-negative integer")
+            self.err_invalid_map_layer_property_type(prop::MAX_NATIVE_ZOOM, layer_index, "non-negative integer")
         })?;
         let transform = serde_json::from_value::<MapTilesetTransform>(transform).map_err(|_| {
-            self.err_invalid_property_type(prop::TRANSFORM, layer_index, "transform object")
+            self.err_invalid_map_layer_property_type(prop::TRANSFORM, layer_index, "transform object")
         })?;
         let start_z = start_z.try_coerce_to_f64().ok_or_else(|| {
-            self.err_invalid_property_type(prop::START_Z, layer_index, "number")
+            self.err_invalid_map_layer_property_type(prop::START_Z, layer_index, "number")
         })?;
         let attribution = serde_json::from_value::<MapAttribution>(attribution).map_err(|_| {
-            self.err_invalid_property_type(prop::ATTRIBUTION, layer_index, "attribution object")
+            self.err_invalid_map_layer_property_type(prop::ATTRIBUTION, layer_index, "attribution object")
         })?;
 
         Ok(MapLayer {
@@ -154,7 +154,7 @@ impl<'a> PreparedConfig<'a> {
         })
     }
 
-    fn err_invalid_property_type(&self, prop: &str, layer_index: usize, expected_type: &'static str) -> PrepError {
+    fn err_invalid_map_layer_property_type(&self, prop: &str, layer_index: usize, expected_type: &'static str) -> PrepError {
         PrepError::InvalidConfigPropertyType(
             self.trace.clone(),
             format!(

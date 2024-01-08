@@ -4,8 +4,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::macros::derive_wasm;
-use crate::prep::PrepResult;
+use crate::prep::{PrepResult, PrepError};
 use crate::prop;
+use crate::json::Coerce;
 
 use super::PreparedConfig;
 
@@ -71,54 +72,43 @@ impl<'a> PreparedConfig<'a> {
 
         // type checking
         let layers = super::check_array!(self, layers, format!("{}.{}", prop::MAP, prop::LAYERS))?;
-        //     let coord_map = super::pack_coord_map(coord_map, trace)?;
-        // let initial_coord = match serde_json::from_value::<GameCoord>(initial_coord) {
-        //     Ok(c) => c,
-        //     Err(_) => {
-        //         return Err(PackerError::InvalidConfigProperty(
-        //             trace.clone(),
-        //             format!("{}.{}", prop::MAP, prop::INITIAL_COORD),
-        //         ))
-        //     }
-        // };
-        //
-        // let initial_zoom = match initial_zoom.as_u64() {
-        //     Some(z) => z,
-        //     None => {
-        //         return Err(PackerError::InvalidConfigProperty(
-        //             trace.clone(),
-        //             format!("{}.{}", prop::MAP, prop::INITIAL_ZOOM),
-        //         ))
-        //     }
-        // };
-        //
-        // let initial_color = if initial_color.is_array() || initial_color.is_object() {
-        //     return Err(PackerError::InvalidConfigProperty(
-        //         trace.clone(),
-        //         format!("{}.{}", prop::MAP, prop::INITIAL_COLOR),
-        //     ));
-        // } else {
-        //     initial_color.coerce_to_string()
-        // };
-        //
-        //     // parse layers
-        // let layers = {
-        //     let mut packed_layers = Vec::with_capacity(layers.len());
-        //     for (i, layer) in layers.into_iter().enumerate() {
-        //         packed_layers.push(super::config.load_map_layer(layer, trace, i)?);
-        //     }
-        //     packed_layers
-        // };
-        // Ok(MapMetadata {
-        //     layers,
-        //     coord_map,
-        //     initial_coord,
-        //     initial_zoom,
-        //     initial_color,
-        // });
+        let coord_map = self.parse_coord_map(coord_map)?;
+        let initial_coord = serde_json::from_value::<GameCoord>(initial_coord)
+            .map_err(|_| self.err_invalid_map_property_type(prop::INITIAL_COORD, "game coord"))?;
+        let initial_zoom = initial_zoom.as_u64()
+            .ok_or_else(|| self.err_invalid_map_property_type(prop::INITIAL_ZOOM, "non-negative integer"))?;
+        let initial_color = if initial_color.is_array() || initial_color.is_object() {
+            Err(self.err_invalid_map_property_type(prop::INITIAL_COLOR, "color string"))?
+        } else {
+            initial_color.coerce_to_string()
+        };
+        // parse layers
+        let layers = {
+            let mut parsed_layers = Vec::with_capacity(layers.len());
+            for (i, layer) in layers.into_iter().enumerate() {
+                parsed_layers.push(self.parse_map_layer(layer, i)?);
+            }
+            parsed_layers
+        };
+        let map = MapMetadata {
+            layers,
+            coord_map,
+            initial_coord,
+            initial_zoom,
+            initial_color,
+        };
 
-        // todo: set self.map
-        todo!()
+        self.map = Some(map);
+
+        Ok(())
+    }
+
+    fn err_invalid_map_property_type(&self, prop: &str, expected_type: &'static str) -> PrepError {
+        PrepError::InvalidConfigPropertyType(
+            self.trace.clone(),
+            format!("{}.{}", prop::MAP, prop).into(),
+            expected_type.into(),
+        )
     }
 }
 
@@ -127,7 +117,6 @@ mod test {
     use serde_json::json;
 
     use crate::prep::PrepError;
-    use crate::res::test_utils::StubLoader;
 
     use super::*;
 
