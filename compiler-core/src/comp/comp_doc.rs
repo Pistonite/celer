@@ -3,17 +3,13 @@ use std::collections::HashSet;
 use std::ops::{Deref, DerefMut};
 
 use instant::Instant;
-use serde::{Deserialize, Serialize};
 
-use crate::json::{Cast, Coerce};
-use crate::lang;
 use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
-use crate::pack::{CompileContext, PackError};
+use crate::pack::CompileContext;
 use crate::plugin::PluginRuntime;
-use crate::prep::{CompilerMetadata, PrepError, PreparedContext, RouteConfig, RouteMetadata};
-use crate::res::Loader;
+use crate::prep::{CompilerMetadata, PrepError, RouteConfig, RouteMetadata};
 
-use super::{CompError, CompLine, CompSection, Compiler};
+use super::CompSection;
 
 /// Compiled Document, which is the output of the comp phase
 pub struct CompDoc<'p> {

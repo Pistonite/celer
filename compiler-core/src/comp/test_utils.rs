@@ -9,8 +9,7 @@ use crate::json::RouteBlob;
 use crate::lang::Preset;
 use crate::pack::{CompileContext, Compiler};
 use crate::prep::{
-    Axis, CompilerMetadata, GameCoord, MapCoordMap, MapMetadata, RouteConfig, RouteMetadata,
-    Setting,
+    Axis, CompilerMetadata, MapCoordMap, MapMetadata, RouteConfig
 };
 
 use super::{LineContext, DEFAULT_SETTING};

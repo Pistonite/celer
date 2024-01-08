@@ -1,14 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-use crate::env::{yield_budget};
+use crate::env::yield_budget;
 use crate::json::{
-    Cast, Coerce, RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef,
+    Coerce, RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef,
     RouteBlobSingleKeyObjectResult,
 };
-use crate::lang::{self, DocDiagnostic, DocRichText, IntoDiagnostic};
+use crate::lang::{self, DocRichText, IntoDiagnostic};
 use crate::pack::PackError;
 
-use super::{CompError, CompLine, CompResult, Compiler};
+use super::{CompError, CompLine, Compiler};
 
 /// Compiled Section
 #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -25,7 +25,7 @@ impl CompSection {
     where
         T: IntoDiagnostic,
     {
-        let mut line = CompLine {
+        let line = CompLine {
             diagnostics: vec![error.into_diagnostic()],
             ..Default::default()
         };
@@ -34,13 +34,6 @@ impl CompSection {
             lines: vec![line],
         }
     }
-
-    // pub async fn sequential_pass(&mut self, compiler: &mut Compiler<'_>) {
-    //     for line in &mut self.lines {
-    //         yield_budget(64).await;
-    //         line.sequential_pass(compiler);
-    //     }
-    // }
 }
 
 impl<'p> Compiler<'p> {

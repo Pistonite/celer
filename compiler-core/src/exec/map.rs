@@ -100,38 +100,105 @@ impl MapBuilder {
 
     /// Advance the current line to the next coordinate
     pub fn move_to(&mut self, coord: GameCoord) {
-        todo!()
+        if let Some(line) = self.line_stack.last_mut() {
+            line.points.push(coord.clone());
+        } else {
+            self.line_stack.push(MapLine {
+                color: self.initial_color.clone(),
+                points: vec![self.initial_coord.clone(), coord.clone()],
+            });
+        }
     }
 
     /// Change the color of the current line
     pub fn change_color(&mut self, color: String) {
-        todo!()
+        if self.color() == &color {
+            return;
+        }
+        self.commit();
+        if let Some(line) = self.line_stack.last_mut() {
+            line.color = color;
+        }
     }
 
     /// Stops the current line and starts a new line from the coordinate
     pub fn warp_to(&mut self, coord: GameCoord) {
-        todo!()
+        self.commit();
+        if let Some(line) = self.line_stack.last_mut() {
+            if let Some(last_point) = line.points.last_mut() {
+                *last_point = coord.clone();
+            }
+        }
     }
 
     /// Save the current color and coordinate to the stack
     pub fn push(&mut self) {
-        todo!()
+        if let Some(line) = self.line_stack.last() {
+            if let Some(last_point) = line.points.last() {
+                self.line_stack.push(MapLine {
+                    color: line.color.clone(),
+                    points: vec![last_point.clone()],
+                });
+            } else {
+                self.line_stack.push(MapLine {
+                    color: line.color.clone(),
+                    points: vec![self.initial_coord.clone()],
+                });
+            }
+        } else {
+            self.line_stack.push(MapLine {
+                color: self.initial_color.clone(),
+                points: vec![self.initial_coord.clone()],
+            });
+        }
     }
 
     /// Stops the current line and starts a new line from the
     /// last saved position (color and coordinate)
     pub fn pop(&mut self) {
-        todo!()
+        self.commit();
+        self.line_stack.pop();
+        if self.line_stack.is_empty() {
+            self.line_stack.push(MapLine {
+                color: self.initial_color.clone(),
+                points: vec![self.initial_coord.clone()],
+            });
+        }
     }
 
     /// Get the current color
     pub fn color(&self) -> &str {
-        todo!()
+        match self.line_stack.last() {
+            Some(line) => &line.color,
+            None => &self.initial_color,
+        }
     }
 
     /// Get the current coordinate
     pub fn coord(&self) -> &GameCoord {
-        todo!()
+        self.line_stack.last().and_then(|line| line.points.last()).unwrap_or(&self.initial_coord)
+    }
+
+    /// Remove the stack top and add it to the commited lines if it has more than 1 coord
+    /// Put a new line on the stack with only the last coordinate
+    fn commit(&mut self) {
+        let line = match self.line_stack.pop() {
+            Some(line) => line,
+            None => return,
+        };
+        let new_line = if line.points.len() > 1 {
+            // unwrap is safe because length > 1
+            let last_point = line.points.last().unwrap().clone();
+            let new_line = MapLine {
+                color: line.color.clone(),
+                points: vec![last_point],
+            };
+            self.lines.push(line); // commit the popped line
+            new_line
+        } else {
+            line // put the line back untouched
+        };
+        self.line_stack.push(new_line);
     }
 
     /// Stops the current line and move all the lines to the output,

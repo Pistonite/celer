@@ -14,12 +14,10 @@
 //! # Output
 //! The output is a [`CompDoc`]
 
-use std::ops::{DerefMut, Deref};
-
 use crate::env::yield_budget;
-use crate::json::{RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef};
+use crate::json::{RouteBlobArrayIterResult, RouteBlobRef};
 use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
-use crate::pack::{Compiler, PackError, CompileContext};
+use crate::pack::{Compiler, PackError};
 use crate::prep::Setting;
 
 mod error;

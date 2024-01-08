@@ -2,7 +2,7 @@ use celerb::lang::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::{RouteBlobRef};
+use crate::json::RouteBlobRef;
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
 use crate::macros::derive_wasm;
 use crate::pack::{Compiler, PackError};
