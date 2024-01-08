@@ -1,11 +1,7 @@
 use std::borrow::Cow;
-use std::collections::BTreeMap;
-
-use serde_json::{json, Map, Value};
 
 use crate::comp::CompResult;
 use crate::json::{Cast, Coerce, SafeRouteBlob, SafeRouteObject};
-use crate::prop;
 
 use super::CompError;
 
@@ -74,6 +70,8 @@ pub fn desugar_line<'a>(
 
 #[cfg(test)]
 mod test {
+    use serde_json::{Value, Map, json};
+
     use crate::json::IntoSafeRouteBlob;
 
     use super::*;

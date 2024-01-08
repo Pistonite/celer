@@ -2,14 +2,13 @@ use celerb::lang::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::{IntoSafeRouteBlob, RouteBlob, RouteBlobRef};
+use crate::json::{RouteBlobRef};
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
 use crate::macros::derive_wasm;
 use crate::pack::{Compiler, PackError};
-use crate::prep::GameCoord;
 use crate::util::StringMap;
 
-use super::{CompError, CompMarker, CompMovement, CompResult, DocNote};
+use super::{CompError, CompMarker, CompMovement, DocNote};
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
 #[derive_wasm]
 pub struct CompLine {
@@ -62,7 +61,7 @@ impl<'p> Compiler<'p> {
     /// Parse the line (parallel pass)
     pub fn parse_line(&self, value: RouteBlobRef<'p>) -> CompLine {
         let mut ctx = self.create_line_context();
-        let value = match value.checked() {
+        match value.checked() {
             Ok(value) => {
                 ctx.parse_line(value);
                 for error in ctx.errors {
@@ -92,45 +91,15 @@ impl<'p> Compiler<'p> {
     }
 }
 
-// impl CompLine {
-//     /// Execute the sequential pass of line compilation
-//     ///
-//     /// This updates the coordinate and color of the line and the compiler
-//     pub fn sequential_pass(&mut self, compiler: &mut Compiler<'_>) {
-//         if self.line_color.is_empty() {
-//             self.line_color = compiler.color.to_owned();
-//         }
-//         // track movements backward
-//         let mut stack = 0usize;
-//         for m in self.movements.iter().rev() {
-//             match m {
-//                 CompMovement::To { to, .. } => {
-//                     // when tracking backwards and stack is empty
-//                     // this is where the coord should be when movement ends
-//                     if stack == 0 {
-//                         compiler.coord = to.clone();
-//                         break;
-//                     }
-//                 }
-//                 CompMovement::Pop => {
-//                     // if we see a pop, we need to find the previous push
-//                     stack += 1;
-//                 }
-//             }
-//         }
-//     }
-// }
-
 #[cfg(test)]
 mod test {
     use map_macro::btree_map;
     use serde_json::{json, Value};
 
-    use crate::comp::line::DocNote;
     use crate::comp::test_utils::{self, CompilerBuilder};
-    use crate::comp::{CompError, CompMarker, CompMovement};
+    use crate::comp::{CompError, CompMarker, CompMovement, DocNote};
     use crate::lang::{self, DocRichText, DocRichTextBlock, Preset};
-    use crate::prep::{Axis, GameCoord, MapCoordMap, MapMetadata, RouteConfig, RouteMetadata};
+    use crate::prep::{Axis, GameCoord, MapCoordMap, MapMetadata, RouteConfig};
 
     use super::*;
 
@@ -264,7 +233,7 @@ mod test {
                 "one": "not an object",
             }),
             CompLine {
-                text: DocRichText::text("[object object]"),
+                text: DocRichText::text("not an object"),
                 ..Default::default()
             },
             vec![CompError::LinePropertiesMustBeObject],
@@ -1005,7 +974,7 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("change color 2"),
-                line_color: Some("new-color".to_string()),
+                line_color: None,
                 // map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },

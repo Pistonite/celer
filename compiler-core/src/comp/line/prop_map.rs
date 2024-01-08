@@ -1,42 +1,24 @@
 use std::collections::BTreeMap;
-use std::ops::{DerefMut, Deref};
 
+use crate::lang::HydrateTarget;
 use crate::json::{IntoSafeRouteBlob, SafeRouteBlob};
 use crate::prop;
 
 #[repr(transparent)]
+#[derive(Debug, Default)]
 pub struct LinePropMap<'a> {
     inner: BTreeMap<String, SafeRouteBlob<'a>>,
 }
 
-impl<'a> Deref for LinePropMap<'a> {
-    type Target = BTreeMap<String, SafeRouteBlob<'a>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl<'a> DerefMut for LinePropMap<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
-    }
-}
-
-impl<'a> LinePropMap<'a> {
-    pub fn new() -> Self {
-        Self {
-            inner: BTreeMap::new(),
-        }
-    }
-
+impl<'a> HydrateTarget<'a> for LinePropMap<'a> {
     /// Insert a property and automatically desugar it
-    pub fn insert<T>(&mut self, key: String, value: T) 
+    fn insert<T>(&mut self, key: String, value: T) 
     where T: IntoSafeRouteBlob + 'a
     {
         let value = value.into_unchecked();
         match key.as_ref() {
             prop::COORD => {
+                let value = SafeRouteBlob::OwnedArray(vec![value]);
                 self.insert(prop::MOVEMENTS.to_string(), value);
             }
             prop::ICON => {
@@ -48,35 +30,37 @@ impl<'a> LinePropMap<'a> {
             }
         }
     }
-    // /// Insert a value directly.
-    // pub fn insert_value(&mut self, key: String, value: SafeRouteBlob<'a>) {
-    //     self.normal.remove(&key);
-    //     self.desugared.insert(key, value);
-    // }
-    // pub fn get(&self, key: &str) -> Option<SafeRouteBlob<'_>> {
-    //     match self.normal.get(key) {
-    //         Some(x) => Some(x.ref_into_unchecked()),
-    //         None => self.desugared.get(key).map(|x| x.ref_into_unchecked()),
-    //     }
-    // }
-    // pub fn remove(&mut self, key: &str) -> Option<SafeRouteBlob<'_>> {
-    //     match self.normal.remove(key) {
-    //         Some(x) => Some(x.into_unchecked()),
-    //         None => self.desugared.remove(key).map(|x| x.into_unchecked()),
-    //     }
-    // }
-    //
-    // pub fn extend(&mut self, other: Self) {
-    //     self.inner.extend(other.inner);
-    // }
-    //
+}
+
+impl<'a> LinePropMap<'a> {
+    pub fn new() -> Self {
+        Self {
+            inner: BTreeMap::new(),
+        }
+    }
+
+    /// Convert self to a BTreeMap with properties evaluated to SafeRouteBlob
     pub fn evaluate(self) -> BTreeMap<String, SafeRouteBlob<'a>> {
-        // for (key, value) in self.normal {
-        //     self.desugared.insert(key, value.into_unchecked());
-        // }
-        // self.desugared
         self.inner
     }
+
+    // delegate methods
+    // not using deref here since insert could be ambiguous/confusing
+    #[inline]
+    pub fn remove(&mut self, key: &str) -> Option<SafeRouteBlob<'a>> {
+        self.inner.remove(key)
+    }
+    #[inline]
+    pub fn get(&self, key: &str) -> Option<&SafeRouteBlob<'a>> {
+        self.inner.get(key)
+    }
+    #[inline]
+    pub fn extend<T>(&mut self, other: T) 
+    where T: IntoIterator<Item = (String, SafeRouteBlob<'a>)>
+    {
+        self.inner.extend(other);
+    }
+
 }
 
 #[cfg(test)]

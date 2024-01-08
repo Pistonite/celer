@@ -45,8 +45,6 @@ impl<'c, 'p> LineContext<'c, 'p> {
 pub struct CompilerBuilder {
     config: RouteConfig,
     presets: BTreeMap<String, Preset>,
-    color: String,
-    coord: GameCoord,
     default_icon_priority: i64,
 }
 

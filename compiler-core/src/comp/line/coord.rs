@@ -68,7 +68,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
 mod test {
     use serde_json::{json, Value};
 
-    use crate::comp::test_utils::CompilerBuilder;
+    use crate::comp::test_utils::{CompilerBuilder, self};
     use crate::json::IntoSafeRouteBlob;
     use crate::pack::Compiler;
     use crate::prep::{MapCoordMap, MapMetadata, RouteConfig};
@@ -95,7 +95,7 @@ mod test {
             (json!({}), "[object object]"),
         ];
 
-        let compiler = Compiler::default();
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
         let ctx = LineContext::with_compiler(&compiler);
 
         for (prop, text) in vals {
@@ -116,7 +116,7 @@ mod test {
 
     #[test]
     fn test_array_invalid_length() {
-        let compiler = Compiler::default();
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
         let ctx = LineContext::with_compiler(&compiler);
         let res0 = ctx.test_parse_coord(json!([]));
         assert_eq!(res0, Err(CompError::InvalidCoordinateArray));
@@ -130,7 +130,7 @@ mod test {
 
     #[test]
     fn test_array_invalid_value() {
-        let compiler = Compiler::default();
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
         let ctx = LineContext::with_compiler(&compiler);
         let res2 = ctx.test_parse_coord(json!([1, true]));
         assert_eq!(

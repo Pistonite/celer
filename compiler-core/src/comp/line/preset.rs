@@ -1,8 +1,8 @@
-use crate::json::{Cast, Coerce, IntoSafeRouteBlob, SafeRouteBlob};
-use crate::lang::{PresetInst};
+use crate::json::{Cast, Coerce, SafeRouteBlob};
+use crate::lang::{PresetInst, HydrateTarget};
 use crate::prop;
 
-use super::{validate_not_array_or_object, CompError, Compiler, LineContext, LinePropMap};
+use super::{validate_not_array_or_object, CompError, LineContext, LinePropMap};
 
 impl<'c, 'p> LineContext<'c, 'p> {
     /// Apply the preset to the output.
@@ -461,9 +461,9 @@ mod test {
                 Preset::compile(json!({
                     "movements": [
                         "push",
-                    "_preset::two",
-                    "pop",
-                ]
+                        "_preset::two",
+                        "pop",
+                    ]
                 }))
                 .unwrap(),
             )

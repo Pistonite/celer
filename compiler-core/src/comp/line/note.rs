@@ -30,22 +30,10 @@ impl DocNote {
 impl<'c, 'p> LineContext<'c, 'p> {
     /// Compile a note block and add to self
     pub fn compile_note(&mut self, prop_name: &str, value: SafeRouteBlob<'_>) {
-        let value = match value.try_into_array() {
-            Err(value) => value,
-            Ok(_) => {
-                self.errors
-                    .push(CompError::InvalidLinePropertyType(prop_name.to_string()));
-                return;
-            }
-        };
-        let value = match value.try_into_object() {
-            Err(value) => value,
-            Ok(_) => {
-                self.errors
-                    .push(CompError::InvalidLinePropertyType(prop_name.to_string()));
-                return;
-            }
-        };
+        if value.is_array() || value.is_object() {
+            self.errors
+                .push(CompError::InvalidLinePropertyType(prop_name.to_string()));
+        }
         // TODO #174: image and video
         let note = DocNote::text(&value.coerce_into_string());
         self.line.notes.push(note);

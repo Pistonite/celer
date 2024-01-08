@@ -6,52 +6,17 @@ use crate::json::{IntoSafeRouteBlob, SafeRouteBlob};
 
 use super::{Preset, PresetBlob};
 
-// pub struct PresetHydrate<'a, 'b> {
-//     preset: &'a PresetBlob,
-//     args: &'b [String],
-// }
-//
-// impl<'a, 'b> IntoSafeRouteBlob for PresetHydrate<'a, 'b> {
-//     fn into_unchecked(self) -> SafeRouteBlob<'static>
-//     {
-//         match self.preset {
-//             PresetBlob::NonTemplate(value) => value.ref_into_unchecked(),
-//             PresetBlob::Template(tempstr) => {
-//                 let str = tempstr.hydrate(self.args);
-//                 Value::String(str).into_unchecked()
-//             }
-//             PresetBlob::Array(arr) => {
-//                 let mut out = vec![];
-//                 for x in arr {
-//                     out.push(x.hydrate(self.args).into_unchecked());
-//                 }
-//                 SafeRouteBlob::OwnedArray(out)
-//             }
-//             PresetBlob::Object(props) => {
-//                 let mut out = BTreeMap::new();
-//                 for (key_template, val) in props {
-//                     let key = key_template.hydrate(self.args);
-//                     let val = val.hydrate(self.args);
-//                     out.insert(key, val.into_unchecked());
-//                 }
-//                 SafeRouteBlob::OwnedObject(out)
-//             }
-//         }
-//     }
-//     fn ref_into_unchecked(&self) -> SafeRouteBlob<'_> {
-//         Self {
-//             preset: self.preset,
-//             args: self.args,
-//         }
-//         .into_unchecked()
-//     }
-// }
+pub trait HydrateTarget<'a> {
+    fn insert<T>(&mut self, key: String, value: T) where T: IntoSafeRouteBlob + 'a;
+}
 
 impl Preset {
     /// Hydrate a preset with the given arguments
     ///
     /// Return a new json blob with all template strings hydrated with the arguments
-    pub fn hydrate<'c>(&'c self, args: &[String], map: &mut BTreeMap<String, SafeRouteBlob<'c>>)
+    pub fn hydrate<'c, TTarget>(&'c self, args: &[String], map: &mut TTarget)
+    where
+        TTarget: HydrateTarget<'c>,
     {
         for (key, value) in self.0.iter() {
             map.insert(key.hydrate(args), value.hydrate(args));
@@ -97,12 +62,18 @@ mod test {
 
     const ARGS: &[&str] = &["hello", "world", "temp"];
 
+    impl<'a> HydrateTarget<'a> for BTreeMap<String, Value> {
+        fn insert<T>(&mut self, key: String, value: T) where T: IntoSafeRouteBlob + 'a {
+            self.insert(key, value.into_unchecked().into());
+        }
+    }
+
     impl Preset {
         fn test_hydrate(&self, args: &[&str]) -> BTreeMap<String, Value> {
             let args = args.iter().map(|x| x.to_string()).collect::<Vec<_>>();
             let mut map = BTreeMap::new();
             self.hydrate(&args, &mut map);
-            map.into_iter().map(|(k, v)| (k, v.into_unchecked().into())).collect()
+            map
         }
     }
 
