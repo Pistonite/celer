@@ -204,12 +204,12 @@ impl MapBuilder {
     /// Stops the current line and move all the lines to the output,
     /// then starts a new line from the same position.
     pub fn build_section(&mut self) -> MapSection {
-        todo!()
-        // MapSection {
-        //     icons: std::mem::take(&mut self.icons),
-        //     markers: std::mem::take(&mut self.markers),
-        //     lines: std::mem::take(&mut self.lines),
-        // }
+        self.commit();
+        MapSection {
+            icons: std::mem::take(&mut self.icons),
+            markers: std::mem::take(&mut self.markers),
+            lines: std::mem::take(&mut self.lines),
+        }
     }
 }
 

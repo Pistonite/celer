@@ -46,7 +46,11 @@ impl CompSection {
 
 #[cfg(test)]
 mod test {
-    use crate::{comp::{CompLine, CompMarker, CompMovement}, exec::{MapIcon, MapMarker, MapLine}, prep::GameCoord};
+    use map_macro::btree_map;
+
+    use crate::comp::{CompLine, CompMarker, CompMovement};
+    use crate::exec::{MapIcon, MapMarker, MapLine};
+    use crate::prep::GameCoord;
 
     use super::*;
 
@@ -94,8 +98,16 @@ mod test {
             ..Default::default()
         };
 
+        let config = RouteConfig {
+            icons: btree_map! {
+                "test 1".to_string() => Default::default(),
+                "test 2".to_string() => Default::default(),
+            }.into(),
+            ..Default::default()
+        };
+
         let exec_section = test_section
-            .exec(&Default::default(), 4, &mut MapBuilder::default())
+            .exec(&config, 4, &mut MapBuilder::default())
             .await;
         assert_eq!(
             exec_section.map.icons,

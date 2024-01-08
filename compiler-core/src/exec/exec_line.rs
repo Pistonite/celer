@@ -4,7 +4,6 @@ use crate::macros::derive_wasm;
 use crate::comp::{CompLine, CompMovement, DocNote};
 use crate::prep::{GameCoord, RouteConfig};
 use crate::lang::{DocRichText, DocRichTextBlock, DocDiagnostic, IntoDiagnostic};
-use crate::util;
 
 use super::{MapBuilder, ExecError, MapIcon, MapMarker};
 
@@ -49,7 +48,13 @@ impl CompLine {
         line_number: usize,
         map_builder: &mut MapBuilder,
     ) -> ExecLine {
-        let line_color = self.line_color.unwrap_or_else(|| map_builder.color().to_string());
+        let line_color = match self.line_color {
+            Some(color) => {
+                map_builder.change_color(color.clone());
+                color
+            },
+            None => map_builder.color().to_string(),
+        };
         // trace coordinates
         let mut map_coords = vec![];
         for movement in self.movements {
@@ -489,10 +494,10 @@ mod test {
         let exec_line = test_line.exec(&Default::default(), 4, 5, &mut builder);
         assert_eq!(exec_line.diagnostics.len(), 3);
         assert_eq!(exec_line.diagnostics[0].msg_type, "warning");
-        assert_eq!(exec_line.diagnostics[0].source, "celer/engine");
+        assert_eq!(exec_line.diagnostics[0].source, "celerc/exec");
         assert_eq!(exec_line.diagnostics[1].msg_type, "warning");
-        assert_eq!(exec_line.diagnostics[1].source, "celer/engine");
+        assert_eq!(exec_line.diagnostics[1].source, "celerc/exec");
         assert_eq!(exec_line.diagnostics[2].msg_type, "warning");
-        assert_eq!(exec_line.diagnostics[2].source, "celer/engine");
+        assert_eq!(exec_line.diagnostics[2].source, "celerc/exec");
     }
 }
