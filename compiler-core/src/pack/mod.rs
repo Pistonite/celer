@@ -24,9 +24,9 @@ use instant::Instant;
 
 use crate::env::{join_futures, yield_budget};
 use crate::json::RouteBlob;
-use crate::plugin::{PluginError, PluginRuntime};
+use crate::plugin::PluginRuntime;
 use crate::prep::{
-    self, CompilerMetadata, GameCoord, PrepDoc, PreparedContext, RouteConfig, Setting,
+    self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting,
 };
 use crate::res::Loader;
 

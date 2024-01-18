@@ -8,9 +8,9 @@ use serde_json::{json, Map, Value};
 use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::lang::{self, DocDiagnostic, DocRichTextBlock};
-use crate::pack::{CompileContext, Compiler};
+use crate::pack::CompileContext;
 use crate::plugin::{operation, PluginResult, PluginRuntime};
-use crate::prep::{CompilerMetadata, DocTag, DocTagColor};
+use crate::prep::{DocTag, DocTagColor};
 use crate::prop;
 
 mod convert;

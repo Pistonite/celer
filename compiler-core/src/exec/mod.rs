@@ -1,8 +1,21 @@
-//! Execution of the compiled document
+//! # Execute (exec) phase
 //!
-//! This is the last stage of the compilation process.
-//! The [`CompDoc`] will be transformed into a [`ExecDoc`]
-//! for rendering
+//! This phase transforms the [`CompDoc`] into a [`ExecDoc`], which
+//! calculates the movement stack and separate the document into the doc part
+//! and the map part.
+//!
+//! # Input
+//! The input is a [`CompDoc`], which is the result of the comp phase.
+//!
+//! # Work
+//! 1. Transform the [`CompDoc`] into a [`ExecDoc`]
+//! 2. Call plugin onAfterExecute
+//!
+//! # Output
+//! The output is a [`ExecDoc`]
+
+use crate::comp::CompDoc;
+use crate::lang::IntoDiagnostic;
 
 mod error;
 pub use error::*;
@@ -16,3 +29,22 @@ mod exec_section;
 pub use exec_section::*;
 mod exec_doc;
 pub use exec_doc::*;
+
+
+impl<'p> CompDoc<'p> {
+    /// Entry point for the exec phase
+    pub async fn execute(mut self) -> ExecDoc<'p> {
+        // TODO #33: prepare exporter properties
+
+        let mut plugins = std::mem::take(&mut self.plugin_runtimes);
+        let mut exec_doc = self.execute_document().await;
+        for plugin in &mut plugins {
+            if let Err(e) = plugin.on_after_execute(&mut exec_doc) {
+                let diag = e.into_diagnostic();
+                exec_doc.diagnostics.push(diag);
+            }
+        }
+
+        exec_doc
+    }
+}

@@ -5,7 +5,6 @@ use serde_json::Value;
 
 use crate::comp::CompDoc;
 use crate::json::Coerce;
-use crate::prep::CompilerMetadata;
 use crate::prop;
 use crate::exec::ExecDoc;
 

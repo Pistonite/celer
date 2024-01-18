@@ -1,14 +1,13 @@
 use std::borrow::Cow;
 
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::comp::CompDoc;
-use crate::lang::{parse_poor, DocDiagnostic, DocPoorText};
 use crate::pack::CompileContext;
-use crate::prep::CompilerMetadata;
 use crate::exec::ExecDoc;
 
+mod error;
+pub use error::*;
 mod builtin;
 mod js;
 mod operation;
@@ -16,24 +15,6 @@ mod operation;
 pub use builtin::BuiltInPlugin;
 pub use js::ScriptPlugin;
 
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
-pub enum PluginError {
-    #[error("An exception occured while executing script: {0}")]
-    ScriptException(String),
-}
-
-// impl PluginError {
-//     pub fn add_to_diagnostics(&self, output: &mut Vec<DocDiagnostic>) {
-//         output.push(DocDiagnostic {
-//             msg: parse_poor(&self.to_string()),
-//             msg_type: "error".to_string(),
-//             // TODO #24 get plugin name dynamically
-//             source: "celerc/plugin".to_string(),
-//         });
-//     }
-// }
-
-pub type PluginResult<T> = Result<T, PluginError>;
 
 /// The plugin runtime trait
 ///
@@ -42,14 +23,6 @@ pub type PluginResult<T> = Result<T, PluginError>;
 pub trait PluginRuntime {
     /// Get a string representing the source of the plugin.
     fn get_source(&self) -> Cow<'static, str>;
-    fn add_diagnostics(&self, msg: DocPoorText, msg_type: String, output: &mut Vec<DocDiagnostic>) {
-        todo!()
-        // output.push(DocDiagnostic {
-        //     msg,
-        //     msg_type,
-        //     source: self.get_source().to_string(),
-        // });
-    }
 
     /// Called before route is compiled, to make changes to the compiler
     fn on_before_compile<'a>(&mut self, _ctx: &mut CompileContext<'a>) -> PluginResult<()> {

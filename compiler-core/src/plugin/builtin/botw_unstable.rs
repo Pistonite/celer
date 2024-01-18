@@ -6,9 +6,8 @@ use serde_json::Value;
 
 use crate::comp::{CompDoc, CompLine, CompMovement};
 use crate::json::Coerce;
-use crate::lang::{self, DocDiagnostic, DocRichText, DocRichTextBlock};
+use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
 use crate::plugin::{operation, PluginResult, PluginRuntime};
-use crate::prep::GameCoord;
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";
@@ -204,6 +203,7 @@ impl BotwAbilityUnstablePlugin {
                             "`time-override` must be a non-negative integer",
                             self.get_source(),
                         );
+                        line.diagnostics.push(error);
                         None
                     }
                     x => x,

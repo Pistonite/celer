@@ -2,9 +2,7 @@ use std::borrow::Cow;
 
 use serde_json::Value;
 
-use crate::comp::CompDoc;
 use crate::pack::CompileContext;
-use crate::prep::CompilerMetadata;
 
 use super::{PluginError, PluginResult, PluginRuntime};
 
@@ -18,7 +16,7 @@ impl ScriptPlugin {
     pub fn create_runtime<'a>(
         &self,
         _ctx: &CompileContext<'a>,
-        props: &Value,
+        _props: &Value,
     ) -> PluginResult<Box<dyn PluginRuntime>> {
         // TODO #24 implement JS plugin engine
         Err(PluginError::ScriptException(

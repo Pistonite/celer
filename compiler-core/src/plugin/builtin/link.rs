@@ -6,7 +6,7 @@ use std::borrow::Cow;
 
 use crate::comp::CompDoc;
 use crate::lang::DocRichTextBlock;
-use crate::pack::{CompileContext, Compiler};
+use crate::pack::CompileContext;
 use crate::prep::{DocTag, DocTagColor};
 use crate::prop;
 

@@ -1,14 +1,14 @@
 //! Compatibility Plugin
 
 // use crate::api::CompilerMetadata;
-use crate::comp::CompDoc;
-use crate::json::Coerce;
-use crate::macros::async_trait;
+// use crate::comp::CompDoc;
+// use crate::json::Coerce;
+// use crate::macros::async_trait;
 
 // use super::{operation, PlugResult, PluginRuntime};
 
-const HIDE_ICON_ON_MAP: &str = "hide-icon-on-map";
-const HIDE_ICON_ON_DOC: &str = "hide-icon-on-doc";
+// const HIDE_ICON_ON_MAP: &str = "hide-icon-on-map";
+// const HIDE_ICON_ON_DOC: &str = "hide-icon-on-doc";
 
 // pub struct CompatPlugin;
 // #[async_trait(?Send)]
