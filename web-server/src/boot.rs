@@ -1,7 +1,7 @@
 //! Things to do on server boot
 
 use celerc::macros::async_recursion;
-use celerc::util;
+use celerc::env;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use futures::future;
@@ -17,10 +17,10 @@ pub async fn setup_site_origin(
     origin: &str,
 ) -> io::Result<()> {
     debug!("setting up site origin to {origin}");
-    util::init_site_origin(origin.to_string())
+    env::init_site_origin(origin.to_string())
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-    let origin = util::get_site_origin();
-    let domain = util::get_site_domain();
+    let origin = env::get_site_origin();
+    let domain = env::get_site_domain();
     let (r1, r2) = join!(
         process_site_origin_for_path(docs_dir, origin, domain),
         process_site_origin_for_path(app_dir, origin, domain)
