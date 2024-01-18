@@ -15,7 +15,7 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { ExecDoc } from "low/celerc";
+import { ExecDoc, GameCoord, MapLayer } from "low/celerc";
 import { Debouncer } from "low/utils";
 
 import { MapLog, roughlyEquals } from "./utils";
@@ -206,7 +206,19 @@ export class MapState {
             newDoc.project.source !== oldDoc.project.source ||
             newDoc.project.version !== oldDoc.project.version
         ) {
-            const { initialCoord, initialZoom, layers } = newDoc.project.map;
+            const newMap = newDoc.project.map;
+            let initialCoord: GameCoord;
+            let initialZoom;
+            let layers: MapLayer[];
+            if (newMap) {
+                initialCoord = newMap.initialCoord;
+                initialZoom = newMap.initialZoom;
+                layers = newMap.layers;
+            } else {
+                initialCoord = [0, 0, 0];
+                initialZoom = 0;
+                layers = [];
+            }
             this.layerMgr.initLayers(this.map, layers, initialCoord);
             const [center, _] = this.layerMgr.unproject(initialCoord);
             // initLayers above already sets the correct layer

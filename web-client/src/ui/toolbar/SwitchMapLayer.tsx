@@ -62,7 +62,11 @@ const useMapLayerNames = () => {
     if (!document) {
         return [];
     }
-    return document.project.map.layers.map(
+    const map = document.project.map;
+    if (!map) {
+        return [];
+    }
+    return map.layers.map(
         (layer) => layer.name || "(Unnamed layer)",
     );
 };

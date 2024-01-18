@@ -1,6 +1,11 @@
 version: '3'
 
 includes:
+  compiler-base:
+    taskfile: ./compiler-base
+    aliases: [base]
+    dir: ./compiler-base
+
   compiler-core:
     taskfile: ./compiler-core
     aliases: [core]
@@ -57,10 +62,12 @@ tasks:
     - task: themes:check
 
   check:rs:
-    deps: [core:grammar]
+    deps: [base:grammar]
     cmds:
     - cargo clippy --package compiler-macros --all-targets -- -D warnings -D clippy::todo
-    - cargo clippy --package compiler-core --features native,test --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-base --features native --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-base --features wasm --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package compiler-core --features native --all-targets -- -D warnings -D clippy::todo
     - cargo clippy --package compiler-core --features wasm --all-targets -- -D warnings -D clippy::todo
     - cargo clippy --package compiler-wasm --all-targets -- -D warnings -D clippy::todo
     - cargo clippy --package web-server --all-targets -- -D warnings -D clippy::todo
@@ -79,7 +86,7 @@ tasks:
 
   build:server:
     deps:
-    - core:grammar
+    - base:grammar
     dir: ./web-server
     cmds:
     - rustup default stable
@@ -95,7 +102,7 @@ tasks:
   build:wasm:
     dir: ./compiler-wasm/build
     deps:
-    - core:grammar
+    - base:grammar
     cmds:
     - cargo run --bin buildwasm --release
 

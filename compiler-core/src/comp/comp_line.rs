@@ -4,13 +4,12 @@ use serde_json::Value;
 
 use crate::json::RouteBlobRef;
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
-use crate::macros::derive_wasm;
 use crate::pack::{Compiler, PackError};
 use crate::util::StringMap;
 
 use super::{CompError, CompMarker, CompMovement, DocNote};
+
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[derive_wasm]
 pub struct CompLine {
     /// Primary text content of the line
     pub text: DocRichText,

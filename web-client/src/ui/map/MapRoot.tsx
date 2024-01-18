@@ -40,7 +40,11 @@ export const MapRoot: React.FC = () => {
         return <LoadScreen color="green" />;
     }
 
-    if (document.project.map.layers.length <= 0) {
+    const { map } = document.project;
+    if (!map) {
+        return <HintScreen>This document has no map</HintScreen>;
+    }
+    if (map.layers.length <= 0) {
         return <HintScreen>This map has no layers</HintScreen>;
     }
 
