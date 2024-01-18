@@ -1,7 +1,5 @@
 use std::borrow::Cow;
 
-use serde::{Serialize, Deserialize};
-
 use crate::macros::derive_wasm;
 use crate::lang::{DocDiagnostic, DocRichText};
 use crate::comp::CompDoc;
@@ -13,7 +11,7 @@ use super::{MapBuilder, ExecSection};
 ///
 /// This is the final output of compiler with
 /// map items separated from doc items
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 #[derive_wasm]
 pub struct ExecDoc<'p> {
     /// Project metadata

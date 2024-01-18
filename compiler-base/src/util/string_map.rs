@@ -3,11 +3,11 @@
 use std::collections::BTreeMap;
 use std::ops::{Deref, DerefMut};
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::macros::derive_wasm;
 
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 #[repr(transparent)]
 pub struct StringMap<T>(

@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 use crate::comp::CompError;
 use crate::json::{Cast, Coerce, SafeRouteBlob};
 use crate::lang;
@@ -9,7 +7,7 @@ use crate::macros::derive_wasm;
 use super::LineContext;
 
 /// Document note block
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 #[derive_wasm]
 #[serde(tag = "type")]
 pub enum DocNote {

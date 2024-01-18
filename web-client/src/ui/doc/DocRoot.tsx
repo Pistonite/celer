@@ -59,6 +59,11 @@ export const DocRoot: React.FC = () => {
             </HintScreen>
         );
     }
+
+    if (document.route.length <= 0) {
+        return <HintScreen>This document has no content</HintScreen>;
+    }
+
     return (
         <ErrorBoundary>
             <CachedDocInternal

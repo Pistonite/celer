@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 use crate::json::{Cast, Coerce, SafeRouteBlob, SafeRouteObject};
 use crate::macros::derive_wasm;
 use crate::prep::GameCoord;
@@ -8,7 +6,7 @@ use crate::prop;
 use super::{CompError, LineContext};
 
 /// Compiled map movement
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 #[derive_wasm]
 #[serde(tag = "type")]
 pub enum CompMovement {

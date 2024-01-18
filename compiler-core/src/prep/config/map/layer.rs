@@ -1,6 +1,5 @@
 //! Packs json blob into [`MapLayerAttr`]
 
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::{Cast, Coerce};
@@ -11,7 +10,7 @@ use crate::prop;
 // use super::{ConfigTrace, PrepError, PackerResult};
 
 /// Attribute (definition) of a map layer in the route
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapLayer {
     /// Display name of the layer
@@ -57,7 +56,7 @@ pub struct MapLayer {
 /// ```no-compile
 /// (x, y) -> (x * scale[0] + translate[0], y * scale[1] + translate[1])
 /// ```
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapTilesetTransform {
     /// The scale of the transformation
@@ -69,7 +68,7 @@ pub struct MapTilesetTransform {
 /// Attribution to display on the map
 ///
 /// (displayed as &copy; LINK)
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapAttribution {
     /// Url of the attribution

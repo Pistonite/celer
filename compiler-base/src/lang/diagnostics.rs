@@ -11,14 +11,12 @@
 use std::borrow::Cow;
 use std::fmt::Display;
 
-use serde::{Deserialize, Serialize};
-
 use crate::env;
 use crate::lang::{self, DocPoorText};
 use crate::macros::derive_wasm;
 
 /// One diagnostic message
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct DocDiagnostic {
     /// The diagnostic message. Poor text is used to automatically make links in the message

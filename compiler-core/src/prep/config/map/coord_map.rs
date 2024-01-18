@@ -1,6 +1,4 @@
 //! Packs map.coord-map into [`MapCoordMap`]
-
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::macros::derive_wasm;
@@ -13,7 +11,7 @@ use crate::prop;
 /// to the x (horizontal) and z (height) axis of the map.
 ///
 /// Default value of 0 will be assigned to the unmapped axis.
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapCoordMap {
     /// Mapping for 2d coordinates in the route.
@@ -25,7 +23,7 @@ pub struct MapCoordMap {
 }
 
 /// Axis of the map
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub enum Axis {
     /// Horizontal axis

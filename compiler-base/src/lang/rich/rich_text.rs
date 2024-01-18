@@ -1,18 +1,16 @@
 use std::fmt::Display;
 
-use serde::{Deserialize, Serialize};
-
 use crate::macros::derive_wasm;
 
 /// Document rich text
 ///
 /// This is a collection of [`DocRichTextBlock`]s
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct DocRichText(pub Vec<DocRichTextBlock>);
 
 /// Document rich text block
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct DocRichTextBlock {
     /// The tag name of the text

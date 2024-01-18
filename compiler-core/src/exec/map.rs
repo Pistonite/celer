@@ -1,12 +1,10 @@
 //! Convert declared movements and colors to lines
 
-use serde::{Serialize, Deserialize};
-
 use crate::macros::derive_wasm;
 use crate::prep::GameCoord;
 
 /// Map features for one section
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapSection {
     /// The icons
@@ -18,7 +16,7 @@ pub struct MapSection {
 }
 
 /// Icon on the map
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapIcon {
     /// Internal icon name (usually kebab-case)
@@ -34,7 +32,7 @@ pub struct MapIcon {
 }
 
 /// Markers on the map
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapMarker {
     pub coord: GameCoord,
@@ -50,7 +48,7 @@ pub struct MapMarker {
 ///
 /// The coordinates do not have to be on the same map layer.
 /// The map will automatically split the path if it croses map layers.
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapLine {
     /// Color of the line

@@ -1,6 +1,3 @@
-
-use serde::{Serialize, Deserialize};
-
 use crate::macros::derive_wasm;
 use crate::env::yield_budget;
 use crate::comp::CompSection;
@@ -9,7 +6,7 @@ use crate::prep::RouteConfig;
 use super::{MapSection, ExecLine, MapBuilder};
 
 /// A section in the executed document
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct ExecSection {
     /// Name of the section

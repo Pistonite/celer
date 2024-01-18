@@ -61,7 +61,8 @@ mod async_impl;
 /// A wrapper to add WASM support to a type so it can be send across the WASM ABI boundary.
 /// All derived code/attributes are behind the `wasm` feature gate.
 ///
-/// The target type should also derive `serde::Serialize` and `serde::Deserialize`.
+/// `serde::Serialize` and `serde::Deserialize` will be automatically added
+/// regardless of the `wasm` feature.
 ///
 /// Under the hood, this uses `serde_wasm_bindgen` and `tsify` to generate the WASM ABI.
 /// Make sure these two crates and the `tsify/js` feature is activated with the `wasm` feature.
@@ -71,9 +72,8 @@ mod async_impl;
 ///
 /// # Example
 /// ```ignore
-/// #[derive(Debug, Clone, Serialize, Deserialize)]
+/// #[derive(Debug, Clone)]
 /// #[derive_wasm]
-/// #[serde(rename_all = "camelCase")]
 /// pub struct MyStruct {
 ///    pub a_thing: i32,
 /// }

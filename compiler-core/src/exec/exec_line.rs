@@ -1,5 +1,3 @@
-use serde::{Serialize, Deserialize};
-
 use crate::macros::derive_wasm;
 use crate::comp::{CompLine, CompMovement, DocNote};
 use crate::prep::{GameCoord, RouteConfig};
@@ -8,7 +6,7 @@ use crate::lang::{DocRichText, DocRichTextBlock, DocDiagnostic, IntoDiagnostic};
 use super::{MapBuilder, ExecError, MapIcon, MapMarker};
 
 /// A line in the executed document
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct ExecLine {
     /// Section number

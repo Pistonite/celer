@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 use crate::json::{Cast, Coerce, SafeRouteBlob};
 use crate::macros::derive_wasm;
 use crate::prep::GameCoord;
@@ -8,7 +6,7 @@ use crate::prop;
 use super::{CompError, LineContext};
 
 /// Data of a marker specified by the `markers` property
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct CompMarker {
     /// The coord of the marker

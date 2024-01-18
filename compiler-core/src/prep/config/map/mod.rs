@@ -1,6 +1,5 @@
 //! Process the `map` config property
 
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::macros::derive_wasm;
@@ -18,7 +17,7 @@ pub use layer::*;
 /// Metadata of the map
 ///
 /// This includes configuration like map layers, coordinates, etc.
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct MapMetadata {
     /// The map layers. First is the lowest layer.
@@ -34,7 +33,7 @@ pub struct MapMetadata {
 }
 
 /// Coordinates representing a point (x, y, z) in the game
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct GameCoord(pub f64, pub f64, pub f64);
 

@@ -53,9 +53,11 @@ pub fn expand(input: TokenStream) -> TokenStream {
         #[automatically_derived]
         mod #derive_wasm_mod {
             use super::*;
+            use serde::{Serialize, Deserialize};
             #cfg_feature_wasm
             use #wasm::{tsify, wasm_bindgen, serde_wasm_bindgen};
 
+            #[derive(serde::Serialize, serde::Deserialize)]
             #derive_tsify
             #[serde(rename_all(serialize = "camelCase", deserialize = "kebab-case"))]
             #parsed

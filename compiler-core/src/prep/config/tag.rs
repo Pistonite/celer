@@ -1,6 +1,5 @@
 //! Process the `tags` property
 
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::env::yield_budget;
@@ -66,7 +65,7 @@ impl<'a> PreparedConfig<'a> {
 /// Document tag type
 ///
 /// Used to style text and provide extra function to the engine
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct DocTag {
     /// Bold style
@@ -126,7 +125,7 @@ impl DocTag {
 }
 
 /// Used to specify color for [`DocTag`]s.
-#[derive(PartialEq, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone)]
 #[derive_wasm]
 #[serde(untagged)]
 pub enum DocTagColor {

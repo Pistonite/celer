@@ -22,7 +22,6 @@ use std::collections::BTreeMap;
 
 use derivative::Derivative;
 use instant::Instant;
-use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
 use crate::env::join_futures;
@@ -66,7 +65,7 @@ pub enum PrepDoc {
 }
 
 /// Config of the route project
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct RouteConfig {
     #[serde(flatten)]
@@ -83,7 +82,7 @@ pub struct RouteConfig {
     pub splits: Vec<String>,
 }
 
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct RouteMetadata {
     /// Source of the route, could be a URL or any string

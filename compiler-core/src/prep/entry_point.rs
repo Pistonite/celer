@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::json::{Coerce, Cast};
@@ -13,7 +12,7 @@ use crate::env::yield_budget;
 use super::{PrepError, PrepResult, Setting};
 
 /// Compiler entry points (name, path) pairs
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct EntryPoints(pub StringMap<String>);
 
@@ -37,7 +36,7 @@ impl EntryPoints {
     }
 }
 
-#[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
+#[derive(PartialEq, Default, Debug, Clone)]
 #[derive_wasm]
 pub struct EntryPointsSorted(pub Vec<(String, String)>);
 
