@@ -70,7 +70,7 @@ impl CompDoc<'static> {
 }
 
 impl<'p> CompDoc<'p> {
-    /// Create a new document showing an error from the pack phase.
+    /// Create a new document showing an error from a single diagnostic.
     pub fn from_diagnostic<T>(error: T, ctx: CompileContext<'p>) -> Self
     where
         T: IntoDiagnostic,

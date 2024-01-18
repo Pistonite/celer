@@ -3,7 +3,7 @@
 use wasm_bindgen::describe::WasmDescribe;
 use wasm_bindgen::prelude::*;
 
-use celerc::types::ExecDoc;
+use celerc::exec::ExecDoc;
 
 pub struct OpaqueExecDoc(JsValue);
 impl OpaqueExecDoc {

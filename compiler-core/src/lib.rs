@@ -17,5 +17,8 @@ pub mod prep; // executor, depends on: comp
 
 // public API re-exports
 pub use prep::{ContextBuilder, PreparedContext};
+pub use pack::Compiler;
+pub use comp::CompDoc;
+pub use exec::ExecDoc;
 
 pub use celerb::*;

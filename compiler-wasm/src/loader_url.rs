@@ -4,9 +4,9 @@ use js_sys::{Function, Uint8Array};
 use log::info;
 use wasm_bindgen::prelude::*;
 
-use celerc::macros::async_trait;
-use celerc::pack::{MarcLoader, PackerError, PackerResult, ResourceLoader};
-use celerc::util::{yield_budget, Marc};
+// use celerc::macros::async_trait;
+// use celerc::pack::{MarcLoader, PackerError, PackerResult, ResourceLoader};
+// use celerc::util::{yield_budget, Marc};
 
 use crate::interop::{self, JsIntoFuture};
 use crate::logger;
@@ -24,35 +24,35 @@ pub fn bind(load_url: Function) {
     LOAD_URL.replace(load_url);
 }
 
-pub fn new_loader() -> MarcLoader {
-    Marc::new(UrlLoader)
-}
-
-/// Loader for loading a URL
-pub struct UrlLoader;
-
-#[async_trait(?Send)]
-impl ResourceLoader for UrlLoader {
-    async fn load_raw(&self, url: &str) -> PackerResult<Vec<u8>> {
-        info!("loading {url}");
-        yield_budget(1).await;
-        let bytes = async {
-            LOAD_URL
-                .with_borrow(|f| f.call1(&JsValue::UNDEFINED, &JsValue::from(url)))?
-                .into_future()
-                .await?
-                .dyn_into::<Uint8Array>()
-        }
-        .await
-        .map_err(|e| {
-            logger::raw_error(&e);
-            PackerError::LoadUrl(format!("loading URL failed: {url}"))
-        })?;
-        Ok(bytes.to_vec())
-    }
-
-    async fn load_image_url(&self, url: &str) -> PackerResult<String> {
-        // image is already a URL, so just return it
-        Ok(url.to_string())
-    }
-}
+// pub fn new_loader() -> MarcLoader {
+//     Marc::new(UrlLoader)
+// }
+//
+// /// Loader for loading a URL
+// pub struct UrlLoader;
+//
+// #[async_trait(?Send)]
+// impl ResourceLoader for UrlLoader {
+//     async fn load_raw(&self, url: &str) -> PackerResult<Vec<u8>> {
+//         info!("loading {url}");
+//         yield_budget(1).await;
+//         let bytes = async {
+//             LOAD_URL
+//                 .with_borrow(|f| f.call1(&JsValue::UNDEFINED, &JsValue::from(url)))?
+//                 .into_future()
+//                 .await?
+//                 .dyn_into::<Uint8Array>()
+//         }
+//         .await
+//         .map_err(|e| {
+//             logger::raw_error(&e);
+//             PackerError::LoadUrl(format!("loading URL failed: {url}"))
+//         })?;
+//         Ok(bytes.to_vec())
+//     }
+//
+//     async fn load_image_url(&self, url: &str) -> PackerResult<String> {
+//         // image is already a URL, so just return it
+//         Ok(url.to_string())
+//     }
+// }

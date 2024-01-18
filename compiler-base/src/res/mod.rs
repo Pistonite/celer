@@ -41,6 +41,12 @@ pub enum ResError {
 
     #[error("Cannot resolve resource `{1}` from `{0}`.")]
     CannotResolve(String, String),
+
+    #[error("Cannot load file `{0}`: {1}")]
+    FailToLoadFile(String, String),
+
+    #[error("Cannot load url `{0}`: {1}")]
+    FailToLoadUrl(String, String),
 }
 
 impl PartialEq for ResError {

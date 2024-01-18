@@ -55,6 +55,7 @@ where
     pub prep_doc: PrepDoc,
     pub start_time: Instant,
     pub setting: Setting,
+    // TODO #173: add a option to make ContextBuilder output a dependency list for PreparedContext
 }
 
 /// The route blob in the output of the prep phase, either built (`use`s resolved or raw (JSON).
@@ -122,6 +123,11 @@ impl<L> ContextBuilder<L>
 where
     L: Loader,
 {
+    /// Entry point for the prep phase.
+    ///
+    /// # Arguments
+    /// `source` - A description for where the project is loaded from
+    /// `project_res` - Points to the `project.yaml` file to load
     pub fn new(source: String, project_res: Resource<'static, L>) -> Self {
         Self {
             source,
@@ -266,6 +272,8 @@ where
             if let Some(redirect_path) = path {
                 match Use::new(redirect_path) {
                     Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
+                        // since the path is absolute, we can just use the project_res to resolve
+                        // it
                         self.project_res = self.project_res.resolve(&valid)?;
                         let mut project_obj = self.load_project().await?;
                         // remove and ignore the entry points in the redirected project

@@ -111,12 +111,7 @@ where
 {
     /// Entry point to the pack phase. Creates a [`Compiler`] that can be used to compile the route
     /// JSON to a document
-    pub async fn create_compiler(&self, reset_start_time: bool) -> PackResult<Compiler<'_>> {
-        let start_time = if reset_start_time {
-            Instant::now()
-        } else {
-            self.start_time.clone()
-        };
+    pub async fn create_compiler(&self, reset_start_time: Option<Instant>) -> PackResult<Compiler<'_>> {
 
         let route_future = async {
             match &self.prep_doc {
@@ -129,12 +124,7 @@ where
             }
         };
 
-        let ctx = CompileContext {
-            start_time,
-            config: Cow::Borrowed(&self.config),
-            meta: Cow::Borrowed(&self.meta),
-            setting: &self.setting,
-        };
+        let ctx = self.create_compile_context(reset_start_time);
 
         // TODO #24 plugin options
 
@@ -162,5 +152,14 @@ where
         };
 
         Ok(compiler)
+    }
+
+    pub fn create_compile_context(&self, reset_start_time: Option<Instant>) -> CompileContext<'_> {
+        CompileContext {
+            start_time: reset_start_time.unwrap_or_else(||self.start_time.clone()),
+            config: Cow::Borrowed(&self.config),
+            meta: Cow::Borrowed(&self.meta),
+            setting: &self.setting,
+        }
     }
 }
