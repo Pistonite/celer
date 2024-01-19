@@ -15,7 +15,6 @@ use crate::res::{Loader, ResError, Resource, Use};
 use super::{PrepError, PrepResult, Setting};
 
 mod icon;
-pub use icon::*;
 mod map;
 pub use map::*;
 mod tag;
@@ -23,9 +22,7 @@ pub use tag::*;
 mod trace;
 pub use trace::*;
 mod plugin;
-pub use plugin::*;
 mod preset;
-pub use preset::*;
 
 #[derive(Derivative, Debug)]
 #[derivative(Default)]

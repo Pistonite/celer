@@ -8,7 +8,6 @@ use crate::prop;
 use super::{validate_not_array_or_object, CompError, LineContext};
 
 mod coord;
-pub use coord::*;
 mod marker;
 pub use marker::*;
 mod movement;
@@ -17,7 +16,6 @@ mod note;
 pub use note::*;
 mod desugar;
 mod preset;
-pub use preset::*;
 mod prop_map;
 use prop_map::*;
 

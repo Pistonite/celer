@@ -14,7 +14,6 @@ pub use res_use::*;
 mod res_type;
 pub use res_type::*;
 mod resolve;
-pub use resolve::*;
 
 pub mod test_utils;
 
