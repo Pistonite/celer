@@ -1,9 +1,9 @@
-use crate::macros::derive_wasm;
 use crate::comp::{CompLine, CompMovement, DocNote};
+use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock, IntoDiagnostic};
+use crate::macros::derive_wasm;
 use crate::prep::{GameCoord, RouteConfig};
-use crate::lang::{DocRichText, DocRichTextBlock, DocDiagnostic, IntoDiagnostic};
 
-use super::{MapBuilder, ExecError, MapIcon, MapMarker};
+use super::{ExecError, MapBuilder, MapIcon, MapMarker};
 
 /// A line in the executed document
 #[derive(PartialEq, Default, Debug, Clone)]
@@ -50,14 +50,20 @@ impl CompLine {
             Some(color) => {
                 map_builder.change_color(color.clone());
                 color
-            },
+            }
             None => map_builder.color().to_string(),
         };
         // trace coordinates
         let mut map_coords = vec![];
         for movement in self.movements {
             match movement {
-                CompMovement::To { to, warp, exclude, color, icon, } => {
+                CompMovement::To {
+                    to,
+                    warp,
+                    exclude,
+                    color,
+                    icon,
+                } => {
                     // update builder properties
                     if let Some(color) = color {
                         map_builder.change_color(color);
@@ -74,7 +80,8 @@ impl CompLine {
                     // add the icon at the end of the movement
                     if let Some(icon) = icon {
                         if !project.icons.contains_key(&icon) {
-                            self.diagnostics.push(ExecError::IconNotFound(icon).into_diagnostic())
+                            self.diagnostics
+                                .push(ExecError::IconNotFound(icon).into_diagnostic())
                         } else {
                             map_builder.icons.push(MapIcon {
                                 id: icon,
@@ -85,7 +92,6 @@ impl CompLine {
                             });
                         }
                     }
-
                 }
                 CompMovement::Push => {
                     map_builder.push();
@@ -101,7 +107,8 @@ impl CompLine {
         // add the main icon to map
         if let Some(icon) = self.map_icon {
             if !project.icons.contains_key(&icon) {
-                self.diagnostics.push(ExecError::IconNotFound(icon).into_diagnostic())
+                self.diagnostics
+                    .push(ExecError::IconNotFound(icon).into_diagnostic())
             } else {
                 map_builder.icons.push(MapIcon {
                     id: icon,
@@ -146,8 +153,10 @@ mod test {
     use map_macro::btree_map;
 
     use crate::comp::{CompMarker, CompMovement, DocNote};
-    use crate::lang::{DocDiagnostic, DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock};
     use crate::exec::MapLine;
+    use crate::lang::{
+        DocDiagnostic, DocPoorText, DocPoorTextBlock, DocRichText, DocRichTextBlock,
+    };
     use crate::prep::GameCoord;
 
     use super::*;
@@ -277,7 +286,8 @@ mod test {
         let project = RouteConfig {
             icons: btree_map! {
                 "test-icon".to_string() => "".to_string(),
-            }.into(),
+            }
+            .into(),
             ..Default::default()
         };
         let exec_line = line.exec(&project, 3, 4, &mut map_section);
@@ -334,7 +344,8 @@ mod test {
                 "test icon".to_string() =>  "".to_string(),
                 "test icon 1".to_string() => "".to_string(),
                 "test icon 2".to_string() => "".to_string(),
-            }.into(),
+            }
+            .into(),
             ..Default::default()
         };
         test_line.exec(&project, 4, 5, &mut builder);
@@ -476,8 +487,7 @@ mod test {
             ..Default::default()
         };
 
-        let exec_line =
-            test_line.exec(&Default::default(), 0, 0, &mut MapBuilder::default());
+        let exec_line = test_line.exec(&Default::default(), 0, 0, &mut MapBuilder::default());
         assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
     }
 

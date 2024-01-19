@@ -3,8 +3,8 @@ use std::borrow::Cow;
 use serde_json::Value;
 
 use crate::comp::CompDoc;
-use crate::pack::CompileContext;
 use crate::exec::ExecDoc;
+use crate::pack::CompileContext;
 
 mod error;
 pub use error::*;
@@ -14,7 +14,6 @@ mod operation;
 
 pub use builtin::BuiltInPlugin;
 pub use js::ScriptPlugin;
-
 
 /// The plugin runtime trait
 ///

@@ -10,7 +10,6 @@ use crate::pack::CompileContext;
 use super::{PluginResult, PluginRuntime};
 
 mod botw_unstable;
-mod compat;
 mod link;
 mod metrics;
 mod variables;
@@ -21,7 +20,6 @@ pub enum BuiltInPlugin {
     Metrics,
     Link,
     Variables,
-    // Compat,
     BotwAbilityUnstable,
 }
 
@@ -38,7 +36,6 @@ impl BuiltInPlugin {
                 &ctx.start_time,
             ))),
             BuiltInPlugin::Variables => Ok(Box::new(variables::VariablesPlugin::from_props(props))),
-            // BuiltInPlugin::Compat => Box::new(compat::CompatPlugin),
             BuiltInPlugin::BotwAbilityUnstable => Ok(Box::new(
                 botw_unstable::BotwAbilityUnstablePlugin::from_props(props),
             )),

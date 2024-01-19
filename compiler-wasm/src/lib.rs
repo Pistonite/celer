@@ -6,8 +6,8 @@ use celerc::prep::EntryPointsSorted;
 
 mod interop;
 use interop::OpaqueExecDoc;
-mod loader;
 mod compile;
+mod loader;
 mod logger;
 
 /// Initialize bindings with WASM

@@ -285,8 +285,7 @@ impl PluginRuntime for VariablesPlugin {
             ..Default::default()
         };
         let tags = &mut ctx.config.to_mut().tags;
-            tags
-            .entry(VAL.to_string())
+        tags.entry(VAL.to_string())
             .and_modify(|t| t.apply_to_default(&tag))
             .or_insert(tag);
         tags.entry(VAL.to_string()).or_default();

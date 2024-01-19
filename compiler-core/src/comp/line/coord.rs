@@ -68,7 +68,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
 mod test {
     use serde_json::{json, Value};
 
-    use crate::comp::test_utils::{CompilerBuilder, self};
+    use crate::comp::test_utils::{self, CompilerBuilder};
     use crate::json::IntoSafeRouteBlob;
     use crate::pack::Compiler;
     use crate::prep::{MapCoordMap, MapMetadata, RouteConfig};

@@ -101,8 +101,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
 mod test {
     use serde_json::{json, Value};
 
-    use crate::json::IntoSafeRouteBlob;
     use crate::comp::test_utils;
+    use crate::json::IntoSafeRouteBlob;
     use crate::pack::Compiler;
 
     use super::*;

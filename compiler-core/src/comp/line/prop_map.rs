@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use crate::lang::HydrateTarget;
 use crate::json::{IntoSafeRouteBlob, SafeRouteBlob};
+use crate::lang::HydrateTarget;
 use crate::prop;
 
 #[repr(transparent)]
@@ -12,8 +12,9 @@ pub struct LinePropMap<'a> {
 
 impl<'a> HydrateTarget<'a> for LinePropMap<'a> {
     /// Insert a property and automatically desugar it
-    fn insert<T>(&mut self, key: String, value: T) 
-    where T: IntoSafeRouteBlob + 'a
+    fn insert<T>(&mut self, key: String, value: T)
+    where
+        T: IntoSafeRouteBlob + 'a,
     {
         let value = value.into_unchecked();
         match key.as_ref() {
@@ -55,12 +56,12 @@ impl<'a> LinePropMap<'a> {
         self.inner.get(key)
     }
     #[inline]
-    pub fn extend<T>(&mut self, other: T) 
-    where T: IntoIterator<Item = (String, SafeRouteBlob<'a>)>
+    pub fn extend<T>(&mut self, other: T)
+    where
+        T: IntoIterator<Item = (String, SafeRouteBlob<'a>)>,
     {
         self.inner.extend(other);
     }
-
 }
 
 #[cfg(test)]
@@ -73,7 +74,11 @@ mod test {
         let mut properties = LinePropMap::new();
         properties.insert("coord".to_string(), json!([1, 2]));
         assert!(properties.get("coord").is_none());
-        let value: Value = properties.get("movements").unwrap().ref_into_unchecked().into();
+        let value: Value = properties
+            .get("movements")
+            .unwrap()
+            .ref_into_unchecked()
+            .into();
         assert_eq!(value, json!([[1, 2]]));
     }
 
@@ -82,9 +87,17 @@ mod test {
         let mut properties = LinePropMap::new();
         properties.insert("icon".to_string(), json!([1, 2]));
         assert!(properties.get("icon").is_none());
-        let value: Value = properties.get("icon-doc").unwrap().ref_into_unchecked().into();
+        let value: Value = properties
+            .get("icon-doc")
+            .unwrap()
+            .ref_into_unchecked()
+            .into();
         assert_eq!(value, json!([1, 2]));
-        let value: Value = properties.get("icon-map").unwrap().ref_into_unchecked().into();
+        let value: Value = properties
+            .get("icon-map")
+            .unwrap()
+            .ref_into_unchecked()
+            .into();
         assert_eq!(value, json!([1, 2]));
     }
 }

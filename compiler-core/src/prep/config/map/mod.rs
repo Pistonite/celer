@@ -2,10 +2,10 @@
 
 use serde_json::Value;
 
-use crate::macros::derive_wasm;
-use crate::prep::{PrepResult, PrepError};
-use crate::prop;
 use crate::json::Coerce;
+use crate::macros::derive_wasm;
+use crate::prep::{PrepError, PrepResult};
+use crate::prop;
 
 use super::PreparedConfig;
 
@@ -74,8 +74,9 @@ impl<'a> PreparedConfig<'a> {
         let coord_map = self.parse_coord_map(coord_map)?;
         let initial_coord = serde_json::from_value::<GameCoord>(initial_coord)
             .map_err(|_| self.err_invalid_map_property_type(prop::INITIAL_COORD, "game coord"))?;
-        let initial_zoom = initial_zoom.as_u64()
-            .ok_or_else(|| self.err_invalid_map_property_type(prop::INITIAL_ZOOM, "non-negative integer"))?;
+        let initial_zoom = initial_zoom.as_u64().ok_or_else(|| {
+            self.err_invalid_map_property_type(prop::INITIAL_ZOOM, "non-negative integer")
+        })?;
         let initial_color = if initial_color.is_array() || initial_color.is_object() {
             Err(self.err_invalid_map_property_type(prop::INITIAL_COLOR, "color string"))?
         } else {

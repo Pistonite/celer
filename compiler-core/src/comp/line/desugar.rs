@@ -54,23 +54,9 @@ pub fn desugar_line<'a>(
     }
 }
 
-// /// Desugar properties on a line
-// ///
-// /// Some properties like `coord` are simply short-hand for other properties.
-// /// They are converted to their long-hand form here.
-// pub fn desugar_properties(properties: &mut BTreeMap<String, Value>) {
-//     if let Some(value) = properties.remove(prop::COORD) {
-//         properties.insert(prop::MOVEMENTS.to_string(), json!([value]));
-//     }
-//     if let Some(value) = properties.remove(prop::ICON) {
-//         properties.insert(prop::ICON_DOC.to_string(), value.clone());
-//         properties.insert(prop::ICON_MAP.to_string(), value);
-//     }
-// }
-
 #[cfg(test)]
 mod test {
-    use serde_json::{Value, Map, json};
+    use serde_json::{json, Map, Value};
 
     use crate::json::IntoSafeRouteBlob;
 

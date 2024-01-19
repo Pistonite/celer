@@ -50,7 +50,8 @@ pub async fn yield_budget(limit: u32) {
 
             let self_value = JsValue::from("self");
             let global_obj = global();
-            let global_self: WorkerGlobalScope = Reflect::get(&global_obj, &self_value)?.dyn_into()?;
+            let global_self: WorkerGlobalScope =
+                Reflect::get(&global_obj, &self_value)?.dyn_into()?;
             let promise = Promise::new(&mut |resolve, _| {
                 let _ =
                     global_self.set_timeout_with_callback_and_timeout_and_arguments_0(&resolve, 0);

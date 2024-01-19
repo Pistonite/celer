@@ -2,8 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::env::yield_budget;
 use crate::json::{
-    Coerce, RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef,
-    RouteBlobSingleKeyObjectResult,
+    Coerce, RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef, RouteBlobSingleKeyObjectResult,
 };
 use crate::lang::{self, DocRichText, IntoDiagnostic};
 use crate::pack::PackError;
@@ -110,41 +109,4 @@ impl<'p> Compiler<'p> {
 
         Some(section)
     }
-
-    // fn create_empty_line_for_error(&self, errors: &[CompError]) -> CompLine {
-    //     let mut diagnostics = vec![];
-    //     for error in errors {
-    //         error.add_to_diagnostics(&mut diagnostics);
-    //     }
-    //     CompLine {
-    //         text: parse_rich("[compile error]"),
-    //         line_color: self.color.clone(),
-    //         diagnostics,
-    //         map_coord: self.coord.clone(),
-    //         ..Default::default()
-    //     }
-    // }
 }
-//
-// impl<'a> Compiler<'a> {
-//
-//
-//
-//     fn create_empty_section_for_error(&self, errors: &[CompError]) -> CompSection {
-//         let mut diagnostics = vec![];
-//         for error in errors {
-//             error.add_to_diagnostics(&mut diagnostics);
-//         }
-//         let line = CompLine {
-//             line_color: self.color.clone(),
-//             diagnostics,
-//             map_coord: self.coord.clone(),
-//             ..Default::default()
-//         };
-//         CompSection {
-//             name: "[compiler error]".to_string(),
-//             lines: vec![line],
-//         }
-//     }
-//
-// }

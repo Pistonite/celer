@@ -1,16 +1,16 @@
 use std::cell::RefCell;
 
 use celerc::env::RefCounted;
-use celerc::res::{Resource, ResPath};
+use celerc::res::{ResPath, Resource};
 use instant::Instant;
 use log::info;
 use wasm_bindgen::prelude::*;
 
 use celerc::pack::PackError;
-use celerc::{PreparedContext, Compiler, CompDoc, ContextBuilder};
+use celerc::{CompDoc, Compiler, ContextBuilder, PreparedContext};
 
 use crate::interop::OpaqueExecDoc;
-use crate::loader::{LoaderInWasm, LoadFileOutput, self};
+use crate::loader::{self, LoadFileOutput, LoaderInWasm};
 
 thread_local! {
     static CACHED_COMPILER_CONTEXT: RefCell<Option<PreparedContext<LoaderInWasm>>> = RefCell::new(None);
@@ -62,7 +62,6 @@ pub async fn compile_document(
     output
 }
 
-
 async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
     // TODO #173: better cache invalidation when local config changes
 
@@ -87,11 +86,14 @@ async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
         info!("entry changed");
         return false;
     }
-    
+
     true
 }
 
-async fn compile_with_pack_error(context: &PreparedContext<LoaderInWasm>, error: PackError) -> Result<OpaqueExecDoc, JsValue> {
+async fn compile_with_pack_error(
+    context: &PreparedContext<LoaderInWasm>,
+    error: PackError,
+) -> Result<OpaqueExecDoc, JsValue> {
     let comp_doc = CompDoc::from_diagnostic(error, context.create_compile_context(None));
     let exec_doc = comp_doc.execute().await;
     OpaqueExecDoc::wrap(exec_doc)

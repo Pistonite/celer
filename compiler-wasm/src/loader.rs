@@ -12,7 +12,7 @@ use wasm_bindgen::prelude::*;
 
 use celerc::env::yield_budget;
 use celerc::macros::async_trait;
-use celerc::res::{Loader, ResResult, ResPath, ResError};
+use celerc::res::{Loader, ResError, ResPath, ResResult};
 
 use crate::interop::{self, JsIntoFuture};
 use crate::logger;
@@ -63,7 +63,6 @@ impl Loader for LoaderInWasm {
 }
 
 pub async fn load_url(url: &str) -> ResResult<Vec<u8>> {
-
     // this is essentially try { Ok(await load_url(url)) } catch (e) { Err(e) }
     let result = async {
         LOAD_URL
@@ -71,13 +70,17 @@ pub async fn load_url(url: &str) -> ResResult<Vec<u8>> {
             .into_future()
             .await?
             .dyn_into::<Uint8Array>()
-    }.await;
+    }
+    .await;
 
     match result {
         Ok(bytes) => Ok(bytes.to_vec()),
         Err(e) => {
             logger::raw_error(&e);
-            Err(ResError::FailToLoadUrl(url.to_string(), "JavaScript Error".to_string()))
+            Err(ResError::FailToLoadUrl(
+                url.to_string(),
+                "JavaScript Error".to_string(),
+            ))
         }
     }
 }
@@ -87,9 +90,12 @@ pub async fn load_file(path: &str) -> ResResult<Vec<u8>> {
         Ok(LoadFileOutput::Loaded(bytes)) => Ok(bytes),
         Ok(LoadFileOutput::NotModified) => {
             // since we passed false to check_changed, this shouldn't be possible
-            Err(ResError::FailToLoadFile(path.to_string(), "JS returned NotModified when not asked to".to_string()))
+            Err(ResError::FailToLoadFile(
+                path.to_string(),
+                "JS returned NotModified when not asked to".to_string(),
+            ))
         }
-        Err(e) => Err(e)
+        Err(e) => Err(e),
     }
 }
 
@@ -119,7 +125,8 @@ async fn load_file_internal(path: &str, check_changed: bool) -> ResResult<LoadFi
             .into_future()
             .await?
             .dyn_into::<Array>()
-    }.await;
+    }
+    .await;
 
     let result = result.and_then(|result| {
         let modified = result.get(0).as_bool().unwrap_or_default();
@@ -134,8 +141,10 @@ async fn load_file_internal(path: &str, check_changed: bool) -> ResResult<LoadFi
         Ok(output) => Ok(output),
         Err(e) => {
             logger::raw_error(&e);
-            Err(ResError::FailToLoadFile(path.to_string(), "JavaScript Error".to_string()))
+            Err(ResError::FailToLoadFile(
+                path.to_string(),
+                "JavaScript Error".to_string(),
+            ))
         }
     }
-
 }

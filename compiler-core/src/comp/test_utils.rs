@@ -8,9 +8,7 @@ use serde_json::Value;
 use crate::json::RouteBlob;
 use crate::lang::Preset;
 use crate::pack::{CompileContext, Compiler};
-use crate::prep::{
-    Axis, CompilerMetadata, MapCoordMap, MapMetadata, RouteConfig
-};
+use crate::prep::{Axis, CompilerMetadata, MapCoordMap, MapMetadata, RouteConfig};
 
 use super::{LineContext, DEFAULT_SETTING};
 

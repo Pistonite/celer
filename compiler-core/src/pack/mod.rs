@@ -25,9 +25,7 @@ use instant::Instant;
 use crate::env::{join_futures, yield_budget};
 use crate::json::RouteBlob;
 use crate::plugin::PluginRuntime;
-use crate::prep::{
-    self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting,
-};
+use crate::prep::{self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting};
 use crate::res::Loader;
 
 mod error;
@@ -44,10 +42,6 @@ pub struct Compiler<'p> {
 
     /// Reference to the built route
     pub route: Cow<'p, RouteBlob>,
-    // /// Current color of the map line
-    // pub color: String,
-    // /// Current position on the map
-    // pub coord: GameCoord,
     /// Runtime of the plugins
     pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
 }
@@ -111,8 +105,10 @@ where
 {
     /// Entry point to the pack phase. Creates a [`Compiler`] that can be used to compile the route
     /// JSON to a document
-    pub async fn create_compiler(&self, reset_start_time: Option<Instant>) -> PackResult<Compiler<'_>> {
-
+    pub async fn create_compiler(
+        &self,
+        reset_start_time: Option<Instant>,
+    ) -> PackResult<Compiler<'_>> {
         let route_future = async {
             match &self.prep_doc {
                 PrepDoc::Built(route) => Cow::Borrowed(route),
@@ -137,18 +133,6 @@ where
             ctx,
             route,
             plugin_runtimes,
-            // color: self
-            //     .config
-            //     .map
-            //     .as_ref()
-            //     .map(|m| m.initial_color.clone())
-            //     .unwrap_or("#fff".to_string()),
-            // coord: self
-            //     .config
-            //     .map
-            //     .as_ref()
-            //     .map(|m| m.initial_coord.clone())
-            //     .unwrap_or_default(),
         };
 
         Ok(compiler)
@@ -156,7 +140,7 @@ where
 
     pub fn create_compile_context(&self, reset_start_time: Option<Instant>) -> CompileContext<'_> {
         CompileContext {
-            start_time: reset_start_time.unwrap_or_else(||self.start_time.clone()),
+            start_time: reset_start_time.unwrap_or_else(|| self.start_time.clone()),
             config: Cow::Borrowed(&self.config),
             meta: Cow::Borrowed(&self.meta),
             setting: &self.setting,

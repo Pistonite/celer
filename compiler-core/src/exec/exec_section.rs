@@ -1,9 +1,9 @@
-use crate::macros::derive_wasm;
-use crate::env::yield_budget;
 use crate::comp::CompSection;
+use crate::env::yield_budget;
+use crate::macros::derive_wasm;
 use crate::prep::RouteConfig;
 
-use super::{MapSection, ExecLine, MapBuilder};
+use super::{ExecLine, MapBuilder, MapSection};
 
 /// A section in the executed document
 #[derive(PartialEq, Default, Debug, Clone)]
@@ -46,7 +46,7 @@ mod test {
     use map_macro::btree_map;
 
     use crate::comp::{CompLine, CompMarker, CompMovement};
-    use crate::exec::{MapIcon, MapMarker, MapLine};
+    use crate::exec::{MapIcon, MapLine, MapMarker};
     use crate::prep::GameCoord;
 
     use super::*;
@@ -99,7 +99,8 @@ mod test {
             icons: btree_map! {
                 "test 1".to_string() => Default::default(),
                 "test 2".to_string() => Default::default(),
-            }.into(),
+            }
+            .into(),
             ..Default::default()
         };
 

@@ -23,8 +23,6 @@ pub struct CompLine {
     pub doc_icon: Option<String>,
     /// Icon id to show on the map
     pub map_icon: Option<String>,
-    // /// Coordinate of the map icon
-    // pub map_coord: GameCoord,
     /// Map icon priority. 0=primary, 1=secondary, >2=other
     pub map_icon_priority: i64,
     /// Map markers
@@ -924,27 +922,6 @@ mod test {
         );
     }
 
-    // #[test]
-    // fn test_inherit_color_coord() {
-    //     let builder = CompilerBuilder::new(
-    //         Default::default(),
-    //         "color".to_string(),
-    //         GameCoord(1.0, 2.0, 3.0),
-    //     );
-    //     let mut compiler = builder.build();
-    //
-    //     test_comp_ok(
-    //         &mut compiler,
-    //         json!("no color or coord"),
-    //         CompLine {
-    //             text: DocRichText::text("no color or coord"),
-    //             line_color: Some("color".to_string()),
-    //             map_coord: GameCoord(1.0, 2.0, 3.0),
-    //             ..Default::default()
-    //         },
-    //     );
-    // }
-
     #[test]
     fn test_change_color() {
         let mut compiler = Compiler::default();
@@ -959,7 +936,6 @@ mod test {
             CompLine {
                 text: DocRichText::text("change color"),
                 line_color: Some("new-color".to_string()),
-                // map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
         );
@@ -974,7 +950,6 @@ mod test {
             CompLine {
                 text: DocRichText::text("change color 2"),
                 line_color: None,
-                // map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("color".to_string())],
@@ -983,18 +958,16 @@ mod test {
 
     #[test]
     fn test_change_coord() {
-        let builder = CompilerBuilder::new(
-            RouteConfig {
-                map: Some(MapMetadata {
-                    coord_map: MapCoordMap {
-                        mapping_3d: (Axis::X, Axis::Y, Axis::Z),
-                        ..Default::default()
-                    },
+        let builder = CompilerBuilder::new(RouteConfig {
+            map: Some(MapMetadata {
+                coord_map: MapCoordMap {
+                    mapping_3d: (Axis::X, Axis::Y, Axis::Z),
                     ..Default::default()
-                }),
+                },
                 ..Default::default()
-            },
-        );
+            }),
+            ..Default::default()
+        });
         let mut compiler = builder.clone().build();
 
         test_comp_ok(
@@ -1006,12 +979,10 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("change coord"),
-                // map_coord: GameCoord(4.0, 5.0, 6.0),
                 movements: vec![CompMovement::to(GameCoord(4.0, 5.0, 6.0))],
                 ..Default::default()
             },
         );
-        // assert_eq!(compiler.coord, GameCoord(4.0, 5.0, 6.0));
 
         let mut compiler = builder.clone().build();
         test_comp_ok(
@@ -1027,7 +998,6 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("push pop"),
-                // map_coord: GameCoord(1.0, 2.0, 3.0),
                 movements: vec![
                     CompMovement::Push,
                     CompMovement::to(GameCoord(4.0, 5.0, 6.0)),
@@ -1047,7 +1017,6 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("invalid"),
-                // map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("movements".to_string())],
@@ -1056,18 +1025,16 @@ mod test {
 
     #[test]
     fn test_movements_preset() {
-        let mut builder = CompilerBuilder::new(
-            RouteConfig {
-                map: Some(MapMetadata {
-                    coord_map: MapCoordMap {
-                        mapping_3d: (Axis::X, Axis::Y, Axis::Z),
-                        ..Default::default()
-                    },
+        let mut builder = CompilerBuilder::new(RouteConfig {
+            map: Some(MapMetadata {
+                coord_map: MapCoordMap {
+                    mapping_3d: (Axis::X, Axis::Y, Axis::Z),
                     ..Default::default()
-                }),
+                },
                 ..Default::default()
-            },
-        );
+            }),
+            ..Default::default()
+        });
         builder.add_preset(
             "_preset::one",
             Preset::compile(json!({
@@ -1092,7 +1059,6 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("preset"),
-                // map_coord: GameCoord(7.0, 8.0, 9.0),
                 movements: vec![
                     CompMovement::to(GameCoord(3.0, 4.0, 5.0)),
                     CompMovement::to(GameCoord(7.0, 8.0, 9.0)),

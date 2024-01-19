@@ -1,7 +1,7 @@
 //! Native environment implementation
 
-use std::sync::Arc;
 use std::future::Future;
+use std::sync::Arc;
 use tokio::task::JoinSet;
 
 /// Ref counted pointer, wrapper for Arc

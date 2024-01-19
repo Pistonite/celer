@@ -1,11 +1,11 @@
 use std::borrow::Cow;
 
-use crate::macros::derive_wasm;
-use crate::lang::{DocDiagnostic, DocRichText};
 use crate::comp::CompDoc;
+use crate::lang::{DocDiagnostic, DocRichText};
+use crate::macros::derive_wasm;
 use crate::prep::RouteConfig;
 
-use super::{MapBuilder, ExecSection};
+use super::{ExecSection, MapBuilder};
 
 /// The executed document
 ///
@@ -24,15 +24,12 @@ pub struct ExecDoc<'p> {
     pub diagnostics: Vec<DocDiagnostic>,
 }
 
-
 impl<'p> CompDoc<'p> {
     /// Execute the document
     pub async fn execute_document(self) -> ExecDoc<'p> {
         let route_config = self.ctx.config.as_ref();
         let mut map_builder = match &route_config.map {
-            Some(map) => {
-                MapBuilder::new(map.initial_color.to_string(), map.initial_coord.clone())
-            },
+            Some(map) => MapBuilder::new(map.initial_color.to_string(), map.initial_coord.clone()),
             None => MapBuilder::default(),
         };
         let mut sections = vec![];
@@ -54,10 +51,10 @@ mod test {
     use instant::Instant;
 
     use crate::comp::{CompLine, CompMovement, CompSection};
-    use crate::exec::{ExecLine, MapSection, MapLine};
+    use crate::exec::{ExecLine, MapLine, MapSection};
     use crate::lang::parse_poor;
     use crate::pack::CompileContext;
-    use crate::prep::{RouteMetadata, Setting, GameCoord, MapMetadata};
+    use crate::prep::{GameCoord, MapMetadata, RouteMetadata, Setting};
 
     use super::*;
 
@@ -71,9 +68,9 @@ mod test {
             },
             ..Default::default()
         };
-        
+
         let test_preface = vec![DocRichText::text("test")];
-        
+
         let test_diagnostics = vec![DocDiagnostic {
             msg: parse_poor("test msg"),
             msg_type: "test".into(),
@@ -81,7 +78,7 @@ mod test {
         }];
 
         let setting = Setting::default();
-        
+
         let test_doc = CompDoc {
             ctx: CompileContext {
                 config: Cow::Borrowed(&test_metadata),
@@ -95,7 +92,7 @@ mod test {
             known_props: Default::default(),
             plugin_runtimes: Default::default(),
         };
-        
+
         let exec_doc = test_doc.execute_document().await;
         assert_eq!(exec_doc.project, Cow::Borrowed(&test_metadata));
         assert_eq!(exec_doc.preface, test_preface);
@@ -122,7 +119,7 @@ mod test {
                 }],
             },
         ];
-        
+
         let project = RouteConfig {
             map: Some(MapMetadata {
                 initial_coord: GameCoord(1.1, 2.2, 3.3),
@@ -130,9 +127,9 @@ mod test {
             }),
             ..Default::default()
         };
-        
+
         let setting = Setting::default();
-        
+
         let test_doc = CompDoc {
             ctx: CompileContext {
                 config: Cow::Borrowed(&project),
@@ -146,7 +143,7 @@ mod test {
             known_props: Default::default(),
             plugin_runtimes: Default::default(),
         };
-        
+
         let exec_doc = test_doc.execute_document().await;
         assert_eq!(
             exec_doc.route,

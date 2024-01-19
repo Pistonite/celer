@@ -7,7 +7,9 @@ use crate::json::{IntoSafeRouteBlob, SafeRouteBlob};
 use super::{Preset, PresetBlob};
 
 pub trait HydrateTarget<'a> {
-    fn insert<T>(&mut self, key: String, value: T) where T: IntoSafeRouteBlob + 'a;
+    fn insert<T>(&mut self, key: String, value: T)
+    where
+        T: IntoSafeRouteBlob + 'a;
 }
 
 impl Preset {
@@ -63,7 +65,10 @@ mod test {
     const ARGS: &[&str] = &["hello", "world", "temp"];
 
     impl<'a> HydrateTarget<'a> for BTreeMap<String, Value> {
-        fn insert<T>(&mut self, key: String, value: T) where T: IntoSafeRouteBlob + 'a {
+        fn insert<T>(&mut self, key: String, value: T)
+        where
+            T: IntoSafeRouteBlob + 'a,
+        {
             self.insert(key, value.into_unchecked().into());
         }
     }

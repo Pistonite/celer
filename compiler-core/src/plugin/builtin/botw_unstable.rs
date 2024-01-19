@@ -327,15 +327,16 @@ impl BotwAbilityUnstablePlugin {
             }
         };
         if count > MAX_USE {
-            let error = DocDiagnostic::error("ability use count must be between 0 and 3!", self.get_source());
+            let error = DocDiagnostic::error(
+                "ability use count must be between 0 and 3!",
+                self.get_source(),
+            );
             diagnostics.push(error);
             return None;
         }
         Some(count as i32)
     }
-
 }
-
 
 /// Get ability string.
 ///

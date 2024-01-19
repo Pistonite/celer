@@ -2,7 +2,7 @@ use serde_json::Value;
 
 use crate::json::{Cast, Coerce, IntoSafeRouteBlob, SafeRouteBlob};
 use crate::lang;
-use crate::lang::{PresetInst, HydrateTarget};
+use crate::lang::{HydrateTarget, PresetInst};
 use crate::prop;
 
 use super::{validate_not_array_or_object, CompError, LineContext};
@@ -136,13 +136,20 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::SPLIT_NAME => {
-                if validate_not_array_or_object!(&value, &mut self.errors, prop::SPLIT_NAME.to_string())
-                {
+                if validate_not_array_or_object!(
+                    &value,
+                    &mut self.errors,
+                    prop::SPLIT_NAME.to_string()
+                ) {
                     self.line.split_name = Some(lang::parse_rich(&value.coerce_to_string()));
                 }
             }
             prop::ICON_DOC => {
-                if validate_not_array_or_object!(&value, &mut self.errors, prop::ICON_DOC.to_string()) {
+                if validate_not_array_or_object!(
+                    &value,
+                    &mut self.errors,
+                    prop::ICON_DOC.to_string()
+                ) {
                     if value.coerce_truthy() {
                         self.line.doc_icon = Some(value.coerce_into_string());
                     } else {
@@ -151,7 +158,11 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::ICON_MAP => {
-                if validate_not_array_or_object!(&value, &mut self.errors, prop::ICON_MAP.to_string()) {
+                if validate_not_array_or_object!(
+                    &value,
+                    &mut self.errors,
+                    prop::ICON_MAP.to_string()
+                ) {
                     if value.coerce_truthy() {
                         self.line.map_icon = Some(value.coerce_to_string());
                     } else {
@@ -175,7 +186,11 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::COUNTER => {
-                if validate_not_array_or_object!(&value, &mut self.errors, prop::COUNTER.to_string()) {
+                if validate_not_array_or_object!(
+                    &value,
+                    &mut self.errors,
+                    prop::COUNTER.to_string()
+                ) {
                     let text = value.coerce_into_string();
                     if !text.is_empty() {
                         let mut blocks = lang::parse_rich(&text).into_iter();
@@ -189,7 +204,8 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 }
             }
             prop::COLOR => {
-                if validate_not_array_or_object!(&value, &mut self.errors, prop::COLOR.to_string()) {
+                if validate_not_array_or_object!(&value, &mut self.errors, prop::COLOR.to_string())
+                {
                     if !value.coerce_truthy() {
                         self.line.line_color = None;
                     } else {
@@ -207,41 +223,9 @@ impl<'c, 'p> LineContext<'c, 'p> {
                     }
                     Ok(array) => array,
                 };
-                // // need to track the coordinate of the final position with a stack
-                // let mut ref_stack = vec![];
                 for (i, v) in array.into_iter().enumerate() {
                     self.compile_movement(&format!("{p}[{i}]", p = prop::MOVEMENTS), v);
                 }
-                //     {
-                //                 match &m {
-                //                     CompMovement::Push => {
-                //                         if let Some(i) = ref_stack.last() {
-                //                             ref_stack.push(*i);
-                //                         }
-                //                     }
-                //                     CompMovement::Pop => {
-                //                         ref_stack.pop();
-                //                     }
-                //                     _ => match ref_stack.last_mut() {
-                //                         Some(i) => *i = output.movements.len(),
-                //                         None => ref_stack.push(output.movements.len()),
-                //                     },
-                //                 }
-                //                 output.movements.push(m);
-                //             }
-                //         }
-                //         if let Some(i) = ref_stack.last() {
-                //             if let CompMovement::To { to, .. } = &output.movements[*i] {
-                //                 output.map_coord = to.clone();
-                //                 self.coord = to.clone();
-                //             } else {
-                //                 unreachable!();
-                //             }
-                //         }
-                // match value {
-                //     Value::Array(array) => {
-                //     }
-                // }
             }
             prop::MARKERS => match value.try_into_array() {
                 Ok(array) => {

@@ -3,11 +3,11 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
-use crate::json::{Coerce, Cast};
+use crate::env::yield_budget;
+use crate::json::{Cast, Coerce};
 use crate::macros::derive_wasm;
 use crate::prop;
 use crate::util::StringMap;
-use crate::env::yield_budget;
 
 use super::{PrepError, PrepResult, Setting};
 
@@ -61,7 +61,7 @@ pub async fn load_entry_points(value: Value, setting: &Setting) -> PrepResult<En
         let value = value.coerce_to_string();
         map.insert(key, value);
     }
-    
+
     for (key, value) in &map {
         yield_budget(64).await;
         let valid = if value.is_empty() {
@@ -76,7 +76,7 @@ pub async fn load_entry_points(value: Value, setting: &Setting) -> PrepResult<En
             ));
         }
     }
-    
+
     Ok(EntryPoints(map.into()))
 }
 

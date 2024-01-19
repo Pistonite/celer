@@ -1,7 +1,7 @@
 //! Things to do on server boot
 
-use celerc::macros::async_recursion;
 use celerc::env;
+use celerc::macros::async_recursion;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use futures::future;

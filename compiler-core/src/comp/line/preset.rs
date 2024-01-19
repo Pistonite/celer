@@ -1,5 +1,5 @@
 use crate::json::{Cast, Coerce, SafeRouteBlob};
-use crate::lang::{PresetInst, HydrateTarget};
+use crate::lang::{HydrateTarget, PresetInst};
 use crate::prop;
 
 use super::{validate_not_array_or_object, CompError, LineContext, LinePropMap};
@@ -8,12 +8,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
     /// Apply the preset to the output.
     ///
     /// Presets are applied recursively, including presets in the movements
-    pub fn apply_preset(
-        &mut self,
-        depth: usize,
-        inst: &PresetInst,
-        output: &mut LinePropMap<'c>,
-    ) {
+    pub fn apply_preset(&mut self, depth: usize, inst: &PresetInst, output: &mut LinePropMap<'c>) {
         if depth > self.compiler.setting.max_preset_ref_depth {
             self.errors
                 .push(CompError::MaxPresetDepthExceeded(inst.name.to_string()));

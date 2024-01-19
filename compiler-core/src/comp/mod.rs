@@ -101,12 +101,6 @@ impl<'p> Compiler<'p> {
             }
         }
 
-        // // pass 2 (sequential) - coordinates are propagated
-        // for section in &mut route {
-        //     yield_budget(64).await;
-        //     section.sequential_pass(&mut self);
-        // }
-
         CompDoc {
             ctx: self.ctx,
             preface,

@@ -85,12 +85,10 @@ impl MapBuilder {
             icons: vec![],
             markers: vec![],
             lines: vec![],
-            line_stack: vec![
-                MapLine {
-                    color: initial_color.clone(),
-                    points: vec![initial_coord.clone()],
-                }
-            ],
+            line_stack: vec![MapLine {
+                color: initial_color.clone(),
+                points: vec![initial_coord.clone()],
+            }],
             initial_color,
             initial_coord,
         }
@@ -174,7 +172,10 @@ impl MapBuilder {
 
     /// Get the current coordinate
     pub fn coord(&self) -> &GameCoord {
-        self.line_stack.last().and_then(|line| line.points.last()).unwrap_or(&self.initial_coord)
+        self.line_stack
+            .last()
+            .and_then(|line| line.points.last())
+            .unwrap_or(&self.initial_coord)
     }
 
     /// Remove the stack top and add it to the commited lines if it has more than 1 coord
@@ -216,10 +217,18 @@ mod test {
     use super::*;
 
     macro_rules! test_coord {
-        (A) => { GameCoord(1.2, 55.0, 37.8) };
-        (B) => { GameCoord(1.2, 65.0, 37.8) };
-        (C) => { GameCoord(1.2, 67.0, 37.8) };
-        (D) => { GameCoord(11.2, 67.0, 37.8) };
+        (A) => {
+            GameCoord(1.2, 55.0, 37.8)
+        };
+        (B) => {
+            GameCoord(1.2, 65.0, 37.8)
+        };
+        (C) => {
+            GameCoord(1.2, 67.0, 37.8)
+        };
+        (D) => {
+            GameCoord(11.2, 67.0, 37.8)
+        };
     }
 
     #[test]
@@ -238,10 +247,13 @@ mod test {
         };
         builder.move_to(test_coord!(B));
         assert_eq!(builder.lines.len(), 0);
-        assert_eq!(builder.line_stack, vec![MapLine {
-            color: "red".to_string(),
-            points: vec![test_coord!(A), test_coord!(B)],
-        }]);
+        assert_eq!(
+            builder.line_stack,
+            vec![MapLine {
+                color: "red".to_string(),
+                points: vec![test_coord!(A), test_coord!(B)],
+            }]
+        );
         assert_eq!(builder.color(), "red");
         assert_eq!(builder.coord(), &test_coord!(B));
     }
@@ -262,10 +274,13 @@ mod test {
         };
         builder.change_color("blue".to_string());
         assert_eq!(builder.lines.len(), 0);
-        assert_eq!(builder.line_stack, vec![MapLine {
-            color: "blue".to_string(),
-            points: vec![test_coord!(A)],
-        }]);
+        assert_eq!(
+            builder.line_stack,
+            vec![MapLine {
+                color: "blue".to_string(),
+                points: vec![test_coord!(A)],
+            }]
+        );
         assert_eq!(builder.color(), "blue");
         assert_eq!(builder.coord(), &test_coord!(A));
     }
@@ -288,16 +303,20 @@ mod test {
             ..Default::default()
         };
         builder.change_color("blue".to_string());
-        assert_eq!(builder.lines, vec![
-            MapLine {
+        assert_eq!(
+            builder.lines,
+            vec![MapLine {
                 color: "red".to_string(),
                 points: vec![test_coord!(A), test_coord!(B)],
-            },
-        ]);
-        assert_eq!(builder.line_stack, vec![MapLine {
-            color: "blue".to_string(),
-            points: vec![test_coord!(B)],
-        }]);
+            },]
+        );
+        assert_eq!(
+            builder.line_stack,
+            vec![MapLine {
+                color: "blue".to_string(),
+                points: vec![test_coord!(B)],
+            }]
+        );
         assert_eq!(builder.color(), "blue");
         assert_eq!(builder.coord(), &test_coord!(B));
     }
@@ -318,10 +337,13 @@ mod test {
         };
         builder.change_color("red".to_string());
         assert_eq!(builder.lines, vec![]);
-        assert_eq!(builder.line_stack, vec![MapLine {
-            color: "red".to_string(),
-            points: vec![test_coord!(A), test_coord!(B), test_coord!(C)],
-        }]);
+        assert_eq!(
+            builder.line_stack,
+            vec![MapLine {
+                color: "red".to_string(),
+                points: vec![test_coord!(A), test_coord!(B), test_coord!(C)],
+            }]
+        );
         assert_eq!(builder.color(), "red");
         assert_eq!(builder.coord(), &test_coord!(C));
     }
@@ -342,10 +364,13 @@ mod test {
         };
         builder.warp_to(test_coord!(B));
         assert_eq!(builder.lines, vec![]);
-        assert_eq!(builder.line_stack, vec![MapLine {
-            color: "red".to_string(),
-            points: vec![test_coord!(B)],
-        }]);
+        assert_eq!(
+            builder.line_stack,
+            vec![MapLine {
+                color: "red".to_string(),
+                points: vec![test_coord!(B)],
+            }]
+        );
         assert_eq!(builder.color(), "red");
         assert_eq!(builder.coord(), &test_coord!(B));
     }
@@ -368,16 +393,20 @@ mod test {
             ..Default::default()
         };
         builder.warp_to(test_coord!(C));
-        assert_eq!(builder.lines, vec![
-            MapLine {
+        assert_eq!(
+            builder.lines,
+            vec![MapLine {
                 color: "red".to_string(),
                 points: vec![test_coord!(A), test_coord!(B)],
-            },
-        ]);
-        assert_eq!(builder.line_stack, vec![MapLine {
-            color: "red".to_string(),
-            points: vec![test_coord!(C)],
-        }]);
+            },]
+        );
+        assert_eq!(
+            builder.line_stack,
+            vec![MapLine {
+                color: "red".to_string(),
+                points: vec![test_coord!(C)],
+            }]
+        );
         assert_eq!(builder.color(), "red");
         assert_eq!(builder.coord(), &test_coord!(C));
     }
@@ -399,16 +428,19 @@ mod test {
         };
         builder.push();
         assert_eq!(builder.lines, vec![]);
-        assert_eq!(builder.line_stack, vec![
-            MapLine {
-                color: "red".to_string(),
-                points: vec![test_coord!(A), test_coord!(B)],
-            },
-            MapLine {
-                color: "red".to_string(),
-                points: vec![test_coord!(B)],
-            }
-        ]);
+        assert_eq!(
+            builder.line_stack,
+            vec![
+                MapLine {
+                    color: "red".to_string(),
+                    points: vec![test_coord!(A), test_coord!(B)],
+                },
+                MapLine {
+                    color: "red".to_string(),
+                    points: vec![test_coord!(B)],
+                }
+            ]
+        );
         assert_eq!(builder.color(), "red");
         assert_eq!(builder.coord(), &test_coord!(B));
     }
@@ -430,16 +462,19 @@ mod test {
         // red: B
         builder.push();
         assert_eq!(builder.lines, vec![]);
-        assert_eq!(builder.line_stack, vec![
-            MapLine {
-                color: "red".to_string(),
-                points: vec![test_coord!(A), test_coord!(B)],
-            },
-            MapLine {
-                color: "red".to_string(),
-                points: vec![test_coord!(B)],
-            }
-        ]);
+        assert_eq!(
+            builder.line_stack,
+            vec![
+                MapLine {
+                    color: "red".to_string(),
+                    points: vec![test_coord!(A), test_coord!(B)],
+                },
+                MapLine {
+                    color: "red".to_string(),
+                    points: vec![test_coord!(B)],
+                }
+            ]
+        );
         assert_eq!(builder.color(), "red");
         assert_eq!(builder.coord(), &test_coord!(B));
         //
@@ -448,34 +483,39 @@ mod test {
         // red: B -> C
         builder.move_to(test_coord!(C));
         assert_eq!(builder.lines, vec![]);
-        assert_eq!(builder.line_stack, vec![
-            MapLine {
-                color: "red".to_string(),
-                points: vec![test_coord!(A), test_coord!(B)],
-            },
-            MapLine {
-                color: "red".to_string(),
-                points: vec![test_coord!(B), test_coord!(C)],
-            }
-        ]);
+        assert_eq!(
+            builder.line_stack,
+            vec![
+                MapLine {
+                    color: "red".to_string(),
+                    points: vec![test_coord!(A), test_coord!(B)],
+                },
+                MapLine {
+                    color: "red".to_string(),
+                    points: vec![test_coord!(B), test_coord!(C)],
+                }
+            ]
+        );
         assert_eq!(builder.color(), "red");
         assert_eq!(builder.coord(), &test_coord!(C));
         //
         // after pop
         // red: A -> B
         builder.pop();
-        assert_eq!(builder.lines, vec![
-            MapLine {
+        assert_eq!(
+            builder.lines,
+            vec![MapLine {
                 color: "red".to_string(),
                 points: vec![test_coord!(B), test_coord!(C)],
-            },
-        ]);
-        assert_eq!(builder.line_stack, vec![
-            MapLine {
+            },]
+        );
+        assert_eq!(
+            builder.line_stack,
+            vec![MapLine {
                 color: "red".to_string(),
                 points: vec![test_coord!(A), test_coord!(B)],
-            },
-        ]);
+            },]
+        );
         assert_eq!(builder.color(), "red");
         assert_eq!(builder.coord(), &test_coord!(B));
     }
@@ -486,7 +526,5 @@ mod test {
         assert_eq!(builder.line_stack.len(), 1);
         builder.pop();
         assert_eq!(builder.line_stack.len(), 1);
-
     }
-
 }
