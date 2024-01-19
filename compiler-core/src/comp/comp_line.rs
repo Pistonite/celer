@@ -1,38 +1,28 @@
-use std::collections::BTreeMap;
-
+use celerb::lang::IntoDiagnostic;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::json::Coerce;
-use crate::lang;
-use crate::lang::PresetInst;
-use crate::macros::test_suite;
-use crate::prop;
-use crate::types::{DocDiagnostic, DocNote, DocRichText, DocRichTextBlock, GameCoord};
+use crate::json::RouteBlobRef;
+use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
+use crate::pack::{Compiler, PackError};
+use crate::util::StringMap;
 
-use super::{
-    validate_not_array_or_object, CompError, CompMarker, CompMovement, Compiler, CompilerResult,
-};
+use super::{CompError, CompMarker, CompMovement, DocNote};
 
 #[derive(PartialEq, Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct CompLine {
     /// Primary text content of the line
     pub text: DocRichText,
     /// Main line color
-    pub line_color: String,
+    pub line_color: Option<String>,
     /// Main movements of this line
     pub movements: Vec<CompMovement>,
     /// Diagnostic messages
     pub diagnostics: Vec<DocDiagnostic>,
     /// Icon id to show on the document
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub doc_icon: Option<String>,
     /// Icon id to show on the map
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub map_icon: Option<String>,
-    /// Coordinate of the map icon
-    pub map_coord: GameCoord,
     /// Map icon priority. 0=primary, 1=secondary, >2=other
     pub map_icon_priority: i64,
     /// Map markers
@@ -40,291 +30,92 @@ pub struct CompLine {
     /// Secondary text to show below the primary text
     pub secondary_text: DocRichText,
     /// Counter text to display
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub counter_text: Option<DocRichTextBlock>,
     /// The notes
     pub notes: Vec<DocNote>,
     /// The split name, if different from text
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub split_name: Option<DocRichText>,
     /// If the line is a banner
     pub is_banner: bool,
     /// The rest of the properties as json blobs
     ///
     /// These are ignored by ExecDoc, but the plugins can use them
-    pub properties: BTreeMap<String, Value>,
+    pub properties: StringMap<Value>,
 }
 
-impl<'a> Compiler<'a> {
-    /// Compile a line
-    ///
-    /// 1. Text line is turned into {line: {}}
-    /// 2. precedence of the presets (later overides previous)
-    ///    - uses
-    ///    - self text (if the preset doesn't define text)
-    ///    - self preset
-    ///    - self properties
-    ///
-    /// Errors are returned as an Err variant with the line and the errors.
-    /// Diagnostics are not added to the line.
-    pub fn comp_line(&mut self, value: Value) -> CompilerResult<CompLine> {
-        let mut errors = vec![];
+/// Context for parsing a line
+///
+/// # Lifetime
+/// The context works with 2 lifetimes: `'c` the lifetime of the compiler reference and `'p` the
+/// lifetime of the prepared context.
+pub struct LineContext<'c, 'p> {
+    pub compiler: &'c Compiler<'p>,
+    pub line: CompLine,
+    pub errors: Vec<CompError>,
+}
 
-        // Convert line into object form
-        let (text, mut line_obj) = match super::desugar_line(value) {
-            Ok(line) => line,
-            Err((text, error)) => {
-                errors.push(error);
-                let output = CompLine {
-                    text: lang::parse_rich(&text),
-                    ..Default::default()
-                };
-                return Err((output, errors));
+impl<'p> Compiler<'p> {
+    /// Parse the line (parallel pass)
+    pub fn parse_line(&self, value: RouteBlobRef<'p>) -> CompLine {
+        let mut ctx = self.create_line_context();
+        match value.checked() {
+            Ok(value) => {
+                ctx.parse_line(value);
+                for error in ctx.errors {
+                    ctx.line.diagnostics.push(error.into_diagnostic());
+                }
+            }
+            Err(e) => {
+                ctx.line
+                    .diagnostics
+                    .push(PackError::BuildRouteLineError(e).into_diagnostic());
             }
         };
 
-        let mut properties = BTreeMap::new();
-
-        // Process the presets
-        if let Some(presets) = line_obj.remove(prop::PRESETS) {
-            self.process_presets(0, presets, &mut properties, &mut errors);
-        }
-
-        if !properties.contains_key(prop::TEXT) {
-            properties.insert(prop::TEXT.to_string(), Value::String(text.clone()));
-        }
-
-        if text.starts_with('_') {
-            let preset_inst = PresetInst::try_parse(&text);
-            if let Some(inst) = preset_inst {
-                // At this level, we will only process the preset if it exists
-                // otherwise treat the string as a regular string
-                if self.meta.presets.contains_key(&inst.name) {
-                    self.apply_preset(0, &inst, &mut properties, &mut errors);
-                }
-            }
-        }
-        properties.extend(line_obj);
-        super::desugar_properties(&mut properties);
-        if let Some(movements) = properties.remove(prop::MOVEMENTS) {
-            properties.insert(
-                prop::MOVEMENTS.to_string(),
-                self.expand_presets_in_movements(0, movements, &mut errors),
-            );
-        }
-
-        let mut output = self.create_line();
-
-        // Process each property
-        for (key, value) in properties.into_iter() {
-            self.process_property(key.as_str(), value, &mut output, &mut errors)
-        }
-
-        if errors.is_empty() {
-            Ok(output)
-        } else {
-            Err((output, errors))
-        }
+        ctx.line
     }
 
-    pub fn create_line(&self) -> CompLine {
-        CompLine {
-            line_color: self.color.clone(),
-            map_coord: self.coord.clone(),
+    fn create_line_context(&self) -> LineContext<'_, 'p> {
+        let line = CompLine {
             map_icon_priority: self.meta.default_icon_priority,
             ..Default::default()
-        }
-    }
-
-    /// Process a property and save it to the output line
-    fn process_property(
-        &mut self,
-        key: &str,
-        value: Value,
-        output: &mut CompLine,
-        errors: &mut Vec<CompError>,
-    ) {
-        match key {
-            prop::TEXT => {
-                validate_not_array_or_object!(&value, errors, prop::TEXT.to_string());
-                output.text = lang::parse_rich(&value.coerce_to_string());
-            }
-            prop::COMMENT => {
-                validate_not_array_or_object!(&value, errors, prop::COMMENT.to_string());
-                output.secondary_text = lang::parse_rich(&value.coerce_to_string());
-            }
-            prop::NOTES => {
-                let iter = match value {
-                    Value::Array(arr) => arr.into_iter(),
-                    Value::Object(_) => {
-                        errors.push(CompError::InvalidLinePropertyType(prop::NOTES.to_string()));
-                        vec![].into_iter()
-                    }
-                    _ => vec![value].into_iter(),
-                };
-
-                let mut notes = vec![];
-                for (i, note_value) in iter.enumerate() {
-                    validate_not_array_or_object!(
-                        &note_value,
-                        errors,
-                        format!("{p}[{i}]", p = prop::NOTES)
-                    );
-                    notes.push(DocNote::Text {
-                        content: lang::parse_rich(&note_value.coerce_to_string()),
-                    });
-                }
-                output.notes = notes;
-            }
-            prop::SPLIT_NAME => {
-                if validate_not_array_or_object!(&value, errors, prop::SPLIT_NAME.to_string()) {
-                    output.split_name = Some(lang::parse_rich(&value.coerce_to_string()));
-                }
-            }
-            prop::ICON_DOC => {
-                if validate_not_array_or_object!(&value, errors, prop::ICON_DOC.to_string()) {
-                    if value.coerce_truthy() {
-                        output.doc_icon = Some(value.coerce_to_string());
-                    } else {
-                        output.doc_icon = None;
-                    }
-                }
-            }
-            prop::ICON_MAP => {
-                if validate_not_array_or_object!(&value, errors, prop::ICON_MAP.to_string()) {
-                    if value.coerce_truthy() {
-                        output.map_icon = Some(value.coerce_to_string());
-                    } else {
-                        output.map_icon = None;
-                    }
-                }
-            }
-            prop::ICON_PRIORITY => {
-                if validate_not_array_or_object!(&value, errors, prop::ICON_PRIORITY.to_string()) {
-                    if let Some(i) = value.try_coerce_to_i64() {
-                        output.map_icon_priority = i;
-                    } else {
-                        errors.push(CompError::InvalidLinePropertyType(
-                            prop::ICON_PRIORITY.to_string(),
-                        ));
-                    }
-                }
-            }
-            prop::COUNTER => {
-                if validate_not_array_or_object!(&value, errors, prop::COUNTER.to_string()) {
-                    let text = value.coerce_to_string();
-                    if !text.is_empty() {
-                        let mut blocks = lang::parse_rich(&text).into_iter();
-                        if let Some(first) = blocks.next() {
-                            output.counter_text = Some(first);
-                        }
-                        if blocks.next().is_some() {
-                            errors.push(CompError::TooManyTagsInCounter);
-                        }
-                    }
-                }
-            }
-            prop::COLOR => {
-                if validate_not_array_or_object!(&value, errors, prop::COLOR.to_string()) {
-                    let new_color = value.coerce_to_string();
-                    output.line_color = new_color.clone();
-                    self.color = new_color;
-                }
-            }
-            prop::MOVEMENTS => {
-                match value {
-                    Value::Array(array) => {
-                        // need to track the coordinate of the final position with a stack
-                        let mut ref_stack = vec![];
-                        for (i, v) in array.into_iter().enumerate() {
-                            if let Some(m) = self.comp_movement(
-                                &format!("{p}[{i}]", p = prop::MOVEMENTS),
-                                v,
-                                errors,
-                            ) {
-                                match &m {
-                                    CompMovement::Push => {
-                                        if let Some(i) = ref_stack.last() {
-                                            ref_stack.push(*i);
-                                        }
-                                    }
-                                    CompMovement::Pop => {
-                                        ref_stack.pop();
-                                    }
-                                    _ => match ref_stack.last_mut() {
-                                        Some(i) => *i = output.movements.len(),
-                                        None => ref_stack.push(output.movements.len()),
-                                    },
-                                }
-                                output.movements.push(m);
-                            }
-                        }
-                        if let Some(i) = ref_stack.last() {
-                            if let CompMovement::To { to, .. } = &output.movements[*i] {
-                                output.map_coord = to.clone();
-                                self.coord = to.clone();
-                            } else {
-                                unreachable!();
-                            }
-                        }
-                    }
-                    _ => errors.push(CompError::InvalidLinePropertyType(
-                        prop::MOVEMENTS.to_string(),
-                    )),
-                }
-            }
-            prop::MARKERS => match value {
-                Value::Array(array) => {
-                    for (i, v) in array.into_iter().enumerate() {
-                        if let Some(m) =
-                            self.comp_marker(&format!("{p}[{i}]", p = prop::MARKERS), v, errors)
-                        {
-                            output.markers.push(m);
-                        }
-                    }
-                }
-                _ => errors.push(CompError::InvalidLinePropertyType(
-                    prop::MARKERS.to_string(),
-                )),
-            },
-            prop::BANNER => match value.try_coerce_to_bool() {
-                Some(value) => output.is_banner = value,
-                None => {
-                    errors.push(CompError::InvalidLinePropertyType(prop::BANNER.to_string()));
-                }
-            },
-            _ => {
-                output.properties.insert(key.to_string(), value);
-            }
+        };
+        LineContext {
+            compiler: self,
+            line,
+            errors: vec![],
         }
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
     use map_macro::btree_map;
-    use serde_json::json;
+    use serde_json::{json, Value};
 
-    use crate::comp::test_utils;
-    use crate::comp::{CompMarker, CompMovement, CompilerBuilder};
-    use crate::lang::Preset;
-    use crate::types::{Axis, DocRichText, GameCoord, MapCoordMap, MapMetadata, RouteMetadata};
+    use crate::comp::test_utils::{self, CompilerBuilder};
+    use crate::comp::{CompError, CompMarker, CompMovement, DocNote};
+    use crate::lang::{self, DocRichText, DocRichTextBlock, Preset};
+    use crate::prep::{Axis, GameCoord, MapCoordMap, MapMetadata, RouteConfig};
 
     use super::*;
 
     fn test_comp_ok(compiler: &mut Compiler<'static>, input: Value, expected: CompLine) {
-        let result = compiler.comp_line(input);
-        assert_eq!(result, Ok(expected));
+        let line = compiler.parse_line(RouteBlobRef::Value(&input));
+        assert_eq!(line, expected);
     }
 
     fn test_comp_err(
         compiler: &mut Compiler<'static>,
         input: Value,
-        expected: CompLine,
+        mut expected: CompLine,
         errors: Vec<CompError>,
     ) {
-        let result = compiler.comp_line(input);
-        assert_eq!(result, Err((expected, errors)));
+        for error in errors {
+            expected.diagnostics.push(error.into_diagnostic());
+        }
+        let line = compiler.parse_line(RouteBlobRef::Value(&input));
+        assert_eq!(line, expected);
     }
 
     #[test]
@@ -439,7 +230,7 @@ mod test {
                 "one": "not an object",
             }),
             CompLine {
-                text: DocRichText::text("[object object]"),
+                text: DocRichText::text("not an object"),
                 ..Default::default()
             },
             vec![CompError::LinePropertiesMustBeObject],
@@ -962,7 +753,8 @@ mod test {
                 text: DocRichText::text("icon is object"),
                 properties: btree_map! {
                     "icon-boo".to_string() => json!("foo"),
-                },
+                }
+                .into(),
                 ..Default::default()
             },
             vec![
@@ -1131,34 +923,8 @@ mod test {
     }
 
     #[test]
-    fn test_inherit_color_coord() {
-        let builder = CompilerBuilder::new(
-            Default::default(),
-            "color".to_string(),
-            GameCoord(1.0, 2.0, 3.0),
-        );
-        let mut compiler = builder.build();
-
-        test_comp_ok(
-            &mut compiler,
-            json!("no color or coord"),
-            CompLine {
-                text: DocRichText::text("no color or coord"),
-                line_color: "color".to_string(),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
-                ..Default::default()
-            },
-        );
-    }
-
-    #[test]
     fn test_change_color() {
-        let builder = CompilerBuilder::new(
-            Default::default(),
-            "color".to_string(),
-            GameCoord(1.0, 2.0, 3.0),
-        );
-        let mut compiler = builder.build();
+        let mut compiler = Compiler::default();
 
         test_comp_ok(
             &mut compiler,
@@ -1169,8 +935,7 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("change color"),
-                line_color: "new-color".to_string(),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
+                line_color: Some("new-color".to_string()),
                 ..Default::default()
             },
         );
@@ -1184,8 +949,7 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("change color 2"),
-                line_color: "new-color".to_string(),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
+                line_color: None,
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("color".to_string())],
@@ -1194,20 +958,16 @@ mod test {
 
     #[test]
     fn test_change_coord() {
-        let builder = CompilerBuilder::new(
-            RouteMetadata {
-                map: MapMetadata {
-                    coord_map: MapCoordMap {
-                        mapping_3d: (Axis::X, Axis::Y, Axis::Z),
-                        ..Default::default()
-                    },
+        let builder = CompilerBuilder::new(RouteConfig {
+            map: Some(MapMetadata {
+                coord_map: MapCoordMap {
+                    mapping_3d: (Axis::X, Axis::Y, Axis::Z),
                     ..Default::default()
                 },
                 ..Default::default()
-            },
-            "".to_string(),
-            GameCoord(1.0, 2.0, 3.0),
-        );
+            }),
+            ..Default::default()
+        });
         let mut compiler = builder.clone().build();
 
         test_comp_ok(
@@ -1219,12 +979,10 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("change coord"),
-                map_coord: GameCoord(4.0, 5.0, 6.0),
                 movements: vec![CompMovement::to(GameCoord(4.0, 5.0, 6.0))],
                 ..Default::default()
             },
         );
-        assert_eq!(compiler.coord, GameCoord(4.0, 5.0, 6.0));
 
         let mut compiler = builder.clone().build();
         test_comp_ok(
@@ -1240,7 +998,6 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("push pop"),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
                 movements: vec![
                     CompMovement::Push,
                     CompMovement::to(GameCoord(4.0, 5.0, 6.0)),
@@ -1260,7 +1017,6 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("invalid"),
-                map_coord: GameCoord(1.0, 2.0, 3.0),
                 ..Default::default()
             },
             vec![CompError::InvalidLinePropertyType("movements".to_string())],
@@ -1269,20 +1025,16 @@ mod test {
 
     #[test]
     fn test_movements_preset() {
-        let mut builder = CompilerBuilder::new(
-            RouteMetadata {
-                map: MapMetadata {
-                    coord_map: MapCoordMap {
-                        mapping_3d: (Axis::X, Axis::Y, Axis::Z),
-                        ..Default::default()
-                    },
+        let mut builder = CompilerBuilder::new(RouteConfig {
+            map: Some(MapMetadata {
+                coord_map: MapCoordMap {
+                    mapping_3d: (Axis::X, Axis::Y, Axis::Z),
                     ..Default::default()
                 },
                 ..Default::default()
-            },
-            "".to_string(),
-            GameCoord(1.0, 2.0, 3.0),
-        );
+            }),
+            ..Default::default()
+        });
         builder.add_preset(
             "_preset::one",
             Preset::compile(json!({
@@ -1307,7 +1059,6 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("preset"),
-                map_coord: GameCoord(7.0, 8.0, 9.0),
                 movements: vec![
                     CompMovement::to(GameCoord(3.0, 4.0, 5.0)),
                     CompMovement::to(GameCoord(7.0, 8.0, 9.0)),
@@ -1389,9 +1140,10 @@ mod test {
             }),
             CompLine {
                 text: DocRichText::text("test"),
-                properties: [("unused".to_string(), json!("property"))]
-                    .into_iter()
-                    .collect(),
+                properties: btree_map! {
+                    "unused".to_string() => json!("property"),
+                }
+                .into(),
                 ..Default::default()
             },
         );

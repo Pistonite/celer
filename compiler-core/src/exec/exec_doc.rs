@@ -1,23 +1,44 @@
 use std::borrow::Cow;
 
 use crate::comp::CompDoc;
-use crate::macros::test_suite;
-use crate::types::{ExecDoc, RouteMetadata};
+use crate::lang::{DocDiagnostic, DocRichText};
+use crate::macros::derive_wasm;
+use crate::prep::RouteConfig;
 
-use super::{ExecResult, MapSectionBuilder};
+use super::{ExecSection, MapBuilder};
 
-impl CompDoc {
+/// The executed document
+///
+/// This is the final output of compiler with
+/// map items separated from doc items
+#[derive(Default, Debug, Clone)]
+#[derive_wasm]
+pub struct ExecDoc<'p> {
+    /// Project metadata
+    pub project: Cow<'p, RouteConfig>,
+    /// The preface
+    pub preface: Vec<DocRichText>,
+    /// The route
+    pub route: Vec<ExecSection>,
+    /// Overall diagnostics (that don't apply to any line)
+    pub diagnostics: Vec<DocDiagnostic>,
+}
+
+impl<'p> CompDoc<'p> {
     /// Execute the document
-    pub async fn exec(self, project: &RouteMetadata) -> ExecResult<ExecDoc<'_>> {
-        let mut map_builder = MapSectionBuilder::default();
-        map_builder.add_coord("", &project.map.initial_coord);
+    pub async fn execute_document(self) -> ExecDoc<'p> {
+        let route_config = self.ctx.config.as_ref();
+        let mut map_builder = match &route_config.map {
+            Some(map) => MapBuilder::new(map.initial_color.to_string(), map.initial_coord.clone()),
+            None => MapBuilder::default(),
+        };
         let mut sections = vec![];
         for (index, section) in self.route.into_iter().enumerate() {
-            let exec_section = section.exec(project, index, &mut map_builder).await;
+            let exec_section = section.exec(route_config, index, &mut map_builder).await;
             sections.push(exec_section);
         }
         ExecDoc {
-            project: Cow::Borrowed(project),
+            project: self.ctx.config,
             preface: self.preface,
             route: sections,
             diagnostics: self.diagnostics,
@@ -25,23 +46,26 @@ impl CompDoc {
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
-    use crate::types::{
-        DocDiagnostic, DocRichText, ExecLine, ExecMapSection, ExecSection, GameCoord, MapLine,
-        MapMetadata, RouteMetadata,
-    };
+    use instant::Instant;
 
     use crate::comp::{CompLine, CompMovement, CompSection};
+    use crate::exec::{ExecLine, MapLine, MapSection};
     use crate::lang::parse_poor;
+    use crate::pack::CompileContext;
+    use crate::prep::{GameCoord, MapMetadata, RouteMetadata, Setting};
 
     use super::*;
 
     #[tokio::test]
     async fn test_copy() {
-        let test_metadata = RouteMetadata {
-            source: "test".to_string(),
-            version: "test version".to_string(),
+        let test_metadata = RouteConfig {
+            meta: RouteMetadata {
+                source: "test".to_string(),
+                version: "test version".to_string(),
+                title: "test title".to_string(),
+            },
             ..Default::default()
         };
 
@@ -49,17 +73,27 @@ mod test {
 
         let test_diagnostics = vec![DocDiagnostic {
             msg: parse_poor("test msg"),
-            msg_type: "test".to_string(),
-            source: "test".to_string(),
+            msg_type: "test".into(),
+            source: "test".into(),
         }];
 
+        let setting = Setting::default();
+
         let test_doc = CompDoc {
+            ctx: CompileContext {
+                config: Cow::Borrowed(&test_metadata),
+                setting: &setting,
+                meta: Cow::Owned(Default::default()),
+                start_time: Instant::now(),
+            },
             preface: test_preface.clone(),
             diagnostics: test_diagnostics.clone(),
-            ..Default::default()
+            route: Default::default(),
+            known_props: Default::default(),
+            plugin_runtimes: Default::default(),
         };
 
-        let exec_doc = test_doc.exec(&test_metadata).await;
+        let exec_doc = test_doc.execute_document().await;
         assert_eq!(exec_doc.project, Cow::Borrowed(&test_metadata));
         assert_eq!(exec_doc.preface, test_preface);
         assert_eq!(exec_doc.diagnostics, test_diagnostics);
@@ -72,7 +106,7 @@ mod test {
                 name: "test1".to_string(),
                 lines: vec![CompLine {
                     movements: vec![CompMovement::to(GameCoord(1.2, 2.2, 3.3))],
-                    line_color: "color".to_string(),
+                    line_color: Some("color".to_string()),
                     ..Default::default()
                 }],
             },
@@ -80,26 +114,37 @@ mod test {
                 name: "test2".to_string(),
                 lines: vec![CompLine {
                     movements: vec![CompMovement::to(GameCoord(1.3, 2.2, 3.3))],
-                    line_color: "color".to_string(),
+                    line_color: Some("color".to_string()),
                     ..Default::default()
                 }],
             },
         ];
 
-        let project = RouteMetadata {
-            map: MapMetadata {
+        let project = RouteConfig {
+            map: Some(MapMetadata {
                 initial_coord: GameCoord(1.1, 2.2, 3.3),
                 ..Default::default()
-            },
+            }),
             ..Default::default()
         };
+
+        let setting = Setting::default();
 
         let test_doc = CompDoc {
-            route: test_sections.clone(),
-            ..Default::default()
+            ctx: CompileContext {
+                config: Cow::Borrowed(&project),
+                setting: &setting,
+                meta: Cow::Owned(Default::default()),
+                start_time: Instant::now(),
+            },
+            preface: Default::default(),
+            diagnostics: Default::default(),
+            route: test_sections,
+            known_props: Default::default(),
+            plugin_runtimes: Default::default(),
         };
 
-        let exec_doc = test_doc.exec(&project).await;
+        let exec_doc = test_doc.execute_document().await;
         assert_eq!(
             exec_doc.route,
             vec![
@@ -112,7 +157,7 @@ mod test {
                         line_color: "color".to_string(),
                         ..Default::default()
                     }],
-                    map: ExecMapSection {
+                    map: MapSection {
                         lines: vec![MapLine {
                             color: "color".to_string(),
                             points: vec![GameCoord(1.1, 2.2, 3.3), GameCoord(1.2, 2.2, 3.3),]
@@ -129,7 +174,7 @@ mod test {
                         line_color: "color".to_string(),
                         ..Default::default()
                     }],
-                    map: ExecMapSection {
+                    map: MapSection {
                         lines: vec![MapLine {
                             color: "color".to_string(),
                             points: vec![GameCoord(1.2, 2.2, 3.3), GameCoord(1.3, 2.2, 3.3),]

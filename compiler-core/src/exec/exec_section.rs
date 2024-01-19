@@ -1,9 +1,21 @@
 use crate::comp::CompSection;
-use crate::macros::test_suite;
-use crate::types::{ExecSection, RouteMetadata};
-use crate::util::yield_budget;
+use crate::env::yield_budget;
+use crate::macros::derive_wasm;
+use crate::prep::RouteConfig;
 
-use super::{ExecResult, MapSectionBuilder};
+use super::{ExecLine, MapBuilder, MapSection};
+
+/// A section in the executed document
+#[derive(PartialEq, Default, Debug, Clone)]
+#[derive_wasm]
+pub struct ExecSection {
+    /// Name of the section
+    pub name: String,
+    /// The lines in the section
+    pub lines: Vec<ExecLine>,
+    /// The map items in this section
+    pub map: MapSection,
+}
 
 impl CompSection {
     /// Execute the section.
@@ -11,10 +23,10 @@ impl CompSection {
     /// Map features will be added to the builder
     pub async fn exec(
         self,
-        project: &RouteMetadata,
+        project: &RouteConfig,
         section_number: usize,
-        map_builder: &mut MapSectionBuilder,
-    ) -> ExecResult<ExecSection> {
+        map_builder: &mut MapBuilder,
+    ) -> ExecSection {
         let mut lines = vec![];
         for (index, line) in self.lines.into_iter().enumerate() {
             yield_budget(64).await;
@@ -24,15 +36,18 @@ impl CompSection {
         ExecSection {
             name: self.name,
             lines,
-            map: map_builder.build(),
+            map: map_builder.build_section(),
         }
     }
 }
 
-#[test_suite]
+#[cfg(test)]
 mod test {
+    use map_macro::btree_map;
+
     use crate::comp::{CompLine, CompMarker, CompMovement};
-    use crate::types::{GameCoord, MapIcon, MapLine, MapMarker};
+    use crate::exec::{MapIcon, MapLine, MapMarker};
+    use crate::prep::GameCoord;
 
     use super::*;
 
@@ -43,7 +58,7 @@ mod test {
             ..Default::default()
         };
         let exec_section = test_section
-            .exec(&Default::default(), 1, &mut MapSectionBuilder::default())
+            .exec(&Default::default(), 1, &mut MapBuilder::default())
             .await;
 
         assert_eq!(exec_section.name, "test");
@@ -56,7 +71,7 @@ mod test {
             ..Default::default()
         };
         let exec_section = test_section
-            .exec(&Default::default(), 3, &mut MapSectionBuilder::default())
+            .exec(&Default::default(), 3, &mut MapBuilder::default())
             .await;
         assert_eq!(exec_section.lines[0].section, 3);
         assert_eq!(exec_section.lines[0].index, 0);
@@ -80,8 +95,17 @@ mod test {
             ..Default::default()
         };
 
+        let config = RouteConfig {
+            icons: btree_map! {
+                "test 1".to_string() => Default::default(),
+                "test 2".to_string() => Default::default(),
+            }
+            .into(),
+            ..Default::default()
+        };
+
         let exec_section = test_section
-            .exec(&Default::default(), 4, &mut MapSectionBuilder::default())
+            .exec(&config, 4, &mut MapBuilder::default())
             .await;
         assert_eq!(
             exec_section.map.icons,
@@ -123,7 +147,7 @@ mod test {
                 },
                 CompLine {
                     markers: vec![CompMarker::default()],
-                    line_color: "test".to_string(),
+                    line_color: Some("test".to_string()),
                     ..Default::default()
                 },
             ],
@@ -131,7 +155,7 @@ mod test {
         };
 
         let exec_section = test_section
-            .exec(&Default::default(), 4, &mut MapSectionBuilder::default())
+            .exec(&Default::default(), 4, &mut MapBuilder::default())
             .await;
         assert_eq!(
             exec_section.map.markers,
@@ -163,7 +187,7 @@ mod test {
         let test_section = CompSection {
             lines: vec![
                 CompLine {
-                    line_color: "test".to_string(),
+                    line_color: Some("test".to_string()),
                     movements: vec![
                         CompMovement::to(GameCoord(1.0, 2.0, 3.0)),
                         CompMovement::to(GameCoord(1.0, 3.0, 3.0)),
@@ -171,7 +195,7 @@ mod test {
                     ..Default::default()
                 },
                 CompLine {
-                    line_color: "test".to_string(),
+                    line_color: Some("test".to_string()),
                     movements: vec![
                         CompMovement::to(GameCoord(1.0, 4.0, 3.0)),
                         CompMovement::to(GameCoord(1.0, 5.0, 3.0)),
@@ -182,8 +206,7 @@ mod test {
             ..Default::default()
         };
 
-        let mut builder = MapSectionBuilder::default();
-        builder.add_coord("test", &GameCoord(1.0, 1.0, 3.0));
+        let mut builder = MapBuilder::new("test".to_string(), GameCoord(1.0, 1.0, 3.0));
 
         let exec_section = test_section
             .exec(&Default::default(), 4, &mut builder)

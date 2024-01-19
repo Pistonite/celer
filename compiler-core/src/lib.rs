@@ -1,18 +1,24 @@
-mod api;
-pub use api::*;
+//! # Celer Compiler Core
+//!
+//! Implementation of the core compiler phases:
+//!    - [`prep`] Prepare the project metadata (cachable)
+//!    - [`pack`] Resolve all resources and packs them into a single object
+//!    - [`comp`] Compile the route into sections and lines
+//!    - [`exec`] Process the route data into a renderable object
+//!    - [`expo`] Export artifacts from the route
+
+pub mod plugin;
+
 pub mod comp;
 pub mod exec;
-pub mod json;
-pub mod lang;
 pub mod pack;
-pub mod plug;
-pub mod prop;
-pub mod types;
-pub mod util;
+pub mod prep; // executor, depends on: comp
+              //pub mod expo;  // export phase (todo)
 
-/// Re-exports of macros
-pub mod macros {
-    pub use async_recursion::async_recursion;
-    pub use async_trait::async_trait;
-    pub use celercmacros::*;
-}
+// public API re-exports
+pub use comp::CompDoc;
+pub use exec::ExecDoc;
+pub use pack::Compiler;
+pub use prep::{ContextBuilder, PreparedContext};
+
+pub use celerb::*;

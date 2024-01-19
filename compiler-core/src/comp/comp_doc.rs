@@ -1,19 +1,19 @@
+use std::borrow::Cow;
 use std::collections::HashSet;
+use std::ops::{Deref, DerefMut};
 
-use serde::{Deserialize, Serialize};
+use instant::Instant;
 
-use crate::json::{Cast, Coerce};
-use crate::lang::parse_rich;
-use crate::pack::{PackerError, PackerValue};
-use crate::types::{DocDiagnostic, DocRichText};
-use crate::util::yield_budget;
+use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
+use crate::pack::CompileContext;
+use crate::plugin::PluginRuntime;
+use crate::prep::{CompilerMetadata, PrepError, RouteConfig, RouteMetadata};
 
-use super::{CompError, CompLine, CompSection, Compiler};
+use super::CompSection;
 
-/// Compiled Document
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct CompDoc {
+/// Compiled Document, which is the output of the comp phase
+pub struct CompDoc<'p> {
+    pub ctx: CompileContext<'p>,
     /// The preface
     pub preface: Vec<DocRichText>,
     /// The route
@@ -22,90 +22,66 @@ pub struct CompDoc {
     pub diagnostics: Vec<DocDiagnostic>,
     /// Properties that are marked as known by plugins
     pub known_props: HashSet<String>,
+    /// Plugins
+    ///
+    /// CompDoc holds this to pass it to the next phase. It does not uses it directly.
+    pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
 }
 
-impl<'a> Compiler<'a> {
-    pub async fn comp_doc(&mut self, route: PackerValue) -> Result<CompDoc, CompError> {
-        let mut route_vec = vec![];
-        let mut preface = vec![];
+impl<'p> Deref for CompDoc<'p> {
+    type Target = CompileContext<'p>;
 
-        let mut errors: Vec<CompError> = vec![];
-
-        match route.try_into_array() {
-            Ok(sections) => {
-                for value in sections.into_iter() {
-                    yield_budget(64).await;
-                    self.add_section_or_preface(&mut preface, &mut route_vec, value)
-                        .await?;
-                }
-            }
-            Err(_) => {
-                errors.push(CompError::InvalidRouteType);
-            }
-        }
-
-        if errors.is_empty() {
-            Ok(CompDoc {
-                preface,
-                route: route_vec,
-                diagnostics: vec![],
-                known_props: Default::default(),
-            })
-        } else {
-            Ok(self.create_empty_doc_for_error(&errors))
-        }
+    fn deref(&self) -> &Self::Target {
+        &self.ctx
     }
+}
 
-    async fn add_section_or_preface(
-        &mut self,
-        preface: &mut Vec<DocRichText>,
-        route: &mut Vec<CompSection>,
-        value: PackerValue,
-    ) -> Result<(), CompError> {
-        match self.comp_section(value).await {
-            Ok(section) => route.push(section),
-            Err(e) => {
-                if let CompError::IsPreface(v) = &e {
-                    if route.is_empty() {
-                        let text = v.coerce_to_string();
-                        preface.push(parse_rich(&text));
-                        return Ok(());
-                    }
-                }
-                let section = self.create_empty_section_for_error(&[e]);
-                route.push(section);
-            }
-        }
-        Ok(())
+impl<'p> DerefMut for CompDoc<'p> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.ctx
     }
+}
 
-    fn create_empty_section_for_error(&self, errors: &[CompError]) -> CompSection {
-        let mut diagnostics = vec![];
-        for error in errors {
-            error.add_to_diagnostics(&mut diagnostics);
-        }
-        let line = CompLine {
-            line_color: self.color.clone(),
-            diagnostics,
-            map_coord: self.coord.clone(),
+impl<'p> AsRef<CompileContext<'p>> for CompDoc<'p> {
+    fn as_ref(&self) -> &CompileContext<'p> {
+        &self.ctx
+    }
+}
+
+impl CompDoc<'static> {
+    /// Create a new document showing an error from the prep phase.
+    pub fn from_prep_error(error: PrepError, start_time: Instant) -> Self {
+        let config = RouteConfig {
+            meta: RouteMetadata {
+                title: "[compile error]".to_string(),
+                ..Default::default()
+            },
             ..Default::default()
         };
-        CompSection {
-            name: "[compiler error]".to_string(),
-            lines: vec![line],
-        }
-    }
+        let ctx = CompileContext {
+            start_time,
+            config: Cow::Owned(config),
+            meta: Cow::Owned(CompilerMetadata::default()),
+            setting: &super::DEFAULT_SETTING,
+        };
 
-    pub fn create_empty_doc_for_packer_error(&self, error: PackerError) -> CompDoc {
-        self.create_empty_doc_for_error(&[CompError::PackerErrors(vec![error])])
+        Self::from_diagnostic(error, ctx)
     }
+}
 
-    pub fn create_empty_doc_for_error(&self, errors: &[CompError]) -> CompDoc {
-        CompDoc {
-            route: vec![self.create_empty_section_for_error(errors)],
-            preface: vec![],
-            diagnostics: vec![],
+impl<'p> CompDoc<'p> {
+    /// Create a new document showing an error from a single diagnostic.
+    pub fn from_diagnostic<T>(error: T, ctx: CompileContext<'p>) -> Self
+    where
+        T: IntoDiagnostic,
+    {
+        Self {
+            ctx,
+            preface: Default::default(),
+            route: Default::default(),
+            diagnostics: vec![error.into_diagnostic()],
             known_props: Default::default(),
+            plugin_runtimes: Default::default(),
         }
     }
 }

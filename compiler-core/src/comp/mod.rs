@@ -1,236 +1,46 @@
-//! Compiler core logic
+//! # Compile (comp) phase
 //!
-//! The compiler takes in the raw route JSON blob and extracts the known properties
-//! into native structures. It also computes temporal properties like the current coordinates
-//! and color at any given point in the route.
+//! This phase transforms the route from raw JSON into structured data (a [`CompDoc`]).
+//! It also may handle errors from earlier phases and show them in the document.
+//!
+//! # Input
+//! The input is [`Compiler`] from pack phase
+//!
+//! # Work
+//! 1. Call plugin onBeforeCompile
+//! 2. Traverse the route and compile route structure
+//! 3. Call plugin onAfterCompile
+//!
+//! # Output
+//! The output is a [`CompDoc`]
 
-use std::borrow::Cow;
-use std::convert::Infallible;
+use crate::env::yield_budget;
+use crate::json::{RouteBlobArrayIterResult, RouteBlobRef};
+use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
+use crate::pack::{Compiler, PackError};
+use crate::prep::Setting;
 
-use derivative::Derivative;
-use serde_json::Value;
-
-use crate::api::CompilerMetadata;
-use crate::lang::parse_poor;
-use crate::pack::PackerError;
-use crate::types::{DocDiagnostic, GameCoord, RouteMetadata};
-use crate::util;
-
-mod comp_coord;
-pub use comp_coord::*;
+mod error;
+pub use error::*;
+mod line;
+pub use line::*;
 mod comp_doc;
 pub use comp_doc::*;
-mod comp_line;
-pub use comp_line::*;
-mod comp_marker;
-pub use comp_marker::*;
-mod comp_movement;
-pub use comp_movement::*;
-mod comp_preset;
-pub use comp_preset::*;
 mod comp_section;
 pub use comp_section::*;
-mod desugar;
-use desugar::*;
+mod comp_line;
+pub use comp_line::*;
 
-pub type CompilerResult<T> = Result<T, (T, Vec<CompError>)>;
-
-#[derive(Derivative, Debug, Clone)]
-#[derivative(Default)]
-pub struct Compiler<'a> {
-    pub project: Cow<'a, RouteMetadata>,
-    pub meta: Cow<'a, CompilerMetadata>,
-    /// Current color of the map line
-    pub color: String,
-    /// Current position on the map
-    pub coord: GameCoord,
-    #[derivative(Default(value = "8"))]
-    pub max_preset_depth: usize,
-}
-
-#[derive(PartialEq, Debug, Clone, thiserror::Error)]
-pub enum CompError {
-    /// When an array is specified as a line
-    #[error("A line cannot be an array. Check the formatting of your route.")]
-    ArrayCannotBeLine,
-
-    /// When an empty object is specified as a line
-    #[error("A line cannot be an empty object.")]
-    EmptyObjectCannotBeLine,
-
-    /// When a line object has more than 2 keys
-    #[error("Multiple keys for a line found. Did you forget to indent the properties?")]
-    TooManyKeysInObjectLine,
-
-    /// When line_object[key] is not an object
-    ///
-    /// For example:
-    /// ```yaml
-    /// - line: "red"
-    /// ```
-    #[error("Line properties must be a mapping. Did you accidentally put a property in the wrong place?")]
-    LinePropertiesMustBeObject,
-
-    /// When a line property type is invalid.
-    ///
-    /// Arg is property name or path
-    #[error("Line property `{0}` has invalid type")]
-    InvalidLinePropertyType(String),
-
-    /// When a preset string is malformed, like `foo` or `_foo::` or `_bar<foo`
-    #[error("Preset string `{0}` is malformed")]
-    InvalidPresetString(String),
-
-    /// When a preset is not found
-    #[error("Preset `{0}` is not found")]
-    PresetNotFound(String),
-
-    /// When presets recurse too much
-    #[error("Maximum preset depth exceeded when processing the preset `{0}`. Did you have circular references in your presets?")]
-    MaxPresetDepthExceeded(String),
-
-    /// When an unexpected property is specified and not used by compiler
-    #[error("Property `{0}` is unused. Did you misspell it?")]
-    UnusedProperty(String),
-
-    /// When the counter property has rich text with more than one tag
-    #[error("Counter property can only have 1 tag.")]
-    TooManyTagsInCounter,
-
-    /// When the value specified as part of movement has invalid type
-    #[error("Some of the movements specified cannot be processed.")]
-    InvalidMovementType,
-
-    /// When the coordinate specified as part of movement is not an array
-    #[error("The coordinate specified by `{0}` is not an array.")]
-    InvalidCoordinateType(String),
-
-    /// When the coordinate specified as part of movement has too few or too many elements
-    #[error("Some of the coordinates specified may not be valid. Coordinates must have either 2 or 3 components.")]
-    InvalidCoordinateArray,
-
-    /// When the coordinate value inside coordinate array is not valid
-    #[error("`{0}` is not a valid coordinate value.")]
-    InvalidCoordinateValue(String),
-
-    /// When a preset specified as part of a movement does not contain the `movements` property
-    #[error("Preset `{0}` cannot be used inside hte `movements` property because it does not contain any movement.")]
-    InvalidMovementPreset(String),
-
-    /// When the value specified as part of marker is invalid
-    #[error("Some of the markers specified cannot be processed.")]
-    InvalidMarkerType,
-
-    /// When a section is a preface.
-    ///
-    /// This may not be an actual error depending on if the compiler is expecting a preface
-    #[error("Preface can only be in the beginning of the route.")]
-    IsPreface(Value),
-
-    /// When a section is invalid
-    #[error("Section data is not the correct type.")]
-    InvalidSectionType,
-
-    /// When packer errors need to be propagated
-    #[error("Packer errors")]
-    PackerErrors(Vec<PackerError>),
-
-    /// When the `route` property is invalid
-    #[error("Route data is not the correct type.")]
-    InvalidRouteType,
-}
-
-impl From<Infallible> for CompError {
-    fn from(_: Infallible) -> Self {
-        unreachable!()
-    }
-}
-
-impl CompError {
-    /// Get the more info url path for a compiler error
-    ///
-    /// The returned path is relative to the site origin (i.e. /docs/...)
-    pub fn get_info_url_path(&self) -> &'static str {
-        match self {
-            CompError::ArrayCannotBeLine
-            | CompError::EmptyObjectCannotBeLine
-            | CompError::TooManyKeysInObjectLine
-            | CompError::LinePropertiesMustBeObject
-            | CompError::InvalidLinePropertyType(_)
-            | CompError::UnusedProperty(_) => "/docs/route/customizing-lines",
-            CompError::InvalidPresetString(_)
-            | CompError::PresetNotFound(_)
-            | CompError::MaxPresetDepthExceeded(_) => "/docs/route/using-presets",
-            CompError::TooManyTagsInCounter => "/docs/route/customizing-lines#counter",
-            CompError::InvalidCoordinateType(_)
-            | CompError::InvalidCoordinateArray
-            | CompError::InvalidCoordinateValue(_)
-            | CompError::InvalidMovementType => "/docs/route/customizing-movements",
-            CompError::InvalidMovementPreset(_) => "/docs/route/customizing-movements#presets",
-            CompError::InvalidMarkerType => "/docs/route/customizing-lines#markers",
-            CompError::IsPreface(_) => "/docs/route/route-structure#preface",
-            CompError::PackerErrors(_) | CompError::InvalidSectionType => {
-                "/docs/route/route-structure"
-            }
-            CompError::InvalidRouteType => "/docs/route/route-structure#entry-point",
-        }
-    }
-
-    pub fn get_type(&self) -> String {
-        let s = match self {
-            CompError::ArrayCannotBeLine
-            | CompError::EmptyObjectCannotBeLine
-            | CompError::TooManyKeysInObjectLine
-            | CompError::LinePropertiesMustBeObject
-            | CompError::InvalidLinePropertyType(_)
-            | CompError::InvalidPresetString(_)
-            | CompError::PresetNotFound(_)
-            | CompError::MaxPresetDepthExceeded(_)
-            | CompError::InvalidMovementType
-            | CompError::InvalidCoordinateType(_)
-            | CompError::InvalidCoordinateArray
-            | CompError::InvalidCoordinateValue(_)
-            | CompError::InvalidMovementPreset(_)
-            | CompError::InvalidMarkerType
-            | CompError::IsPreface(_)
-            | CompError::InvalidSectionType
-            | CompError::PackerErrors(_)
-            | CompError::InvalidRouteType => "error",
-
-            CompError::UnusedProperty(_) | CompError::TooManyTagsInCounter => "warn",
-        };
-
-        s.to_string()
-    }
-
-    pub fn add_to_diagnostics(&self, output: &mut Vec<DocDiagnostic>) {
-        match self {
-            CompError::PackerErrors(errors) => {
-                for error in errors {
-                    error.add_to_diagnostics(output);
-                }
-            }
-            other_error => {
-                let site_origin = util::get_site_origin();
-                let help_url_path = other_error.get_info_url_path();
-                let msg = format!("{other_error} See {site_origin}{help_url_path} for more info.");
-
-                output.push(DocDiagnostic {
-                    msg: parse_poor(&msg),
-                    msg_type: other_error.get_type(),
-                    source: "celerc/compiler".to_string(),
-                });
-            }
-        }
-    }
-}
+#[cfg(test)]
+mod test_utils;
 
 /// Convenience macro for validating a json value and add error
 macro_rules! validate_not_array_or_object {
-    ($value:expr, $errors:ident, $property:expr) => {{
+    ($value:expr, $errors:expr, $property:expr) => {{
         let v = $value;
         if v.is_array() || v.is_object() {
-            $errors.push(CompError::InvalidLinePropertyType($property));
+            let e = $errors;
+            e.push(CompError::InvalidLinePropertyType($property));
             false
         } else {
             true
@@ -239,26 +49,90 @@ macro_rules! validate_not_array_or_object {
 }
 pub(crate) use validate_not_array_or_object;
 
-#[cfg(test)]
-mod compiler_builder;
-#[cfg(test)]
-pub use compiler_builder::*;
-#[cfg(test)]
-mod test_utils {
-    #[cfg(feature = "test")]
-    pub fn create_test_compiler_with_coord_transform() -> super::Compiler<'static> {
-        use crate::types::{Axis, MapCoordMap, MapMetadata, RouteMetadata};
-        let project = RouteMetadata {
-            map: MapMetadata {
-                coord_map: MapCoordMap {
-                    mapping_3d: (Axis::X, Axis::Y, Axis::Z),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            ..Default::default()
-        };
-        let builder = super::CompilerBuilder::new(project, Default::default(), Default::default());
-        builder.build()
+static DEFAULT_SETTING: Setting = Setting::const_default();
+
+impl<'p> Compiler<'p> {
+    /// Entry point for the comp phase
+    pub async fn compile(mut self) -> CompDoc<'p> {
+        for plugin in &mut self.plugin_runtimes {
+            if let Err(e) = plugin.on_before_compile(&mut self.ctx) {
+                return CompDoc::from_diagnostic(CompError::PluginBeforeCompileError(e), self.ctx);
+            }
+        }
+        let mut plugins = std::mem::take(&mut self.plugin_runtimes);
+        let mut comp_doc = self.compile_document().await;
+        for plugin in &mut plugins {
+            if let Err(e) = plugin.on_after_compile(&mut comp_doc) {
+                let diag = CompError::PluginAfterCompileError(e).into_diagnostic();
+                comp_doc.diagnostics.push(diag);
+            }
+        }
+
+        comp_doc.plugin_runtimes = plugins;
+        comp_doc
+    }
+
+    async fn compile_document(self) -> CompDoc<'p> {
+        let route_blob = RouteBlobRef::Blob(self.route.as_ref());
+
+        let mut preface = vec![];
+        let mut route = vec![];
+        let mut diagnostics = vec![];
+
+        // route entry point must be an array
+        match route_blob.try_as_array_iter() {
+            RouteBlobArrayIterResult::Ok(sections) => {
+                for section in sections {
+                    yield_budget(64).await;
+                    self.compile_section_or_preface(
+                        section,
+                        &mut route,
+                        &mut preface,
+                        &mut diagnostics,
+                    )
+                    .await;
+                }
+            }
+            RouteBlobArrayIterResult::NotArray => {
+                diagnostics.push(CompError::InvalidRouteType.into_diagnostic());
+            }
+            RouteBlobArrayIterResult::Err(e) => {
+                diagnostics.push(PackError::BuildRouteError(e).into_diagnostic());
+            }
+        }
+
+        CompDoc {
+            ctx: self.ctx,
+            preface,
+            route,
+            diagnostics,
+            known_props: Default::default(),
+            // will be filled in after plugin after compile is called
+            // due to mutable borrow constraint
+            plugin_runtimes: Default::default(),
+        }
+    }
+
+    async fn compile_section_or_preface(
+        &self,
+        section_ref: RouteBlobRef<'p>,
+        route: &mut Vec<CompSection>,
+        prefaces: &mut Vec<DocRichText>,
+        diagnostics: &mut Vec<DocDiagnostic>,
+    ) {
+        match self.compile_section(section_ref.clone(), route).await {
+            Some(section) => route.push(section),
+            None => {
+                match self.compile_preface(section_ref) {
+                    Ok(preface) => prefaces.push(preface),
+                    Err(e) => {
+                        let e = PackError::BuildRouteSectionError(e);
+                        // since error is in the preface
+                        // add to overall diagnostics
+                        diagnostics.push(e.into_diagnostic());
+                    }
+                }
+            }
+        }
     }
 }

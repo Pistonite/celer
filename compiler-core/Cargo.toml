@@ -1,16 +1,17 @@
 [package]
 name = "compiler-core"
 version = "0.0.0"
-description = "Core logic for the compiler"
+description = "Core compile phases for the compiler"
 edition = "2021"
 
+[dependencies.celerb]
+package = "compiler-base"
+path = "../compiler-base"
+default-features = false
+
 [dependencies]
-async-recursion = "1.0.4"
-async-trait = "0.1.73"
-compiler-macros = { path = "../compiler-macros" }
 derivative = "2.2.0"
 futures = "0.3.28"
-regen-lang = "0.0.6"
 serde = { version = "1.0.174", features = ["derive"] }
 serde_json = "1.0.103"
 serde_yaml = "0.9.25"
@@ -18,37 +19,23 @@ thiserror = "1.0.47"
 tokio = { version = "1.32.0", features = [
     "macros",
 ], optional = true}
-wasm-bindgen = { version = "0.2.87", optional = true }
-wasm-bindgen-futures = { version = "0.4.37", optional = true }
-js-sys = { version = "0.3.64", optional = true }
-web-sys = { version = "0.3.64", optional = true }
-tsify = { version = "0.4.5", default-features = false, features = ["js"], optional = true }
 instant = "0.1.12"
 log = "0.4.20"
-serde-wasm-bindgen = { version = "0.6.0", optional = true }
 roman = "0.1.6"
 
 [dev-dependencies]
 map-macro = "0.2.6"
 
 [features]
-default = []
+default = ["native"]
 native = [
+    "celerb/native",
     "dep:tokio", 
     "tokio/rt-multi-thread",
 ]
 wasm = [
-    "dep:wasm-bindgen", 
-    "dep:wasm-bindgen-futures",
-    "dep:js-sys",
-    "web-sys/WorkerGlobalScope",
+    "celerb/wasm",
     "instant/wasm-bindgen",
-    "dep:tsify",
-    "dep:serde-wasm-bindgen",
-]
-test = [
-    "dep:tokio",
-    "tokio/rt-multi-thread",
 ]
 
 [lib]

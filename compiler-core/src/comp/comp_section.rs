@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::json::Cast;
-use crate::lang::parse_rich;
-use crate::pack::PackerValue;
-use crate::util::yield_budget;
+use crate::env::yield_budget;
+use crate::json::{
+    Coerce, RouteBlobArrayIterResult, RouteBlobError, RouteBlobRef, RouteBlobSingleKeyObjectResult,
+};
+use crate::lang::{self, DocRichText, IntoDiagnostic};
+use crate::pack::PackError;
 
 use super::{CompError, CompLine, Compiler};
 
@@ -17,88 +19,94 @@ pub struct CompSection {
     pub lines: Vec<CompLine>,
 }
 
-impl<'a> Compiler<'a> {
-    pub async fn comp_section(&mut self, value: PackerValue) -> Result<CompSection, CompError> {
-        if let PackerValue::Err(e) = value {
-            return Err(CompError::PackerErrors(vec![e]));
-        }
-        if value.is_array() {
-            return Err(CompError::InvalidSectionType);
-        }
-
-        let section_obj = match value.try_into_object() {
-            Ok(v) => v,
-            Err(v) => {
-                // If not an array or object and is valid, treat as a preface value
-                if let PackerValue::Ok(v) = v {
-                    return Err(CompError::IsPreface(v));
-                } else {
-                    unreachable!();
-                }
-            }
-        };
-
-        let mut iter = section_obj.into_iter();
-        let (section_name, section_value) = iter.next().ok_or(CompError::InvalidSectionType)?;
-        if iter.next().is_some() {
-            return Err(CompError::InvalidSectionType);
-        }
-        let mut section = CompSection {
-            name: section_name,
-            lines: vec![],
-        };
-        if let PackerValue::Err(e) = section_value {
-            section
-                .lines
-                .push(self.create_empty_line_for_error(&[CompError::PackerErrors(vec![e])]));
-            return Ok(section);
-        }
-        let section_lines = match section_value.try_into_array() {
-            Ok(v) => v,
-            Err(_) => {
-                section
-                    .lines
-                    .push(self.create_empty_line_for_error(&[CompError::InvalidSectionType]));
-                return Ok(section);
-            }
-        };
-        for line in section_lines {
-            yield_budget(64).await;
-            match line.flatten() {
-                Ok(v) => {
-                    let line = match self.comp_line(v) {
-                        Ok(l) => l,
-                        Err((mut l, errors)) => {
-                            for error in errors {
-                                error.add_to_diagnostics(&mut l.diagnostics);
-                            }
-                            l
-                        }
-                    };
-                    section.lines.push(line);
-                }
-                Err(errors) => {
-                    section
-                        .lines
-                        .push(self.create_empty_line_for_error(&[CompError::PackerErrors(errors)]));
-                }
-            }
-        }
-
-        Ok(section)
-    }
-
-    fn create_empty_line_for_error(&self, errors: &[CompError]) -> CompLine {
-        let mut diagnostics = vec![];
-        for error in errors {
-            error.add_to_diagnostics(&mut diagnostics);
-        }
-        CompLine {
-            text: parse_rich("[compile error]"),
-            line_color: self.color.clone(),
-            diagnostics,
-            map_coord: self.coord.clone(),
+impl CompSection {
+    pub fn from_diagnostic<T>(error: T) -> Self
+    where
+        T: IntoDiagnostic,
+    {
+        let line = CompLine {
+            diagnostics: vec![error.into_diagnostic()],
             ..Default::default()
+        };
+        Self {
+            name: "[error]".to_string(),
+            lines: vec![line],
         }
+    }
+}
+
+impl<'p> Compiler<'p> {
+    pub fn compile_preface(&self, value: RouteBlobRef<'p>) -> Result<DocRichText, RouteBlobError> {
+        let value = value.checked()?;
+        let text = value.coerce_into_string();
+        Ok(lang::parse_rich(&text))
+    }
+    /// Compile a blob into a section
+    ///
+    /// If value is a preface, returns `None`
+    pub async fn compile_section(
+        &self,
+        value: RouteBlobRef<'p>,
+        route: &Vec<CompSection>,
+    ) -> Option<CompSection> {
+        let result = match value.try_as_single_key_object() {
+            RouteBlobSingleKeyObjectResult::Ok(key, value) => Ok((key, value)),
+            RouteBlobSingleKeyObjectResult::Err(error) => {
+                Err(PackError::BuildRouteSectionError(error).into_diagnostic())
+            }
+            RouteBlobSingleKeyObjectResult::Empty => {
+                if route.is_empty() {
+                    return None;
+                } else {
+                    Err(CompError::EmptyObjectCannotBeSection.into_diagnostic())
+                }
+            }
+            RouteBlobSingleKeyObjectResult::TooManyKeys => {
+                if route.is_empty() {
+                    return None;
+                } else {
+                    Err(CompError::TooManyKeysInObjectSection.into_diagnostic())
+                }
+            }
+            RouteBlobSingleKeyObjectResult::NotObject => {
+                if route.is_empty() {
+                    return None;
+                } else {
+                    Err(CompError::InvalidSectionType.into_diagnostic())
+                }
+            }
+        };
+
+        let (name, value) = match result {
+            Ok(v) => v,
+            Err(e) => {
+                return Some(CompSection::from_diagnostic(e));
+            }
+        };
+
+        let array = match value.try_as_array_iter() {
+            RouteBlobArrayIterResult::Ok(v) => v,
+            RouteBlobArrayIterResult::Err(e) => {
+                return Some(CompSection::from_diagnostic(
+                    PackError::BuildRouteSectionError(e),
+                ));
+            }
+            RouteBlobArrayIterResult::NotArray => {
+                return Some(CompSection::from_diagnostic(CompError::InvalidSectionType));
+            }
+        };
+
+        let mut lines = vec![];
+        for line in array {
+            yield_budget(64).await;
+            lines.push(self.parse_line(line));
+        }
+
+        let section = CompSection {
+            name: name.to_owned(),
+            lines,
+        };
+
+        Some(section)
     }
 }

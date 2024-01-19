@@ -3,12 +3,12 @@ import L from "leaflet";
 import "leaflet-rastercoords";
 
 import { AppDispatcher, viewActions } from "core/store";
-import { MapLayerAttr, MapTilesetTransform, GameCoord } from "low/celerc";
+import { MapLayer, MapTilesetTransform, GameCoord } from "low/celerc";
 
 import { MapLog, getAttributionHtml } from "./utils";
 
 /// Tile layer wrapper
-type MapLayer = {
+type MapTileLayer = {
     /// The tile layer
     layer: L.TileLayer;
     /// The start Z value
@@ -26,7 +26,7 @@ export class MapLayerMgr {
     /// Reference to the app store for dispatching actions
     private dispatcher: AppDispatcher;
     /// The tileset layers
-    private layers: MapLayer[] = [];
+    private layers: MapTileLayer[] = [];
     /// The active tileset layer
     private activeLayerIndex = -1;
 
@@ -39,7 +39,7 @@ export class MapLayerMgr {
     /// This will also set the map to the initial coord
     public initLayers(
         map: L.Map,
-        mapLayers: MapLayerAttr[],
+        mapLayers: MapLayer[],
         initialCoord: GameCoord,
     ) {
         MapLog.info("initializing map layers");
@@ -69,7 +69,7 @@ export class MapLayerMgr {
         this.setActiveLayer(map, initialLayer);
     }
 
-    private getActiveLayer(): MapLayer | undefined {
+    private getActiveLayer(): MapTileLayer | undefined {
         return this.layers[this.activeLayerIndex];
     }
 

@@ -30,10 +30,16 @@ fn main_internal() -> io::Result<()> {
 
     println!("copying files");
     fs::create_dir_all(OUTPUT_PUBLIC_DIR)?;
-    fs::copy(
-        Path::new(TEMP_OUTPUT_DIR).join(BINDING_TS),
-        Path::new(OUTPUT_LOW_DIR).join(BINDING_TS),
-    )?;
+    // there is some problem with wasm-bindgen (or tsify), where it doesn't generate
+    // the correct bindings in debug mode
+    if cfg!(debug_assertions) {
+        println!("not copying generated bindings in debug mode. Please run in release mode if bindings are updated!");
+    } else {
+        fs::copy(
+            Path::new(TEMP_OUTPUT_DIR).join(BINDING_TS),
+            Path::new(OUTPUT_LOW_DIR).join(BINDING_TS),
+        )?;
+    }
 
     fs::copy(
         Path::new(TEMP_OUTPUT_DIR).join(WORKER_JS),

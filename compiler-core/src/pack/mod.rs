@@ -1,226 +1,149 @@
-//! Packer (first steps of compiling a route)
+//! # Pack phase
 //!
-//! The packer takes a project from a resource context, processes the metadata,
-//! and resolves any `use` property defined in the route or metadata.
+//! This phase ensures the `use`s in the route are resolved, and creates
+//! the plugin runtimes and the compiler
+//!
+//! # Input
+//! It takes [`PreparedContext`] as input, either cached or newly created.
+//! If cached, the start_time of the compiler is set to the current time.
+//!
+//! It also takes options to modify the plugin list.
+//!
+//! # Work
+//! 1. Resolve the `use`s in the route, if not already resolved
+//! 2. Modify the plugin list according to the options
+//! 3. Create the plugin runtimes, calling `onInit` for script plugins
+//!
+//! # Output
+//! The output is a [`Compiler`]
 
-use std::convert::Infallible;
-use std::fmt::{Display, Formatter};
+use std::borrow::Cow;
+use std::ops::{Deref, DerefMut};
 
-use crate::lang;
-use crate::types::DocDiagnostic;
+use instant::Instant;
 
-mod pack_config;
-pub use pack_config::*;
-mod pack_coord_map;
-pub use pack_coord_map::*;
-mod pack_entry_points;
-pub use pack_entry_points::*;
-mod pack_map;
-pub use pack_map::*;
-mod pack_map_layer;
-pub use pack_map_layer::*;
-mod pack_preset;
-pub use pack_preset::*;
-mod pack_project;
-pub use pack_project::*;
-mod pack_route;
-pub use pack_route::*;
-mod pack_use;
-pub use pack_use::*;
-mod pack_value;
-pub use pack_value::*;
-mod resource;
-pub use resource::*;
+use crate::env::{join_futures, yield_budget};
+use crate::json::RouteBlob;
+use crate::plugin::PluginRuntime;
+use crate::prep::{self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting};
+use crate::res::Loader;
 
-#[derive(Default, Debug, Clone, PartialEq)]
-pub struct ConfigTrace(Vec<usize>);
+mod error;
+pub use error::*;
 
-impl ConfigTrace {
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.0.len()
-    }
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-    #[inline]
-    pub fn push(&mut self, v: usize) {
-        self.0.push(v)
-    }
-    #[inline]
-    pub fn pop(&mut self) -> Option<usize> {
-        self.0.pop()
+/// Output of the pack phase.
+///
+/// The compiler keeps a reference to data in the prepared context to avoid copying.
+/// Data that are allowed to be changed use copy-on-write.
+///
+/// The compiler is also stateful, as it tracks the current location and color of the route
+pub struct Compiler<'p> {
+    pub ctx: CompileContext<'p>,
+
+    /// Reference to the built route
+    pub route: Cow<'p, RouteBlob>,
+    /// Runtime of the plugins
+    pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
+}
+
+impl<'p> Deref for Compiler<'p> {
+    type Target = CompileContext<'p>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.ctx
     }
 }
 
-impl Display for ConfigTrace {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "trace=[{}]",
-            self.0
-                .iter()
-                .map(|x| x.to_string())
-                .collect::<Vec<_>>()
-                .join(",")
-        )
+impl<'p> DerefMut for Compiler<'p> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.ctx
     }
 }
 
-impl From<&[usize]> for ConfigTrace {
-    fn from(v: &[usize]) -> Self {
-        Self(v.to_vec())
+impl<'p> AsRef<CompileContext<'p>> for Compiler<'p> {
+    fn as_ref(&self) -> &CompileContext<'p> {
+        &self.ctx
     }
 }
 
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
-pub enum PackerError {
-    #[error("The project file (project.yaml) is missing or invalid.")]
-    InvalidProject,
-
-    #[error("Invalid `use` value: {0}. If you are specifying a relative path, make sure to start with ./ or ../")]
-    InvalidUse(String),
-
-    #[error("Invalid path: {0}")]
-    InvalidPath(String),
-
-    #[error("Invalid url: {0}")]
-    InvalidUrl(String),
-
-    #[error("Max depth of {0} levels of `use` is reached. Please make sure there are no circular dependencies.")]
-    MaxUseDepthExceeded(usize),
-
-    #[error("Max reference depth of {0} levels is reached. There might be a formatting error in your project files.")]
-    MaxRefDepthExceeded(usize),
-
-    #[error("Max preset namespace depth of {0} levels is reached. There might be a formatting error in your project files. If this is intentional, consider making the namespaces less complex.")]
-    MaxPresetNamespaceDepthExceeded(usize),
-
-    #[error("The format of resource {0} cannot be determined")]
-    UnknownFormat(String),
-
-    #[error("Cannot load file: {0}")]
-    LoadFile(String),
-
-    #[error("Cannot load url: {0}")]
-    LoadUrl(String),
-
-    #[error("Error when parsing structured data in file {0}: {1}")]
-    InvalidFormat(String, String),
-
-    #[error("Error when parsing file {0}: file is not UTF-8")]
-    InvalidUtf8(String),
-
-    #[error("")]
-    InvalidIcon,
-
-    #[error("Resource type is invalid: {0} should be of type {1}")]
-    InvalidResourceType(String, String),
-
-    #[error("Project metadata is missing a required property: {0}")]
-    MissingMetadataProperty(String),
-
-    #[error("Project property {0} has invalid type")]
-    InvalidMetadataPropertyType(String),
-
-    #[error("Project metadata has extra unused property: {0}")]
-    UnusedMetadataProperty(String),
-
-    #[error("Project config ({0}) has an invalid type")]
-    InvalidConfigType(ConfigTrace),
-
-    #[error("Project config ({0}): the `{1}` property is invalid")]
-    InvalidConfigProperty(ConfigTrace, String),
-
-    #[error("Project config ({0}): the required `{1}` property is missing")]
-    MissingConfigProperty(ConfigTrace, String),
-
-    #[error("Project config ({0}): the `{1}` property is unused")]
-    UnusedConfigProperty(ConfigTrace, String),
-
-    #[error("Project config ({0}): The preset {1} is invalid")]
-    InvalidPreset(ConfigTrace, String),
-
-    #[error("Project config ({0}): defining map when a previous config already defines one")]
-    DuplicateMap(ConfigTrace),
-
-    #[error("Project config ({0}): config is nesting too deep!")]
-    MaxConfigDepthExceeded(ConfigTrace),
-
-    #[error("Project config ({0}): the tag `{1}` is not defined")]
-    TagNotFound(ConfigTrace, String),
-
-    #[error("Entry point `{0}` is invalid: `{1}` is neither an absolute path, nor a name of another entry point.")]
-    InvalidEntryPoint(String, String),
-
-    #[error("Entry point `{0}` is nesting too deep! Do you have a recursive loop?")]
-    MaxEntryPointDepthExceeded(String),
-
-    #[error("`{0}` is not a valid built-in plugin or reference to a plugin script")]
-    InvalidPlugin(String),
-
-    #[error("No map defined in project config")]
-    MissingMap,
-
-    #[error("Image resource {0} has exceeded the size limit of {1}")]
-    ImageTooBig(String, String),
-
-    #[error("{0}")]
-    NotImpl(String),
-}
-
-impl PackerError {
-    pub fn add_to_diagnostics(&self, output: &mut Vec<DocDiagnostic>) {
-        output.push(DocDiagnostic {
-            msg: lang::parse_poor(&self.to_string()),
-            msg_type: "error".to_string(),
-            source: "celerc/packer".to_string(),
-        });
-    }
-
-    pub fn is_cancel(&self) -> bool {
-        false
+impl<'p> AsMut<CompileContext<'p>> for Compiler<'p> {
+    fn as_mut(&mut self) -> &mut CompileContext<'p> {
+        &mut self.ctx
     }
 }
 
-impl From<Infallible> for PackerError {
-    fn from(_: Infallible) -> Self {
-        unreachable!()
-    }
+/// Intermediate data when the compiler is being constructed
+pub struct CompileContext<'p> {
+    /// The start time of the compilation (not current phase)
+    pub start_time: Instant,
+    /// The config of the route
+    pub config: Cow<'p, RouteConfig>,
+    /// The metadata
+    pub meta: Cow<'p, CompilerMetadata>,
+    /// Compiler settings
+    pub setting: &'p Setting,
 }
 
-pub type PackerResult<T> = Result<T, PackerError>;
-
-pub enum ImageFormat {
-    PNG,
-    JPEG,
-    GIF,
-    WEBP,
-}
-
-impl ImageFormat {
-    pub fn try_from_path(path: &str) -> Option<Self> {
-        let path = path.to_lowercase();
-        if path.ends_with(".png") {
-            Some(Self::PNG)
-        } else if path.ends_with(".jpg") || path.ends_with(".jpeg") {
-            Some(Self::JPEG)
-        } else if path.ends_with(".gif") {
-            Some(Self::GIF)
-        } else if path.ends_with(".webp") {
-            Some(Self::WEBP)
-        } else {
-            None
+impl<'p> CompileContext<'p> {
+    /// Create the plugin runtimes from the plugin list
+    pub async fn create_plugin_runtimes(&self) -> PackResult<Vec<Box<dyn PluginRuntime>>> {
+        let mut output = Vec::with_capacity(self.meta.plugins.len());
+        for plugin in &self.meta.plugins {
+            yield_budget(4).await;
+            let runtime = plugin
+                .create_runtime(self)
+                .map_err(PackError::PluginInitError)?;
+            output.push(runtime);
         }
+        Ok(output)
+    }
+}
+
+impl<L> PreparedContext<L>
+where
+    L: Loader,
+{
+    /// Entry point to the pack phase. Creates a [`Compiler`] that can be used to compile the route
+    /// JSON to a document
+    pub async fn create_compiler(
+        &self,
+        reset_start_time: Option<Instant>,
+    ) -> PackResult<Compiler<'_>> {
+        let route_future = async {
+            match &self.prep_doc {
+                PrepDoc::Built(route) => Cow::Borrowed(route),
+                PrepDoc::Raw(route) => {
+                    let route =
+                        prep::build_route(&self.project_res, route.clone(), &self.setting).await;
+                    Cow::Owned(route)
+                }
+            }
+        };
+
+        let ctx = self.create_compile_context(reset_start_time);
+
+        // TODO #24 plugin options
+
+        let plugin_runtimes_future = ctx.create_plugin_runtimes();
+
+        let (route, plugin_runtimes) = join_futures!(route_future, plugin_runtimes_future);
+        let plugin_runtimes = plugin_runtimes?;
+
+        let compiler = Compiler {
+            ctx,
+            route,
+            plugin_runtimes,
+        };
+
+        Ok(compiler)
     }
 
-    pub fn media_type(&self) -> &'static str {
-        match self {
-            Self::PNG => "image/png",
-            Self::JPEG => "image/jpeg",
-            Self::GIF => "image/gif",
-            Self::WEBP => "image/webp",
+    pub fn create_compile_context(&self, reset_start_time: Option<Instant>) -> CompileContext<'_> {
+        CompileContext {
+            start_time: reset_start_time.unwrap_or(self.start_time),
+            config: Cow::Borrowed(&self.config),
+            meta: Cow::Borrowed(&self.meta),
+            setting: &self.setting,
         }
     }
 }

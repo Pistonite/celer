@@ -1,58 +1,68 @@
-use proc_macro2::TokenStream;
-use quote::quote;
+use proc_macro::TokenStream;
 
-/// A wrapper to remove Send trait to `async_trait` and `async_recursion`
-/// if the `wasm` feature flag is enabled.
+mod util;
+
+/// A wrapper for `async_trait` to add (?Send) in some cases.
 ///
 /// # Examples
-/// Instead of
-/// ```ignore
+/// Use the normal `async_trait` macros
+/// when `Send` is explicitly required or need to be explicitly removed:
+/// ```no_compile
 /// #[async_trait]
 /// pub trait XXX {
 ///     ...
 /// }
-/// ```
-/// Do
-/// ```ignore
-/// #[maybe_send(async_trait)]
+/// #[async_trait(?Send)]
 /// pub trait XXX {
 ///     ...
 /// }
 /// ```
-/// Instead of
-/// ```ignore
+/// Use `auto` to remove Send when wasm feature is on
+/// ```no_compile
+/// #[async_trait(auto)]
+/// pub trait XXX {
+///     ...
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn async_trait(attr: TokenStream, input: TokenStream) -> TokenStream {
+    async_impl::expand("async_trait", attr, input)
+}
+
+/// A wrapper for `async_recursion`
+/// to add (?Send) in some cases.
+///
+/// # Examples
+/// Use the normal `async_recursion` macros
+/// when `Send` is explicitly required or need to be explicitly removed:
+/// ```no_compile
 /// #[async_recursion]
 /// pub async fn foo() {
 ///     ...
 /// }
+/// #[async_recursion(?Send)]
+/// pub async fn foo() {
+///     ...
+/// }
 /// ```
-/// Do
-/// ```ignore
-/// #[maybe_send(async_recursion)]
+/// Use `auto` to remove Send when wasm feature is on
+/// ```no_compile
+/// #[async_recursion(auto)]
 /// pub async fn foo() {
 ///     ...
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn maybe_send(
-    attr: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let attr = TokenStream::from(attr);
-    let input = TokenStream::from(input);
-    let tokens = quote! {
-        #[cfg_attr(not(feature="wasm"), #attr)]
-        #[cfg_attr(feature="wasm", #attr(?Send))]
-        #input
-    };
-    tokens.into()
+pub fn async_recursion(attr: TokenStream, input: TokenStream) -> TokenStream {
+    async_impl::expand("async_recursion", attr, input)
 }
+mod async_impl;
 
-mod derive_wasm_impl;
 /// A wrapper to add WASM support to a type so it can be send across the WASM ABI boundary.
 /// All derived code/attributes are behind the `wasm` feature gate.
 ///
-/// The target type should also derive `serde::Serialize` and `serde::Deserialize`.
+/// `serde::Serialize` and `serde::Deserialize` will be automatically added
+/// regardless of the `wasm` feature.
 ///
 /// Under the hood, this uses `serde_wasm_bindgen` and `tsify` to generate the WASM ABI.
 /// Make sure these two crates and the `tsify/js` feature is activated with the `wasm` feature.
@@ -62,33 +72,14 @@ mod derive_wasm_impl;
 ///
 /// # Example
 /// ```ignore
-/// #[derive(Debug, Clone, Serialize, Deserialize)]
+/// #[derive(Debug, Clone)]
 /// #[derive_wasm]
-/// #[serde(rename_all = "camelCase")]
 /// pub struct MyStruct {
 ///    pub a_thing: i32,
 /// }
 /// ```
-/// If the derive resides in compiler-core, `#[derive_wasm(feature="wasm")]` should be used.
 #[proc_macro_attribute]
-pub fn derive_wasm(
-    feature_attr: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    derive_wasm_impl::expand(feature_attr, input)
+pub fn derive_wasm(_attr: TokenStream, input: TokenStream) -> TokenStream {
+    derive_wasm_impl::expand(input)
 }
-
-/// A wrapper for `#[cfg(test)]` to only define the test when the `test` feature flag is enabled
-#[proc_macro_attribute]
-pub fn test_suite(
-    _attr: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let input = TokenStream::from(input);
-    let tokens = quote! {
-        #[cfg(feature="test")]
-        #[cfg(test)]
-        #input
-    };
-    tokens.into()
-}
+mod derive_wasm_impl;

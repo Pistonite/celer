@@ -1,6 +1,6 @@
 //! Utilities
 
-import { DocColor, DocTag } from "low/celerc";
+import { DocTagColor, DocTag } from "low/celerc";
 import { DOMClass, DOMId, Logger } from "low/utils";
 
 export const DocLog = new Logger("doc");
@@ -177,7 +177,7 @@ export const getInjectedStyleTag = (id: string): HTMLStyleElement => {
     return styleTag as HTMLStyleElement;
 };
 
-const createCssStringForColor = (color: DocColor, type: "fg" | "bg") => {
+const createCssStringForColor = (color: DocTagColor, type: "fg" | "bg") => {
     if (typeof color === "string") {
         return `--rich-text-${type}-light:${color};--rich-text-${type}-dark:${color};`;
     }
