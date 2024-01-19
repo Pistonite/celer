@@ -101,7 +101,7 @@ pub async fn load_file(path: &str) -> ResResult<Vec<u8>> {
 
 #[inline]
 pub async fn load_file_check_changed(path: &str) -> ResResult<LoadFileOutput> {
-    return load_file_internal(path, true).await;
+    load_file_internal(path, true).await
 }
 
 pub enum LoadFileOutput {

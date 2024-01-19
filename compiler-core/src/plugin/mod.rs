@@ -24,7 +24,7 @@ pub trait PluginRuntime {
     fn get_source(&self) -> Cow<'static, str>;
 
     /// Called before route is compiled, to make changes to the compiler
-    fn on_before_compile<'a>(&mut self, _ctx: &mut CompileContext<'a>) -> PluginResult<()> {
+    fn on_before_compile(&mut self, _ctx: &mut CompileContext) -> PluginResult<()> {
         Ok(())
     }
     /// Called after the route is compiled, to transform the route
@@ -32,7 +32,7 @@ pub trait PluginRuntime {
         Ok(())
     }
     /// Called after the route is turned into ExecDoc
-    fn on_after_execute<'a>(&mut self, _doc: &mut ExecDoc<'a>) -> PluginResult<()> {
+    fn on_after_execute(&mut self, _doc: &mut ExecDoc) -> PluginResult<()> {
         Ok(())
     }
 }
@@ -46,10 +46,7 @@ pub struct PluginInstance {
 }
 
 impl PluginInstance {
-    pub fn create_runtime<'a>(
-        &self,
-        ctx: &CompileContext<'a>,
-    ) -> PluginResult<Box<dyn PluginRuntime>> {
+    pub fn create_runtime(&self, ctx: &CompileContext<'_>) -> PluginResult<Box<dyn PluginRuntime>> {
         match &self.plugin {
             Plugin::BuiltIn(p) => p.create_runtime(ctx, &self.props),
             Plugin::Script(p) => p.create_runtime(ctx, &self.props),

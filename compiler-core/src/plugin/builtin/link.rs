@@ -14,7 +14,7 @@ use crate::plugin::{operation, PluginResult, PluginRuntime};
 
 pub struct LinkPlugin;
 impl PluginRuntime for LinkPlugin {
-    fn on_before_compile<'a>(&mut self, ctx: &mut CompileContext<'a>) -> PluginResult<()> {
+    fn on_before_compile(&mut self, ctx: &mut CompileContext) -> PluginResult<()> {
         // add the link tag if not defined already
         let link_tag = DocTag {
             color: Some(DocTagColor::LightDark {

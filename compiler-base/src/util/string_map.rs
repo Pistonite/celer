@@ -28,13 +28,13 @@ where
     }
 }
 
-impl<T> Into<BTreeMap<String, T>> for StringMap<T>
+impl<T> From<StringMap<T>> for BTreeMap<String, T>
 where
     T: Serialize,
 {
     #[inline]
-    fn into(self) -> BTreeMap<String, T> {
-        self.0
+    fn from(map: StringMap<T>) -> Self {
+        map.0
     }
 }
 

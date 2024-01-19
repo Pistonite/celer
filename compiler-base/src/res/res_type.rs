@@ -26,10 +26,7 @@ impl ResType {
 
     /// Return if the resource is an image
     pub fn is_image(&self) -> bool {
-        match self {
-            Self::Png | Self::Jpeg | Self::Gif | Self::Webp => true,
-            _ => false,
-        }
+        matches!(self, Self::Png | Self::Jpeg | Self::Gif | Self::Webp)
     }
 }
 

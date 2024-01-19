@@ -31,7 +31,7 @@ impl Default for Compiler<'static> {
 impl<'c, 'p> LineContext<'c, 'p> {
     pub fn with_compiler(compiler: &'c Compiler<'p>) -> Self {
         LineContext {
-            compiler: &compiler,
+            compiler,
             line: Default::default(),
             errors: Default::default(),
         }

@@ -117,6 +117,7 @@ impl BaseError for CompError {
     }
 
     fn is_error(&self) -> bool {
+        #[allow(clippy::match_like_matches_macro)]
         match self {
             CompError::UnusedProperty(_) | CompError::TooManyTagsInCounter => false,
             _ => true,

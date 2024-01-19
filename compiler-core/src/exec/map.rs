@@ -108,7 +108,7 @@ impl MapBuilder {
 
     /// Change the color of the current line
     pub fn change_color(&mut self, color: String) {
-        if self.color() == &color {
+        if self.color() == color {
             return;
         }
         self.commit();

@@ -12,9 +12,7 @@ use super::CompError;
 /// - string (desugared to `{[value]: {}}`)
 /// - null (desugared to `{"": {}}`)
 /// - boolean, number (desugared to string representation)
-pub fn desugar_line<'a>(
-    value: SafeRouteBlob<'a>,
-) -> (Cow<'a, str>, CompResult<SafeRouteObject<'a>>) {
+pub fn desugar_line(value: SafeRouteBlob<'_>) -> (Cow<'_, str>, CompResult<SafeRouteObject<'_>>) {
     if value.is_array() {
         return (
             value.coerce_into_string().into(),

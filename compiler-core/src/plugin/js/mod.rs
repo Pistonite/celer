@@ -13,9 +13,9 @@ pub struct ScriptPlugin {
 }
 
 impl ScriptPlugin {
-    pub fn create_runtime<'a>(
+    pub fn create_runtime(
         &self,
-        _ctx: &CompileContext<'a>,
+        _ctx: &CompileContext<'_>,
         _props: &Value,
     ) -> PluginResult<Box<dyn PluginRuntime>> {
         // TODO #24 implement JS plugin engine

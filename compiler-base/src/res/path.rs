@@ -146,22 +146,22 @@ mod test {
     #[test]
     fn test_new_local() {
         let path = "";
-        let path = ResPath::new_local_unchecked(&path);
+        let path = ResPath::new_local_unchecked(path);
         assert_eq!(path.to_string(), "");
 
         let path = "test/path";
-        let path = ResPath::new_local_unchecked(&path);
+        let path = ResPath::new_local_unchecked(path);
         assert_eq!(path.to_string(), "test/path");
     }
 
     #[test]
     fn test_new_remote() {
         let path = "";
-        let path = ResPath::new_remote_unchecked("https://hello/", &path);
+        let path = ResPath::new_remote_unchecked("https://hello/", path);
         assert_eq!(path.to_string(), "https://hello/");
 
         let path = "test/path";
-        let path = ResPath::new_remote_unchecked("https://hello/", &path);
+        let path = ResPath::new_remote_unchecked("https://hello/", path);
         assert_eq!(path.to_string(), "https://hello/test/path");
     }
 

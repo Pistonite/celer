@@ -24,9 +24,9 @@ pub enum BuiltInPlugin {
 }
 
 impl BuiltInPlugin {
-    pub fn create_runtime<'a>(
+    pub fn create_runtime(
         &self,
-        ctx: &CompileContext<'a>,
+        ctx: &CompileContext<'_>,
         props: &Value,
     ) -> PluginResult<Box<dyn PluginRuntime>> {
         match &self {

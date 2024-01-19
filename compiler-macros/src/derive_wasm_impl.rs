@@ -152,6 +152,7 @@ fn transform_input_field(field: &mut Field, add_cfg_wasm: bool) {
                     .expect("syn::parse2 failed to parse attr_tokens");
                 field.attrs.push(attr.0);
             } else if !allow_map {
+                #[allow(clippy::collapsible_if)]
                 if seg.ident == "BTreeMap" || seg.ident == "HashMap" {
                     let celerc = util::compiler_crate_ident();
                     panic!("Use {celerc}::util::StringMap instead of `BTreeMap` or `HashMap` in types that are exposed through WASM interface, to automatically get the correct TypeScript types.")

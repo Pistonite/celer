@@ -59,7 +59,7 @@ impl PluginRuntime for MetricsPlugin {
         }
         Ok(())
     }
-    fn on_after_execute<'a>(&mut self, doc: &mut ExecDoc<'a>) -> PluginResult<()> {
+    fn on_after_execute(&mut self, doc: &mut ExecDoc) -> PluginResult<()> {
         // measure time since comp finished = exec time
         let exec_time_ms = self.last_start_time.elapsed().as_millis() as u64;
         let project = doc.project.to_mut();

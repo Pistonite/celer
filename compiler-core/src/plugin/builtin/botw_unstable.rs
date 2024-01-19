@@ -216,7 +216,7 @@ impl BotwAbilityUnstablePlugin {
             self.update_recharge(0);
         }
 
-        if let Some(x) = is_in_castle(&line) {
+        if let Some(x) = is_in_castle(line) {
             self.set_in_castle(x);
         }
 

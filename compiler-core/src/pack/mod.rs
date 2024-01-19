@@ -91,7 +91,7 @@ impl<'p> CompileContext<'p> {
         for plugin in &self.meta.plugins {
             yield_budget(4).await;
             let runtime = plugin
-                .create_runtime(&self)
+                .create_runtime(self)
                 .map_err(PackError::PluginInitError)?;
             output.push(runtime);
         }
@@ -140,7 +140,7 @@ where
 
     pub fn create_compile_context(&self, reset_start_time: Option<Instant>) -> CompileContext<'_> {
         CompileContext {
-            start_time: reset_start_time.unwrap_or_else(|| self.start_time.clone()),
+            start_time: reset_start_time.unwrap_or(self.start_time),
             config: Cow::Borrowed(&self.config),
             meta: Cow::Borrowed(&self.meta),
             setting: &self.setting,

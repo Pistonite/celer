@@ -204,7 +204,7 @@ impl<'a> From<SafeRouteBlob<'a>> for Value {
                 Value::Array(arr.iter().map(|x| Value::from(x.clone())).collect())
             }
             SafeRouteBlob::OwnedArray(arr) => {
-                Value::Array(arr.into_iter().map(|x| Value::from(x)).collect())
+                Value::Array(arr.into_iter().map(Value::from).collect())
             }
             SafeRouteBlob::BorrowedObject(obj) => Value::Object(
                 obj.iter()
@@ -497,6 +497,18 @@ pub enum SafeRouteArray<'a> {
 }
 
 impl<'a> SafeRouteArray<'a> {
+    /// Check if the array is empty
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::BorrowedValue(arr) => arr.is_empty(),
+            Self::OwnedValue(arr) => arr.is_empty(),
+            Self::BorrowedBlob(arr) => arr.is_empty(),
+            Self::OwnedBlob(arr) => arr.is_empty(),
+            Self::BorrowedSafe(arr) => arr.is_empty(),
+            Self::OwnedSafe(arr) => arr.is_empty(),
+        }
+    }
     /// Get the length of the array
     #[inline]
     pub fn len(&self) -> usize {
@@ -561,10 +573,29 @@ pub enum SafeRouteObject<'a> {
     OwnedSafe(BTreeMap<String, SafeRouteBlob<'a>>),
 }
 
+impl<'a> Default for SafeRouteObject<'a> {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> SafeRouteObject<'a> {
     /// Create an empty object
     pub fn new() -> Self {
         Self::OwnedSafe(BTreeMap::new())
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        match self {
+            Self::BorrowedValue(obj) => obj.is_empty(),
+            Self::OwnedValue(obj) => obj.is_empty(),
+            Self::BorrowedBlob(obj) => obj.is_empty(),
+            Self::OwnedBlob(obj) => obj.is_empty(),
+            Self::BorrowedSafe(obj) => obj.is_empty(),
+            Self::OwnedSafe(obj) => obj.is_empty(),
+        }
     }
 
     /// Get the length of the object

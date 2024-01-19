@@ -86,7 +86,7 @@ jobs:
     - uses: baptiste0928/cargo-install@v2
       with:
         crate: regen-lang
-    - run: task core:grammar
+    - run: task base:grammar
     - run: cargo build --bin celerserver --release --target x86_64-unknown-linux-musl
       working-directory: ./web-server
     - uses: actions/upload-artifact@v3

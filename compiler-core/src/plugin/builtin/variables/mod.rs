@@ -275,7 +275,7 @@ impl VariablesPlugin {
 }
 
 impl PluginRuntime for VariablesPlugin {
-    fn on_before_compile<'a>(&mut self, ctx: &mut CompileContext<'a>) -> PluginResult<()> {
+    fn on_before_compile(&mut self, ctx: &mut CompileContext) -> PluginResult<()> {
         // add the val tag if not defined already
         let tag = DocTag {
             color: Some(DocTagColor::LightDark {
