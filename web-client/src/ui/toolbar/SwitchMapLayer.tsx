@@ -66,9 +66,7 @@ const useMapLayerNames = () => {
     if (!map) {
         return [];
     }
-    return map.layers.map(
-        (layer) => layer.name || "(Unnamed layer)",
-    );
+    return map.layers.map((layer) => layer.name || "(Unnamed layer)");
 };
 
 /// The control is disabled if there are less than 2 layers.
