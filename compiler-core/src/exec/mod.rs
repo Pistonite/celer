@@ -12,10 +12,11 @@
 //! 2. Call plugin onAfterExecute
 //!
 //! # Output
-//! The output is a [`ExecDoc`]
+//! The output is a [`ExecContext`], which contains the [`ExecDoc`].
 
 use crate::comp::CompDoc;
 use crate::lang::IntoDiagnostic;
+use crate::plugin::PluginRuntime;
 
 mod error;
 pub use error::*;
@@ -28,11 +29,18 @@ pub use exec_section::*;
 mod exec_doc;
 pub use exec_doc::*;
 
+/// Output of the exec phase
+pub struct ExecContext<'p> {
+    /// The exec doc
+    pub exec_doc: ExecDoc<'p>,
+    /// The plugin runtimes at this point
+    /// which can be used to run exporters
+    pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
+}
+
 impl<'p> CompDoc<'p> {
     /// Entry point for the exec phase
-    pub async fn execute(mut self) -> ExecDoc<'p> {
-        // TODO #33: prepare exporter properties
-
+    pub async fn execute(mut self) -> ExecContext<'p> {
         let mut plugins = std::mem::take(&mut self.plugin_runtimes);
         let mut exec_doc = self.execute_document().await;
         for plugin in &mut plugins {
@@ -42,6 +50,9 @@ impl<'p> CompDoc<'p> {
             }
         }
 
-        exec_doc
+        ExecContext {
+            exec_doc,
+            plugin_runtimes: plugins,
+        }
     }
 }

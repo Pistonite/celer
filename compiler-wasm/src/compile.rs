@@ -46,7 +46,8 @@ pub async fn compile_document(
         Ok(x) => x,
         Err(e) => {
             let comp_doc = CompDoc::from_prep_error(e, start_time);
-            let exec_doc = comp_doc.execute().await;
+            let exec_doc = comp_doc.execute().await.exec_doc;
+            // TODO #33: exports
             return OpaqueExecDoc::wrap(exec_doc);
         }
     };
@@ -95,14 +96,14 @@ async fn compile_with_pack_error(
     error: PackError,
 ) -> Result<OpaqueExecDoc, JsValue> {
     let comp_doc = CompDoc::from_diagnostic(error, context.create_compile_context(None));
-    let exec_doc = comp_doc.execute().await;
-    OpaqueExecDoc::wrap(exec_doc)
+    let exec_ctx = comp_doc.execute().await;
+    OpaqueExecDoc::wrap(exec_ctx.exec_doc)
 }
 
 async fn compile_with_compiler(compiler: Compiler<'_>) -> Result<OpaqueExecDoc, JsValue> {
     let comp_doc = compiler.compile().await;
-    let exec_doc = comp_doc.execute().await;
-    OpaqueExecDoc::wrap(exec_doc)
+    let exec_ctx = comp_doc.execute().await;
+    OpaqueExecDoc::wrap(exec_ctx.exec_doc)
 }
 
 /// Create a context builder that corresponds to the root project.yaml

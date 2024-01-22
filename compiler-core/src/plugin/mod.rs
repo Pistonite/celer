@@ -4,6 +4,7 @@ use serde_json::Value;
 
 use crate::comp::CompDoc;
 use crate::exec::ExecDoc;
+use crate::expo::{ExportMetadata, ExpoDoc};
 use crate::pack::CompileContext;
 
 mod error;
@@ -34,6 +35,17 @@ pub trait PluginRuntime {
     /// Called after the route is turned into ExecDoc
     fn on_after_execute(&mut self, _doc: &mut ExecDoc) -> PluginResult<()> {
         Ok(())
+    }
+
+    fn on_prepare_export(&mut self) -> PluginResult<Option<ExportMetadata>> {
+        Ok(None)
+    }
+
+    fn on_export_comp_doc(&mut self, _doc: &CompDoc) -> PluginResult<Option<ExpoDoc>> {
+        Ok(None)
+    }
+    fn on_export_exec_doc(&mut self, _doc: &ExecDoc) -> PluginResult<Option<ExpoDoc>> {
+        Ok(None)
     }
 }
 
