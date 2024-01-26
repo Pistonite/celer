@@ -10,6 +10,9 @@ pub enum PackError {
     #[error("Failed to initialize plugins: {0}")]
     PluginInitError(PluginError),
 
+    #[error("Plugin {0} is duplicated. Please remove the duplicate or use `allow-duplicate: true`")]
+    DuplicatePlugin(String),
+
     #[error("Failed to build route: {0}")]
     BuildRouteError(RouteBlobError),
 
@@ -34,6 +37,7 @@ impl BaseError for PackError {
     fn help_path(&self) -> Option<Cow<'static, str>> {
         let path = match self {
             PackError::PluginInitError(_) => "plugin/getting-started",
+            PackError::DuplicatePlugin(_) => "plugin/getting-started#allow-duplicates",
             PackError::BuildRouteError(_) => "route/route-structure",
             PackError::BuildRouteSectionError(_) => "route/route-structure#sections",
             PackError::BuildRouteLineError(_) => "route/route-structure#lines",

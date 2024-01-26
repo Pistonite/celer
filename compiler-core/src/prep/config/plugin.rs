@@ -24,6 +24,7 @@ impl<'a> PreparedConfig<'a> {
             let v = super::check_map!(self, v, format!("{}[{}]", prop::PLUGINS, i))?;
             let mut plugin = None;
             let mut props = json!(null);
+            let mut allow_duplicate = false;
 
             // parse properties
             for (key, value) in v.into_iter() {
@@ -34,6 +35,9 @@ impl<'a> PreparedConfig<'a> {
                     }
                     prop::WITH => {
                         props = value;
+                    }
+                    prop::ALLOW_DUPLICATE => {
+                        allow_duplicate = value.coerce_truthy();
                     }
                     _ => {
                         return Err(PrepError::UnusedConfigProperty(
@@ -52,7 +56,7 @@ impl<'a> PreparedConfig<'a> {
                 )
             })?;
 
-            self.plugins.push(PluginInstance { plugin, props });
+            self.plugins.push(PluginInstance { plugin, allow_duplicate, props });
         }
 
         Ok(())
@@ -76,10 +80,9 @@ impl<'a> PreparedConfig<'a> {
                         // load the script
                         let script_resource = res.resolve(&valid_use)?;
                         let script = script_resource.load_utf8().await?;
-                        // TODO #24: do we want to clone here?
                         Plugin::Script(ScriptPlugin {
+                            id: script_resource.path().to_string(),
                             script: script.into_owned(),
-                            source: valid_use.to_string(),
                         })
                     }
                 }

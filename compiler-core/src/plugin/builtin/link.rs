@@ -54,8 +54,8 @@ impl PluginRuntime for LinkPlugin {
         Ok(())
     }
 
-    fn get_source(&self) -> Cow<'static, str> {
-        "plugin/link".into()
+    fn get_id(&self) -> Cow<'static, str> {
+        Cow::Owned(super::BuiltInPlugin::Link.id())
     }
 }
 

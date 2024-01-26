@@ -18,13 +18,14 @@
 //! The output is a [`Compiler`]
 
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 use std::ops::{Deref, DerefMut};
 
 use instant::Instant;
 
 use crate::env::{join_futures, yield_budget};
 use crate::json::RouteBlob;
-use crate::plugin::PluginRuntime;
+use crate::plugin::{PluginRuntime, PluginOptions};
 use crate::prep::{self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting};
 use crate::res::Loader;
 
@@ -86,14 +87,56 @@ pub struct CompileContext<'p> {
 
 impl<'p> CompileContext<'p> {
     /// Create the plugin runtimes from the plugin list
-    pub async fn create_plugin_runtimes(&self) -> PackResult<Vec<Box<dyn PluginRuntime>>> {
-        let mut output = Vec::with_capacity(self.meta.plugins.len());
+    pub async fn create_plugin_runtimes(&self, options: Option<PluginOptions>) -> PackResult<Vec<Box<dyn PluginRuntime>>> {
+        let add_size = options.as_ref().map(|x| x.add.len()).unwrap_or_default();
+        let mut output = Vec::with_capacity(self.meta.plugins.len() + add_size);
+        // we don't know how many plugins the users specify
+        // so using a set to check for remove
+        // even it's less efficient for small sizes
+        let mut remove = BTreeSet::new();
+        if let Some(options) = &options {
+            remove.extend(options.remove.iter().map(|x| x.as_str()));
+        }
+        let mut seen = BTreeSet::new();
         for plugin in &self.meta.plugins {
             yield_budget(4).await;
+
+            let id = plugin.get_id();
+
+            let id_ref: &str = id.as_ref(); // need type annotation for contains below
+            if remove.contains(id_ref) {
+                continue;
+            }
+
+            if !plugin.allow_duplicate && !seen.insert(id) {
+                return Err(PackError::DuplicatePlugin(plugin.get_display_name().into_owned()));
+            }
+
+            // TODO #175: plugin dependencies
+            
             let runtime = plugin
                 .create_runtime(self)
                 .map_err(PackError::PluginInitError)?;
             output.push(runtime);
+        }
+
+        if let Some(options) = &options {
+            for plugin in &options.add {
+                yield_budget(4).await;
+
+                let id = plugin.get_id();
+
+                if !plugin.allow_duplicate && !seen.insert(id) {
+                    return Err(PackError::DuplicatePlugin(plugin.get_display_name().into_owned()));
+                }
+
+                // TODO #175: plugin dependencies
+
+                let runtime = plugin
+                    .create_runtime(self)
+                    .map_err(PackError::PluginInitError)?;
+                output.push(runtime);
+            }
         }
         Ok(output)
     }
@@ -108,6 +151,7 @@ where
     pub async fn create_compiler(
         &self,
         reset_start_time: Option<Instant>,
+        plugin_options: Option<PluginOptions>,
     ) -> PackResult<Compiler<'_>> {
         let route_future = async {
             match &self.prep_doc {
@@ -122,9 +166,7 @@ where
 
         let ctx = self.create_compile_context(reset_start_time);
 
-        // TODO #24 plugin options
-
-        let plugin_runtimes_future = ctx.create_plugin_runtimes();
+        let plugin_runtimes_future = ctx.create_plugin_runtimes(plugin_options);
 
         let (route, plugin_runtimes) = join_futures!(route_future, plugin_runtimes_future);
         let plugin_runtimes = plugin_runtimes?;

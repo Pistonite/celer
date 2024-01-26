@@ -20,7 +20,8 @@ pub enum ExportTarget {
     CompDoc,
     /// The exporter only runs for the ExecDoc
     ExecDoc,
-    /// The exporter should run for both phases
+    /// The exporter should run for both phases,
+    /// and produce the output in the ExecDoc phase
     Both,
 }
 

@@ -152,7 +152,7 @@ impl VariablesPlugin {
         new_tag: &str,
     ) {
         if let Err(e) = self.transform_text_with_tag(text, new_tag) {
-            let error = DocDiagnostic::error(&e, self.get_source());
+            let error = DocDiagnostic::error(&e, self.get_display_name());
             diagnostics.push(error);
         }
     }
@@ -213,7 +213,7 @@ impl VariablesPlugin {
 
     pub fn update_vars(&mut self, diagnostics: &mut Vec<DocDiagnostic>, vars: &Value) {
         if let Err(e) = self.update_vars_internal(vars) {
-            let error = DocDiagnostic::error(&e, self.get_source());
+            let error = DocDiagnostic::error(&e, self.get_display_name());
             diagnostics.push(error);
         }
     }
@@ -323,7 +323,7 @@ impl PluginRuntime for VariablesPlugin {
         Ok(())
     }
 
-    fn get_source(&self) -> Cow<'static, str> {
-        "plugin/variables".into()
+    fn get_id(&self) -> Cow<'static, str> {
+        Cow::Owned(super::BuiltInPlugin::Variables.id())
     }
 }

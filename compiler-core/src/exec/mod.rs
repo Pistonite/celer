@@ -16,7 +16,8 @@
 
 use crate::comp::CompDoc;
 use crate::lang::IntoDiagnostic;
-use crate::plugin::PluginRuntime;
+use crate::plugin::{PluginRuntime, PluginMetadata};
+use crate::macros::derive_wasm;
 
 mod error;
 pub use error::*;
@@ -30,11 +31,15 @@ mod exec_doc;
 pub use exec_doc::*;
 
 /// Output of the exec phase
+#[derive_wasm]
 pub struct ExecContext<'p> {
     /// The exec doc
     pub exec_doc: ExecDoc<'p>,
+    /// Plugin information collected at the end of compilation
+    pub plugin_metadata: Vec<PluginMetadata>,
     /// The plugin runtimes at this point
     /// which can be used to run exporters
+    #[serde(skip)]
     pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
 }
 
@@ -43,7 +48,12 @@ impl<'p> CompDoc<'p> {
     pub async fn execute(mut self) -> ExecContext<'p> {
         let mut plugins = std::mem::take(&mut self.plugin_runtimes);
         let mut exec_doc = self.execute_document().await;
+        let mut plugin_metadata = Vec::with_capacity(plugins.len());
         for plugin in &mut plugins {
+            plugin_metadata.push(PluginMetadata {
+                id: plugin.get_id(),
+                name: plugin.get_display_name(),
+            });
             if let Err(e) = plugin.on_after_execute(&mut exec_doc) {
                 let diag = e.into_diagnostic();
                 exec_doc.diagnostics.push(diag);
@@ -53,6 +63,7 @@ impl<'p> CompDoc<'p> {
         ExecContext {
             exec_doc,
             plugin_runtimes: plugins,
+            plugin_metadata,
         }
     }
 }
