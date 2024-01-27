@@ -2,7 +2,7 @@
 
 import { withPayload } from "low/store";
 
-import { DocSettingsState, KeyBinding, KeyBindingName } from "./state";
+import { AppPluginType, DocSettingsState, KeyBinding, KeyBindingName } from "./state";
 
 export const setDocTheme = withPayload<DocSettingsState, string>(
     (state, theme) => {
@@ -45,4 +45,11 @@ export const setSplitTypes = withPayload<
     string[] | undefined
 >((state, value) => {
     state.splitTypes = value;
+});
+
+export const setAppPluginEnabled = withPayload<
+    DocSettingsState,
+    { type: AppPluginType; enabled: boolean }
+>((state, { type, enabled }) => {
+    state.enabledAppPlugins[type] = enabled;
 });

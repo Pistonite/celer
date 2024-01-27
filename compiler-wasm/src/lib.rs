@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 use celerc::prep::EntryPointsSorted;
 
 mod interop;
-use interop::OpaqueExecDoc;
+use interop::OpaqueExecContext;
 mod compile;
 mod loader;
 mod logger;
@@ -47,6 +47,6 @@ pub async fn get_entry_points() -> Result<EntryPointsSorted, JsValue> {
 pub async fn compile_document(
     entry_path: Option<String>,
     use_cache: bool,
-) -> Result<OpaqueExecDoc, JsValue> {
+) -> Result<OpaqueExecContext, JsValue> {
     compile::compile_document(entry_path, use_cache).await
 }

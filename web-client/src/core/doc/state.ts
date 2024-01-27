@@ -1,6 +1,6 @@
 //! Document view, setting, and route document state
 
-import { ExecDoc } from "low/celerc";
+import { ExecDoc, PluginMetadata } from "low/celerc";
 
 /// View state for the document
 export type DocViewState = {
@@ -36,7 +36,20 @@ export type DocSettingsState = {
     ///
     /// Undefined means to use the document default
     splitTypes: string[] | undefined;
+
+    enabledAppPlugins: Partial<Record<AppPluginType, boolean>>;
+
+    /// Plugins to disable (remove) for each document, identified by document title
+    disabledPlugins: Record<string, string[]>;
+
+    /// If user plugins are enabled
+    enableUserPlugins: boolean;
+
+    /// Additional user plugin configuration YAML string
+    userPluginConfig: string;
 } & KeyBindingSettings;
+
+export type AppPluginType = "export-split";
 
 export type KeyBindingSettings = {
     prevLineKey: KeyBinding;
@@ -64,6 +77,12 @@ export const initialDocSettingsState: DocSettingsState = {
     nextLineKey: ["Alt", "ArrowDown"],
     prevSplitKey: ["PageUp"],
     nextSplitKey: ["PageDown"],
+    enabledAppPlugins: {
+        "export-split": true,
+    },
+    disabledPlugins: {},
+    enableUserPlugins: false,
+    userPluginConfig: `# See ${window.location.origin}/docs/plugin/settings for more information`
 };
 
 /// The document state type
@@ -76,10 +95,13 @@ export type DocumentState = {
     serial: number;
     /// The current document
     document: ExecDoc | undefined;
+    /// The current document's plugin metadata 
+    pluginMetadata: PluginMetadata[] | undefined;
 };
 
 /// The initial document state
 export const initialDocumentState: DocumentState = {
     serial: 0,
     document: undefined,
+    pluginMetadata: undefined,
 };

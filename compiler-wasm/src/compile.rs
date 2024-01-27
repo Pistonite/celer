@@ -9,7 +9,7 @@ use wasm_bindgen::prelude::*;
 use celerc::pack::PackError;
 use celerc::{CompDoc, Compiler, ContextBuilder, PreparedContext};
 
-use crate::interop::OpaqueExecDoc;
+use crate::interop::OpaqueExecContext;
 use crate::loader::{self, LoadFileOutput, LoaderInWasm};
 
 thread_local! {
@@ -21,14 +21,14 @@ thread_local! {
 pub async fn compile_document(
     entry_path: Option<String>,
     use_cache: bool,
-) -> Result<OpaqueExecDoc, JsValue> {
+) -> Result<OpaqueExecContext, JsValue> {
     if use_cache && is_cached_compiler_valid(entry_path.as_ref()).await {
         let cached_context = CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.take());
 
         if let Some(context) = cached_context {
             info!("using cached compiler context");
             let start_time = Instant::now();
-            let result = match context.create_compiler(Some(start_time)).await {
+            let result = match context.create_compiler(Some(start_time), None).await {
                 Ok(x) => compile_with_compiler(x).await,
                 Err(e) => compile_with_pack_error(&context, e).await,
             };
@@ -46,13 +46,13 @@ pub async fn compile_document(
         Ok(x) => x,
         Err(e) => {
             let comp_doc = CompDoc::from_prep_error(e, start_time);
-            let exec_doc = comp_doc.execute().await.exec_doc;
+            let exec_context = comp_doc.execute().await;
             // TODO #33: exports
-            return OpaqueExecDoc::wrap(exec_doc);
+            return OpaqueExecContext::try_from(exec_context);
         }
     };
 
-    let compiler_result = prepared_context.create_compiler(None).await;
+    let compiler_result = prepared_context.create_compiler(None, None).await;
     let output = match compiler_result {
         Ok(x) => compile_with_compiler(x).await,
         Err(e) => compile_with_pack_error(&prepared_context, e).await,
@@ -94,16 +94,16 @@ async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
 async fn compile_with_pack_error(
     context: &PreparedContext<LoaderInWasm>,
     error: PackError,
-) -> Result<OpaqueExecDoc, JsValue> {
+) -> Result<OpaqueExecContext, JsValue> {
     let comp_doc = CompDoc::from_diagnostic(error, context.create_compile_context(None));
     let exec_ctx = comp_doc.execute().await;
-    OpaqueExecDoc::wrap(exec_ctx.exec_doc)
+    OpaqueExecContext::try_from(exec_ctx)
 }
 
-async fn compile_with_compiler(compiler: Compiler<'_>) -> Result<OpaqueExecDoc, JsValue> {
+async fn compile_with_compiler(compiler: Compiler<'_>) -> Result<OpaqueExecContext, JsValue> {
     let comp_doc = compiler.compile().await;
     let exec_ctx = comp_doc.execute().await;
-    OpaqueExecDoc::wrap(exec_ctx.exec_doc)
+    OpaqueExecContext::try_from(exec_ctx)
 }
 
 /// Create a context builder that corresponds to the root project.yaml

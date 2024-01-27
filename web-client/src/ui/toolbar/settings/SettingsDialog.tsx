@@ -18,6 +18,7 @@ import {
     Map20Regular,
     Code20Regular,
     Info20Regular,
+    Wrench20Regular,
 } from "@fluentui/react-icons";
 
 import { useWindowSize } from "ui/shared";
@@ -28,6 +29,7 @@ import { useActions } from "low/store";
 import { MapSettings } from "./MapSettings";
 import { DocSettings } from "./DocSettings";
 import { EditorSettings } from "./EditorSettings";
+import { PluginSettings } from "./PluginSettings";
 import { MetaSettings } from "./MetaSettings";
 
 type TabData = {
@@ -67,6 +69,12 @@ export const SettingsDialog: React.FC = () => {
                       } as const,
                   ]
                 : []),
+            {
+                id: "plugin",
+                text: "Plugins",
+                Icon: Wrench20Regular,
+                Page: PluginSettings,
+            },
             {
                 id: "meta",
                 text: "Meta",

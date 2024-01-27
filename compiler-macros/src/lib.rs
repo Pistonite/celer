@@ -83,3 +83,31 @@ pub fn derive_wasm(_attr: TokenStream, input: TokenStream) -> TokenStream {
     derive_wasm_impl::expand(input)
 }
 mod derive_wasm_impl;
+
+/// A wrapper of a raw JS value converted from a lifetime-bounded type.
+///
+/// Sometimes we want to return a lifetime-bounded value from Rust to WASM.
+/// The value must be converted to a JS value when it's still alive. However,
+/// this way it would lose the type information. This macro will wrap the JsValue
+/// to keep the type information.
+///
+/// # Example
+/// ```ignore
+/// // the wrapped type needs to be have `derive_wasm`
+/// #[derive_opaque(ExecDoc)] 
+/// pub struct OpaqueExecDoc<'a>;
+/// // the derived type actually doesn't have lifetime
+/// // the lifetime is used to annotate the wrapped type
+///
+/// // convert
+/// OpaqueExecDoc::try_from(exec_doc)
+/// ```
+/// The example will generate an `OpaqueExecDoc` type.
+///
+/// You can convert to it from `ExecDoc` with `OpaqueExecDoc::try_from(exec_doc)`,
+/// and return it across WASM FFI boundary. The typescript type is the same as `ExecDoc`.
+#[proc_macro_attribute]
+pub fn derive_opaque(attr: TokenStream, input: TokenStream) -> TokenStream {
+    derive_opaque_impl::expand(attr, input)
+}
+mod derive_opaque_impl;
