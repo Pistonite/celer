@@ -11,14 +11,16 @@ pub mod plugin;
 
 pub mod comp;
 pub mod exec;
+pub mod expo;
 pub mod pack;
-pub mod prep; // executor, depends on: comp
-              //pub mod expo;  // export phase (todo)
+pub mod prep;
 
 // public API re-exports
 pub use comp::CompDoc;
-pub use exec::ExecDoc;
-pub use pack::Compiler;
+pub use exec::{ExecContext, ExecDoc};
+pub use pack::{CompileContext, Compiler};
 pub use prep::{ContextBuilder, PreparedContext};
+
+pub use plugin::{PluginOptions, PluginOptionsRaw};
 
 pub use celerb::*;

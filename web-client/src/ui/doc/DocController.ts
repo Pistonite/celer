@@ -310,11 +310,12 @@ export class DocController {
                         );
                     } else if (retryCount === maxRetryCount) {
                         DocLog.warn(
-                            `cannot find current line after max retries. Further warnings will be suppressed.`,
+                            `cannot find current line after too many retries. Further warnings will be suppressed.`,
                         );
                     }
                     await sleep(1000);
                     if (this.isEventObsolete(eventId)) {
+                        DocLog.info("canceling previous update");
                         return false;
                     }
                     retryCount++;

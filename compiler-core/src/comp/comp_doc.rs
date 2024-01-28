@@ -62,6 +62,8 @@ impl CompDoc<'static> {
             start_time,
             config: Cow::Owned(config),
             meta: Cow::Owned(CompilerMetadata::default()),
+            plugins: vec![],
+            plugin_meta: vec![],
             setting: &super::DEFAULT_SETTING,
         };
 
@@ -71,6 +73,9 @@ impl CompDoc<'static> {
 
 impl<'p> CompDoc<'p> {
     /// Create a new document showing an error from a single diagnostic.
+    ///
+    /// If the error happened before the context is even available, use `ExecDoc::from_diagnostic`
+    /// instead.
     pub fn from_diagnostic<T>(error: T, ctx: CompileContext<'p>) -> Self
     where
         T: IntoDiagnostic,

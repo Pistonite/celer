@@ -20,6 +20,8 @@ impl Default for Compiler<'static> {
                 start_time: Instant::now(),
                 config: Cow::Owned(RouteConfig::default()),
                 meta: Cow::Owned(CompilerMetadata::default()),
+                plugins: vec![],
+                plugin_meta: vec![],
                 setting: &DEFAULT_SETTING,
             },
             route: Cow::Owned(RouteBlob::Prim(Value::Null)),
@@ -70,8 +72,9 @@ impl CompilerBuilder {
                 meta: Cow::Owned(CompilerMetadata {
                     presets: self.presets,
                     default_icon_priority: self.default_icon_priority,
-                    ..Default::default()
                 }),
+                plugins: vec![],
+                plugin_meta: vec![],
                 setting: &DEFAULT_SETTING,
             },
             ..Default::default()

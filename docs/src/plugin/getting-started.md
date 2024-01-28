@@ -1,10 +1,16 @@
-# Getting Started
+# Getting Started with Plugins
 :::info
 The plugin system is currently unstable.
 :::
 The principle of the plugin system is to separate core Celer functionalities from additional (and mostly optional) functionalities.
+This way, the Celer Compiler can stay as stable as possible, while allowing the communities to add features as they wish.
 
-A plugin in Celer is a piece of program that runs as part of the compiler. The process goes as the following:
+Plugins are meant to be easy to use by both routers and viewers of the routes.
+Routers define plugins in the routes to augment the compiler, and viewers
+can use plugins to personalize their view of the document (See [here](./settings.md) for more info)
+
+## Concept
+A plugin in Celer is a piece of program that runs as part of the compiler. The (simplified) process goes as the following:
 
 1. The compiler parses the income files and celer-specific syntax like presets
 2. The compiler hands the compiled document to a plugin
@@ -12,7 +18,7 @@ A plugin in Celer is a piece of program that runs as part of the compiler. The p
 4. After the last plugin is done modifying the document, it hands the document back to the compiler.
 
 
-## Configuration
+## Route Configuration
 To add a plugin to the compiler, use the `plugins` property in your `config`.
 
 The example below adds the built-in [Link Plugin](./link.md) to the compiler, which transforms `link` tags into clickable links.
@@ -25,11 +31,17 @@ config:
 Note that the `use` property takes `"link"`, which is not any of the syntax mentioned in
 [File structure](../route/file-structure.md). This signals Celer that you want to use a built-in
 plugin. Built-in plugins are implemented in Rust and has higher performance.
+
+See [here](./built-in.md) for a full list of built-in plugins
 :::
-:::warning
-Plugins can be specified multiple times. Duplicates will NOT be removed, and you usually want to avoid it.
-For example, you might be `use`-ing a config file someone else made where a plugin is already specified.
-:::
+
+To specify an external plugin, use the `<user>/<repo>/<path>` syntax similar
+to how route works explained [here](../route/file-structure.md).
+```yaml
+config:
+- plugins:
+  - use: foo/bar/path/to/plugin.js
+```
 
 ## Additional Settings
 Some plugins take additional settings through the `with` property
@@ -43,13 +55,16 @@ config:
 ```
 Please refer to the documentation for the plugin you are using on what settings are available.
 
-## Built-in Plugins
-Here is a list of all built-in plugins. The `ID` column is what you put after `use` in the config.
-|Name|ID|Description|
-|-|-|-|
-|[Link](./link.md)|`link`|Turns `link` tags into clickable links|
-|[Variables](./variables.md)|`variables`|Adds a variable system that can be used to track completion, item counts, etc.|
-<!--
-|[Assertion](./assertion.md)|`assertion`|Adds an assertion system that can give warning when a value does not meet some condition|
--->
 
+## Allow Duplicates
+By default, celer will give an error if you specify the same plugin multiple times.
+Most of the time it's due to a mistake, but if you actually want to, you can use the `allow-duplicate` property:
+```yaml
+config:
+- plugins:
+  - use: link
+  - use: link
+    allow-duplicate: true # without this, the compiler will not run
+```
+
+External plugins are considered duplicates if they point to the same path or url.

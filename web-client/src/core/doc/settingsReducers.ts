@@ -2,7 +2,12 @@
 
 import { withPayload } from "low/store";
 
-import { DocSettingsState, KeyBinding, KeyBindingName } from "./state";
+import {
+    AppPluginType,
+    DocSettingsState,
+    KeyBinding,
+    KeyBindingName,
+} from "./state";
 
 export const setDocTheme = withPayload<DocSettingsState, string>(
     (state, theme) => {
@@ -46,3 +51,41 @@ export const setSplitTypes = withPayload<
 >((state, value) => {
     state.splitTypes = value;
 });
+
+export const setAppPluginEnabled = withPayload<
+    DocSettingsState,
+    { type: AppPluginType; enabled: boolean }
+>((state, { type, enabled }) => {
+    state.enabledAppPlugins[type] = enabled;
+});
+
+export const setRoutePluginEnabled = withPayload<
+    DocSettingsState,
+    { docTitle: string; plugin: string; enabled: boolean }
+>((state, { docTitle, plugin, enabled }) => {
+    if (enabled) {
+        if (state.disabledPlugins[docTitle]) {
+            state.disabledPlugins[docTitle] = state.disabledPlugins[
+                docTitle
+            ].filter((x) => x !== plugin);
+        }
+        return;
+    }
+    if (state.disabledPlugins[docTitle]) {
+        state.disabledPlugins[docTitle].push(plugin);
+        return;
+    }
+    state.disabledPlugins[docTitle] = [plugin];
+});
+
+export const setUserPluginEnabled = withPayload<DocSettingsState, boolean>(
+    (state, value) => {
+        state.enableUserPlugins = value;
+    },
+);
+
+export const setUserPluginConfig = withPayload<DocSettingsState, string>(
+    (state, value) => {
+        state.userPluginConfig = value;
+    },
+);

@@ -54,6 +54,7 @@ where
     pub prep_doc: PrepDoc,
     pub start_time: Instant,
     pub setting: Setting,
+    pub plugins: Vec<PluginInstance>,
     // TODO #173: add a option to make ContextBuilder output a dependency list for PreparedContext
 }
 
@@ -100,8 +101,8 @@ pub struct RouteMetadata {
 /// IDEs may also find this useful to provide auto-complete, etc.
 #[derive(Default, Debug, Clone)]
 pub struct CompilerMetadata {
+    /// Loaded presets
     pub presets: BTreeMap<String, Preset>,
-    pub plugins: Vec<PluginInstance>,
     pub default_icon_priority: i64,
 }
 
@@ -208,15 +209,14 @@ where
 
             let meta = CompilerMetadata {
                 presets: optimized_presets,
-                plugins: prep_config.plugins,
                 default_icon_priority: prep_config.default_icon_priority,
             };
 
-            PrepResult::Ok((config, meta))
+            PrepResult::Ok((config, meta, prep_config.plugins))
         };
 
         let (config_and_meta, prep_doc) = join_futures!(config_future, route_future);
-        let (config, meta) = config_and_meta?;
+        let (config, meta, plugins) = config_and_meta?;
 
         Ok(PreparedContext {
             project_res: self.project_res,
@@ -225,6 +225,7 @@ where
             prep_doc,
             start_time,
             setting: self.setting,
+            plugins,
         })
     }
 

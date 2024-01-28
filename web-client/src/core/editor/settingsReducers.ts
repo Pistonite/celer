@@ -21,11 +21,11 @@ export const setCompilerEntryPath = withPayload<EditorSettingsState, string>(
     },
 );
 
-export const setCompilerUseCachePack0 = withPayload<
+export const setCompilerUseCachedPrepPhase = withPayload<
     EditorSettingsState,
     boolean
->((state, compilerUseCachePack0) => {
-    state.compilerUseCachePack0 = compilerUseCachePack0;
+>((state, value) => {
+    state.compilerUseCachedPrepPhase = value;
 });
 
 export const setEditorMode = withPayload<EditorSettingsState, EditorMode>(

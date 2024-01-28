@@ -1,8 +1,5 @@
-import reduxWatch from "redux-watch";
-
 import {
     AppStore,
-    SettingsState,
     documentActions,
     settingsActions,
     settingsSelector,
@@ -11,9 +8,12 @@ import {
 } from "core/store";
 import {
     EntryPointsSorted,
+    PluginOptionsRaw,
     compile_document,
     get_entry_points,
+    set_plugin_options,
 } from "low/celerc";
+import { getRawPluginOptions } from "core/doc";
 import {
     wrapAsync,
     setWorker,
@@ -52,6 +52,7 @@ export class CompilerKernelImpl implements CompilerKernel {
 
     private needCompile: boolean;
     private compiling: boolean;
+    private lastPluginOptions: PluginOptionsRaw | undefined;
 
     private cleanup: () => void;
 
@@ -60,17 +61,8 @@ export class CompilerKernelImpl implements CompilerKernel {
         this.needCompile = false;
         this.compiling = false;
 
-        const watchSettings = reduxWatch(() =>
-            settingsSelector(store.getState()),
-        );
-        const unwatchSettings = store.subscribe(
-            watchSettings((newVal, oldVal) => {
-                this.onSettingsUpdate(newVal, oldVal);
-            }),
-        );
-
         this.cleanup = () => {
-            unwatchSettings();
+            // no cleanup needed for now
         };
     }
 
@@ -92,6 +84,7 @@ export class CompilerKernelImpl implements CompilerKernel {
         this.store.dispatch(viewActions.setCompilerReady(false));
         CompilerLog.info("initializing compiler worker...");
         this.fileAccess = fileAccess;
+        this.lastPluginOptions = undefined;
         const worker = new Worker("/celerc/worker.js");
         registerWorkerHandler(
             "load_file",
@@ -182,14 +175,25 @@ export class CompilerKernelImpl implements CompilerKernel {
             // if anyone calls triggerCompile during compilation, it will be turned on again
             // to trigger another compile
             this.needCompile = false;
+            const state = this.store.getState();
+            const { compilerUseCachedPrepPhase } = settingsSelector(state);
+
+            const pluginOptions = getRawPluginOptions(state);
+            if (pluginOptions !== this.lastPluginOptions) {
+                this.lastPluginOptions = pluginOptions;
+                const result = await wrapAsync(() => {
+                    return set_plugin_options(pluginOptions);
+                });
+                if (result.isErr()) {
+                    CompilerLog.error(result.inner());
+                }
+            }
+
             CompilerLog.info("invoking compiler...");
-            const { compilerUseCachePack0 } = settingsSelector(
-                this.store.getState(),
-            );
             const result = await wrapAsync(() => {
                 return compile_document(
                     validatedEntryPath,
-                    compilerUseCachePack0,
+                    compilerUseCachedPrepPhase,
                 );
             });
             // yielding just in case other things need to update
@@ -317,14 +321,5 @@ export class CompilerKernelImpl implements CompilerKernel {
             }
         }
         return "";
-    }
-
-    private onSettingsUpdate(oldVal: SettingsState, newVal: SettingsState) {
-        if (this.fileAccess) {
-            if (oldVal.compilerEntryPath !== newVal.compilerEntryPath) {
-                CompilerLog.info("entry path changed, triggering compile");
-                this.compile();
-            }
-        }
     }
 }

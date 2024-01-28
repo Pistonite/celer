@@ -1,14 +1,20 @@
+use celerc::PluginOptionsRaw;
 use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
 
+use celerc::env::RefCounted;
 use celerc::prep::EntryPointsSorted;
+use celerc::res::{ResPath, Resource};
 
 mod interop;
-use interop::OpaqueExecDoc;
+use interop::OpaqueExecContext;
 mod compile;
 mod loader;
+use loader::LoaderInWasm;
 mod logger;
+mod plugin;
+use plugin::SetPluginOptionsResult;
 
 /// Initialize bindings with WASM
 #[wasm_bindgen]
@@ -47,6 +53,20 @@ pub async fn get_entry_points() -> Result<EntryPointsSorted, JsValue> {
 pub async fn compile_document(
     entry_path: Option<String>,
     use_cache: bool,
-) -> Result<OpaqueExecDoc, JsValue> {
+) -> Result<OpaqueExecContext, JsValue> {
     compile::compile_document(entry_path, use_cache).await
+}
+
+/// Set user plugin options
+#[wasm_bindgen]
+#[inline]
+pub async fn set_plugin_options(options: Option<PluginOptionsRaw>) -> SetPluginOptionsResult {
+    plugin::set_plugin_options(options).await
+}
+
+pub fn get_root_project_resource() -> Resource<'static, LoaderInWasm> {
+    Resource::new(
+        ResPath::Local("project.yaml".into()),
+        RefCounted::new(LoaderInWasm),
+    )
 }

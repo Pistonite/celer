@@ -75,3 +75,11 @@ div.settings-value-slider label {
 .settings-info-field > div > span {
     word-wrap: break-word;
 }
+
+.settings-checkbox-block {
+    display: flex !important;
+}
+
+.settings-section-inner > span.fui-Text {
+    margin: 8px 0;
+}

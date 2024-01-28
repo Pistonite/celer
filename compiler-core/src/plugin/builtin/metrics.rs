@@ -88,7 +88,7 @@ impl PluginRuntime for MetricsPlugin {
         Ok(())
     }
 
-    fn get_source(&self) -> Cow<'static, str> {
-        "plugin/metrics".into()
+    fn get_id(&self) -> Cow<'static, str> {
+        Cow::Owned(super::BuiltInPlugin::Metrics.id())
     }
 }

@@ -2,6 +2,7 @@
 //!
 //! These are property constants used in the configuration and route files.
 
+pub const ALLOW_DUPLICATE: &str = "allow-duplicate";
 pub const AT: &str = "at";
 pub const ATTRIBUTION: &str = "attribution";
 pub const BANNER: &str = "banner";

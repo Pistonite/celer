@@ -1,6 +1,7 @@
 import reduxWatch from "redux-watch";
 
 import {
+    AppState,
     AppStore,
     SettingsState,
     documentActions,
@@ -8,8 +9,10 @@ import {
     saveSettings,
     settingsActions,
     settingsSelector,
+    viewSelector,
     viewActions,
 } from "core/store";
+import { isRecompileNeeded } from "core/doc";
 import { console, Logger, isInDarkMode } from "low/utils";
 import type { FileSys, FsResult } from "low/fs";
 
@@ -65,7 +68,7 @@ export class Kernel {
     private initStore(): AppStore {
         this.log.info("initializing store...");
         const store = initStore();
-        // switch theme base on store settings
+        // switch theme on boot base on store settings
         this.switchTheme(settingsSelector(store.getState()).theme);
 
         const watchSettings = reduxWatch(() =>
@@ -80,6 +83,21 @@ export class Kernel {
                 // switch theme
                 if (newVal.theme !== oldVal.theme) {
                     this.switchTheme(newVal.theme);
+                }
+            }),
+        );
+
+        const watchAll = reduxWatch(() => store.getState());
+        store.subscribe(
+            watchAll(async (newVal: AppState, oldVal: AppState) => {
+                if (await isRecompileNeeded(newVal, oldVal)) {
+                    console.info("reloading document due to state change...");
+                    if (viewSelector(newVal).stageMode === "edit") {
+                        const compiler = await this.getCompiler();
+                        compiler.compile();
+                    } else {
+                        // TODO #26: reload doc from server
+                    }
                 }
             }),
         );

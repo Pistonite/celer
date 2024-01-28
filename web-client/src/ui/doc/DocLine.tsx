@@ -10,12 +10,12 @@ import { useActions } from "low/store";
 
 import { Rich } from "./Rich";
 import { DocLineContainerClass, getTagClassName } from "./utils";
-import { Poor } from "./Poor";
 import {
     BannerTextWidthClass,
     BannerTextWithIconWidthClass,
     BannerWidthClass,
 } from "./updateBannerWidths";
+import { DocDiagnosticBlock } from "./DocDiagnosticBlock";
 
 /// One line in the document
 type DocLineProps = {
@@ -152,30 +152,8 @@ export const DocLine: React.FC<DocLineProps> = ({
                     </div>
                 }
             </div>
-            {diagnostics.map(({ msg, type, source }, i) => (
-                <div className="docline-diagnostic" key={i}>
-                    <div
-                        className={clsx(
-                            "docline-diagnostic-head",
-                            `docline-diagnostic-${type}`,
-                        )}
-                    >
-                        <Text size={300} font="monospace">
-                            ^^^ {type}: {source}:
-                        </Text>
-                    </div>
-                    <div
-                        className={clsx(
-                            "docline-diagnostic-body",
-                            `docline-diagnostic-${type}`,
-                        )}
-                    >
-                        <Poor
-                            content={msg}
-                            textProps={{ size: 300, font: "monospace" }}
-                        />
-                    </div>
-                </div>
+            {diagnostics.map((diagnostic, i) => (
+                <DocDiagnosticBlock key={i} diagnostic={diagnostic} showCaret />
             ))}
         </div>
     );

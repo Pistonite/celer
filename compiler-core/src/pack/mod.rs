@@ -18,13 +18,14 @@
 //! The output is a [`Compiler`]
 
 use std::borrow::Cow;
+use std::collections::BTreeSet;
 use std::ops::{Deref, DerefMut};
 
 use instant::Instant;
 
-use crate::env::{join_futures, yield_budget};
+use crate::env::yield_budget;
 use crate::json::RouteBlob;
-use crate::plugin::PluginRuntime;
+use crate::plugin::{PluginInstance, PluginMetadata, PluginOptions, PluginRuntime};
 use crate::prep::{self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting};
 use crate::res::Loader;
 
@@ -80,16 +81,89 @@ pub struct CompileContext<'p> {
     pub config: Cow<'p, RouteConfig>,
     /// The metadata
     pub meta: Cow<'p, CompilerMetadata>,
+    /// Plugin instances, does not include disabled plugins
+    pub plugins: Vec<PluginInstance>,
+    /// Plugin metadata, including disabled plugins
+    pub plugin_meta: Vec<PluginMetadata>,
     /// Compiler settings
     pub setting: &'p Setting,
 }
 
 impl<'p> CompileContext<'p> {
-    /// Create the plugin runtimes from the plugin list
-    pub async fn create_plugin_runtimes(&self) -> PackResult<Vec<Box<dyn PluginRuntime>>> {
-        let mut output = Vec::with_capacity(self.meta.plugins.len());
-        for plugin in &self.meta.plugins {
+    /// Configure the plugin list according to the options
+    pub async fn configure_plugins(&mut self, options: Option<PluginOptions>) -> PackResult<()> {
+        let add_size = options.as_ref().map(|x| x.add.len()).unwrap_or_default();
+        let old_instances = {
+            let mut new_instances = Vec::with_capacity(self.plugins.len() + add_size);
+            std::mem::swap(&mut self.plugins, &mut new_instances);
+            new_instances
+        };
+
+        let mut seen = BTreeSet::new();
+        let mut duplicates = Vec::new();
+
+        self.plugin_meta.clear();
+
+        // we don't know how many plugins the users specify
+        // so using a set to check for remove
+        // even it's less efficient for small sizes
+        let mut remove = BTreeSet::new();
+        let mut add = None;
+        if let Some(options) = options {
+            remove.extend(options.remove);
+            add = Some(options.add);
+        }
+        for plugin in old_instances {
             yield_budget(4).await;
+
+            let meta = plugin.get_metadata(false);
+
+            if !remove.contains(&meta.id) {
+                if !plugin.allow_duplicate && seen.contains(&meta.id) {
+                    duplicates.push(meta.id.clone());
+                } else {
+                    seen.insert(meta.id.clone());
+                    // TODO #175: plugin dependencies
+                    self.plugins.push(plugin);
+                }
+            }
+
+            self.plugin_meta.push(meta);
+        }
+
+        if let Some(add) = add {
+            for plugin in add {
+                yield_budget(4).await;
+
+                let meta = plugin.get_metadata(true);
+
+                // don't need to check remove for user-added plugins
+
+                if !plugin.allow_duplicate && seen.contains(&meta.id) {
+                    duplicates.push(meta.id.clone());
+                    continue;
+                } else {
+                    seen.insert(meta.id.clone());
+                    // TODO #175: plugin dependencies
+                    self.plugins.push(plugin);
+                }
+
+                self.plugin_meta.push(meta);
+            }
+        }
+
+        if !duplicates.is_empty() {
+            return Err(PackError::DuplicatePlugins(duplicates.join(", ")));
+        }
+
+        Ok(())
+    }
+
+    pub async fn create_plugin_runtimes(&self) -> PackResult<Vec<Box<dyn PluginRuntime>>> {
+        let mut output = Vec::with_capacity(self.plugins.len());
+        for plugin in &self.plugins {
+            yield_budget(4).await;
+
             let runtime = plugin
                 .create_runtime(self)
                 .map_err(PackError::PluginInitError)?;
@@ -103,47 +177,46 @@ impl<L> PreparedContext<L>
 where
     L: Loader,
 {
-    /// Entry point to the pack phase. Creates a [`Compiler`] that can be used to compile the route
-    /// JSON to a document
-    pub async fn create_compiler(
-        &self,
-        reset_start_time: Option<Instant>,
-    ) -> PackResult<Compiler<'_>> {
-        let route_future = async {
-            match &self.prep_doc {
-                PrepDoc::Built(route) => Cow::Borrowed(route),
-                PrepDoc::Raw(route) => {
-                    let route =
-                        prep::build_route(&self.project_res, route.clone(), &self.setting).await;
-                    Cow::Owned(route)
-                }
-            }
-        };
-
-        let ctx = self.create_compile_context(reset_start_time);
-
-        // TODO #24 plugin options
-
-        let plugin_runtimes_future = ctx.create_plugin_runtimes();
-
-        let (route, plugin_runtimes) = join_futures!(route_future, plugin_runtimes_future);
-        let plugin_runtimes = plugin_runtimes?;
-
-        let compiler = Compiler {
-            ctx,
-            route,
-            plugin_runtimes,
-        };
-
-        Ok(compiler)
-    }
-
-    pub fn create_compile_context(&self, reset_start_time: Option<Instant>) -> CompileContext<'_> {
-        CompileContext {
+    /// Entry point to the pack phase.
+    ///
+    /// The returned compile context should be configured, then [`create_compiler`] is called to
+    /// create the compiler to proceed to the next phase.
+    pub async fn new_compilation(&self, reset_start_time: Option<Instant>) -> CompileContext<'_> {
+        let ctx = CompileContext {
             start_time: reset_start_time.unwrap_or(self.start_time),
             config: Cow::Borrowed(&self.config),
             meta: Cow::Borrowed(&self.meta),
+            plugins: self.plugins.clone(),
+            plugin_meta: vec![],
             setting: &self.setting,
-        }
+        };
+        ctx
+    }
+
+    /// Create the compiler to continue to the next phase
+    ///
+    /// If this fails, the CompileContext is returned to the caller along with the error
+    pub async fn create_compiler<'p>(
+        &'p self,
+        context: CompileContext<'p>,
+    ) -> Result<Compiler<'p>, (PackError, CompileContext<'p>)> {
+        let route = match &self.prep_doc {
+            PrepDoc::Built(route) => Cow::Borrowed(route),
+            PrepDoc::Raw(route) => {
+                let route =
+                    prep::build_route(&self.project_res, route.clone(), &self.setting).await;
+                Cow::Owned(route)
+            }
+        };
+        let plugin_runtimes = match context.create_plugin_runtimes().await {
+            Ok(x) => x,
+            Err(e) => return Err((e, context)),
+        };
+        let compiler = Compiler {
+            ctx: context,
+            route,
+            plugin_runtimes,
+        };
+        Ok(compiler)
     }
 }
