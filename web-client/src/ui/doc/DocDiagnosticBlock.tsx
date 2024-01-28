@@ -13,7 +13,7 @@ export type DocDiagnosticBlockProps = {
     diagnostic: DocDiagnostic;
     /// Show caret pointing to the line above
     showCaret: boolean;
-}
+};
 
 const PREFIX = "docline-diagnostic";
 
@@ -27,7 +27,10 @@ DocDiagnosticBodyClass.style({
     "word-break": "break-word",
 });
 
-export const DocDiagnosticBlock: React.FC<DocDiagnosticBlockProps> = ({diagnostic, showCaret}) => {
+export const DocDiagnosticBlock: React.FC<DocDiagnosticBlockProps> = ({
+    diagnostic,
+    showCaret,
+}) => {
     const { msg, source, type } = diagnostic;
     return (
         <div className={PREFIX}>
@@ -38,7 +41,8 @@ export const DocDiagnosticBlock: React.FC<DocDiagnosticBlockProps> = ({diagnosti
                 )}
             >
                 <Text size={300} font="monospace">
-                    {showCaret?"^^^ ":""}{type}: {source}:
+                    {showCaret ? "^^^ " : ""}
+                    {type}: {source}:
                 </Text>
             </div>
             <div

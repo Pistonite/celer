@@ -2,11 +2,28 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useSelector } from "react-redux";
-import { Body1, Button, Checkbox, CheckboxProps, Field, Link, Switch, Textarea} from "@fluentui/react-components";
+import {
+    Body1,
+    Button,
+    Checkbox,
+    CheckboxProps,
+    Field,
+    Link,
+    Switch,
+    Textarea,
+} from "@fluentui/react-components";
 
 import { ErrorBar } from "ui/shared";
-import { documentSelector, settingsActions, settingsSelector } from "core/store";
-import { AppPluginType, parseUserConfigOptions, useDocDisabledPlugins } from "core/doc";
+import {
+    documentSelector,
+    settingsActions,
+    settingsSelector,
+} from "core/store";
+import {
+    AppPluginType,
+    parseUserConfigOptions,
+    useDocDisabledPlugins,
+} from "core/doc";
 import { useActions } from "low/store";
 import { PluginMetadata } from "low/celerc";
 import { DOMId, useDebouncer } from "low/utils";
@@ -27,18 +44,23 @@ const adjustUserPluginConfigTextareaHeight = () => {
     element.style.height = "32px";
     const height = Math.max(32, Math.min(element.scrollHeight, 300));
     element.style.height = `${height}px`;
-}
+};
 
 export const PluginSettings: React.FC = () => {
     const { pluginMetadata, document, serial } = useSelector(documentSelector);
     // cache the plugin metadata once the dialog shows up
     // so the UI doesn't jump around when the plugin metadata changes
-    const [cachedPluginMetadata, setCachedPluginMetadata] = useState(pluginMetadata);
-    const { enableUserPlugins, userPluginConfig } = useSelector(settingsSelector);
-    const { setRoutePluginEnabled, setUserPluginEnabled, setUserPluginConfig } = useActions(settingsActions);
+    const [cachedPluginMetadata, setCachedPluginMetadata] =
+        useState(pluginMetadata);
+    const { enableUserPlugins, userPluginConfig } =
+        useSelector(settingsSelector);
+    const { setRoutePluginEnabled, setUserPluginEnabled, setUserPluginConfig } =
+        useActions(settingsActions);
     const disabledPlugins = useDocDisabledPlugins();
 
-    const [userPluginSyntaxError, setUserPluginSyntaxError] = useState<string | undefined>(undefined);
+    const [userPluginSyntaxError, setUserPluginSyntaxError] = useState<
+        string | undefined
+    >(undefined);
     const [configText, setConfigText] = useState(userPluginConfig);
     const dispatchDebouncer = useDebouncer(2000);
     const [_, startTransition] = useTransition();
@@ -59,7 +81,7 @@ export const PluginSettings: React.FC = () => {
                     Enable or disable plugins pre-configured by Celer
                 </Body1>
 
-                <AppPluginCheckbox 
+                <AppPluginCheckbox
                     type="export-split"
                     label="Export to LiveSplit"
                     disabled={true}
@@ -69,29 +91,29 @@ export const PluginSettings: React.FC = () => {
                 <Body1 block>
                     {getRoutePluginMessage(cachedPluginMetadata)}
                 </Body1>
-                {
-                    cachedPluginMetadata?.map((plugin, i) => 
-                        <PluginCheckbox
-                            key={i}
-                            label={(plugin.isFromUser?"(user) ":"")+plugin.name}
-                            checked={!disabledPlugins.includes(plugin.id)}
-                            disabled={plugin.isFromUser}
-                            onChange={(_, data) => {
-                                if (!document) {
-                                    return;
-                                }
-                                setRoutePluginEnabled({
-                                    docTitle: document.project.title,
-                                    plugin: plugin.id,
-                                    enabled: !!data.checked,
-                                });
-                            }}
-                        />
-                    )
-                }
+                {cachedPluginMetadata?.map((plugin, i) => (
+                    <PluginCheckbox
+                        key={i}
+                        label={
+                            (plugin.isFromUser ? "(user) " : "") + plugin.name
+                        }
+                        checked={!disabledPlugins.includes(plugin.id)}
+                        disabled={plugin.isFromUser}
+                        onChange={(_, data) => {
+                            if (!document) {
+                                return;
+                            }
+                            setRoutePluginEnabled({
+                                docTitle: document.project.title,
+                                plugin: plugin.id,
+                                enabled: !!data.checked,
+                            });
+                        }}
+                    />
+                ))}
                 <Field>
-                    <Button 
-                        appearance="primary" 
+                    <Button
+                        appearance="primary"
                         disabled={cachedPluginMetadata === pluginMetadata}
                         onClick={() => {
                             setCachedPluginMetadata(pluginMetadata);
@@ -103,17 +125,33 @@ export const PluginSettings: React.FC = () => {
             </SettingsSection>
             <SettingsSection title="User Plugins">
                 <Field
-                    label={<>
-                        Configure extra plugins to use when loading route documents.{" "}
-                        <Link href={`${window.location.origin}/docs/plugin/settings`} target="_blank">
-                            Learn more
-                        </Link>
-                    </>}
-                    hint={document ? `The current document title is "${document.project.title}"` : undefined}
-                    validationState={userPluginSyntaxError ? "error" : "success"}
-                    validationMessage={userPluginSyntaxError ? "There is a syntax error with your configuration" : "Configuration syntax is valid"}
+                    label={
+                        <>
+                            Configure extra plugins to use when loading route
+                            documents.{" "}
+                            <Link
+                                href={`${window.location.origin}/docs/plugin/settings`}
+                                target="_blank"
+                            >
+                                Learn more
+                            </Link>
+                        </>
+                    }
+                    hint={
+                        document
+                            ? `The current document title is "${document.project.title}"`
+                            : undefined
+                    }
+                    validationState={
+                        userPluginSyntaxError ? "error" : "success"
+                    }
+                    validationMessage={
+                        userPluginSyntaxError
+                            ? "There is a syntax error with your configuration"
+                            : "Configuration syntax is valid"
+                    }
                 >
-                    <Switch 
+                    <Switch
                         label="Enable user plugins"
                         checked={!!enableUserPlugins}
                         onChange={(_, data) => {
@@ -122,7 +160,7 @@ export const PluginSettings: React.FC = () => {
                     />
                 </Field>
                 <Field>
-                    <Textarea 
+                    <Textarea
                         spellCheck={false}
                         id={UserPluginConfigTextarea.id}
                         disabled={!enableUserPlugins}
@@ -134,7 +172,6 @@ export const PluginSettings: React.FC = () => {
                                 setUserPluginConfig(data.value);
                             });
                         }}
-
                     />
                 </Field>
                 <ErrorBar title="Syntax Error">
@@ -145,7 +182,9 @@ export const PluginSettings: React.FC = () => {
     );
 };
 
-const getRoutePluginMessage = (pluginMetadata: PluginMetadata[] | undefined) => {
+const getRoutePluginMessage = (
+    pluginMetadata: PluginMetadata[] | undefined,
+) => {
     if (pluginMetadata === undefined) {
         return "Once a route document is loaded, you can enable or disable plugins here.";
     }
@@ -153,14 +192,17 @@ const getRoutePluginMessage = (pluginMetadata: PluginMetadata[] | undefined) => 
         return "This route document does not load any plugins";
     }
     return "Enable or disable plugins loaded by the route document";
-}
+};
 
-const AppPluginCheckbox: React.FC<CheckboxProps & {type: AppPluginType}> = ({type, ...props}) => {
+const AppPluginCheckbox: React.FC<CheckboxProps & { type: AppPluginType }> = ({
+    type,
+    ...props
+}) => {
     // const { enabledAppPlugins } = useSelector(settingsSelector);
     const { setAppPluginEnabled } = useActions(settingsActions);
 
     return (
-        <PluginCheckbox 
+        <PluginCheckbox
             {...props}
             checked={false} // TODO #33: export splits
             // checked={!!enabledAppPlugins[type]}
@@ -175,10 +217,5 @@ const AppPluginCheckbox: React.FC<CheckboxProps & {type: AppPluginType}> = ({typ
 };
 
 const PluginCheckbox: React.FC<CheckboxProps> = (props) => {
-    return (
-        <Checkbox
-            {...props}
-            className="settings-checkbox-block"
-        />
-    );
+    return <Checkbox {...props} className="settings-checkbox-block" />;
 };

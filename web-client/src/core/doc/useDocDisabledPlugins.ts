@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
@@ -18,6 +17,6 @@ export const useDocDisabledPlugins = (): string[] => {
         return disabledPlugins[title] || [];
     }, [serial, disabledPlugins]);
     /* eslint-enable react-hooks/exhaustive-deps*/
-    
+
     return disabledPluginsForCurrentDoc;
-}
+};

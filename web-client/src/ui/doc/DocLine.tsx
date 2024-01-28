@@ -153,11 +153,7 @@ export const DocLine: React.FC<DocLineProps> = ({
                 }
             </div>
             {diagnostics.map((diagnostic, i) => (
-                <DocDiagnosticBlock 
-                    key={i}
-                    diagnostic={diagnostic}
-                    showCaret
-                />
+                <DocDiagnosticBlock key={i} diagnostic={diagnostic} showCaret />
             ))}
         </div>
     );

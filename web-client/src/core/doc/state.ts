@@ -82,7 +82,7 @@ export const initialDocSettingsState: DocSettingsState = {
     },
     disabledPlugins: {},
     enableUserPlugins: false,
-    userPluginConfig: "# See the \"Learn more\" link above for more information"
+    userPluginConfig: '# See the "Learn more" link above for more information',
 };
 
 /// The document state type
@@ -95,7 +95,7 @@ export type DocumentState = {
     serial: number;
     /// The current document
     document: ExecDoc | undefined;
-    /// The current document's plugin metadata 
+    /// The current document's plugin metadata
     pluginMetadata: PluginMetadata[] | undefined;
 };
 

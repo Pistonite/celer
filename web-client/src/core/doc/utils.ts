@@ -1,7 +1,17 @@
 //! Utilities for document
 
-import { AppState, SettingsState, settingsSelector, documentSelector } from "core/store";
-import { DocPoorText, DocRichTextBlock, ExecDoc, PluginOptionsRaw } from "low/celerc";
+import {
+    AppState,
+    SettingsState,
+    settingsSelector,
+    documentSelector,
+} from "core/store";
+import {
+    DocPoorText,
+    DocRichTextBlock,
+    ExecDoc,
+    PluginOptionsRaw,
+} from "low/celerc";
 import { Debouncer, shallowArrayEqual } from "low/utils";
 import { parseUserConfigOptions } from "./useDocCurrentUserPluginConfig";
 
@@ -127,72 +137,102 @@ const RECOMPILE_ON_SETTINGS: (keyof SettingsState)[] = [
     "disabledPlugins",
 ];
 
-const RecompileNeededDebouncer = new Debouncer(100, (oldState: AppState, newState: AppState) => {
-    const oldSettings = settingsSelector(oldState);
-    const newSettings = settingsSelector(newState);
-    for (const key of RECOMPILE_ON_SETTINGS) {
-        if (oldSettings[key] !== newSettings[key]) {
-            return true;
-        }
-    }
-    // user plugin config
-    if (oldSettings.enableUserPlugins !== newSettings.enableUserPlugins || oldSettings.userPluginConfig !== newSettings.userPluginConfig) {
-        const newDocument = documentSelector(newState);
-        if (newSettings.enableUserPlugins) {
-            const [result] = parseUserConfigOptions(newSettings.userPluginConfig, newDocument.document);
-            if (result) {
-                return true;
-            }
-            return false; // error in config
-        }
-        // user plugin config disabled
-        // if old has config, recompile
-        const oldDocument = documentSelector(oldState);
-        if (oldSettings.enableUserPlugins) {
-            const [result] = parseUserConfigOptions(oldSettings.userPluginConfig, oldDocument.document);
-            if (result && result.length > 0) {
+const RecompileNeededDebouncer = new Debouncer(
+    100,
+    (oldState: AppState, newState: AppState) => {
+        const oldSettings = settingsSelector(oldState);
+        const newSettings = settingsSelector(newState);
+        for (const key of RECOMPILE_ON_SETTINGS) {
+            if (oldSettings[key] !== newSettings[key]) {
                 return true;
             }
         }
-    }
+        // user plugin config
+        if (
+            oldSettings.enableUserPlugins !== newSettings.enableUserPlugins ||
+            oldSettings.userPluginConfig !== newSettings.userPluginConfig
+        ) {
+            const newDocument = documentSelector(newState);
+            if (newSettings.enableUserPlugins) {
+                const [result] = parseUserConfigOptions(
+                    newSettings.userPluginConfig,
+                    newDocument.document,
+                );
+                if (result) {
+                    return true;
+                }
+                return false; // error in config
+            }
+            // user plugin config disabled
+            // if old has config, recompile
+            const oldDocument = documentSelector(oldState);
+            if (oldSettings.enableUserPlugins) {
+                const [result] = parseUserConfigOptions(
+                    oldSettings.userPluginConfig,
+                    oldDocument.document,
+                );
+                if (result && result.length > 0) {
+                    return true;
+                }
+            }
+        }
 
-    return false;
-}, () => false);
+        return false;
+    },
+    () => false,
+);
 
 /// If a recompile/reload is needed when state changes
 ///
 /// This is async to batch multiple updates
-export const isRecompileNeeded = (oldState: AppState, newState: AppState): Promise<boolean> => {
-    return RecompileNeededDebouncer.dispatch(oldState, newState) as Promise<boolean>;
-}
+export const isRecompileNeeded = (
+    oldState: AppState,
+    newState: AppState,
+): Promise<boolean> => {
+    return RecompileNeededDebouncer.dispatch(
+        oldState,
+        newState,
+    ) as Promise<boolean>;
+};
 
 let lastPluginOptionInputs: unknown[] | undefined = undefined;
 let lastPluginOptionResult: PluginOptionsRaw | undefined = undefined;
 
 /// Get the raw plugin options to pass to the compiler
-export const getRawPluginOptions = (state: AppState): PluginOptionsRaw | undefined=> {
-    const { disabledPlugins, enabledAppPlugins, enableUserPlugins, userPluginConfig } = settingsSelector(state);
+export const getRawPluginOptions = (
+    state: AppState,
+): PluginOptionsRaw | undefined => {
+    const {
+        disabledPlugins,
+        enabledAppPlugins,
+        enableUserPlugins,
+        userPluginConfig,
+    } = settingsSelector(state);
     const { document, serial } = documentSelector(state);
 
     const currentInputs = [
-        disabledPlugins, 
-        enabledAppPlugins, 
-        enableUserPlugins, 
+        disabledPlugins,
+        enabledAppPlugins,
+        enableUserPlugins,
         userPluginConfig,
         serial,
     ];
-    console.log("getRawPluginOptions", currentInputs);
-    if (lastPluginOptionInputs !== undefined && shallowArrayEqual(currentInputs, lastPluginOptionInputs)) {
+    if (
+        lastPluginOptionInputs !== undefined &&
+        shallowArrayEqual(currentInputs, lastPluginOptionInputs)
+    ) {
         return lastPluginOptionResult;
     }
     lastPluginOptionInputs = currentInputs;
 
-    const remove = document ? disabledPlugins[document.project.title] || [] : [];
+    const remove = document
+        ? disabledPlugins[document.project.title] || []
+        : [];
     const add = [];
     if (enabledAppPlugins["export-split"]) {
-        // TODO: #33    
+        // TODO #33: export splits
         // add.push({ use: "export-livesplit" });
-        // add.push({ 
+        // add.push({
         //     use: "export-livesplit",
         //     "allow-duplicate": true,
         //     with: {
@@ -212,4 +252,4 @@ export const getRawPluginOptions = (state: AppState): PluginOptionsRaw | undefin
         lastPluginOptionResult = { remove, add };
     }
     return lastPluginOptionResult;
-}
+};

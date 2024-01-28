@@ -93,7 +93,12 @@ type DocInternalProps = {
     splitTypes: string[];
     controller: DocController;
 };
-const DocInternal: React.FC<DocInternalProps> = ({ serial, document, splitTypes, controller }) => {
+const DocInternal: React.FC<DocInternalProps> = ({
+    serial,
+    document,
+    splitTypes,
+    controller,
+}) => {
     DocLog.info(`rendering document (serial=${serial})`);
 
     const flatNotes = document.route.reduce(
@@ -142,15 +147,13 @@ const DocInternal: React.FC<DocInternalProps> = ({ serial, document, splitTypes,
                 }}
             >
                 <div>
-                    {
-                        document.diagnostics.map((diagnostic, i) => (
-                            <DocDiagnosticBlock 
-                                key={i}
-                                diagnostic={diagnostic}
-                                showCaret={false}
-                            />
-                        ))
-                    }
+                    {document.diagnostics.map((diagnostic, i) => (
+                        <DocDiagnosticBlock
+                            key={i}
+                            diagnostic={diagnostic}
+                            showCaret={false}
+                        />
+                    ))}
                 </div>
                 <div id="docpreface-container">
                     {document.preface.map((text, i) => (

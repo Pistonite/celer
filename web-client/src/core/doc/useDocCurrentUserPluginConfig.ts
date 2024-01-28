@@ -10,7 +10,8 @@ type UserPluginOptionsResult = [Value[], undefined] | [undefined, string];
 /// Hook to get the parsed user config options for the current document
 export const useDocCurrentUserPluginConfig = (): UserPluginOptionsResult => {
     const { document, serial } = useSelector(documentSelector);
-    const { userPluginConfig, enableUserPlugins } = useSelector(settingsSelector);
+    const { userPluginConfig, enableUserPlugins } =
+        useSelector(settingsSelector);
 
     /* eslint-disable react-hooks/exhaustive-deps*/
     const result: UserPluginOptionsResult = useMemo(() => {
@@ -23,9 +24,12 @@ export const useDocCurrentUserPluginConfig = (): UserPluginOptionsResult => {
     /* eslint-enable react-hooks/exhaustive-deps*/
 
     return result;
-}
+};
 
-export const parseUserConfigOptions = (config: string, document: ExecDoc | undefined): UserPluginOptionsResult => {
+export const parseUserConfigOptions = (
+    config: string,
+    document: ExecDoc | undefined,
+): UserPluginOptionsResult => {
     try {
         const configObj = YAML.load(config);
         if (!configObj) {
@@ -45,9 +49,12 @@ export const parseUserConfigOptions = (config: string, document: ExecDoc | undef
         if (document) {
             const title = document.project.title;
             if (title in configObj) {
-                const docOptions: unknown = configObj[title as keyof typeof configObj];
+                const docOptions: unknown =
+                    configObj[title as keyof typeof configObj];
                 if (!Array.isArray(docOptions)) {
-                    throw new Error(`Configuration for document "${title}" must be an array!`);
+                    throw new Error(
+                        `Configuration for document "${title}" must be an array!`,
+                    );
                 }
                 options.push(...docOptions);
             }
@@ -64,4 +71,4 @@ export const parseUserConfigOptions = (config: string, document: ExecDoc | undef
         }
         return [undefined, `${e}`];
     }
-}
+};

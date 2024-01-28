@@ -1,4 +1,3 @@
-
 import {
     AppStore,
     documentActions,
@@ -323,5 +322,4 @@ export class CompilerKernelImpl implements CompilerKernel {
         }
         return "";
     }
-
 }
