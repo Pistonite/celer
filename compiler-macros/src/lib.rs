@@ -94,7 +94,7 @@ mod derive_wasm_impl;
 /// # Example
 /// ```ignore
 /// // the wrapped type needs to be have `derive_wasm`
-/// #[derive_opaque(ExecDoc)] 
+/// #[derive_opaque(ExecDoc)]
 /// pub struct OpaqueExecDoc<'a>;
 /// // the derived type actually doesn't have lifetime
 /// // the lifetime is used to annotate the wrapped type

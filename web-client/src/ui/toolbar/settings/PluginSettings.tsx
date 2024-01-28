@@ -73,8 +73,9 @@ export const PluginSettings: React.FC = () => {
                     cachedPluginMetadata?.map((plugin, i) => 
                         <PluginCheckbox
                             key={i}
-                            label={plugin.name}
+                            label={(plugin.isFromUser?"(user) ":"")+plugin.name}
                             checked={!disabledPlugins.includes(plugin.id)}
+                            disabled={plugin.isFromUser}
                             onChange={(_, data) => {
                                 if (!document) {
                                     return;
@@ -155,13 +156,14 @@ const getRoutePluginMessage = (pluginMetadata: PluginMetadata[] | undefined) => 
 }
 
 const AppPluginCheckbox: React.FC<CheckboxProps & {type: AppPluginType}> = ({type, ...props}) => {
-    const { enabledAppPlugins } = useSelector(settingsSelector);
+    // const { enabledAppPlugins } = useSelector(settingsSelector);
     const { setAppPluginEnabled } = useActions(settingsActions);
 
     return (
         <PluginCheckbox 
             {...props}
-            checked={!!enabledAppPlugins[type]}
+            checked={false} // TODO #33: export splits
+            // checked={!!enabledAppPlugins[type]}
             onChange={(_, data) => {
                 setAppPluginEnabled({
                     type,

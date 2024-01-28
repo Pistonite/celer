@@ -9,17 +9,17 @@
 
 pub mod plugin;
 
-pub mod prep; 
-pub mod pack;
 pub mod comp;
 pub mod exec;
 pub mod expo;
+pub mod pack;
+pub mod prep;
 
 // public API re-exports
-pub use prep::{ContextBuilder, PreparedContext};
-pub use pack::Compiler;
 pub use comp::CompDoc;
-pub use exec::{ExecDoc, ExecContext};
+pub use exec::{ExecContext, ExecDoc};
+pub use pack::{CompileContext, Compiler};
+pub use prep::{ContextBuilder, PreparedContext};
 
 pub use plugin::{PluginOptions, PluginOptionsRaw};
 

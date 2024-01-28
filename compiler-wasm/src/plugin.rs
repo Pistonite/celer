@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 
-use log::{info, error};
+use log::{error, info};
 
-use celerc::{PluginOptions, PluginOptionsRaw};
 use celerc::macros::derive_wasm;
+use celerc::{PluginOptions, PluginOptionsRaw};
 
 #[derive(Debug, Clone)]
 #[derive_wasm]
@@ -20,7 +20,7 @@ pub async fn set_plugin_options(options: Option<PluginOptionsRaw>) -> SetPluginO
             info!("clearing plugin options");
             let _ = PLUGIN_OPTIONS.with(|x| x.replace(Ok(None)));
             return SetPluginOptionsResult(None);
-        },
+        }
     };
     info!("setting plugin options");
     match options.parse(&super::get_root_project_resource()).await {
@@ -28,7 +28,7 @@ pub async fn set_plugin_options(options: Option<PluginOptionsRaw>) -> SetPluginO
             let _ = PLUGIN_OPTIONS.with(|x| x.replace(Ok(Some(options))));
             info!("plugin options set successfully");
             SetPluginOptionsResult(None)
-        },
+        }
         Err(e) => {
             let e = e.to_string();
             let _ = PLUGIN_OPTIONS.with(|x| x.replace(Err(e.clone())));

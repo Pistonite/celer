@@ -23,12 +23,16 @@ impl ScriptPlugin {
             "Script plugins are not implemented yet".to_string(),
         ))
     }
+
+    /// Get the display name of the plugin, which is the file name (xxx.js)
     pub fn get_display_name(&self) -> String {
-        let name = self.id.rfind('/').map(|x| &self.id[x + 1..]).unwrap_or(&self.id);
-        format!("plugin/{name}")
+        self.id
+            .rfind('/')
+            .map(|x| &self.id[x + 1..])
+            .unwrap_or(&self.id)
+            .to_string()
     }
 }
-
 
 // pub struct ScriptPluginRuntime {
 //     pub source: String,

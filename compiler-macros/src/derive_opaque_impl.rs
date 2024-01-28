@@ -1,4 +1,3 @@
-
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use syn::DeriveInput;
@@ -45,7 +44,7 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> TokenStream {
                     Ok(Self(inner.try_to_js_value()?))
                 }
             }
-            
+
             #[automatically_derived]
             #[wasm_bindgen]
             extern "C" {
@@ -61,7 +60,7 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> TokenStream {
                 }
             }
 
-            #[automatically_derived]    
+            #[automatically_derived]
             impl #impl_generics From<#name> for JsValue #where_clause {
                 #[inline]
                 fn from(inner: #name) -> Self {

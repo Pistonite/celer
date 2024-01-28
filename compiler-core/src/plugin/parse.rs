@@ -1,13 +1,13 @@
 //! Parsing plugin configurations
 
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 
-use crate::res::{Use, ResError, Loader, Resource};
 use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::prop;
+use crate::res::{Loader, ResError, Resource, Use};
 
-use super::{PluginInstance, Plugin, BuiltInPlugin, ScriptPlugin};
+use super::{BuiltInPlugin, Plugin, PluginInstance, ScriptPlugin};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PluginParseError {
@@ -22,8 +22,11 @@ pub enum PluginParseError {
 }
 
 /// Parse a plugin instance (one element in the `plugins` array)
-pub async fn parse_plugin_instance<L>(value: Map<String, Value>, res: &Resource<'_, L>) -> Result<PluginInstance, PluginParseError>
-    where
+pub async fn parse_plugin_instance<L>(
+    value: Map<String, Value>,
+    res: &Resource<'_, L>,
+) -> Result<PluginInstance, PluginParseError>
+where
     L: Loader,
 {
     let mut plugin = None;
@@ -52,12 +55,19 @@ pub async fn parse_plugin_instance<L>(value: Map<String, Value>, res: &Resource<
     // check if `use` was specified
     let plugin = plugin.ok_or(PluginParseError::MissingPlugin)?;
 
-    Ok(PluginInstance { plugin, allow_duplicate, props })
+    Ok(PluginInstance {
+        plugin,
+        allow_duplicate,
+        props,
+    })
 }
 
 /// Parse the `use` property
-async fn parse_plugin_use<L>(res: &Resource<'_, L>, value: Value) -> Result<Plugin, PluginParseError>
-    where
+async fn parse_plugin_use<L>(
+    res: &Resource<'_, L>,
+    value: Value,
+) -> Result<Plugin, PluginParseError>
+where
     L: Loader,
 {
     let use_path_string = value.coerce_to_string();

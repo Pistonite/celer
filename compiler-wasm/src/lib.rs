@@ -3,8 +3,8 @@ use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
 
-use celerc::prep::EntryPointsSorted;
 use celerc::env::RefCounted;
+use celerc::prep::EntryPointsSorted;
 use celerc::res::{ResPath, Resource};
 
 mod interop;

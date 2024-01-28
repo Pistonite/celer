@@ -72,7 +72,6 @@ impl CompilerBuilder {
                 meta: Cow::Owned(CompilerMetadata {
                     presets: self.presets,
                     default_icon_priority: self.default_icon_priority,
-                    ..Default::default()
                 }),
                 plugins: vec![],
                 plugin_meta: vec![],

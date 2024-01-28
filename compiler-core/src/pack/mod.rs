@@ -25,7 +25,7 @@ use instant::Instant;
 
 use crate::env::yield_budget;
 use crate::json::RouteBlob;
-use crate::plugin::{PluginRuntime, PluginOptions, PluginMetadata, PluginInstance};
+use crate::plugin::{PluginInstance, PluginMetadata, PluginOptions, PluginRuntime};
 use crate::prep::{self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting};
 use crate::res::Loader;
 
@@ -116,46 +116,39 @@ impl<'p> CompileContext<'p> {
         for plugin in old_instances {
             yield_budget(4).await;
 
-            let id = plugin.get_id().to_string();
-            self.plugin_meta.push(PluginMetadata {
-                id: id.clone(),
-                name: plugin.get_display_name().to_string(),
-                is_from_user: false,
-            });
+            let meta = plugin.get_metadata(false);
 
-            if remove.contains(&id) {
-                continue;
+            if !remove.contains(&meta.id) {
+                if !plugin.allow_duplicate && seen.contains(&meta.id) {
+                    duplicates.push(meta.id.clone());
+                } else {
+                    seen.insert(meta.id.clone());
+                    // TODO #175: plugin dependencies
+                    self.plugins.push(plugin);
+                }
             }
 
-            if !plugin.allow_duplicate && seen.contains(&id) {
-                duplicates.push(id);
-                continue;
-            }
-            seen.insert(id);
-
-            // TODO #175: plugin dependencies
-            self.plugins.push(plugin);
+            self.plugin_meta.push(meta);
         }
 
         if let Some(add) = add {
             for plugin in add {
                 yield_budget(4).await;
 
-                let id = plugin.get_id().to_string();
-                self.plugin_meta.push(PluginMetadata {
-                    id: id.clone(),
-                    name: plugin.get_display_name().to_string(),
-                    is_from_user: true,
-                });
+                let meta = plugin.get_metadata(true);
 
-                if !plugin.allow_duplicate && seen.contains(&id) {
-                    duplicates.push(id);
+                // don't need to check remove for user-added plugins
+
+                if !plugin.allow_duplicate && seen.contains(&meta.id) {
+                    duplicates.push(meta.id.clone());
                     continue;
+                } else {
+                    seen.insert(meta.id.clone());
+                    // TODO #175: plugin dependencies
+                    self.plugins.push(plugin);
                 }
-                seen.insert(id);
 
-                // TODO #175: plugin dependencies
-                self.plugins.push(plugin);
+                self.plugin_meta.push(meta);
             }
         }
 
@@ -188,7 +181,7 @@ where
     ///
     /// The returned compile context should be configured, then [`create_compiler`] is called to
     /// create the compiler to proceed to the next phase.
-    pub async fn new_compilation(&self, reset_start_time: Option<Instant>) -> PackResult<CompileContext<'_>> {
+    pub async fn new_compilation(&self, reset_start_time: Option<Instant>) -> CompileContext<'_> {
         let ctx = CompileContext {
             start_time: reset_start_time.unwrap_or(self.start_time),
             config: Cow::Borrowed(&self.config),
@@ -197,18 +190,28 @@ where
             plugin_meta: vec![],
             setting: &self.setting,
         };
-        Ok(ctx)
+        ctx
     }
 
-    pub async fn create_compiler<'p>(&'p self, context: CompileContext<'p>) -> PackResult<Compiler<'p>> {
-        let route= match &self.prep_doc {
+    /// Create the compiler to continue to the next phase
+    ///
+    /// If this fails, the CompileContext is returned to the caller along with the error
+    pub async fn create_compiler<'p>(
+        &'p self,
+        context: CompileContext<'p>,
+    ) -> Result<Compiler<'p>, (PackError, CompileContext<'p>)> {
+        let route = match &self.prep_doc {
             PrepDoc::Built(route) => Cow::Borrowed(route),
             PrepDoc::Raw(route) => {
-                let route = prep::build_route(&self.project_res, route.clone(), &self.setting).await;
+                let route =
+                    prep::build_route(&self.project_res, route.clone(), &self.setting).await;
                 Cow::Owned(route)
             }
         };
-        let plugin_runtimes = context.create_plugin_runtimes().await?;
+        let plugin_runtimes = match context.create_plugin_runtimes().await {
+            Ok(x) => x,
+            Err(e) => return Err((e, context)),
+        };
         let compiler = Compiler {
             ctx: context,
             route,

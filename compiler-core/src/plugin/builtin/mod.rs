@@ -43,6 +43,8 @@ impl BuiltInPlugin {
     }
 
     pub fn id(&self) -> String {
-        serde_json::to_string(self).map(|x| x.trim_matches('"').to_string()).unwrap_or_default()
+        serde_json::to_string(self)
+            .map(|x| x.trim_matches('"').to_string())
+            .unwrap_or_default()
     }
 }

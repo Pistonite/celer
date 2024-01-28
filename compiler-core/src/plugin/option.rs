@@ -1,11 +1,10 @@
 use serde_json::Value;
 
-use crate::res::{Resource, Loader};
 use crate::json::Cast;
 use crate::macros::derive_wasm;
+use crate::res::{Loader, Resource};
 
-use super::{PluginInstance, PluginResult, PluginError};
-
+use super::{PluginError, PluginInstance, PluginResult};
 
 /// Options for users to alter plugins defined in the route
 #[derive(Debug, Clone, Default)]
@@ -26,17 +25,23 @@ pub struct PluginOptionsRaw {
 }
 
 impl PluginOptionsRaw {
-    pub async fn parse<L>(self, res: &Resource<'_, L>) -> PluginResult<PluginOptions> 
-    where L: Loader
+    pub async fn parse<L>(self, res: &Resource<'_, L>) -> PluginResult<PluginOptions>
+    where
+        L: Loader,
     {
         let mut options = PluginOptions {
             remove: self.remove,
-            add: Vec::with_capacity(self.add.len())
+            add: Vec::with_capacity(self.add.len()),
         };
         for (i, v) in self.add.into_iter().enumerate() {
             let v = match v.try_into_object() {
                 Ok(v) => v,
-                Err(_) => return Err(PluginError::InvalidAddPlugin(i, "option must be a mapping object".to_string()))
+                Err(_) => {
+                    return Err(PluginError::InvalidAddPlugin(
+                        i,
+                        "option must be a mapping object".to_string(),
+                    ))
+                }
             };
             let plugin = match super::parse_plugin_instance(v, res).await {
                 Ok(plugin) => plugin,

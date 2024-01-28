@@ -16,8 +16,8 @@
 
 use crate::comp::CompDoc;
 use crate::lang::IntoDiagnostic;
-use crate::plugin::{PluginRuntime, PluginMetadata};
 use crate::macros::derive_wasm;
+use crate::plugin::{PluginMetadata, PluginRuntime};
 
 mod error;
 pub use error::*;

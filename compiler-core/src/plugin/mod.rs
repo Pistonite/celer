@@ -4,9 +4,9 @@ use serde_json::Value;
 
 use crate::comp::CompDoc;
 use crate::exec::ExecDoc;
-use crate::expo::{ExportMetadata, ExpoDoc};
-use crate::pack::CompileContext;
+use crate::expo::{ExpoDoc, ExportMetadata};
 use crate::macros::derive_wasm;
+use crate::pack::CompileContext;
 
 mod error;
 pub use error::*;
@@ -45,7 +45,7 @@ pub trait PluginRuntime {
     /// a built-in plugin or the path/url to an external plugin
     fn get_id(&self) -> Cow<'static, str>;
 
-    /// Get the display name of the plugin. 
+    /// Get the display name of the plugin.
     ///
     /// This should be used with diagnostics, and will be displayed in the settings
     fn get_display_name(&self) -> Cow<'static, str> {
@@ -99,14 +99,22 @@ impl PluginInstance {
     pub fn get_id(&self) -> Cow<'_, str> {
         match &self.plugin {
             Plugin::BuiltIn(p) => Cow::Owned(p.id()),
-            Plugin::Script(p) => Cow::Borrowed(&p.id)
+            Plugin::Script(p) => Cow::Borrowed(&p.id),
         }
     }
 
     pub fn get_display_name(&self) -> Cow<'_, str> {
         match &self.plugin {
             Plugin::BuiltIn(p) => Cow::Owned(format!("plugin/{}", p.id())),
-            Plugin::Script(p) => Cow::Owned(p.get_display_name())
+            Plugin::Script(p) => Cow::Owned(p.get_display_name()),
+        }
+    }
+
+    pub fn get_metadata(&self, is_from_user: bool) -> PluginMetadata {
+        PluginMetadata {
+            id: self.get_id().into_owned(),
+            name: self.get_display_name().into_owned(),
+            is_from_user,
         }
     }
 }

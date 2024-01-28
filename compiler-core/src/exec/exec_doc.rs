@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use crate::comp::CompDoc;
-use crate::lang::{IntoDiagnostic, DocDiagnostic, DocRichText};
+use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
 use crate::macros::derive_wasm;
 use crate::prep::RouteConfig;
 

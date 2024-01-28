@@ -2,11 +2,13 @@ use std::cell::RefCell;
 
 use celerc::lang::DocDiagnostic;
 use instant::Instant;
-use log::{info, error};
+use log::{error, info};
 use wasm_bindgen::prelude::*;
 
 use celerc::pack::PackError;
-use celerc::{CompDoc, Compiler, ContextBuilder, PreparedContext, ExecContext};
+use celerc::{
+    CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PluginOptions, PreparedContext,
+};
 
 use crate::interop::OpaqueExecContext;
 use crate::loader::{self, LoadFileOutput, LoaderInWasm};
@@ -36,24 +38,22 @@ pub async fn compile_document(
     if use_cache && is_cached_compiler_valid(entry_path.as_ref()).await {
         let cached_context = CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.take());
 
-        if let Some(context) = cached_context {
+        if let Some(prep_ctx) = cached_context {
             info!("using cached compiler context");
             let start_time = Instant::now();
-            let result = match context.create_compiler(Some(start_time), plugin_options).await {
-                Ok(x) => compile_with_compiler(x).await,
-                Err(e) => compile_with_pack_error(&context, e).await,
-            };
-            CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.replace(context));
+            let result = compile_in_context(&prep_ctx, Some(start_time), plugin_options).await;
+            CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.replace(prep_ctx));
             return result;
         }
     }
 
+    // create a new context
     let mut context_builder = new_context_builder();
     if entry_path.is_some() {
         context_builder = context_builder.entry_point(entry_path);
     }
     let start_time = Instant::now();
-    let prepared_context = match context_builder.build_context().await {
+    let prep_ctx = match context_builder.build_context().await {
         Ok(x) => x,
         Err(e) => {
             let comp_doc = CompDoc::from_prep_error(e, start_time);
@@ -63,15 +63,9 @@ pub async fn compile_document(
         }
     };
 
-    let compiler_result = prepared_context.create_compiler(None, plugin_options).await;
-    let output = match compiler_result {
-        Ok(x) => compile_with_compiler(x).await,
-        Err(e) => compile_with_pack_error(&prepared_context, e).await,
-    };
-
-    CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.replace(prepared_context));
-
-    output
+    let result = compile_in_context(&prep_ctx, None, plugin_options).await;
+    CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.replace(prep_ctx));
+    result
 }
 
 async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
@@ -102,11 +96,26 @@ async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
     true
 }
 
+async fn compile_in_context(
+    prep_ctx: &PreparedContext<LoaderInWasm>,
+    start_time: Option<Instant>,
+    plugin_options: Option<PluginOptions>,
+) -> Result<OpaqueExecContext, JsValue> {
+    let mut comp_ctx = prep_ctx.new_compilation(start_time).await;
+    match comp_ctx.configure_plugins(plugin_options).await {
+        Err(e) => compile_with_pack_error(comp_ctx, e).await,
+        Ok(_) => match prep_ctx.create_compiler(comp_ctx).await {
+            Ok(x) => compile_with_compiler(x).await,
+            Err((e, comp_ctx)) => compile_with_pack_error(comp_ctx, e).await,
+        },
+    }
+}
+
 async fn compile_with_pack_error(
-    context: &PreparedContext<LoaderInWasm>,
+    context: CompileContext<'_>,
     error: PackError,
 ) -> Result<OpaqueExecContext, JsValue> {
-    let comp_doc = CompDoc::from_diagnostic(error, context.create_compile_context(None));
+    let comp_doc = CompDoc::from_diagnostic(error, context);
     let exec_ctx = comp_doc.execute().await;
     OpaqueExecContext::try_from(exec_ctx)
 }
