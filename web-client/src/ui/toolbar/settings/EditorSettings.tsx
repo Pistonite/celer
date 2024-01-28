@@ -32,14 +32,14 @@ export const EditorSettings: React.FC = () => {
         showFileTree,
         autoSaveEnabled,
         compilerEntryPath,
-        compilerUseCachedPrepPhase: compilerUseCachePack0,
+        compilerUseCachedPrepPhase,
         editorMode,
     } = useSelector(settingsSelector);
     const {
         setShowFileTree,
         setAutoSaveEnabled,
         setCompilerEntryPath,
-        setCompilerUseCachePack0,
+        setCompilerUseCachedPrepPhase,
         setEditorMode,
     } = useActions(settingsActions);
 
@@ -207,9 +207,9 @@ export const EditorSettings: React.FC = () => {
                     hint="Allow the compiler to cache certain configurations such as presets and plugins to speed up compilation."
                 >
                     <Switch
-                        checked={!!compilerUseCachePack0}
+                        checked={!!compilerUseCachedPrepPhase}
                         onChange={(_, data) => {
-                            setCompilerUseCachePack0(data.checked);
+                            setCompilerUseCachedPrepPhase(data.checked);
                         }}
                     />
                 </Field>
