@@ -5,6 +5,11 @@ The plugin system is currently unstable.
 The principle of the plugin system is to separate core Celer functionalities from additional (and mostly optional) functionalities.
 This way, the Celer Compiler can stay as stable as possible, while allowing the communities to add features as they wish.
 
+Plugins are meant to be easy to use by both routers and viewers of the routes.
+Routers define plugins in the routes to augment the compiler, and viewers
+can use plugins to personalize their view of the document (See [here](./settings.md) for more info)
+
+## Concept
 A plugin in Celer is a piece of program that runs as part of the compiler. The (simplified) process goes as the following:
 
 1. The compiler parses the income files and celer-specific syntax like presets
