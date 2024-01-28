@@ -21,4 +21,6 @@ pub use pack::Compiler;
 pub use comp::CompDoc;
 pub use exec::{ExecDoc, ExecContext};
 
+pub use plugin::{PluginOptions, PluginOptionsRaw};
+
 pub use celerb::*;

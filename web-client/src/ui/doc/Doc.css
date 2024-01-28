@@ -108,14 +108,6 @@
     }
 }
 
-.docline-diagnostic-head {
-    padding: 4px 4px 0 4px;
-}
-.docline-diagnostic-body {
-    padding: 4px 0 4px 4px;
-    word-break: break-word;
-}
-
 .docpreface-block {
     padding: 4px 0px 4px 8px;
     box-sizing: border-box;

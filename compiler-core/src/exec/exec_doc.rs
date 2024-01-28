@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use crate::comp::CompDoc;
-use crate::lang::{DocDiagnostic, DocRichText};
+use crate::lang::{IntoDiagnostic, DocDiagnostic, DocRichText};
 use crate::macros::derive_wasm;
 use crate::prep::RouteConfig;
 
@@ -22,6 +22,19 @@ pub struct ExecDoc<'p> {
     pub route: Vec<ExecSection>,
     /// Overall diagnostics (that don't apply to any line)
     pub diagnostics: Vec<DocDiagnostic>,
+}
+
+impl ExecDoc<'static> {
+    /// Create a new document showing an error
+    pub fn from_diagnostic<T>(error: T) -> Self
+    where
+        T: IntoDiagnostic,
+    {
+        ExecDoc {
+            diagnostics: vec![error.into_diagnostic()],
+            ..Default::default()
+        }
+    }
 }
 
 impl<'p> CompDoc<'p> {
@@ -84,6 +97,8 @@ mod test {
                 config: Cow::Borrowed(&test_metadata),
                 setting: &setting,
                 meta: Cow::Owned(Default::default()),
+                plugins: vec![],
+                plugin_meta: vec![],
                 start_time: Instant::now(),
             },
             preface: test_preface.clone(),
@@ -135,6 +150,8 @@ mod test {
                 config: Cow::Borrowed(&project),
                 setting: &setting,
                 meta: Cow::Owned(Default::default()),
+                plugins: vec![],
+                plugin_meta: vec![],
                 start_time: Instant::now(),
             },
             preface: Default::default(),

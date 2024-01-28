@@ -7,6 +7,8 @@ use crate::lang::BaseError;
 pub enum PluginError {
     #[error("An exception occured while executing script: {0}")]
     ScriptException(String),
+    #[error("Extra plugin at `{0}` from plugin options is invalid: {1}")]
+    InvalidAddPlugin(usize, String),
 }
 
 pub type PluginResult<T> = Result<T, PluginError>;
@@ -21,6 +23,7 @@ impl BaseError for PluginError {
     }
 
     fn help_path(&self) -> Option<Cow<'static, str>> {
+        // helps are surfaced through core phase errors
         None
     }
 }

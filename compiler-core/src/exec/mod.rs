@@ -43,17 +43,26 @@ pub struct ExecContext<'p> {
     pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
 }
 
+impl ExecContext<'static> {
+    pub fn from_diagnostic<T>(error: T) -> Self
+    where
+        T: IntoDiagnostic,
+    {
+        ExecContext {
+            exec_doc: ExecDoc::from_diagnostic(error),
+            plugin_metadata: vec![],
+            plugin_runtimes: vec![],
+        }
+    }
+}
+
 impl<'p> CompDoc<'p> {
     /// Entry point for the exec phase
     pub async fn execute(mut self) -> ExecContext<'p> {
         let mut plugins = std::mem::take(&mut self.plugin_runtimes);
+        let plugin_metadata = std::mem::take(&mut self.plugin_meta);
         let mut exec_doc = self.execute_document().await;
-        let mut plugin_metadata = Vec::with_capacity(plugins.len());
         for plugin in &mut plugins {
-            plugin_metadata.push(PluginMetadata {
-                id: plugin.get_id(),
-                name: plugin.get_display_name(),
-            });
             if let Err(e) = plugin.on_after_execute(&mut exec_doc) {
                 let diag = e.into_diagnostic();
                 exec_doc.diagnostics.push(diag);

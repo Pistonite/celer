@@ -15,6 +15,8 @@ mod js;
 mod operation;
 mod option;
 pub use option::*;
+mod parse;
+pub use parse::*;
 
 pub use builtin::BuiltInPlugin;
 pub use js::ScriptPlugin;
@@ -25,9 +27,11 @@ pub use js::ScriptPlugin;
 #[derive_wasm]
 pub struct PluginMetadata {
     /// Id used to identify the plugin
-    pub id: Cow<'static, str>,
+    pub id: String,
     /// Display name of the plugin
-    pub name: Cow<'static, str>
+    pub name: String,
+    /// If the plugin is from a user plugin config
+    pub is_from_user: bool,
 }
 
 /// The plugin runtime trait
@@ -101,7 +105,7 @@ impl PluginInstance {
 
     pub fn get_display_name(&self) -> Cow<'_, str> {
         match &self.plugin {
-            Plugin::BuiltIn(p) => Cow::Owned(p.id()),
+            Plugin::BuiltIn(p) => Cow::Owned(format!("plugin/{}", p.id())),
             Plugin::Script(p) => Cow::Owned(p.get_display_name())
         }
     }

@@ -53,3 +53,35 @@ export const setAppPluginEnabled = withPayload<
 >((state, { type, enabled }) => {
     state.enabledAppPlugins[type] = enabled;
 });
+
+export const setRoutePluginEnabled = withPayload<
+    DocSettingsState,
+    { docTitle: string; plugin: string; enabled: boolean }
+>((state, { docTitle, plugin, enabled }) => {
+    if (enabled) {
+        if (state.disabledPlugins[docTitle]) {
+            state.disabledPlugins[docTitle] = state.disabledPlugins[docTitle].filter(x => x !== plugin);
+        }
+        return;
+    }
+    if (state.disabledPlugins[docTitle]) {
+        state.disabledPlugins[docTitle].push(plugin);
+        return;
+    }
+    state.disabledPlugins[docTitle] = [plugin];
+
+});
+
+export const setUserPluginEnabled = withPayload<
+    DocSettingsState,
+    boolean
+>((state, value) => {
+    state.enableUserPlugins = value;
+});
+
+export const setUserPluginConfig = withPayload<
+    DocSettingsState,
+    string
+>((state, value) => {
+    state.userPluginConfig = value;
+});

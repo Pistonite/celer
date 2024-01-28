@@ -44,7 +44,7 @@ export type EditorSettingsState = {
     autoSaveEnabled: boolean;
     showFileTree: boolean;
     compilerEntryPath: string;
-    compilerUseCachePack0: boolean;
+    compilerUseCachedPrepPhase: boolean;
     editorMode: EditorMode;
 };
 
@@ -52,6 +52,6 @@ export const initialEditorSettingsState: EditorSettingsState = {
     autoSaveEnabled: true,
     showFileTree: true,
     compilerEntryPath: "",
-    compilerUseCachePack0: true,
+    compilerUseCachedPrepPhase: true,
     editorMode: "web",
 };

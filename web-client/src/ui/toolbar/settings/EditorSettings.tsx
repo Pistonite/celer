@@ -32,7 +32,7 @@ export const EditorSettings: React.FC = () => {
         showFileTree,
         autoSaveEnabled,
         compilerEntryPath,
-        compilerUseCachePack0,
+        compilerUseCachedPrepPhase: compilerUseCachePack0,
         editorMode,
     } = useSelector(settingsSelector);
     const {

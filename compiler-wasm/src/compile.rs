@@ -1,16 +1,16 @@
 use std::cell::RefCell;
 
-use celerc::env::RefCounted;
-use celerc::res::{ResPath, Resource};
+use celerc::lang::DocDiagnostic;
 use instant::Instant;
-use log::info;
+use log::{info, error};
 use wasm_bindgen::prelude::*;
 
 use celerc::pack::PackError;
-use celerc::{CompDoc, Compiler, ContextBuilder, PreparedContext};
+use celerc::{CompDoc, Compiler, ContextBuilder, PreparedContext, ExecContext};
 
 use crate::interop::OpaqueExecContext;
 use crate::loader::{self, LoadFileOutput, LoaderInWasm};
+use crate::plugin;
 
 thread_local! {
     static CACHED_COMPILER_CONTEXT: RefCell<Option<PreparedContext<LoaderInWasm>>> = RefCell::new(None);
@@ -22,13 +22,24 @@ pub async fn compile_document(
     entry_path: Option<String>,
     use_cache: bool,
 ) -> Result<OpaqueExecContext, JsValue> {
+    let plugin_options = match plugin::get_plugin_options() {
+        Ok(x) => x,
+        Err(message) => {
+            let message = format!("Failed to load user plugin options: {message}");
+            error!("{message}");
+            let diagnostic = DocDiagnostic::error(&message, "web-editor");
+            let exec_ctx = ExecContext::from_diagnostic(diagnostic);
+            return OpaqueExecContext::try_from(exec_ctx);
+        }
+    };
+
     if use_cache && is_cached_compiler_valid(entry_path.as_ref()).await {
         let cached_context = CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.take());
 
         if let Some(context) = cached_context {
             info!("using cached compiler context");
             let start_time = Instant::now();
-            let result = match context.create_compiler(Some(start_time), None).await {
+            let result = match context.create_compiler(Some(start_time), plugin_options).await {
                 Ok(x) => compile_with_compiler(x).await,
                 Err(e) => compile_with_pack_error(&context, e).await,
             };
@@ -52,7 +63,7 @@ pub async fn compile_document(
         }
     };
 
-    let compiler_result = prepared_context.create_compiler(None, None).await;
+    let compiler_result = prepared_context.create_compiler(None, plugin_options).await;
     let output = match compiler_result {
         Ok(x) => compile_with_compiler(x).await,
         Err(e) => compile_with_pack_error(&prepared_context, e).await,
@@ -109,9 +120,6 @@ async fn compile_with_compiler(compiler: Compiler<'_>) -> Result<OpaqueExecConte
 /// Create a context builder that corresponds to the root project.yaml
 pub fn new_context_builder() -> ContextBuilder<LoaderInWasm> {
     let source = "Web Editor".to_string();
-    let project_res = Resource::new(
-        ResPath::Local("project.yaml".into()),
-        RefCounted::new(LoaderInWasm),
-    );
+    let project_res = super::get_root_project_resource();
     ContextBuilder::new(source, project_res)
 }

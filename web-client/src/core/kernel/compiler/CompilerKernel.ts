@@ -1,12 +1,12 @@
-/// Interface used to access the compiler
-///
-/// The compiler kernel is lazy-loaded only if compiler is needed.
-/// The interface provides a way for TypeScript to know about the compiler
 
 import { EntryPointsSorted } from "low/celerc";
 import { FileAccess } from "low/fs";
 import { Result } from "low/utils";
 
+/// Interface used to access the compiler
+///
+/// The compiler kernel is lazy-loaded only if compiler is needed.
+/// The interface provides a way for TypeScript to know about the compiler
 /// without importing the compiler module.
 export interface CompilerKernel {
     /// Initialize the compiler and bind it to a FileAccess implementation

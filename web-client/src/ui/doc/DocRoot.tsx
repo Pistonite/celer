@@ -25,16 +25,19 @@ import {
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocController, initDocController } from "./DocController";
 import { Rich } from "./Rich";
+import { DocDiagnosticBlock } from "./DocDiagnosticBlock";
 
 export const DocRoot: React.FC = () => {
     const { stageMode, isEditingLayout, compileInProgress } =
         useSelector(viewSelector);
     const { document, serial } = useSelector(documentSelector);
+    const { hideDocWhenResizing } = useSelector(settingsSelector);
+    const splitTypes = useDocSplitTypes();
+
     const store = useStore();
     const controller = useMemo(() => {
         return initDocController(store as AppStore);
     }, [store]);
-    const { hideDocWhenResizing } = useSelector(settingsSelector);
 
     if (!document) {
         if (stageMode === "edit" && !compileInProgress) {
@@ -60,7 +63,7 @@ export const DocRoot: React.FC = () => {
         );
     }
 
-    if (document.route.length <= 0) {
+    if (document.route.length === 0 && document.diagnostics.length === 0) {
         return <HintScreen>This document has no content</HintScreen>;
     }
 
@@ -69,6 +72,7 @@ export const DocRoot: React.FC = () => {
             <CachedDocInternal
                 serial={serial}
                 document={document}
+                splitTypes={splitTypes}
                 controller={controller}
             />
         </ErrorBoundary>
@@ -76,6 +80,9 @@ export const DocRoot: React.FC = () => {
 };
 
 /// Main doc viewer component
+///
+/// The document is not connected to the store to prevent
+/// accidental re-renders. Do not use useSelector in this component.
 type DocInternalProps = {
     /// Serial number of the document
     ///
@@ -83,13 +90,11 @@ type DocInternalProps = {
     serial: number;
     /// The document to render
     document: ExecDoc;
-    /// The controller
+    splitTypes: string[];
     controller: DocController;
 };
-const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
-    DocLog.info("rendering document");
-
-    const splitTypes = useDocSplitTypes();
+const DocInternal: React.FC<DocInternalProps> = ({ serial, document, splitTypes, controller }) => {
+    DocLog.info(`rendering document (serial=${serial})`);
 
     const flatNotes = document.route.reduce(
         (acc: DocNoteBlockProps[], section, i) => {
@@ -136,6 +141,17 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
                     ["--note-min-width" as string]: "48px",
                 }}
             >
+                <div>
+                    {
+                        document.diagnostics.map((diagnostic, i) => (
+                            <DocDiagnosticBlock 
+                                key={i}
+                                diagnostic={diagnostic}
+                                showCaret={false}
+                            />
+                        ))
+                    }
+                </div>
                 <div id="docpreface-container">
                     {document.preface.map((text, i) => (
                         <div key={i} className="docpreface-block">
@@ -230,5 +246,5 @@ const DocInternal: React.FC<DocInternalProps> = ({ document, controller }) => {
 const CachedDocInternal = memo(
     DocInternal,
     (prev, next) =>
-        prev.serial === next.serial && prev.controller === next.controller,
+        prev.serial === next.serial && prev.splitTypes === next.splitTypes,
 );

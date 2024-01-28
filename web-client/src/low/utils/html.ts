@@ -22,6 +22,17 @@ export class DOMId<E extends HTMLElement> {
     public get(): E | undefined {
         return document.getElementById(this.id) as E | undefined;
     }
+
+    public style(style: Record<string, unknown>) {
+        const map = {};
+        addCssObjectToMap(`#${this.id}`, style, map);
+        const css = Object.entries(map)
+            .map(([selector, group]) => {
+                return `${selector}{${group}}`;
+            })
+            .join("");
+        new DOMStyleInject(`${this.id}-styles-byid`).setStyle(css);
+    }
 }
 
 /// Accessor for runtime injected style tag

@@ -82,7 +82,7 @@ export const initialDocSettingsState: DocSettingsState = {
     },
     disabledPlugins: {},
     enableUserPlugins: false,
-    userPluginConfig: `# See ${window.location.origin}/docs/plugin/settings for more information`
+    userPluginConfig: "# See the \"Learn more\" link above for more information"
 };
 
 /// The document state type
