@@ -56,24 +56,39 @@ pub trait PluginRuntime {
     fn on_before_compile(&mut self, _ctx: &mut CompileContext) -> PluginResult<()> {
         Ok(())
     }
+
     /// Called after the route is compiled, to transform the route
     fn on_after_compile(&mut self, _doc: &mut CompDoc) -> PluginResult<()> {
         Ok(())
     }
+
     /// Called after the route is turned into ExecDoc
     fn on_after_execute(&mut self, _doc: &mut ExecDoc) -> PluginResult<()> {
         Ok(())
     }
 
-    fn on_prepare_export(&mut self) -> PluginResult<Option<ExportMetadata>> {
+    /// Called at the end of compilation to check what exports are available
+    fn on_prepare_export(&mut self) -> PluginResult<Option<Vec<ExportMetadata>>> {
         Ok(None)
     }
 
-    fn on_export_comp_doc(&mut self, _doc: &CompDoc) -> PluginResult<Option<ExpoDoc>> {
+    /// Called only in export workflow, to let the exporter access the CompDoc
+    ///
+    /// If the exporter needs to access the ExecDoc as well, it should return `None`.
+    /// Otherwise, the returned export data will be used and the exporter will not be called
+    /// with the ExecDoc
+    fn on_export_comp_doc(&mut self, _properties: &Value, _payload: &Value, _doc: &CompDoc) -> PluginResult<Option<ExpoDoc>> {
         Ok(None)
     }
-    fn on_export_exec_doc(&mut self, _doc: &ExecDoc) -> PluginResult<Option<ExpoDoc>> {
-        Ok(None)
+
+    /// Called only in export workflow, to let the exporter access the ExecDoc
+    ///
+    /// The exporter must return the export data or throw an error
+    fn on_export_exec_doc(&mut self, _properties: Value, _payload: Value, _doc: &ExecDoc) -> PluginResult<ExpoDoc> {
+        Err(PluginError::NotImplemented(
+            self.get_display_name().into_owned(),
+            "on_export_exec_doc".into(),
+        ))
     }
 }
 

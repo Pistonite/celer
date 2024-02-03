@@ -11,16 +11,19 @@ use super::{PluginResult, PluginRuntime};
 
 mod botw_unstable;
 mod link;
+mod livesplit;
 mod metrics;
 mod variables;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BuiltInPlugin {
-    Metrics,
-    Link,
-    Variables,
     BotwAbilityUnstable,
+    #[serde(rename = "export-livesplit")]
+    ExportLiveSplit,
+    Link,
+    Metrics,
+    Variables,
 }
 
 impl BuiltInPlugin {
@@ -30,15 +33,16 @@ impl BuiltInPlugin {
         props: &Value,
     ) -> PluginResult<Box<dyn PluginRuntime>> {
         match &self {
+            BuiltInPlugin::BotwAbilityUnstable => Ok(Box::new(
+                botw_unstable::BotwAbilityUnstablePlugin::from_props(props),
+            )),
+            BuiltInPlugin::ExportLiveSplit => Ok(Box::new(livesplit::ExportLiveSplitPlugin)),
             BuiltInPlugin::Link => Ok(Box::new(link::LinkPlugin)),
             BuiltInPlugin::Metrics => Ok(Box::new(metrics::MetricsPlugin::from_props(
                 props,
                 &ctx.start_time,
             ))),
             BuiltInPlugin::Variables => Ok(Box::new(variables::VariablesPlugin::from_props(props))),
-            BuiltInPlugin::BotwAbilityUnstable => Ok(Box::new(
-                botw_unstable::BotwAbilityUnstablePlugin::from_props(props),
-            )),
         }
     }
 
