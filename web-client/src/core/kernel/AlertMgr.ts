@@ -17,7 +17,7 @@ export type AlertOptions<TExtra extends AlertExtraAction[]> = {
     learnMoreLink?: string;
     /// Extra actions besides ok and cancel
     extraActions?: TExtra;
-}
+};
 
 /// Options for showing a rich (react) alert
 export type RichAlertOptions<TExtra extends AlertExtraAction[]> = {
@@ -31,7 +31,7 @@ export type RichAlertOptions<TExtra extends AlertExtraAction[]> = {
     cancelButton?: string;
     /// Extra actions besides ok and cancel
     extraActions?: TExtra;
-}
+};
 
 type IdsOf<T extends AlertExtraAction[]> = T[number]["id"];
 type AlertCallback = (ok: boolean | string) => void;
@@ -55,7 +55,7 @@ export class AlertMgr {
     /// clicked ok and false if the user clicked cancel.
     ///
     /// If there are extra options, it may resolve to the id of the extra action
-    public show<TExtra extends AlertExtraAction[]=[]>({
+    public show<TExtra extends AlertExtraAction[] = []>({
         title,
         message,
         okButton,
@@ -65,19 +65,21 @@ export class AlertMgr {
     }: AlertOptions<TExtra>): Promise<boolean | IdsOf<TExtra>> {
         return new Promise((resolve) => {
             this.initAlert(resolve, undefined);
-            this.store.dispatch(viewActions.setAlert({
-                title,
-                text: message,
-                okButton: okButton ?? "Ok",
-                cancelButton: cancelButton ?? "Cancel",
-                learnMore: learnMoreLink ?? "",
-                extraActions: extraActions ?? [],
-            }));
+            this.store.dispatch(
+                viewActions.setAlert({
+                    title,
+                    text: message,
+                    okButton: okButton ?? "Ok",
+                    cancelButton: cancelButton ?? "Cancel",
+                    learnMore: learnMoreLink ?? "",
+                    extraActions: extraActions ?? [],
+                }),
+            );
         });
     }
 
     /// Like `show`, but with a custom react component for the body
-    public showRich<TExtra extends AlertExtraAction[]=[]>({
+    public showRich<TExtra extends AlertExtraAction[] = []>({
         title,
         component,
         okButton,
@@ -86,14 +88,16 @@ export class AlertMgr {
     }: RichAlertOptions<TExtra>): Promise<boolean | IdsOf<TExtra>> {
         return new Promise((resolve) => {
             this.initAlert(resolve, component);
-            this.store.dispatch(viewActions.setAlert({
-                title,
-                text: "",
-                okButton: okButton ?? "Ok",
-                cancelButton: cancelButton ?? "",
-                learnMore: "",
-                extraActions: extraActions ?? [],
-            }));
+            this.store.dispatch(
+                viewActions.setAlert({
+                    title,
+                    text: "",
+                    okButton: okButton ?? "Ok",
+                    cancelButton: cancelButton ?? "",
+                    learnMore: "",
+                    extraActions: extraActions ?? [],
+                }),
+            );
         });
     }
 
@@ -106,7 +110,10 @@ export class AlertMgr {
         }
     }
 
-    private initAlert(resolve: AlertCallback, component: React.ComponentType | undefined) {
+    private initAlert(
+        resolve: AlertCallback,
+        component: React.ComponentType | undefined,
+    ) {
         this.previousFocusedElement = document.activeElement ?? undefined;
         this.alertCallback = (response) => {
             this.store.dispatch(viewActions.clearAlert());
@@ -114,7 +121,11 @@ export class AlertMgr {
             this.RichAlertComponent = undefined;
             setTimeout(() => {
                 const element = this.previousFocusedElement;
-                if (element && "focus" in element && typeof element.focus === "function") {
+                if (
+                    element &&
+                    "focus" in element &&
+                    typeof element.focus === "function"
+                ) {
                     element.focus();
                 }
                 resolve(response);
@@ -131,5 +142,4 @@ export class AlertMgr {
     public getRichComponent() {
         return this.RichAlertComponent;
     }
-
 }

@@ -39,7 +39,6 @@ export const AppAlert: React.FC = () => {
             open
             modalType="alert"
             onOpenChange={async (_, data) => {
-
                 if (!data.open) {
                     // doing this async just in case
                     await sleep(0);
@@ -51,54 +50,57 @@ export const AppAlert: React.FC = () => {
                 <DialogBody>
                     <DialogTitle>{alertTitle}</DialogTitle>
                     <DialogContent>
-                        {
-                            RichAlertComponent ? (
-                                <RichAlertComponent />
-                            ) : (
-                                    <>
-                                        <Text block>{alertText}</Text>
-                                        {alertLearnMoreLink && (
-                                            <div style={{ marginTop: 10 }}>
-                                                <Link href={alertLearnMoreLink} target="_blank">
-                                                    Learn more
-                                                </Link>
-                                            </div>
-                                        )}
-                                    </>
-                            )
-                        }
+                        {RichAlertComponent ? (
+                            <RichAlertComponent />
+                        ) : (
+                            <>
+                                <Text block>{alertText}</Text>
+                                {alertLearnMoreLink && (
+                                    <div style={{ marginTop: 10 }}>
+                                        <Link
+                                            href={alertLearnMoreLink}
+                                            target="_blank"
+                                        >
+                                            Learn more
+                                        </Link>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </DialogContent>
                     <DialogActions fluid={alertExtraActions.length > 0}>
                         <DialogTrigger disableButtonEnhancement>
-                            <Button 
+                            <Button
                                 appearance="primary"
-                                onClick={() => responseRef.current = true}
+                                onClick={() => (responseRef.current = true)}
                             >
                                 {alertOkButton}
                             </Button>
                         </DialogTrigger>
                         {alertCancelButton && (
                             <DialogTrigger disableButtonEnhancement>
-                                <Button 
+                                <Button
                                     appearance="secondary"
-                                    onClick={() => responseRef.current = false}
+                                    onClick={() =>
+                                        (responseRef.current = false)
+                                    }
                                 >
                                     {alertCancelButton}
                                 </Button>
                             </DialogTrigger>
                         )}
-                        {
-                            alertExtraActions.map((action, i) => (
-                                <DialogTrigger key={i} disableButtonEnhancement>
-                                    <Button 
-                                        appearance="secondary"
-                                        onClick={() => responseRef.current = action.id}
-                                    >
-                                        {action.text}
-                                    </Button>
-                                </DialogTrigger>
-                            ))
-                        }
+                        {alertExtraActions.map((action, i) => (
+                            <DialogTrigger key={i} disableButtonEnhancement>
+                                <Button
+                                    appearance="secondary"
+                                    onClick={() =>
+                                        (responseRef.current = action.id)
+                                    }
+                                >
+                                    {action.text}
+                                </Button>
+                            </DialogTrigger>
+                        ))}
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>

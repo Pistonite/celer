@@ -5,5 +5,4 @@ declare module "is-equal" {
 }
 
 // suppress the error from loading prismjs languages
-declare module "prismjs/components/*" {
-}
+declare module "prismjs/components/*" {}

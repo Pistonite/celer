@@ -1,4 +1,3 @@
-
 import { makeStyles, shorthands } from "@fluentui/react-components";
 import ReactSimpleCodeEditor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs";
@@ -35,7 +34,7 @@ function initStyles() {
             },
             "& textarea": {
                 ...shorthands.outline("initial", "none"),
-            }
+            },
         },
         outer: {
             ...shorthands.margin("10px", "0"),
@@ -46,22 +45,28 @@ function initStyles() {
                 ...shorthands.outline("1px", "solid", dark ? "white" : "black"),
             },
             backgroundColor: dark ? "#111" : "#eee",
-        }
+        },
     });
 }
 const useStyles = initStyles();
 
-const PrismEditorCore: React.FC<PrismEditorProps> = ({language, value, setValue}) => {
+const PrismEditorCore: React.FC<PrismEditorProps> = ({
+    language,
+    value,
+    setValue,
+}) => {
     const styles = useStyles();
     return (
         <div className={styles.outer}>
             <div className={styles.inner}>
                 <ReactSimpleCodeEditor
                     value={value}
-                    onValueChange={code => setValue(code)}
-                    highlight={code => highlight(code, languages[language], language)}
+                    onValueChange={(code) => setValue(code)}
+                    highlight={(code) =>
+                        highlight(code, languages[language], language)
+                    }
                     padding={4}
-                    onKeyDown={e => {
+                    onKeyDown={(e) => {
                         // prevent dialog from closing if the editor is
                         // inside a dialog
                         if (e.key === "Escape") {
@@ -73,6 +78,6 @@ const PrismEditorCore: React.FC<PrismEditorProps> = ({language, value, setValue}
             </div>
         </div>
     );
-}
+};
 
 export default PrismEditorCore;

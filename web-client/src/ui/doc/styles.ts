@@ -7,6 +7,6 @@ export const useDocStyles = makeStyles({
         ...shorthands.padding("16px 0px 16px 64px"),
         "& span": {
             wordWrap: "break-word",
-        }
-    }
+        },
+    },
 });

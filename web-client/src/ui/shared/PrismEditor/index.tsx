@@ -1,5 +1,5 @@
 //! An editor that uses PrismJS for syntax highlighting
-import React, { Suspense, } from "react";
+import React, { Suspense } from "react";
 import { Spinner } from "@fluentui/react-components";
 
 import { PrismEditorProps } from "./types";
@@ -12,4 +12,4 @@ export const PrismEditor: React.FC<PrismEditorProps> = (props) => {
             <PrismEditorCore {...props} />
         </Suspense>
     );
-}
+};

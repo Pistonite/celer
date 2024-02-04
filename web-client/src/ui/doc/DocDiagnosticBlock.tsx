@@ -26,7 +26,7 @@ const useStyles = makeStyles({
     [DocDiagnosticBodyClass.className]: {
         ...shorthands.padding("4px 0 4px 4px"),
         wordBreak: "break-word",
-    }
+    },
 });
 
 export const DocDiagnosticBlock: React.FC<DocDiagnosticBlockProps> = ({

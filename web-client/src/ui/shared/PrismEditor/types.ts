@@ -5,7 +5,11 @@ export type PrismEditorProps = {
     language: PrismEditorLanguage;
     value: string;
     setValue: (value: string) => void;
-}
+};
 
-export type PrismEditorLanguage = "markup" | "css" | "clike" | "javascript" | "yaml";
-
+export type PrismEditorLanguage =
+    | "markup"
+    | "css"
+    | "clike"
+    | "javascript"
+    | "yaml";

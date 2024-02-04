@@ -15,12 +15,12 @@ export type StageViewState = {
 export type AlertExtraAction = {
     id: string;
     text: string;
-}
+};
 export type ModifyAlertActionPayload = {
     okButton?: string;
     cancelButton?: string;
     extraActions?: AlertExtraAction[];
-}
+};
 
 export type StageMode = "view" | "edit";
 

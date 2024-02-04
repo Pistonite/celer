@@ -85,7 +85,8 @@ const useSaveProjectControl = () => {
         if (result.isErr()) {
             await kernel.getAlertMgr().show({
                 title: "Error",
-                message: "Fail to save changes to file system. Please try again.",
+                message:
+                    "Fail to save changes to file system. Please try again.",
                 okButton: "Close",
             });
         }

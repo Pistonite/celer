@@ -160,7 +160,14 @@ export const PluginSettings: React.FC = () => {
                     <Button
                         appearance="primary"
                         disabled={!enableUserPlugins}
-                        onClick={() => editUserPluginConfig(userPluginConfig, kernel, document, setUserPluginConfig)}
+                        onClick={() =>
+                            editUserPluginConfig(
+                                userPluginConfig,
+                                kernel,
+                                document,
+                                setUserPluginConfig,
+                            )
+                        }
                     >
                         Edit Config
                     </Button>
@@ -225,21 +232,26 @@ const PluginCheckbox: React.FC<CheckboxProps> = (props) => {
     return <Checkbox {...props} className="settings-checkbox-block" />;
 };
 
-const editUserPluginConfig = async (userPluginConfig: string, kernel: Kernel, document: ExecDoc | undefined, setUserPluginConfig: (x: string) => void):Promise<void> => {
+const editUserPluginConfig = async (
+    userPluginConfig: string,
+    kernel: Kernel,
+    document: ExecDoc | undefined,
+    setUserPluginConfig: (x: string) => void,
+): Promise<void> => {
     let config = userPluginConfig;
     let [_, error] = parseUserConfigOptions(config, document);
     // eslint-disable-next-line no-constant-condition
-    while(true) {
+    while (true) {
         const response = await kernel.getAlertMgr().showRich({
             title: "User Plugins",
             component: () => {
                 return (
-                    <UserPluginConfigEditor 
+                    <UserPluginConfigEditor
                         initialError={error}
                         initialValue={config}
-                        onChange={x => {
+                        onChange={(x) => {
                             kernel.getAlertMgr().modifyActions({
-                                extraActions: []
+                                extraActions: [],
                             });
                             config = x;
                         }}
@@ -248,12 +260,14 @@ const editUserPluginConfig = async (userPluginConfig: string, kernel: Kernel, do
             },
             okButton: "Save",
             cancelButton: "Cancel",
-            extraActions: error ? [
-                {
-                    id: "force",
-                    text: "Save with this error",
-                }
-            ] as const: []
+            extraActions: error
+                ? [
+                      {
+                          id: "force",
+                          text: "Save with this error",
+                      } as const,
+                  ]
+                : [],
         });
         if (!response) {
             console.info("user cancelled user plugin config");
@@ -270,21 +284,25 @@ const editUserPluginConfig = async (userPluginConfig: string, kernel: Kernel, do
     }
     console.info("saving new user plugin config");
     setUserPluginConfig(config);
-}
+};
 
 type UserPluginConfigEditorProps = {
     initialValue: string;
     onChange: (value: string) => void;
     initialError: string | undefined;
-}
+};
 
-const UserPluginConfigEditor: React.FC<UserPluginConfigEditorProps> = ({initialError, initialValue, onChange}) => {
+const UserPluginConfigEditor: React.FC<UserPluginConfigEditorProps> = ({
+    initialError,
+    initialValue,
+    onChange,
+}) => {
     const { document } = useSelector(documentSelector);
     const [currentValue, setCurrentValue] = useState(initialValue);
     const [error, setError] = useState(initialError);
     return (
         <div>
-            <Body1 block style={{marginBottom: 4}}>
+            <Body1 block style={{ marginBottom: 4 }}>
                 Please edit your plugin configuration below.{" "}
                 <Link
                     href={`${window.location.origin}/docs/plugin/settings`}
@@ -293,24 +311,18 @@ const UserPluginConfigEditor: React.FC<UserPluginConfigEditorProps> = ({initialE
                     Learn more
                 </Link>
             </Body1>
-            {
-                document !== undefined && (
-                    <MessageBar intent="info">
-                        <MessageBarBody>
-                            The current document title is "{document.project.title}"
-                        </MessageBarBody>
-                    </MessageBar>
-                )
-            }
-            {
-                error !== undefined && (
-                    <ErrorBar title="Syntax Error">
-                        {error}
-                    </ErrorBar>
-                )
-            }
+            {document !== undefined && (
+                <MessageBar intent="info">
+                    <MessageBarBody>
+                        The current document title is "{document.project.title}"
+                    </MessageBarBody>
+                </MessageBar>
+            )}
+            {error !== undefined && (
+                <ErrorBar title="Syntax Error">{error}</ErrorBar>
+            )}
             <div>
-                <PrismEditor 
+                <PrismEditor
                     language="yaml"
                     value={currentValue}
                     setValue={(x) => {
@@ -322,4 +334,4 @@ const UserPluginConfigEditor: React.FC<UserPluginConfigEditorProps> = ({initialE
             </div>
         </div>
     );
-}
+};

@@ -40,7 +40,8 @@ export const EditorDropZone: React.FC = () => {
                 if (!item) {
                     await kernel.getAlertMgr().show({
                         title: "Error",
-                        message: "Cannot open the project. Make sure you are dropping the correct folder and try again.",
+                        message:
+                            "Cannot open the project. Make sure you are dropping the correct folder and try again.",
                         okButton: "Close",
                     });
                     return;

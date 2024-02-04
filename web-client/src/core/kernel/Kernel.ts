@@ -299,7 +299,7 @@ export class Kernel {
                 return;
             }
             if (code === FsResultCodes.NotSupported) {
-                await this.getAlertMgr().show( {
+                await this.getAlertMgr().show({
                     title: "Not Supported",
                     message: "Your browser does not support this feature.",
                     okButton: "Close",
@@ -308,11 +308,12 @@ export class Kernel {
             } else if (code === FsResultCodes.IsFile) {
                 await this.getAlertMgr().show({
                     title: "Error",
-                    message: "You dropped a file. Make sure you are dropping the project folder and not individual files.",
+                    message:
+                        "You dropped a file. Make sure you are dropping the project folder and not individual files.",
                     okButton: "Close",
                 });
             } else {
-                await this.getAlertMgr().show( {
+                await this.getAlertMgr().show({
                     title: "Error",
                     message: `Cannot open the project. Make sure you have access to the folder or contact support. (Error code ${code}}`,
                     okButton: "Close",
@@ -329,7 +330,8 @@ export class Kernel {
             if (code === FsResultCodes.PermissionDenied) {
                 retry = await this.getAlertMgr().show({
                     title: "Permission Denied",
-                    message: "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
+                    message:
+                        "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
                     okButton: "Grant Permission",
                     cancelButton: "Cancel",
                 });
@@ -352,8 +354,9 @@ export class Kernel {
             // must be able to save to use web editor
             if (!fileSys.isWritable()) {
                 const yes = await this.getAlertMgr().show({
-                title: "Save not supported",
-                message: "The web editor cannot be used because your browser does not support saving changes to the file system. If you wish to edit the project, you can use the External Editor workflow and have Celer load changes directly from your file system.",
+                    title: "Save not supported",
+                    message:
+                        "The web editor cannot be used because your browser does not support saving changes to the file system. If you wish to edit the project, you can use the External Editor workflow and have Celer load changes directly from your file system.",
                     okButton: "Use external editor",
                     cancelButton: "Cancel",
                     learnMoreLink: "/docs/route/editor/web#browser-os-support",
@@ -367,9 +370,10 @@ export class Kernel {
         }
 
         if (fileSys.isStale()) {
-            const yes = await this.getAlertMgr().show( {
+            const yes = await this.getAlertMgr().show({
                 title: "Heads up!",
-                message: "Your browser has limited support for file system access when opening a project from a dialog. Certain operations may not work! Please see the learn more link below for more information.",
+                message:
+                    "Your browser has limited support for file system access when opening a project from a dialog. Certain operations may not work! Please see the learn more link below for more information.",
                 okButton: "Continue anyway",
                 cancelButton: "Cancel",
                 learnMoreLink: "/docs/route/editor/external#open-a-project",
@@ -417,4 +421,3 @@ export class Kernel {
         }
     }
 }
-

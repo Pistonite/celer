@@ -87,7 +87,7 @@ function addCssObjectToMap(
 }
 
 /// Accessor for DOM Class
-export class DOMClass<N extends string, E extends HTMLElement=HTMLElement> {
+export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
     readonly className: N;
     constructor(className: N) {
         this.className = className;
@@ -111,7 +111,9 @@ export class DOMClass<N extends string, E extends HTMLElement=HTMLElement> {
     }
 
     public query(selector?: string): E | undefined {
-        const element = document.querySelector(`.${this.className}${selector || ""}`) || undefined;
+        const element =
+            document.querySelector(`.${this.className}${selector || ""}`) ||
+            undefined;
         return element as E | undefined;
     }
 
