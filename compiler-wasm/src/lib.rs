@@ -8,7 +8,7 @@ use celerc::prep::EntryPointsSorted;
 use celerc::res::{ResPath, Resource};
 
 mod interop;
-use interop::OpaqueExecContext;
+use interop::OpaqueExpoContext;
 mod compile;
 mod loader;
 use loader::LoaderInWasm;
@@ -53,7 +53,7 @@ pub async fn get_entry_points() -> Result<EntryPointsSorted, JsValue> {
 pub async fn compile_document(
     entry_path: Option<String>,
     use_cache: bool,
-) -> Result<OpaqueExecContext, JsValue> {
+) -> Result<OpaqueExpoContext, JsValue> {
     compile::compile_document(entry_path, use_cache).await
 }
 

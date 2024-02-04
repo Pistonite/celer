@@ -46,7 +46,7 @@ pub struct ExportMetadata {
     /// This is not part of the config and cannot be changed by the user
     pub properties: Value,
 
-    /// Example configuration for the exporter to show to the user
+    /// (Optional) Example YAML configuration for the exporter to show to the user
     pub example_config: Option<String>,
 }
 
@@ -69,6 +69,8 @@ pub enum ExportIcon {
 }
 
 /// The exported document type
+#[derive(Debug, Clone)]
+#[derive_wasm]
 pub struct ExpoDoc {
     /// The file name
     pub file_name: String,

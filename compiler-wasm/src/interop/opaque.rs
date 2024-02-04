@@ -3,7 +3,7 @@
 use wasm_bindgen::prelude::*;
 
 use celerc::macros::derive_opaque;
-use celerc::ExecContext;
+use celerc::ExpoContext;
 
-#[derive_opaque(ExecContext)]
-pub struct OpaqueExecContext<'p>;
+#[derive_opaque(ExpoContext)]
+pub struct OpaqueExpoContext<'p>;

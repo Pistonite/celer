@@ -394,6 +394,7 @@ dependencies = [
  "roman",
  "serde",
  "serde_json",
+ "serde_yaml",
  "thiserror",
  "tokio",
 ]

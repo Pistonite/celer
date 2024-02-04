@@ -1,6 +1,6 @@
 //! Document view, setting, and route document state
 
-import { ExecDoc, PluginMetadata } from "low/celerc";
+import { ExecDoc, ExportMetadata, PluginMetadata } from "low/celerc";
 
 /// View state for the document
 export type DocViewState = {
@@ -97,6 +97,8 @@ export type DocumentState = {
     document: ExecDoc | undefined;
     /// The current document's plugin metadata
     pluginMetadata: PluginMetadata[] | undefined;
+    /// The current document's export options
+    exportMetadata: ExportMetadata[] | undefined;
 };
 
 /// The initial document state
@@ -104,4 +106,5 @@ export const initialDocumentState: DocumentState = {
     serial: 0,
     document: undefined,
     pluginMetadata: undefined,
+    exportMetadata: undefined,
 };

@@ -20,6 +20,7 @@ pub use comp::CompDoc;
 pub use exec::{ExecContext, ExecDoc};
 pub use pack::{CompileContext, Compiler};
 pub use prep::{ContextBuilder, PreparedContext};
+pub use expo::{ExpoContext, ExpoDoc};
 
 pub use plugin::{PluginOptions, PluginOptionsRaw};
 

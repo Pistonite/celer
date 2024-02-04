@@ -14,6 +14,7 @@ import { SyncProject } from "./SyncProject";
 import { SaveProject } from "./SaveProject";
 import { CompileProject } from "./CompileProject";
 import { OpenDocs } from "./OpenDocs";
+import { Export } from "./Export";
 
 /// Header controls.
 ///
@@ -32,7 +33,7 @@ export const getHeaderControls = (
         // Doc Controls
         {
             priority: 40,
-            controls: [SelectSection, ViewDiagnostics],
+            controls: [SelectSection, ViewDiagnostics, Export],
         },
         // Map Controls
         {

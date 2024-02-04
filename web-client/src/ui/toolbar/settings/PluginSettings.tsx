@@ -83,8 +83,7 @@ export const PluginSettings: React.FC = () => {
 
                 <AppPluginCheckbox
                     type="export-split"
-                    label="Export to LiveSplit"
-                    disabled={true}
+                    label="Export split files"
                 />
             </SettingsSection>
             <SettingsSection title="Route Plugins">
@@ -198,14 +197,13 @@ const AppPluginCheckbox: React.FC<CheckboxProps & { type: AppPluginType }> = ({
     type,
     ...props
 }) => {
-    // const { enabledAppPlugins } = useSelector(settingsSelector);
+    const { enabledAppPlugins } = useSelector(settingsSelector);
     const { setAppPluginEnabled } = useActions(settingsActions);
 
     return (
         <PluginCheckbox
             {...props}
-            checked={false} // TODO #33: export splits
-            // checked={!!enabledAppPlugins[type]}
+            checked={!!enabledAppPlugins[type]}
             onChange={(_, data) => {
                 setAppPluginEnabled({
                     type,
