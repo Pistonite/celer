@@ -25,7 +25,6 @@ export const isFileSystemAccessApiSupported = (): boolean => {
         return false;
     }
 
-    // @ts-expect-error FileSystemFileHandle should have a createWritable() method
     if (!window.FileSystemFileHandle.prototype.createWritable) {
         return false;
     }
@@ -162,10 +161,7 @@ export class FileSystemAccessApiFileSys implements FileSys {
             return result;
         }
         try {
-            // @ts-expect-error FileSystemWritableFileStream is not in tslib
-            const file: FileSystemWritableFileStream =
-                // @ts-expect-error FileSystemFileHandle should have a createWritable() method
-                await result.inner().createWritable();
+            const file = await result.inner().createWritable();
             await file.write(content);
             await file.close();
             return result.makeOk(undefined);

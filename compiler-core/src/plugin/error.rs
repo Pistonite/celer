@@ -7,8 +7,12 @@ use crate::lang::BaseError;
 pub enum PluginError {
     #[error("An exception occured while executing script: {0}")]
     ScriptException(String),
+
     #[error("Extra plugin at `{0}` from plugin options is invalid: {1}")]
     InvalidAddPlugin(usize, String),
+
+    #[error("The plugin `{0}` does not implement the required `{1}` method!")]
+    NotImplemented(String, String),
 }
 
 pub type PluginResult<T> = Result<T, PluginError>;

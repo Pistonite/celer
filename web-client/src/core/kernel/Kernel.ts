@@ -20,6 +20,7 @@ import type { CompilerKernel } from "./compiler";
 import type { EditorKernel } from "./editor";
 import { KeyMgr } from "./KeyMgr";
 import { WindowMgr } from "./WindowMgr";
+import { AlertMgr } from "./AlertMgr";
 
 type InitUiFunction = (
     kernel: Kernel,
@@ -48,7 +49,7 @@ export class Kernel {
     private cleanupUi: (() => void) | null = null;
 
     // Alert API
-    private alertCallback: ((ok: boolean) => void) | undefined = undefined;
+    private alertMgr: AlertMgr;
 
     // Editor API
     // The editor is owned by the kernel because the toolbar needs access
@@ -62,6 +63,7 @@ export class Kernel {
         this.initReact = initReact;
         this.log.info("starting application");
         this.store = this.initStore();
+        this.alertMgr = new AlertMgr(this.store);
     }
 
     /// Initialize the store
@@ -179,48 +181,8 @@ export class Kernel {
         this.themeLinkTag.href = `/themes/${theme}.min.css`;
     }
 
-    /// Show an alert dialog
-    ///
-    /// Returns a promise that resolves to true if the user
-    /// clicked ok and false if the user clicked cancel.
-    public showAlert(
-        title: string,
-        message: string,
-        okButton: string,
-        cancelButton: string,
-        learnMore?: string,
-    ): Promise<boolean> {
-        return new Promise((resolve) => {
-            // Run new alert asynchronously so that the previous alert has time to disappear first
-            setTimeout(() => {
-                this.alertCallback = (ok) => {
-                    this.store?.dispatch(viewActions.clearAlert());
-                    resolve(ok);
-                    this.alertCallback = undefined;
-                };
-                const store = this.store;
-                if (!store) {
-                    console.error("store not initialized");
-                    resolve(false);
-                    return;
-                }
-                store.dispatch(
-                    viewActions.setAlert({
-                        title,
-                        text: message,
-                        learnMore: learnMore || "",
-                        okButton,
-                        cancelButton,
-                    }),
-                );
-            }, 50);
-        });
-    }
-
-    public onAlertAction(ok: boolean) {
-        if (this.alertCallback) {
-            this.alertCallback(ok);
-        }
+    public getAlertMgr(): AlertMgr {
+        return this.alertMgr;
     }
 
     public getEditor(): EditorKernel | null {
@@ -255,27 +217,25 @@ export class Kernel {
                 return;
             }
             if (code === FsResultCodes.NotSupported) {
-                await this.showAlert(
-                    "Not Supported",
-                    "Your browser does not support this feature.",
-                    "Close",
-                    "",
-                    "/docs/route/editor/web#browser-os-support",
-                );
+                await this.getAlertMgr().show({
+                    title: "Not Supported",
+                    message: "Your browser does not support this feature.",
+                    okButton: "Close",
+                    learnMoreLink: "/docs/route/editor/web#browser-os-support",
+                });
             } else if (code === FsResultCodes.IsFile) {
-                await this.showAlert(
-                    "Error",
-                    "You dropped a file. Make sure you are dropping the project folder and not individual files.",
-                    "Close",
-                    "",
-                );
+                await this.getAlertMgr().show({
+                    title: "Error",
+                    message:
+                        "You dropped a file. Make sure you are dropping the project folder and not individual files.",
+                    okButton: "Close",
+                });
             } else {
-                await this.showAlert(
-                    "Error",
-                    `Cannot open the project. Make sure you have access to the folder or contact support. (Error code ${code}}`,
-                    "Close",
-                    "",
-                );
+                await this.getAlertMgr().show({
+                    title: "Error",
+                    message: `Cannot open the project. Make sure you have access to the folder or contact support. (Error code ${code}}`,
+                    okButton: "Close",
+                });
             }
             return;
         }
@@ -286,19 +246,20 @@ export class Kernel {
             let retry = false;
             const code = result.inner();
             if (code === FsResultCodes.PermissionDenied) {
-                retry = await this.showAlert(
-                    "Permission Denied",
-                    "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
-                    "Grant Permission",
-                    "Cancel",
-                );
+                retry = await this.getAlertMgr().show({
+                    title: "Permission Denied",
+                    message:
+                        "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
+                    okButton: "Grant Permission",
+                    cancelButton: "Cancel",
+                });
             } else {
-                retry = await this.showAlert(
-                    "Error",
-                    `Failed to initialize the project. Please try again. (Error code ${code})`,
-                    "Retry",
-                    "Cancel",
-                );
+                retry = await this.getAlertMgr().show({
+                    title: "Error",
+                    message: `Failed to initialize the project. Please try again. (Error code ${code})`,
+                    okButton: "Retry",
+                    cancelButton: "Cancel",
+                });
             }
             if (!retry) {
                 return;
@@ -310,13 +271,14 @@ export class Kernel {
         if (editorMode === "web") {
             // must be able to save to use web editor
             if (!fileSys.isWritable()) {
-                const yes = await this.showAlert(
-                    "Save not supported",
-                    "The web editor cannot be used because your browser does not support saving changes to the file system. If you wish to edit the project, you can use the External Editor workflow and have Celer load changes directly from your file system.",
-                    "Use external editor",
-                    "Cancel",
-                    "/docs/route/editor/web#browser-os-support",
-                );
+                const yes = await this.getAlertMgr().show({
+                    title: "Save not supported",
+                    message:
+                        "The web editor cannot be used because your browser does not support saving changes to the file system. If you wish to edit the project, you can use the External Editor workflow and have Celer load changes directly from your file system.",
+                    okButton: "Use external editor",
+                    cancelButton: "Cancel",
+                    learnMoreLink: "/docs/route/editor/web#browser-os-support",
+                });
                 if (!yes) {
                     return;
                 }
@@ -326,13 +288,14 @@ export class Kernel {
         }
 
         if (fileSys.isStale()) {
-            const yes = await this.showAlert(
-                "Heads up!",
-                "Your browser has limited support for file system access when opening a project from a dialog. Certain operations may not work! Please see the learn more link below for more information.",
-                "Continue anyway",
-                "Cancel",
-                "/docs/route/editor/external#open-a-project",
-            );
+            const yes = await this.getAlertMgr().show({
+                title: "Heads up!",
+                message:
+                    "Your browser has limited support for file system access when opening a project from a dialog. Certain operations may not work! Please see the learn more link below for more information.",
+                okButton: "Continue anyway",
+                cancelButton: "Cancel",
+                learnMoreLink: "/docs/route/editor/external#open-a-project",
+            });
             if (!yes) {
                 return;
             }

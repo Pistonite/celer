@@ -10,7 +10,7 @@ use celerc::{
     CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PluginOptions, PreparedContext,
 };
 
-use crate::interop::OpaqueExecContext;
+use crate::interop::OpaqueExpoContext;
 use crate::loader::{self, LoadFileOutput, LoaderInWasm};
 use crate::plugin;
 
@@ -23,7 +23,7 @@ thread_local! {
 pub async fn compile_document(
     entry_path: Option<String>,
     use_cache: bool,
-) -> Result<OpaqueExecContext, JsValue> {
+) -> Result<OpaqueExpoContext, JsValue> {
     let plugin_options = match plugin::get_plugin_options() {
         Ok(x) => x,
         Err(message) => {
@@ -31,7 +31,7 @@ pub async fn compile_document(
             error!("{message}");
             let diagnostic = DocDiagnostic::error(&message, "web-editor");
             let exec_ctx = ExecContext::from_diagnostic(diagnostic);
-            return OpaqueExecContext::try_from(exec_ctx);
+            return OpaqueExpoContext::try_from(exec_ctx.prepare_exports());
         }
     };
 
@@ -58,8 +58,7 @@ pub async fn compile_document(
         Err(e) => {
             let comp_doc = CompDoc::from_prep_error(e, start_time);
             let exec_context = comp_doc.execute().await;
-            // TODO #33: exports
-            return OpaqueExecContext::try_from(exec_context);
+            return OpaqueExpoContext::try_from(exec_context.prepare_exports());
         }
     };
 
@@ -100,7 +99,7 @@ async fn compile_in_context(
     prep_ctx: &PreparedContext<LoaderInWasm>,
     start_time: Option<Instant>,
     plugin_options: Option<PluginOptions>,
-) -> Result<OpaqueExecContext, JsValue> {
+) -> Result<OpaqueExpoContext, JsValue> {
     let mut comp_ctx = prep_ctx.new_compilation(start_time).await;
     match comp_ctx.configure_plugins(plugin_options).await {
         Err(e) => compile_with_pack_error(comp_ctx, e).await,
@@ -114,16 +113,16 @@ async fn compile_in_context(
 async fn compile_with_pack_error(
     context: CompileContext<'_>,
     error: PackError,
-) -> Result<OpaqueExecContext, JsValue> {
+) -> Result<OpaqueExpoContext, JsValue> {
     let comp_doc = CompDoc::from_diagnostic(error, context);
     let exec_ctx = comp_doc.execute().await;
-    OpaqueExecContext::try_from(exec_ctx)
+    OpaqueExpoContext::try_from(exec_ctx.prepare_exports())
 }
 
-async fn compile_with_compiler(compiler: Compiler<'_>) -> Result<OpaqueExecContext, JsValue> {
+async fn compile_with_compiler(compiler: Compiler<'_>) -> Result<OpaqueExpoContext, JsValue> {
     let comp_doc = compiler.compile().await;
     let exec_ctx = comp_doc.execute().await;
-    OpaqueExecContext::try_from(exec_ctx)
+    OpaqueExpoContext::try_from(exec_ctx.prepare_exports())
 }
 
 /// Create a context builder that corresponds to the root project.yaml

@@ -7,6 +7,7 @@ const rules = [
     /React\.forwardRef/,
     /React\.createContext/,
     /React\.memo/,
+    /React\.Suspense/,
 ];
 
 function checkFile(_file, content) {

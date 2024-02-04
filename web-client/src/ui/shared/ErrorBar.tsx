@@ -5,13 +5,14 @@ import {
     MessageBar,
     MessageBarBody,
     MessageBarTitle,
+    makeStyles,
 } from "@fluentui/react-components";
-import { DOMClass } from "low/utils";
 
-const ErrorBarClass = new DOMClass("error-bar");
-ErrorBarClass.style({
-    "font-family": "monospace",
-    "white-space": "pre-wrap",
+const useErrorBarStyles = makeStyles({
+    root: {
+        fontFamily: "monospace",
+        whiteSpace: "pre-wrap",
+    },
 });
 
 type ErrorBarProps = {
@@ -36,19 +37,20 @@ export const ErrorBar: React.FC<PropsWithChildren<ErrorBarProps>> = ({
 };
 
 export const FormattedError: React.FC<{ error: unknown }> = ({ error }) => {
+    const styles = useErrorBarStyles();
     if (typeof error !== "string" || !error) {
         return null;
     }
     const lines = error.split("\n").map((line, i) => {
         if (!line) {
             return (
-                <div className={ErrorBarClass.className} key={i}>
+                <div className={styles.root} key={i}>
                     &nbsp;
                 </div>
             );
         }
         return (
-            <div className={ErrorBarClass.className} key={i}>
+            <div className={styles.root} key={i}>
                 {line || ""}
             </div>
         );

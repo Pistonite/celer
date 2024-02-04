@@ -1,6 +1,6 @@
 //! Plugin tab of the settings dialog
 
-import { useEffect, useState, useTransition } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 import {
     Body1,
@@ -9,11 +9,12 @@ import {
     CheckboxProps,
     Field,
     Link,
+    MessageBar,
+    MessageBarBody,
     Switch,
-    Textarea,
 } from "@fluentui/react-components";
 
-import { ErrorBar } from "ui/shared";
+import { ErrorBar, PrismEditor } from "ui/shared";
 import {
     documentSelector,
     settingsActions,
@@ -24,30 +25,15 @@ import {
     parseUserConfigOptions,
     useDocDisabledPlugins,
 } from "core/doc";
+import { Kernel, useKernel } from "core/kernel";
 import { useActions } from "low/store";
-import { PluginMetadata } from "low/celerc";
-import { DOMId, useDebouncer } from "low/utils";
+import { ExecDoc, PluginMetadata } from "low/celerc";
+import { console } from "low/utils";
 
 import { SettingsSection } from "./SettingsSection";
 
-const UserPluginConfigTextarea = new DOMId("user-plugin-config-textarea");
-UserPluginConfigTextarea.style({
-    "font-family": "monospace",
-    "font-size": "12px",
-});
-const adjustUserPluginConfigTextareaHeight = () => {
-    const element = UserPluginConfigTextarea.get();
-    if (!element) {
-        return;
-    }
-    // shrink it
-    element.style.height = "32px";
-    const height = Math.max(32, Math.min(element.scrollHeight, 300));
-    element.style.height = `${height}px`;
-};
-
 export const PluginSettings: React.FC = () => {
-    const { pluginMetadata, document, serial } = useSelector(documentSelector);
+    const { pluginMetadata, document } = useSelector(documentSelector);
     // cache the plugin metadata once the dialog shows up
     // so the UI doesn't jump around when the plugin metadata changes
     const [cachedPluginMetadata, setCachedPluginMetadata] =
@@ -58,22 +44,8 @@ export const PluginSettings: React.FC = () => {
         useActions(settingsActions);
     const disabledPlugins = useDocDisabledPlugins();
 
-    const [userPluginSyntaxError, setUserPluginSyntaxError] = useState<
-        string | undefined
-    >(undefined);
-    const [configText, setConfigText] = useState(userPluginConfig);
-    const dispatchDebouncer = useDebouncer(2000);
-    const [_, startTransition] = useTransition();
+    const kernel = useKernel();
 
-    useEffect(adjustUserPluginConfigTextareaHeight, []);
-    /* eslint-disable react-hooks/exhaustive-deps*/
-    useEffect(() => {
-        startTransition(() => {
-            const [_, error] = parseUserConfigOptions(configText, document);
-            setUserPluginSyntaxError(error);
-        });
-    }, [configText, serial]);
-    /* eslint-enable react-hooks/exhaustive-deps*/
     return (
         <>
             <SettingsSection title="App Plugins">
@@ -83,8 +55,7 @@ export const PluginSettings: React.FC = () => {
 
                 <AppPluginCheckbox
                     type="export-split"
-                    label="Export to LiveSplit"
-                    disabled={true}
+                    label="Export split files"
                 />
             </SettingsSection>
             <SettingsSection title="Route Plugins">
@@ -142,14 +113,6 @@ export const PluginSettings: React.FC = () => {
                             ? `The current document title is "${document.project.title}"`
                             : undefined
                     }
-                    validationState={
-                        userPluginSyntaxError ? "error" : "success"
-                    }
-                    validationMessage={
-                        userPluginSyntaxError
-                            ? "There is a syntax error with your configuration"
-                            : "Configuration syntax is valid"
-                    }
                 >
                     <Switch
                         label="Enable user plugins"
@@ -160,23 +123,21 @@ export const PluginSettings: React.FC = () => {
                     />
                 </Field>
                 <Field>
-                    <Textarea
-                        spellCheck={false}
-                        id={UserPluginConfigTextarea.id}
+                    <Button
+                        appearance="primary"
                         disabled={!enableUserPlugins}
-                        value={configText}
-                        onChange={(_, data) => {
-                            setConfigText(data.value);
-                            adjustUserPluginConfigTextareaHeight();
-                            dispatchDebouncer(() => {
-                                setUserPluginConfig(data.value);
-                            });
-                        }}
-                    />
+                        onClick={() =>
+                            editUserPluginConfig(
+                                userPluginConfig,
+                                kernel,
+                                document,
+                                setUserPluginConfig,
+                            )
+                        }
+                    >
+                        Edit Config
+                    </Button>
                 </Field>
-                <ErrorBar title="Syntax Error">
-                    {userPluginSyntaxError}
-                </ErrorBar>
             </SettingsSection>
         </>
     );
@@ -198,14 +159,13 @@ const AppPluginCheckbox: React.FC<CheckboxProps & { type: AppPluginType }> = ({
     type,
     ...props
 }) => {
-    // const { enabledAppPlugins } = useSelector(settingsSelector);
+    const { enabledAppPlugins } = useSelector(settingsSelector);
     const { setAppPluginEnabled } = useActions(settingsActions);
 
     return (
         <PluginCheckbox
             {...props}
-            checked={false} // TODO #33: export splits
-            // checked={!!enabledAppPlugins[type]}
+            checked={!!enabledAppPlugins[type]}
             onChange={(_, data) => {
                 setAppPluginEnabled({
                     type,
@@ -218,4 +178,108 @@ const AppPluginCheckbox: React.FC<CheckboxProps & { type: AppPluginType }> = ({
 
 const PluginCheckbox: React.FC<CheckboxProps> = (props) => {
     return <Checkbox {...props} className="settings-checkbox-block" />;
+};
+
+const editUserPluginConfig = async (
+    userPluginConfig: string,
+    kernel: Kernel,
+    document: ExecDoc | undefined,
+    setUserPluginConfig: (x: string) => void,
+): Promise<void> => {
+    let config = userPluginConfig;
+    let [_, error] = parseUserConfigOptions(config, document);
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const response = await kernel.getAlertMgr().showRich({
+            title: "User Plugins",
+            component: () => {
+                return (
+                    <UserPluginConfigEditor
+                        initialError={error}
+                        initialValue={config}
+                        onChange={(x) => {
+                            kernel.getAlertMgr().modifyActions({
+                                extraActions: [],
+                            });
+                            config = x;
+                        }}
+                    />
+                );
+            },
+            okButton: "Save",
+            cancelButton: "Cancel",
+            extraActions: error
+                ? [
+                      {
+                          id: "force",
+                          text: "Save with this error",
+                      } as const,
+                  ]
+                : [],
+        });
+        if (!response) {
+            console.info("user cancelled user plugin config");
+            return;
+        }
+        if (response === "force") {
+            break;
+        }
+        [_, error] = parseUserConfigOptions(config, document);
+        if (!error) {
+            break;
+        }
+        console.error("user plugin config has errors");
+    }
+    console.info("saving new user plugin config");
+    setUserPluginConfig(config);
+};
+
+type UserPluginConfigEditorProps = {
+    initialValue: string;
+    onChange: (value: string) => void;
+    initialError: string | undefined;
+};
+
+const UserPluginConfigEditor: React.FC<UserPluginConfigEditorProps> = ({
+    initialError,
+    initialValue,
+    onChange,
+}) => {
+    const { document } = useSelector(documentSelector);
+    const [currentValue, setCurrentValue] = useState(initialValue);
+    const [error, setError] = useState(initialError);
+    return (
+        <div>
+            <Body1 block style={{ marginBottom: 4 }}>
+                Please edit your plugin configuration below.{" "}
+                <Link
+                    href={`${window.location.origin}/docs/plugin/settings`}
+                    target="_blank"
+                >
+                    Learn more
+                </Link>
+            </Body1>
+            {document !== undefined && (
+                <MessageBar intent="info">
+                    <MessageBarBody>
+                        The current document title is "{document.project.title}"
+                    </MessageBarBody>
+                </MessageBar>
+            )}
+            {error !== undefined && (
+                <ErrorBar title="Syntax Error">{error}</ErrorBar>
+            )}
+            <div>
+                <PrismEditor
+                    language="yaml"
+                    value={currentValue}
+                    setValue={(x) => {
+                        setCurrentValue(x);
+                        setError(undefined);
+                        onChange(x);
+                    }}
+                />
+            </div>
+        </div>
+    );
 };

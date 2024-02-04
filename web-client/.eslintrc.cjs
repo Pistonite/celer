@@ -23,7 +23,8 @@ module.exports = {
     },
     ignorePatterns: ["*.d.ts"],
     rules: {
-        "react-refresh/only-export-components": "warn",
+        // TODO #182: will address this later
+        "react-refresh/only-export-components": "off",
         "@typescript-eslint/no-unused-vars": [
             "warn",
             {

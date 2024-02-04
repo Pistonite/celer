@@ -18,6 +18,7 @@ pub mod prep;
 // public API re-exports
 pub use comp::CompDoc;
 pub use exec::{ExecContext, ExecDoc};
+pub use expo::{ExpoContext, ExpoDoc};
 pub use pack::{CompileContext, Compiler};
 pub use prep::{ContextBuilder, PreparedContext};
 

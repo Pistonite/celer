@@ -1,5 +1,4 @@
 //! Global alert component
-import "./AppAlert.css";
 import { useRef } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -17,6 +16,7 @@ import {
 
 import { useKernel } from "core/kernel";
 import { viewSelector } from "core/store";
+import { sleep } from "low/utils";
 
 export const AppAlert: React.FC = () => {
     const {
@@ -25,10 +25,12 @@ export const AppAlert: React.FC = () => {
         alertLearnMoreLink,
         alertOkButton,
         alertCancelButton,
+        alertExtraActions,
     } = useSelector(viewSelector);
-    const kernel = useKernel();
-    const okRef = useRef<HTMLButtonElement>(null);
-    if (!alertText) {
+    const alertMgr = useKernel().getAlertMgr();
+    const responseRef = useRef<boolean | string>(false);
+    const RichAlertComponent = alertMgr.getRichComponent();
+    if (!alertText && !RichAlertComponent) {
         return null;
     }
 
@@ -36,10 +38,11 @@ export const AppAlert: React.FC = () => {
         <Dialog
             open
             modalType="alert"
-            onOpenChange={(ev, data) => {
+            onOpenChange={async (_, data) => {
                 if (!data.open) {
-                    const ok = ev.target === okRef.current;
-                    kernel.onAlertAction(ok);
+                    // doing this async just in case
+                    await sleep(0);
+                    alertMgr.onAction(responseRef.current);
                 }
             }}
         >
@@ -47,28 +50,59 @@ export const AppAlert: React.FC = () => {
                 <DialogBody>
                     <DialogTitle>{alertTitle}</DialogTitle>
                     <DialogContent>
-                        <Text block>{alertText}</Text>
-                        {alertLearnMoreLink && (
-                            <div className="alert-link">
-                                <Link href={alertLearnMoreLink} target="_blank">
-                                    Learn more
-                                </Link>
-                            </div>
+                        {RichAlertComponent ? (
+                            <RichAlertComponent />
+                        ) : (
+                            <>
+                                <Text block>{alertText}</Text>
+                                {alertLearnMoreLink && (
+                                    <div style={{ marginTop: 10 }}>
+                                        <Link
+                                            href={alertLearnMoreLink}
+                                            target="_blank"
+                                        >
+                                            Learn more
+                                        </Link>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </DialogContent>
-                    <DialogActions>
+                    <DialogActions fluid={alertExtraActions.length > 0}>
                         <DialogTrigger disableButtonEnhancement>
-                            <Button ref={okRef} appearance="primary">
+                            <Button
+                                appearance="primary"
+                                onClick={() => {
+                                    responseRef.current = true;
+                                }}
+                            >
                                 {alertOkButton}
                             </Button>
                         </DialogTrigger>
                         {alertCancelButton && (
                             <DialogTrigger disableButtonEnhancement>
-                                <Button appearance="secondary">
+                                <Button
+                                    appearance="secondary"
+                                    onClick={() => {
+                                        responseRef.current = false;
+                                    }}
+                                >
                                     {alertCancelButton}
                                 </Button>
                             </DialogTrigger>
                         )}
+                        {alertExtraActions.map((action, i) => (
+                            <DialogTrigger key={i} disableButtonEnhancement>
+                                <Button
+                                    appearance="secondary"
+                                    onClick={() => {
+                                        responseRef.current = action.id;
+                                    }}
+                                >
+                                    {action.text}
+                                </Button>
+                            </DialogTrigger>
+                        ))}
                     </DialogActions>
                 </DialogBody>
             </DialogSurface>

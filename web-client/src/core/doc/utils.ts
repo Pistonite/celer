@@ -230,15 +230,7 @@ export const getRawPluginOptions = (
         : [];
     const add = [];
     if (enabledAppPlugins["export-split"]) {
-        // TODO #33: export splits
-        // add.push({ use: "export-livesplit" });
-        // add.push({
-        //     use: "export-livesplit",
-        //     "allow-duplicate": true,
-        //     with: {
-        //         subsplits: true,
-        //     }
-        // });
+        add.push({ use: "export-livesplit" });
     }
     if (enableUserPlugins) {
         const [result] = parseUserConfigOptions(userPluginConfig, document);

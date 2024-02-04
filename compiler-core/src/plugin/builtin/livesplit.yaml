@@ -1,0 +1,13 @@
+# Do you want subsplits?
+# --------
+# Subsplits are divided by sections in the route document
+# Change below to `true` to enable subsplits
+subsplits: false
+
+# Do you want icons?
+# --------
+# Change below to `false` to disable icons
+icons: true
+
+# Keep this as-is to use the splits configured in the settings
+split-types: null

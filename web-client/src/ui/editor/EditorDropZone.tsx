@@ -38,12 +38,12 @@ export const EditorDropZone: React.FC = () => {
                 const item = e.dataTransfer?.items[0];
 
                 if (!item) {
-                    kernel.showAlert(
-                        "Error",
-                        "Cannot open the project. Make sure you are dropping the correct folder and try again.",
-                        "Close",
-                        "",
-                    );
+                    await kernel.getAlertMgr().show({
+                        title: "Error",
+                        message:
+                            "Cannot open the project. Make sure you are dropping the correct folder and try again.",
+                        okButton: "Close",
+                    });
                     return;
                 }
                 const fileSysResult = await createFsFromDataTransferItem(item);

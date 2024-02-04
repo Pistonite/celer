@@ -78,7 +78,7 @@ export const useDebouncer = (delay: number) => {
             }
             handle.current = window.setTimeout(fn, delay);
         },
-        [delay, handle],
+        [delay],
     );
 
     return dispatch;

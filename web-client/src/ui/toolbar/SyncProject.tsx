@@ -70,12 +70,12 @@ const useSyncProjectControl = () => {
             // failure could be due to project structure change. try again
             const result2 = await editor.loadChangesFromFs();
             if (result2.isErr()) {
-                await kernel.showAlert(
-                    "Error",
-                    "Fail to load changes from file system. Please try again.",
-                    "Close",
-                    "",
-                );
+                await kernel.getAlertMgr().show({
+                    title: "Error",
+                    message:
+                        "Fail to load changes from file system. Please try again.",
+                    okButton: "Close",
+                });
             }
         }
         incFileSysSerial();

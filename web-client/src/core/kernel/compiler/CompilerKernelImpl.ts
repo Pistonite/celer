@@ -144,6 +144,10 @@ export class CompilerKernelImpl implements CompilerKernel {
     public async compile() {
         // setting the needCompile flag to ensure this request is handled eventually
         this.needCompile = true;
+        if (!this.fileAccess) {
+            CompilerLog.warn("file access not available, skipping compile");
+            return;
+        }
 
         if (!(await this.ensureReady())) {
             CompilerLog.warn(

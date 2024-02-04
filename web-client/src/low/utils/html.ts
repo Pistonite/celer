@@ -1,5 +1,7 @@
 //! Basic utilities for working in browser environments.
 
+import clsx from "clsx";
+
 export const isInDarkMode = () =>
     !!(
         window.matchMedia &&
@@ -20,7 +22,8 @@ export class DOMId<E extends HTMLElement> {
     }
 
     public get(): E | undefined {
-        return document.getElementById(this.id) as E | undefined;
+        const element = document.getElementById(this.id) || undefined;
+        return element as E | undefined;
     }
 
     public style(style: Record<string, unknown>) {
@@ -82,13 +85,19 @@ function addCssObjectToMap(
 }
 
 /// Accessor for DOM Class
-export class DOMClass {
-    readonly className: string;
-    constructor(className: string) {
+export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
+    readonly className: N;
+    constructor(className: N) {
         this.className = className;
     }
 
-    public style(style: Record<string, unknown>) {
+    /// Get the combined class name from the given Griffel style map
+    public styledClassName(style: Record<N, string>) {
+        return clsx(this.className, style[this.className]);
+    }
+
+    /// Inject a raw css map into the head that targets this class
+    public injectStyle(style: Record<string, string>) {
         const map = {};
         addCssObjectToMap(`.${this.className}`, style, map);
         const css = Object.entries(map)
@@ -99,11 +108,14 @@ export class DOMClass {
         new DOMStyleInject(`${this.className}-styles`).setStyle(css);
     }
 
-    public query(selector?: string) {
-        return document.querySelector(`.${this.className}${selector || ""}`);
+    public query(selector?: string): E | undefined {
+        const element =
+            document.querySelector(`.${this.className}${selector || ""}`) ||
+            undefined;
+        return element as E | undefined;
     }
 
-    public queryAll(selector?: string) {
+    public queryAll(selector?: string): NodeListOf<E> {
         return document.querySelectorAll(`.${this.className}${selector || ""}`);
     }
 }
