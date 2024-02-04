@@ -4,6 +4,7 @@ import { Text } from "@fluentui/react-components";
 
 import { SectionBannerWidthClass } from "./updateBannerWidths";
 import { DocSectionHead } from "./utils";
+import { useDocStyles } from "./styles";
 
 /// Component for one section in the document
 type DocSectionProps = {
@@ -18,11 +19,12 @@ export const DocSection: React.FC<PropsWithChildren<DocSectionProps>> = ({
     index,
     children,
 }) => {
+    const styles = useDocStyles();
     return (
         <div className="docsection-container" data-section={index}>
             <div
                 className={clsx(
-                    DocSectionHead.className,
+                    DocSectionHead.styledClassName(styles),
                     SectionBannerWidthClass,
                 )}
             >

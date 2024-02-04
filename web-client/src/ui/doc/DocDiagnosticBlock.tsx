@@ -1,7 +1,7 @@
 //! The diagnostic text block
 
 import clsx from "clsx";
-import { Text } from "@fluentui/react-components";
+import { Text, makeStyles, shorthands } from "@fluentui/react-components";
 
 import { DocDiagnostic } from "low/celerc";
 import { DOMClass } from "low/utils";
@@ -18,13 +18,15 @@ export type DocDiagnosticBlockProps = {
 const PREFIX = "docline-diagnostic";
 
 const DocDiagnosticHeadClass = new DOMClass(`${PREFIX}-head`);
-DocDiagnosticHeadClass.style({
-    padding: "4px 4px 0 4px",
-});
 const DocDiagnosticBodyClass = new DOMClass(`${PREFIX}-body`);
-DocDiagnosticBodyClass.style({
-    padding: "4px 0 4px 4px",
-    "word-break": "break-word",
+const useStyles = makeStyles({
+    [DocDiagnosticHeadClass.className]: {
+        ...shorthands.padding("4px 4px 0 4px"),
+    },
+    [DocDiagnosticBodyClass.className]: {
+        ...shorthands.padding("4px 0 4px 4px"),
+        wordBreak: "break-word",
+    }
 });
 
 export const DocDiagnosticBlock: React.FC<DocDiagnosticBlockProps> = ({
@@ -32,11 +34,12 @@ export const DocDiagnosticBlock: React.FC<DocDiagnosticBlockProps> = ({
     showCaret,
 }) => {
     const { msg, source, type } = diagnostic;
+    const styles = useStyles();
     return (
         <div className={PREFIX}>
             <div
                 className={clsx(
-                    DocDiagnosticHeadClass.className,
+                    DocDiagnosticHeadClass.styledClassName(styles),
                     `${PREFIX}-${type}`,
                 )}
             >
@@ -47,7 +50,7 @@ export const DocDiagnosticBlock: React.FC<DocDiagnosticBlockProps> = ({
             </div>
             <div
                 className={clsx(
-                    DocDiagnosticBodyClass.className,
+                    DocDiagnosticBodyClass.styledClassName(styles),
                     `${PREFIX}-${type}`,
                 )}
             >

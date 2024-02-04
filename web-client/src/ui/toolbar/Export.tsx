@@ -109,3 +109,16 @@ const ExportIconComponent: React.FC<{name: ExportIcon | undefined}> = ({name}) =
             return <Document20Regular />;
     }
 };
+
+type ExportDialogProps = {
+    /// All available export options
+    exportMetadata: ExportMetadata[];
+    /// Currently selected export option
+    selectedMetadata: ExportMetadata;
+    setSelectedMetadata: (metadata: ExportMetadata) => void;
+}
+const ExportDialog: React.FC<{metadata: ExportMetadata}> = ({metadata}) => {
+    return (
+        <></>
+    );
+}

@@ -2,7 +2,7 @@
 
 import { ReducerDecl, withPayload } from "low/store";
 
-import { SettingsTab, StageMode, StageViewState } from "./state";
+import { AlertExtraAction, ModifyAlertActionPayload, SettingsTab, StageMode, StageViewState } from "./state";
 
 export const setStageMode = withPayload<StageViewState, StageMode>(
     (state, mode) => {
@@ -22,17 +22,33 @@ export type AlertPayload = {
     learnMore: string;
     okButton: string;
     cancelButton: string;
+    extraActions: AlertExtraAction[];
 };
 
 export const setAlert = withPayload<StageViewState, AlertPayload>(
-    (state, { title, text, learnMore: link, okButton, cancelButton }) => {
+    (state, { title, text, learnMore: link, okButton, cancelButton, extraActions }) => {
         state.alertTitle = title;
         state.alertText = text;
         state.alertLearnMoreLink = link;
         state.alertOkButton = okButton;
         state.alertCancelButton = cancelButton;
+        state.alertExtraActions = extraActions;
     },
 );
+
+export const setAlertActions = withPayload<StageViewState, ModifyAlertActionPayload>(
+    (state, { okButton, cancelButton, extraActions }) => {
+        if (okButton !== undefined) {
+            state.alertOkButton = okButton;
+        }
+        if (cancelButton !== undefined) {
+            state.alertCancelButton = cancelButton;
+        }
+        if (extraActions !== undefined) {
+            state.alertExtraActions = extraActions;
+        }
+    }
+)
 
 export const clearAlert: ReducerDecl<StageViewState> = (state) => {
     state.alertText = "";

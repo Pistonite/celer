@@ -83,12 +83,11 @@ const useSaveProjectControl = () => {
         editor.notifyActivity();
         const result = await editor.saveChangesToFs();
         if (result.isErr()) {
-            await kernel.showAlert(
-                "Error",
-                "Fail to save changes to file system. Please try again.",
-                "Close",
-                "",
-            );
+            await kernel.getAlertMgr().show({
+                title: "Error",
+                message: "Fail to save changes to file system. Please try again.",
+                okButton: "Close",
+            });
         }
     }, [kernel]);
 

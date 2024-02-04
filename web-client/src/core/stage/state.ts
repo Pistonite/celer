@@ -8,9 +8,19 @@ export type StageViewState = {
     alertLearnMoreLink: string;
     alertOkButton: string;
     alertCancelButton: string;
+    alertExtraActions: AlertExtraAction[];
     settingsTab: SettingsTab;
     isResizingWindow: boolean;
 };
+export type AlertExtraAction = {
+    id: string;
+    text: string;
+}
+export type ModifyAlertActionPayload = {
+    okButton?: string;
+    cancelButton?: string;
+    extraActions?: AlertExtraAction[];
+}
 
 export type StageMode = "view" | "edit";
 
@@ -23,6 +33,7 @@ export const initialStageViewState: StageViewState = {
     alertLearnMoreLink: "",
     alertOkButton: "",
     alertCancelButton: "",
+    alertExtraActions: [],
     settingsTab: "doc",
     isResizingWindow: false,
 };

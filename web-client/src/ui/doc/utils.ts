@@ -1,7 +1,7 @@
 //! Utilities
 
 import { DocTagColor, DocTag } from "low/celerc";
-import { DOMClass, DOMId, Logger } from "low/utils";
+import { DOMClass, DOMId, DOMStyleInject, Logger } from "low/utils";
 
 export const DocLog = new Logger("doc");
 
@@ -22,13 +22,6 @@ export const DocLineContainerClass = "docline-container";
 
 /// Class for the section heads (title) in the document
 export const DocSectionHead = new DOMClass("docsection-head");
-DocSectionHead.style({
-    "box-sizing": "border-box",
-    padding: "16px 0px 16px 64px",
-    " span": {
-        "word-wrap": "break-word",
-    },
-});
 
 /// Scroll view type
 export type ScrollView = {
@@ -126,10 +119,12 @@ export const getLineScrollView = (
 
 export const RichTextClassName = "rich-text";
 
+const RichTextStyles = new DOMStyleInject("rich-text");
+
 /// Update the styles/classes for rich tags
 export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
-    const styleTag = getInjectedStyleTag("rich-text");
-    styleTag.innerText = Object.entries(tags)
+    // const styleTag = getInjectedStyleTag("rich-text");
+    const css = Object.entries(tags)
         .map(([tag, data]) => {
             let css = `.${getTagClassName(tag)}{`;
             if (data.bold) {
@@ -157,25 +152,26 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
             return css + "}";
         })
         .join("");
+    RichTextStyles.setStyle(css);
     DocLog.info("rich text css updated.");
 };
 
 /// Get or inject a style tag with the id. The id sets the "data-inject" attribute
-export const getInjectedStyleTag = (id: string): HTMLStyleElement => {
-    let styleTag = document.querySelector(`style[data-inject="${id}"`);
-    if (!styleTag) {
-        DocLog.info(`creating injected ${id} tag...`);
-        styleTag = document.createElement("style");
-        styleTag.setAttribute("data-inject", id);
-        const head = document.querySelector("head");
-        if (!head) {
-            DocLog.error("cannot find `head`");
-        } else {
-            head.appendChild(styleTag);
-        }
-    }
-    return styleTag as HTMLStyleElement;
-};
+// export const getInjectedStyleTag = (id: string): HTMLStyleElement => {
+//     let styleTag = document.querySelector(`style[data-inject="${id}"`);
+//     if (!styleTag) {
+//         DocLog.info(`creating injected ${id} tag...`);
+//         styleTag = document.createElement("style");
+//         styleTag.setAttribute("data-inject", id);
+//         const head = document.querySelector("head");
+//         if (!head) {
+//             DocLog.error("cannot find `head`");
+//         } else {
+//             head.appendChild(styleTag);
+//         }
+//     }
+//     return styleTag as HTMLStyleElement;
+// };
 
 const createCssStringForColor = (color: DocTagColor, type: "fg" | "bg") => {
     if (typeof color === "string") {

@@ -23,7 +23,8 @@ First follow these steps to get to the user plugin settings:
 1. Open the document you want to tweak.
 2. Click on <FluentIcon name="Settings20Regular" /> `Settings` on the toolbar.
 3. Select the <FluentIcon name="Wrench20Regular" /> `Plugins` category.
-4. You should see a text area under `User Plugins`.
+4. Under `User Plugins`, click the `Edit Config` button.
+5. You should see a dialog with a text area popped up.
 
 The syntax to configure user plugins is:
 ```yaml
@@ -40,7 +41,7 @@ Replace:
 - `"Document Title"` with the exact title of the document you want to add the plugin to, surrounded by quotes.
   There is a little hint above the text area that tells you what the title of the current document is. You can also use the wildcard`"*"` to 
   add the plugin to all documents.
-- `my/plugin/file.js` with the path of the plugin. The plugin should be a file on GitHub,
+- `my/extra/plugin1.js` with the path of the plugin. The plugin should be a file on GitHub,
   and you can reference it by `<user>/<repo>/path/to/file.js`. See [here](../route/file-structure.md)
   for more about the `use` property. However note that you cannot use a path to file on your computer.
 
