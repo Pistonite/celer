@@ -2,8 +2,6 @@
 
 import clsx from "clsx";
 
-// import { GriffelStyle, makeStyles } from "@fluentui/react-components";
-
 export const isInDarkMode = () =>
     !!(
         window.matchMedia &&

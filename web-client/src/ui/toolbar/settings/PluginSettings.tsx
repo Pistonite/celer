@@ -12,7 +12,6 @@ import {
     MessageBar,
     MessageBarBody,
     Switch,
-    // Textarea,
 } from "@fluentui/react-components";
 
 import { ErrorBar, PrismEditor } from "ui/shared";
@@ -33,22 +32,6 @@ import { console } from "low/utils";
 
 import { SettingsSection } from "./SettingsSection";
 
-// const UserPluginConfigTextarea = new DOMId("user-plugin-config-textarea");
-// UserPluginConfigTextarea.style({
-//     "font-family": "monospace",
-//     "font-size": "12px",
-// });
-// const adjustUserPluginConfigTextareaHeight = () => {
-//     const element = UserPluginConfigTextarea.get();
-//     if (!element) {
-//         return;
-//     }
-//     // shrink it
-//     element.style.height = "32px";
-//     const height = Math.max(32, Math.min(element.scrollHeight, 300));
-//     element.style.height = `${height}px`;
-// };
-
 export const PluginSettings: React.FC = () => {
     const { pluginMetadata, document } = useSelector(documentSelector);
     // cache the plugin metadata once the dialog shows up
@@ -60,23 +43,6 @@ export const PluginSettings: React.FC = () => {
     const { setRoutePluginEnabled, setUserPluginEnabled, setUserPluginConfig } =
         useActions(settingsActions);
     const disabledPlugins = useDocDisabledPlugins();
-
-    // const [userPluginSyntaxError, setUserPluginSyntaxError] = useState<
-    //     string | undefined
-    // >(undefined);
-    // const [configText, setConfigText] = useState(userPluginConfig);
-    // const dispatchDebouncer = useDebouncer(2000);
-    // const [_, startTransition] = useTransition();
-
-    // useEffect(adjustUserPluginConfigTextareaHeight, []);
-    // /* eslint-disable react-hooks/exhaustive-deps*/
-    // useEffect(() => {
-    //     startTransition(() => {
-    //         const [_, error] = parseUserConfigOptions(configText, document);
-    //         setUserPluginSyntaxError(error);
-    //     });
-    // }, [configText, serial]);
-    // /* eslint-enable react-hooks/exhaustive-deps*/
 
     const kernel = useKernel();
 
@@ -175,24 +141,6 @@ export const PluginSettings: React.FC = () => {
             </SettingsSection>
         </>
     );
-    // <Field>
-    //     <Textarea
-    //         spellCheck={false}
-    //         id={UserPluginConfigTextarea.id}
-    //         disabled={!enableUserPlugins}
-    //         value={configText}
-    //         onChange={(_, data) => {
-    //             setConfigText(data.value);
-    //             adjustUserPluginConfigTextareaHeight();
-    //             dispatchDebouncer(() => {
-    //                 setUserPluginConfig(data.value);
-    //             });
-    //         }}
-    //     />
-    // </Field>
-    // <ErrorBar title="Syntax Error">
-    //     {userPluginSyntaxError}
-    // </ErrorBar>
 };
 
 const getRoutePluginMessage = (

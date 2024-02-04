@@ -123,7 +123,6 @@ const RichTextStyles = new DOMStyleInject("rich-text");
 
 /// Update the styles/classes for rich tags
 export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
-    // const styleTag = getInjectedStyleTag("rich-text");
     const css = Object.entries(tags)
         .map(([tag, data]) => {
             let css = `.${getTagClassName(tag)}{`;
@@ -155,23 +154,6 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
     RichTextStyles.setStyle(css);
     DocLog.info("rich text css updated.");
 };
-
-/// Get or inject a style tag with the id. The id sets the "data-inject" attribute
-// export const getInjectedStyleTag = (id: string): HTMLStyleElement => {
-//     let styleTag = document.querySelector(`style[data-inject="${id}"`);
-//     if (!styleTag) {
-//         DocLog.info(`creating injected ${id} tag...`);
-//         styleTag = document.createElement("style");
-//         styleTag.setAttribute("data-inject", id);
-//         const head = document.querySelector("head");
-//         if (!head) {
-//             DocLog.error("cannot find `head`");
-//         } else {
-//             head.appendChild(styleTag);
-//         }
-//     }
-//     return styleTag as HTMLStyleElement;
-// };
 
 const createCssStringForColor = (color: DocTagColor, type: "fg" | "bg") => {
     if (typeof color === "string") {

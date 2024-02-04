@@ -72,7 +72,9 @@ export const AppAlert: React.FC = () => {
                         <DialogTrigger disableButtonEnhancement>
                             <Button
                                 appearance="primary"
-                                onClick={() => (responseRef.current = true)}
+                                onClick={() => {
+                                    responseRef.current = true;
+                                }}
                             >
                                 {alertOkButton}
                             </Button>
@@ -81,9 +83,9 @@ export const AppAlert: React.FC = () => {
                             <DialogTrigger disableButtonEnhancement>
                                 <Button
                                     appearance="secondary"
-                                    onClick={() =>
-                                        (responseRef.current = false)
-                                    }
+                                    onClick={() => {
+                                        responseRef.current = false;
+                                    }}
                                 >
                                     {alertCancelButton}
                                 </Button>
@@ -93,9 +95,9 @@ export const AppAlert: React.FC = () => {
                             <DialogTrigger key={i} disableButtonEnhancement>
                                 <Button
                                     appearance="secondary"
-                                    onClick={() =>
-                                        (responseRef.current = action.id)
-                                    }
+                                    onClick={() => {
+                                        responseRef.current = action.id;
+                                    }}
                                 >
                                     {action.text}
                                 </Button>

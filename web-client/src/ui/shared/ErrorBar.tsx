@@ -30,7 +30,7 @@ export const ErrorBar: React.FC<PropsWithChildren<ErrorBarProps>> = ({
         <MessageBar intent="error">
             <MessageBarBody>
                 <MessageBarTitle>{title}</MessageBarTitle>
-                {<FormattedError error={children} />}
+                <FormattedError error={children} />
             </MessageBarBody>
         </MessageBar>
     );
