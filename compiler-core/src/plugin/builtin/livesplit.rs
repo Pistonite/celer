@@ -4,9 +4,9 @@ use std::borrow::Cow;
 
 use serde_json::json;
 
-use crate::expo::{ExportMetadata, ExportIcon};
+use crate::expo::{ExportIcon, ExportMetadata};
 
-use crate::plugin::{PluginRuntime, PluginResult};
+use crate::plugin::{PluginResult, PluginRuntime};
 
 pub struct ExportLiveSplitPlugin;
 
@@ -23,7 +23,7 @@ impl PluginRuntime for ExportLiveSplitPlugin {
             icon: ExportIcon::Data,
             extension: Some("lss".to_string()),
             properties: json!(null),
-            example_config: Some(include_str!("./livesplit.yaml").to_string())
+            example_config: Some(include_str!("./livesplit.yaml").to_string()),
         };
         Ok(Some(vec![metadata]))
     }

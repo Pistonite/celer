@@ -77,14 +77,24 @@ pub trait PluginRuntime {
     /// If the exporter needs to access the ExecDoc as well, it should return `None`.
     /// Otherwise, the returned export data will be used and the exporter will not be called
     /// with the ExecDoc
-    fn on_export_comp_doc(&mut self, _properties: &Value, _payload: &Value, _doc: &CompDoc) -> PluginResult<Option<ExpoDoc>> {
+    fn on_export_comp_doc(
+        &mut self,
+        _properties: &Value,
+        _payload: &Value,
+        _doc: &CompDoc,
+    ) -> PluginResult<Option<ExpoDoc>> {
         Ok(None)
     }
 
     /// Called only in export workflow, to let the exporter access the ExecDoc
     ///
     /// The exporter must return the export data or throw an error
-    fn on_export_exec_doc(&mut self, _properties: Value, _payload: Value, _doc: &ExecDoc) -> PluginResult<ExpoDoc> {
+    fn on_export_exec_doc(
+        &mut self,
+        _properties: Value,
+        _payload: Value,
+        _doc: &ExecDoc,
+    ) -> PluginResult<ExpoDoc> {
         Err(PluginError::NotImplemented(
             self.get_display_name().into_owned(),
             "on_export_exec_doc".into(),
