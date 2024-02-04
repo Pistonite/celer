@@ -4,6 +4,7 @@ import YAML from "js-yaml";
 
 import { documentSelector, settingsSelector } from "core/store";
 import { ExecDoc, Value } from "low/celerc";
+import { errorToString } from "low/utils";
 
 type UserPluginOptionsResult = [Value[], undefined] | [undefined, string];
 
@@ -61,14 +62,6 @@ export const parseUserConfigOptions = (
         }
         return [options, undefined];
     } catch (e) {
-        if (typeof e === "string") {
-            return [undefined, e];
-        }
-        if (e && typeof e === "object" && "message" in e) {
-            if (typeof e.message === "string") {
-                return [undefined, e.message];
-            }
-        }
-        return [undefined, `${e}`];
+        return [undefined, errorToString(e)];
     }
 };

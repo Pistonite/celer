@@ -1,4 +1,4 @@
-import { EntryPointsSorted } from "low/celerc";
+import { EntryPointsSorted, ExpoDoc, ExportRequest } from "low/celerc";
 import { FileAccess } from "low/fs";
 import { Result } from "low/utils";
 
@@ -25,4 +25,9 @@ export interface CompilerKernel {
 
     /// Get compiler entry points
     getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>>;
+
+    /// Export the document with the given request
+    ///
+    /// Any error will be stored in the return value. This function will not throw
+    export(request: ExportRequest): Promise<ExpoDoc>;
 }

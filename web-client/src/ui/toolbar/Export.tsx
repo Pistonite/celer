@@ -1,13 +1,15 @@
 //! Control for selecting export options
 
 import { forwardRef } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useStore } from "react-redux";
 import {
+    Body1,
     Menu,
     MenuItem,
     MenuList,
     MenuPopover,
     MenuTrigger,
+    Spinner,
     ToolbarButton,
     Tooltip,
 } from "@fluentui/react-components";
@@ -23,10 +25,12 @@ import {
     Video20Regular,
 } from "@fluentui/react-icons";
 
-import { documentSelector } from "core/store";
-import { ExecDoc, ExportIcon, ExportMetadata } from "low/celerc";
+import { AppStore, documentSelector } from "core/store";
+import { ExecDoc, ExpoDoc, ExportIcon, ExportMetadata } from "low/celerc";
 
 import { ControlComponentProps, ToolbarControl } from "./util";
+import { Kernel, useKernel } from "core/kernel";
+import { errorToString } from "low/utils";
 
 export const Export: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
@@ -94,8 +98,8 @@ const ExportInternal: React.FC<ExportInternalProps> = ({
             <MenuTrigger>{children}</MenuTrigger>
             <MenuPopover>
                 <MenuList>
-                    {exportMetadata?.map((metadata, i) => (
-                        <ExportButton key={i} metadata={metadata} />
+                    {exportMetadata?.map((_, i) => (
+                        <ExportButton key={i} exportMetadata={exportMetadata} index={i} />
                     ))}
                 </MenuList>
             </MenuPopover>
@@ -103,17 +107,24 @@ const ExportInternal: React.FC<ExportInternalProps> = ({
     );
 };
 
-const ExportButton: React.FC<{ metadata: ExportMetadata }> = ({ metadata }) => {
+const ExportButton: React.FC<{ exportMetadata: ExportMetadata[], index: number }> = ({ exportMetadata, index }) => {
+    const metadata = exportMetadata[index];
     const text = metadata.extension
         ? `${metadata.name} (*.${metadata.extension})`
         : metadata.name;
+
+    const kernel = useKernel();
+    const store: AppStore = useStore();
     return (
         <Tooltip
             content={metadata.description}
             relationship="label"
             positioning="after"
         >
-            <MenuItem icon={<ExportIconComponent name={metadata.icon} />}>
+            <MenuItem 
+                icon={<ExportIconComponent name={metadata.icon} />}
+                onClick={() => runExportWizard(exportMetadata, index, kernel, store)}
+            >
                 {text}
             </MenuItem>
         </Tooltip>
@@ -145,15 +156,78 @@ const ExportIconComponent: React.FC<{ name: ExportIcon | undefined }> = ({
     }
 };
 
-// type ExportDialogProps = {
-//     /// All available export options
-//     exportMetadata: ExportMetadata[];
-//     /// Currently selected export option
-//     selectedMetadata: ExportMetadata;
-//     setSelectedMetadata: (metadata: ExportMetadata) => void;
-// }
-// const ExportDialog: React.FC<{metadata: ExportMetadata}> = ({metadata}) => {
-//     return (
-//         <></>
-//     );
-// }
+const runExportWizard = async (exportMetadata: ExportMetadata[], index: number, kernel: Kernel, store: AppStore) => {
+    let selection = index;
+    let error: string | undefined = undefined;
+    // eslint-disable-next-line no-constant-condition
+    while(true) {
+        const ok = await kernel.getAlertMgr().showRich({
+            title: "Export",
+            component: () => {
+                return (
+                    <ExportDialog
+                        exportMetadata={exportMetadata}
+                        initialSelectionIndex={selection}
+                        onSelectionChange={(i) => {
+                            selection = i;
+                        }}
+                        error={error}
+                    />
+                );
+            },
+            okButton: "Export",
+            cancelButton: "Cancel",
+        });
+        if (!ok) {
+            return;
+        }
+        const result = await kernel.getAlertMgr().showBlocking({
+            title: "Export",
+            component: () => {
+                return (
+                    <>
+                        <Body1 block>
+                            Generating the export file... Download will automatically start once done.
+                        </Body1>
+                        <Spinner />
+                    </>
+                );
+            }
+        }, async (): Promise<ExpoDoc> => {
+                return {error: "not implemented"};
+            });
+        if (result.isOk()) {
+            const expoDoc = result.inner();
+            if ("success" in expoDoc) {
+                const file = expoDoc.success;
+                // todo: download file
+                console.log(file);
+                return;
+            } 
+
+            error = expoDoc.error;
+        } else {
+            const v = result.inner();
+            if (v === false) {
+                // cancel
+                return;
+            }
+            error = errorToString(v);
+        }
+    }
+}
+
+type ExportDialogProps = {
+    /// All available export options
+    exportMetadata: ExportMetadata[];
+    /// Currently selected export option
+    initialSelectionIndex: number;
+    onSelectionChange: (index: number) => void;
+    /// Error to show
+    error?: string;
+}
+const ExportDialog: React.FC<ExportDialogProps> = ({exportMetadata}) => {
+    return (
+        <></>
+    );
+}

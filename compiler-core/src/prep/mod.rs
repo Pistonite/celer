@@ -49,6 +49,7 @@ where
     L: Loader,
 {
     pub project_res: Resource<'static, L>,
+    pub entry_path: Option<String>,
     pub config: RouteConfig,
     pub meta: CompilerMetadata,
     pub prep_doc: PrepDoc,
@@ -220,6 +221,7 @@ where
 
         Ok(PreparedContext {
             project_res: self.project_res,
+            entry_path: self.entry_point,
             config,
             meta,
             prep_doc,
@@ -248,6 +250,7 @@ where
     }
 
     /// Load the project and switch the project resource to the entry point resource.
+    /// Also sets self.entry_point to the resolved entry path.
     /// Returns the loaded project object with the `entry-points` property removed
     ///
     /// If the entry point is None, it will attempt to redirect to the "default" entry point
@@ -269,24 +272,26 @@ where
                 }
             };
 
+
             if let Some(redirect_path) = path {
-                match Use::new(redirect_path) {
+                return match Use::new(redirect_path.clone()) {
                     Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
                         // since the path is absolute, we can just use the project_res to resolve
                         // it
+                        self.entry_point = Some(redirect_path.to_string());
                         self.project_res = self.project_res.resolve(&valid)?;
                         let mut project_obj = self.load_project().await?;
                         // remove and ignore the entry points in the redirected project
                         project_obj.remove(prop::ENTRY_POINTS);
-                        return Ok(project_obj);
+                        Ok(project_obj)
                     }
                     _ => {
                         // this shouldn't happen
                         // since load_entry_points checks for if the path is valid
-                        return Err(PrepError::InvalidEntryPoint(
+                        Err(PrepError::InvalidEntryPoint(
                             self.entry_point.as_ref().cloned().unwrap_or_default(),
                             "unreachable".to_string(),
-                        ));
+                        ))
                     }
                 }
             }

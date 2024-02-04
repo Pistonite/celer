@@ -11,6 +11,7 @@
 use serde_json::Value;
 
 use crate::exec::ExecContext;
+use crate::comp::CompDoc;
 use crate::macros::derive_wasm;
 
 /// Output of the export phase
@@ -68,14 +69,31 @@ pub enum ExportIcon {
     Video,
 }
 
+/// Request to export a document sent from the client
+#[derive(Debug, Clone)]
+#[derive_wasm]
+pub struct ExportRequest {
+    /// Id of the exporter plugin to run
+    pub plugin_id: String,
+    /// Extra properties to pass back to the exporter.
+    pub properties: Value,
+    /// Configuration payload provided by the user
+    pub payload: Value,
+}
+
 /// The exported document type
 #[derive(Debug, Clone)]
 #[derive_wasm]
-pub struct ExpoDoc {
-    /// The file name
-    pub file_name: String,
-    /// The content of the file
-    pub bytes: Vec<u8>,
+pub enum ExpoDoc {
+    /// Success output. Contains file name and the bytes
+    Success {
+        /// File name
+        file_name: String,
+        /// File bytes
+        bytes: Vec<u8>,
+    },
+    /// Error output with a message
+    Error(String),
 }
 
 impl<'p> ExecContext<'p> {
@@ -90,5 +108,49 @@ impl<'p> ExecContext<'p> {
             exec_ctx: self,
             export_metadata: result,
         }
+    }
+}
+
+impl<'p> CompDoc<'p> {
+    /// Run the export request on this document after the comp phase
+    ///
+    /// Returning `Some` means the export was successful. Returning `None` means the export is
+    /// pending and needed to run in the exec phase
+    pub fn run_exporter(&mut self, req: &ExportRequest) -> Option<ExpoDoc> {
+        let mut plugins = std::mem::take(&mut self.plugin_runtimes);
+
+        for plugin in &mut plugins {
+            if req.plugin_id == plugin.get_id() {
+                let result = match plugin.on_export_comp_doc(&req.properties, &req.payload, self) {
+                    Ok(None) => { None },
+                    Ok(Some(expo_doc)) => { Some(expo_doc) },
+                    Err(e) => { Some(ExpoDoc::Error(e.to_string())) },
+                };
+                self.plugin_runtimes = plugins;
+                return result;
+            }
+        }
+
+        self.plugin_runtimes = plugins;
+        Some(ExpoDoc::Error(format!("Plugin {} not found", req.plugin_id)))
+    }
+}
+
+impl<'p> ExecContext<'p> {
+    /// Run the export request on this document after the exec phase
+    pub fn run_exporter(self, req: ExportRequest) -> ExpoDoc {
+        let mut plugins = self.plugin_runtimes;
+
+        for plugin in &mut plugins {
+            if req.plugin_id == plugin.get_id() {
+                let result = match plugin.on_export_exec_doc(req.properties, req.payload, &self.exec_doc) {
+                    Ok(expo_doc) => { expo_doc },
+                    Err(e) => { ExpoDoc::Error(e.to_string()) },
+                };
+                return result;
+            }
+        }
+
+        ExpoDoc::Error(format!("Plugin {} not found", req.plugin_id))
     }
 }
