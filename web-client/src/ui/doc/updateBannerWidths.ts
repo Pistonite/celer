@@ -20,7 +20,6 @@ export const updateBannerWidths = (): void => {
     const bannerWidth = containerWidth - 64; // subtract the header
     const textWidth = bannerWidth - 4; // subtract the padding
 
-    // const styleTag = getInjectedStyleTag("banner-width");
     let style = `.${SectionBannerWidthClass}{width:${containerWidth}px !important;}`;
     style += `.${BannerWidthClass}{width:${bannerWidth}px !important;}`;
     style += `.${BannerTextWidthClass}{width:${textWidth}px !important;}`;
@@ -28,6 +27,5 @@ export const updateBannerWidths = (): void => {
         textWidth - 50
     }px !important;}`;
     BannerWidthStyles.setStyle(style);
-    // styleTag.innerHTML = style;
     DocLog.info("banner width css updated.");
 };
