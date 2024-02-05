@@ -2,8 +2,6 @@
 
 use std::borrow::Cow;
 
-use serde_json::json;
-
 use crate::expo::{ExportIcon, ExportMetadata};
 
 use crate::plugin::{PluginResult, PluginRuntime};
@@ -22,8 +20,9 @@ impl PluginRuntime for ExportLiveSplitPlugin {
             description: "Export to a LiveSplit split file".to_string(),
             icon: ExportIcon::Data,
             extension: Some("lss".to_string()),
-            properties: json!(null),
+            export_id: None,
             example_config: Some(include_str!("./livesplit.yaml").to_string()),
+            learn_more: Some("/docs/plugin/export-livesplit".to_string()),
         };
         Ok(Some(vec![metadata]))
     }

@@ -1,9 +1,11 @@
 //! Control for selecting export options
 
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { useSelector, useStore } from "react-redux";
 import {
     Body1,
+    Dropdown,
+    Field,
     Menu,
     MenuItem,
     MenuList,
@@ -12,6 +14,10 @@ import {
     Spinner,
     ToolbarButton,
     Tooltip,
+    Option,
+    Divider,
+    Link,
+    Button,
 } from "@fluentui/react-components";
 import {
     AnimalCat20Regular,
@@ -25,12 +31,15 @@ import {
     Video20Regular,
 } from "@fluentui/react-icons";
 
-import { AppStore, documentSelector } from "core/store";
+import { AppStore, documentSelector, settingsActions, settingsSelector } from "core/store";
 import { ExecDoc, ExpoDoc, ExportIcon, ExportMetadata } from "low/celerc";
 
 import { ControlComponentProps, ToolbarControl } from "./util";
 import { Kernel, useKernel } from "core/kernel";
-import { errorToString } from "low/utils";
+import { errorToString, sleep } from "low/utils";
+import { createExportRequest, getExportConfig, getExportLabel, isConfigNeeded } from "core/doc";
+import { ErrorBar, PrismEditor } from "ui/shared";
+import { useActions } from "low/store";
 
 export const Export: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
@@ -109,9 +118,7 @@ const ExportInternal: React.FC<ExportInternalProps> = ({
 
 const ExportButton: React.FC<{ exportMetadata: ExportMetadata[], index: number }> = ({ exportMetadata, index }) => {
     const metadata = exportMetadata[index];
-    const text = metadata.extension
-        ? `${metadata.name} (*.${metadata.extension})`
-        : metadata.name;
+    const text = getExportLabel(metadata);
 
     const kernel = useKernel();
     const store: AppStore = useStore();
@@ -157,30 +164,41 @@ const ExportIconComponent: React.FC<{ name: ExportIcon | undefined }> = ({
 };
 
 const runExportWizard = async (exportMetadata: ExportMetadata[], index: number, kernel: Kernel, store: AppStore) => {
+    const state = store.getState();
     let selection = index;
     let error: string | undefined = undefined;
+    // show the extra config dialog based on the initial selection
+    const enableConfig = isConfigNeeded(exportMetadata[selection]);
+    let config: string = getExportConfig(exportMetadata[selection], settingsSelector(state));
     // eslint-disable-next-line no-constant-condition
     while(true) {
-        const ok = await kernel.getAlertMgr().showRich({
-            title: "Export",
-            component: () => {
-                return (
-                    <ExportDialog
-                        exportMetadata={exportMetadata}
-                        initialSelectionIndex={selection}
-                        onSelectionChange={(i) => {
-                            selection = i;
-                        }}
-                        error={error}
-                    />
-                );
-            },
-            okButton: "Export",
-            cancelButton: "Cancel",
-        });
-        if (!ok) {
-            return;
+        if (enableConfig) {
+            const ok = await kernel.getAlertMgr().showRich({
+                title: "Export",
+                component: () => {
+                    return (
+                        <ExportDialog
+                            exportMetadata={exportMetadata}
+                            initialSelectionIndex={selection}
+                            onSelectionChange={(i) => {
+                                selection = i;
+                            }}
+                            error={error}
+                            config={config}
+                            onConfigChange={(c) => {
+                                config = c;
+                            }}
+                        />
+                    );
+                },
+                okButton: "Export",
+                cancelButton: "Cancel",
+            });
+            if (!ok) {
+                return;
+            }
         }
+        store.dispatch(settingsActions.setExportConfig({metadata: exportMetadata[selection], config}));
         const result = await kernel.getAlertMgr().showBlocking({
             title: "Export",
             component: () => {
@@ -189,12 +207,19 @@ const runExportWizard = async (exportMetadata: ExportMetadata[], index: number, 
                         <Body1 block>
                             Generating the export file... Download will automatically start once done.
                         </Body1>
+                        <div style={{padding: 16}}>
                         <Spinner />
+                        </div>
                     </>
                 );
             }
         }, async (): Promise<ExpoDoc> => {
-                return {error: "not implemented"};
+                const requestResult = createExportRequest(exportMetadata[selection], config);
+                if (requestResult.isErr()) {
+                    return {error: errorToString(requestResult.inner()) };
+                }
+                const request = requestResult.inner();
+                return await kernel.export(request);
             });
         if (result.isOk()) {
             const expoDoc = result.inner();
@@ -225,9 +250,94 @@ type ExportDialogProps = {
     onSelectionChange: (index: number) => void;
     /// Error to show
     error?: string;
+    /// The config string
+    config: string;
+    onConfigChange: (config: string) => void;
 }
-const ExportDialog: React.FC<ExportDialogProps> = ({exportMetadata}) => {
+const ExportDialog: React.FC<ExportDialogProps> = ({
+    exportMetadata,
+    initialSelectionIndex,
+    onSelectionChange,
+    error,
+    config,
+    onConfigChange,
+}) => {
+    const { setExportConfigToDefault } = useActions(settingsActions);
+
+
+    const [selectedIndex, setSelectedIndex] = useState(initialSelectionIndex);
+    const [configValue, setConfigValue] = useState(config);
+
+    const metadata = exportMetadata[selectedIndex];
+    const enableConfig = isConfigNeeded(metadata);
+
     return (
-        <></>
+        <>
+            <Field
+                label="Select the export format"
+                hint={metadata.description}
+            >
+                <Dropdown
+                    value={getExportLabel(metadata)}
+                    selectedOptions={[selectedIndex.toString()]}
+                    onOptionSelect={(_, data) => {
+                        const index = parseInt(data.selectedOptions[0]);
+                        setSelectedIndex(index);
+                        onSelectionChange(index);
+                    }}
+                >
+                    {
+                        exportMetadata.map((metadata, i) => (
+                            <Option key={i} value={i.toString()} >
+                                {getExportLabel(metadata)}
+                            </Option>
+                        ))
+                    }
+                </Dropdown>
+            </Field>
+            {enableConfig &&
+                <>
+                    <Divider style={{marginTop: 8, marginBottom: 8}} />
+                    <Body1 block style={{marginBottom: 8}}>
+                        This export option accepts extra configuration.
+                        {metadata.learnMore &&
+                            <>
+                                {" "}
+                                <Link
+                                    href={metadata.learnMore}
+                                    target="_blank"
+                                >
+                                    Learn more
+                                    {
+                                        !(metadata.learnMore.startsWith("/") || metadata.learnMore.startsWith(window.location.origin)) && " (external link)"
+                                    }
+                                </Link>
+                            </>
+                        }
+                    </Body1>
+                    { error && 
+                            <ErrorBar title="Error">
+                                {error}
+                            </ErrorBar>
+                    }
+                    <PrismEditor
+                        language="yaml"
+                        value={configValue}
+                        setValue={(x) => {
+                            setConfigValue(x);
+                            onConfigChange(x);
+                        }}
+                    />
+                    <Button onClick={() => {
+                        setExportConfigToDefault({metadata});
+                        const config = metadata.exampleConfig || "";
+                        setConfigValue(config);
+                        onConfigChange(config);
+                    }}>
+                        Reset configuration
+                    </Button>
+                </>
+            }
+        </>
     );
 }

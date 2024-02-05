@@ -26,6 +26,7 @@ import {
     sleep,
     allocErr,
     ReentrantLock,
+    errorToString,
 } from "low/utils";
 import { FileAccess, FsResultCodes } from "low/fs";
 
@@ -254,7 +255,7 @@ export class CompilerKernelImpl implements CompilerKernel {
 
             if (result.isErr()) {
                 CompilerLog.error(result.inner());
-                return { error: `${result.inner()}` };
+                return { error: errorToString(result.inner()) };
             }
             return result.inner();
         });

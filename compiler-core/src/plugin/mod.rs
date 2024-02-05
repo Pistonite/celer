@@ -79,7 +79,7 @@ pub trait PluginRuntime {
     /// with the ExecDoc
     fn on_export_comp_doc(
         &mut self,
-        _properties: &Value,
+        _export_id: &str,
         _payload: &Value,
         _doc: &CompDoc,
     ) -> PluginResult<Option<ExpoDoc>> {
@@ -91,7 +91,7 @@ pub trait PluginRuntime {
     /// The exporter must return the export data or throw an error
     fn on_export_exec_doc(
         &mut self,
-        _properties: Value,
+        _export_id: &str,
         _payload: Value,
         _doc: &ExecDoc,
     ) -> PluginResult<ExpoDoc> {

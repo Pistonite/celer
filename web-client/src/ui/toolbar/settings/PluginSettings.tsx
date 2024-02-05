@@ -101,17 +101,12 @@ export const PluginSettings: React.FC = () => {
                             Configure extra plugins to use when loading route
                             documents.{" "}
                             <Link
-                                href={`${window.location.origin}/docs/plugin/settings`}
+                                href="/docs/plugin/settings"
                                 target="_blank"
                             >
                                 Learn more
                             </Link>
                         </>
-                    }
-                    hint={
-                        document
-                            ? `The current document title is "${document.project.title}"`
-                            : undefined
                     }
                 >
                     <Switch
@@ -253,7 +248,7 @@ const UserPluginConfigEditor: React.FC<UserPluginConfigEditorProps> = ({
             <Body1 block style={{ marginBottom: 4 }}>
                 Please edit your plugin configuration below.{" "}
                 <Link
-                    href={`${window.location.origin}/docs/plugin/settings`}
+                    href="/docs/plugin/settine"
                     target="_blank"
                 >
                     Learn more

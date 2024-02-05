@@ -4,7 +4,7 @@ let worker: Worker;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const specialHandlers: { [key: string]: (data: any) => any } = {};
 // map of [resolve, reject, timeoutHandle]
-const workerHandlers: {
+let workerHandlers: {
     [key: number]: [(x: any) => void, (x: any) => void, any];
 } = {};
 let nextId = 0;
@@ -38,7 +38,12 @@ export function setWorker(w: Worker, logger: Logger) {
             }
         } else {
             // Event handler
-            const [resolve, reject, timeoutHandle] = workerHandlers[handleId];
+            const handler = workerHandlers[handleId];
+            if (!handler) {
+                console.warn(`no worker handler for handleId=${handleId}. This could possibly be due to a previous panic from the worker.`);
+                return;
+            }
+            const [resolve, reject, timeoutHandle] = handler;
             clearTimeout(timeoutHandle);
             delete workerHandlers[handleId];
             if (ok) {
@@ -50,6 +55,13 @@ export function setWorker(w: Worker, logger: Logger) {
     };
     worker.onerror = (e) => {
         console.error(e);
+        // we don't know where the error comes from, so we reject all handlers
+        const handlers = workerHandlers;
+        workerHandlers = {};
+        Object.values(handlers).forEach(([, reject, timeoutHandle]) => {
+            clearTimeout(timeoutHandle);
+            reject(e);
+        });
     };
     return new Promise((resolve) => {
         let handle: any;

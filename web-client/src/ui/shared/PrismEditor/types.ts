@@ -5,6 +5,7 @@ export type PrismEditorProps = {
     language: PrismEditorLanguage;
     value: string;
     setValue: (value: string) => void;
+    disabled?: boolean;
 };
 
 export type PrismEditorLanguage =

@@ -41,14 +41,16 @@ pub struct ExportMetadata {
     /// (Optional) File extension of the export. For example "lss"
     pub extension: Option<String>,
 
-    /// Extra properties to pass to the exporter when running
-    ///
-    /// This can be used to distinguish multiple exports from the same exporter.
-    /// This is not part of the config and cannot be changed by the user
-    pub properties: Value,
+    /// (Optional) Extra id to distinguish multiple exports from the same exporter
+    pub export_id: Option<String>,
 
     /// (Optional) Example YAML configuration for the exporter to show to the user
     pub example_config: Option<String>,
+
+    /// (Optional) Learn more link to guide the user on how to configure the export.
+    ///
+    /// ONLY VISIBLE if you also provide an example config!
+    pub learn_more: Option<String>,
 }
 
 /// Icon for the export.
@@ -74,9 +76,11 @@ pub enum ExportIcon {
 #[derive_wasm]
 pub struct ExportRequest {
     /// Id of the exporter plugin to run
+    #[serde(rename = "pluginId")]
     pub plugin_id: String,
-    /// Extra properties to pass back to the exporter.
-    pub properties: Value,
+    /// Extra id to distinguish multiple exports from the same exporter
+    #[serde(rename = "exportId")]
+    pub export_id: String,
     /// Configuration payload provided by the user
     pub payload: Value,
 }
@@ -87,13 +91,21 @@ pub struct ExportRequest {
 pub enum ExpoDoc {
     /// Success output. Contains file name and the bytes
     Success {
-        /// File name
         file_name: String,
-        /// File bytes
-        bytes: Vec<u8>,
+        file_content: ExpoBlob,
     },
     /// Error output with a message
     Error(String),
+}
+
+/// The data in the export
+#[derive(Debug, Clone)]
+#[derive_wasm]
+pub enum ExpoBlob {
+    /// UTF-8 text
+    Text(String),
+    /// Binary data encoded in base64
+    Base64(String),
 }
 
 impl<'p> ExecContext<'p> {
@@ -121,7 +133,7 @@ impl<'p> CompDoc<'p> {
 
         for plugin in &mut plugins {
             if req.plugin_id == plugin.get_id() {
-                let result = match plugin.on_export_comp_doc(&req.properties, &req.payload, self) {
+                let result = match plugin.on_export_comp_doc(&req.export_id, &req.payload, self) {
                     Ok(None) => { None },
                     Ok(Some(expo_doc)) => { Some(expo_doc) },
                     Err(e) => { Some(ExpoDoc::Error(e.to_string())) },
@@ -143,7 +155,7 @@ impl<'p> ExecContext<'p> {
 
         for plugin in &mut plugins {
             if req.plugin_id == plugin.get_id() {
-                let result = match plugin.on_export_exec_doc(req.properties, req.payload, &self.exec_doc) {
+                let result = match plugin.on_export_exec_doc(&req.export_id, req.payload, &self.exec_doc) {
                     Ok(expo_doc) => { expo_doc },
                     Err(e) => { ExpoDoc::Error(e.to_string()) },
                 };
