@@ -1,5 +1,6 @@
 //! Basic utilities for working in browser environments.
 
+import { mergeClasses } from "@fluentui/react-components";
 import clsx from "clsx";
 
 export const isInDarkMode = () =>
@@ -93,7 +94,7 @@ export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
 
     /// Get the combined class name from the given Griffel style map
     public styledClassName(style: Record<N, string>) {
-        return clsx(this.className, style[this.className]);
+        return mergeClasses(this.className, style[this.className]);
     }
 
     /// Inject a raw css map into the head that targets this class

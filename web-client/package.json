@@ -7,7 +7,6 @@
         "@fluentui/react-components": "^9.21.0",
         "@fluentui/react-icons": "^2.0.214",
         "@reduxjs/toolkit": "^1.9.5",
-        "clsx": "^1.2.1",
         "denque": "^2.1.0",
         "immer": "^10.0.2",
         "is-equal": "^1.6.4",

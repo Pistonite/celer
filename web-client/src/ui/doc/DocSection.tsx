@@ -1,6 +1,5 @@
-import clsx from "clsx";
 import { PropsWithChildren } from "react";
-import { Text } from "@fluentui/react-components";
+import { Text, mergeClasses } from "@fluentui/react-components";
 
 import { SectionBannerWidthClass } from "./updateBannerWidths";
 import { DocSectionHead } from "./utils";
@@ -23,7 +22,7 @@ export const DocSection: React.FC<PropsWithChildren<DocSectionProps>> = ({
     return (
         <div className="docsection-container" data-section={index}>
             <div
-                className={clsx(
+                className={mergeClasses(
                     DocSectionHead.styledClassName(styles),
                     SectionBannerWidthClass,
                 )}
