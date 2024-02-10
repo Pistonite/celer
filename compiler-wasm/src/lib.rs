@@ -1,4 +1,4 @@
-use celerc::{PluginOptionsRaw, ExportRequest, ExpoDoc};
+use celerc::{ExpoDoc, ExportRequest, PluginOptionsRaw};
 use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
@@ -63,7 +63,7 @@ pub async fn compile_document(
 pub async fn export_document(
     entry_path: Option<String>,
     use_cache: bool,
-    req: ExportRequest
+    req: ExportRequest,
 ) -> Result<ExpoDoc, JsValue> {
     compiler::export_document(entry_path, use_cache, req).await
 }

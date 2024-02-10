@@ -1,6 +1,3 @@
-use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
-
 use celerc::lang::DocDiagnostic;
 use celerc::prep::PrepResult;
 use instant::Instant;
@@ -13,7 +10,7 @@ use celerc::{
 };
 
 use crate::interop::OpaqueExpoContext;
-use crate::loader::{self, LoadFileOutput, LoaderInWasm};
+use crate::loader::LoaderInWasm;
 use crate::plugin;
 
 mod cache;
@@ -45,20 +42,6 @@ pub async fn compile_document(
         }
     }
 
-
-
-    // if use_cache && is_cached_compiler_valid(entry_path.as_ref()).await {
-    //     let cached_context = CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.take());
-    //
-    //     if let Some(prep_ctx) = cached_context {
-    //         info!("using cached compiler context");
-    //         let start_time = Instant::now();
-    //         let result = compile_in_context(&prep_ctx, Some(start_time), plugin_options).await;
-    //         CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| x.replace(prep_ctx));
-    //         return result;
-    //     }
-    // }
-
     // create a new context
     info!("creating new compiler context");
     let start_time = Instant::now();
@@ -83,34 +66,6 @@ pub async fn new_context(entry_path: Option<String>) -> PrepResult<PreparedConte
     }
     context_builder.build_context().await
 }
-
-// async fn is_cached_compiler_valid(entry_path: Option<&String>) -> bool {
-//     // TODO #173: better cache invalidation when local config changes
-//
-//     let root_project_result = loader::load_file_check_changed("project.yaml").await;
-//     if !matches!(root_project_result, Ok(LoadFileOutput::NotModified)) {
-//         info!("root project.yaml is modified");
-//         return false;
-//     }
-//     if let Some(entry_path) = entry_path {
-//         let entry_path = match entry_path.strip_prefix('/') {
-//             Some(x) => x,
-//             None => entry_path,
-//         };
-//         let entry_result = loader::load_file_check_changed(entry_path).await;
-//         if !matches!(entry_result, Ok(LoadFileOutput::NotModified)) {
-//             info!("entry project.yaml is modified");
-//             return false;
-//         }
-//     }
-//     let is_same = CACHED_COMPILER_ENTRY_PATH.with_borrow(|x| x.as_ref() == entry_path);
-//     if !is_same {
-//         info!("entry changed");
-//         return false;
-//     }
-//
-//     true
-// }
 
 async fn compile_in_context(
     prep_ctx: &PreparedContext<LoaderInWasm>,

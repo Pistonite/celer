@@ -1,12 +1,12 @@
 use instant::Instant;
-use wasm_bindgen::prelude::*;
 use log::{error, info};
+use wasm_bindgen::prelude::*;
 
-use celerc::{ExpoDoc, ExportRequest, PreparedContext, PluginOptions, Compiler};
 use celerc::pack::PackError;
+use celerc::{Compiler, ExpoDoc, ExportRequest, PluginOptions, PreparedContext};
 
-use crate::plugin;
 use crate::loader::LoaderInWasm;
+use crate::plugin;
 
 use super::CachedContextGuard;
 
@@ -66,7 +66,10 @@ fn export_with_pack_error(error: PackError) -> Result<ExpoDoc, JsValue> {
     Ok(ExpoDoc::Error(error.to_string()))
 }
 
-async fn export_with_compiler(compiler: Compiler<'_>, req: ExportRequest) -> Result<ExpoDoc, JsValue> {
+async fn export_with_compiler(
+    compiler: Compiler<'_>,
+    req: ExportRequest,
+) -> Result<ExpoDoc, JsValue> {
     let mut comp_doc = compiler.compile().await;
     if let Some(expo_doc) = comp_doc.run_exporter(&req) {
         return Ok(expo_doc);

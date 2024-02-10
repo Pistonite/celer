@@ -42,7 +42,7 @@ export type BlockingAlertOptions = {
     component: React.ComponentType;
     /// Text for the cancel button. Default is "Cancel"
     cancelButton?: string;
-}
+};
 
 type IdsOf<T extends AlertExtraAction[]> = T[number]["id"];
 type AlertCallback = (ok: boolean | string) => void;
@@ -118,11 +118,10 @@ export class AlertMgr {
     /// cancels.
     ///
     /// If f throws, the alert will be cleared, and Err(e) will be returned.
-    public showBlocking<T>({
-        title,
-        component,
-        cancelButton,
-    }: BlockingAlertOptions, f: () => Promise<T>): Promise<Result<T, boolean | unknown>> {
+    public showBlocking<T>(
+        { title, component, cancelButton }: BlockingAlertOptions,
+        f: () => Promise<T>,
+    ): Promise<Result<T, boolean | unknown>> {
         return new Promise((resolve) => {
             let cancelled = false;
             this.initAlert(() => {
@@ -143,11 +142,15 @@ export class AlertMgr {
             );
             // let the UI update first
             setTimeout(() => {
-                f().then((result) => {
-                    if (!cancelled) {
-                        this.clearAlertAndThen(() => resolve(allocOk(result)));
-                    }
-                }).catch(e => {
+                f()
+                    .then((result) => {
+                        if (!cancelled) {
+                            this.clearAlertAndThen(() =>
+                                resolve(allocOk(result)),
+                            );
+                        }
+                    })
+                    .catch((e) => {
                         if (!cancelled) {
                             this.clearAlertAndThen(() => resolve(allocErr(e)));
                         }
@@ -184,8 +187,8 @@ export class AlertMgr {
             const element = this.previousFocusedElement;
             if (
                 element &&
-                    "focus" in element &&
-                    typeof element.focus === "function"
+                "focus" in element &&
+                typeof element.focus === "function"
             ) {
                 element.focus();
             }

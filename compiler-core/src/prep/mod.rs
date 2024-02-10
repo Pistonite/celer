@@ -272,7 +272,6 @@ where
                 }
             };
 
-
             if let Some(redirect_path) = path {
                 return match Use::new(redirect_path.clone()) {
                     Use::Valid(valid) if matches!(valid, ValidUse::Absolute(_)) => {
@@ -293,7 +292,7 @@ where
                             "unreachable".to_string(),
                         ))
                     }
-                }
+                };
             }
         }
 

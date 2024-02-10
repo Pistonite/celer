@@ -1,20 +1,10 @@
-
 use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
 
-use celerc::lang::DocDiagnostic;
-use instant::Instant;
-use log::{error, info};
-use wasm_bindgen::prelude::*;
+use log::info;
 
-use celerc::pack::PackError;
-use celerc::{
-    CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PluginOptions, PreparedContext,
-};
+use celerc::PreparedContext;
 
-use crate::interop::OpaqueExpoContext;
 use crate::loader::{self, LoadFileOutput, LoaderInWasm};
-use crate::plugin;
 
 thread_local! {
     static CACHED_COMPILER_CONTEXT: RefCell<Option<PreparedContext<LoaderInWasm>>> = RefCell::new(None);
@@ -50,7 +40,7 @@ impl CachedContextGuard {
                     }
                 }
                 Some(CachedContextGuard(Some(prep_ctx)))
-            },
+            }
             None => None,
         }
     }
@@ -94,4 +84,3 @@ impl AsRef<PreparedContext<LoaderInWasm>> for CachedContextGuard {
 //         return false;
 //     }
 // }
-

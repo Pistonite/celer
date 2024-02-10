@@ -235,16 +235,16 @@ const SectionModeSelector: React.FC<SectionModeSelectorProps> = ({
                     setValue(data.selectedOptions[0] as SectionMode);
                 }}
             >
-                <Option value={SectionMode.All} >
+                <Option value={SectionMode.All}>
                     {SectionModeTexts[SectionMode.All]}
                 </Option>
-                <Option value={SectionMode.CurrentHighlight} >
+                <Option value={SectionMode.CurrentHighlight}>
                     {SectionModeTexts[SectionMode.CurrentHighlight]}
                 </Option>
-                <Option value={SectionMode.Current} >
+                <Option value={SectionMode.Current}>
                     {SectionModeTexts[SectionMode.Current]}
                 </Option>
-                <Option value={SectionMode.None} >
+                <Option value={SectionMode.None}>
                     {SectionModeTexts[SectionMode.None]}
                 </Option>
             </Dropdown>
@@ -289,13 +289,13 @@ const LayerModeSelector: React.FC<DropdownProps & LayerModeSelectorProps> = ({
                     setValue(data.selectedOptions[0] as LayerMode);
                 }}
             >
-                <Option value={LayerMode.CurrentOnly} >
+                <Option value={LayerMode.CurrentOnly}>
                     {LayerModeTexts[LayerMode.CurrentOnly]}
                 </Option>
-                <Option value={LayerMode.CurrentAndAdjacent} >
+                <Option value={LayerMode.CurrentAndAdjacent}>
                     {LayerModeTexts[LayerMode.CurrentAndAdjacent]}
                 </Option>
-                <Option value={LayerMode.All} >
+                <Option value={LayerMode.All}>
                     {LayerModeTexts[LayerMode.All]}
                 </Option>
             </Dropdown>

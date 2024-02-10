@@ -1,4 +1,8 @@
-import { makeStyles, mergeClasses, shorthands } from "@fluentui/react-components";
+import {
+    makeStyles,
+    mergeClasses,
+    shorthands,
+} from "@fluentui/react-components";
 import ReactSimpleCodeEditor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs";
 
@@ -48,7 +52,7 @@ function initStyles() {
         },
         outerDisabled: {
             backgroundColor: dark ? "#333" : "#ddd",
-        }
+        },
     });
 }
 const useStyles = initStyles();
@@ -61,7 +65,12 @@ const PrismEditorCore: React.FC<PrismEditorProps> = ({
 }) => {
     const styles = useStyles();
     return (
-        <div className={mergeClasses(styles.outer, disabled && styles.outerDisabled)}>
+        <div
+            className={mergeClasses(
+                styles.outer,
+                disabled && styles.outerDisabled,
+            )}
+        >
             <div className={styles.inner}>
                 <ReactSimpleCodeEditor
                     value={value}

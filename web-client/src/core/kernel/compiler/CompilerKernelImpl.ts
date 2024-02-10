@@ -222,26 +222,28 @@ export class CompilerKernelImpl implements CompilerKernel {
     public async export(request: ExportRequest): Promise<ExpoDoc> {
         if (!this.fileAccess) {
             return {
-                error: "Compiler not available. Please make sure a project is loaded."
+                error: "Compiler not available. Please make sure a project is loaded.",
             };
         }
 
         if (!(await this.ensureReady())) {
             return {
-                error: "Compiler is not ready. Please try again later."
+                error: "Compiler is not ready. Please try again later.",
             };
         }
 
         const validatedEntryPathResult = await this.validateEntryPath();
         if (validatedEntryPathResult.isErr()) {
             return {
-                error: "Compiler entry path is invalid. Please check your settings."
+                error: "Compiler entry path is invalid. Please check your settings.",
             };
         }
         const validatedEntryPath = validatedEntryPathResult.inner();
 
         return await this.compilerLock.lockedScope(undefined, async () => {
-            const { compilerUseCachedPrepPhase } = settingsSelector(this.store.getState());
+            const { compilerUseCachedPrepPhase } = settingsSelector(
+                this.store.getState(),
+            );
 
             await this.updatePluginOptions();
 
@@ -259,7 +261,6 @@ export class CompilerKernelImpl implements CompilerKernel {
             }
             return result.inner();
         });
-
     }
 
     /// Try to wait for the compiler to be ready. Returns true if it becomes ready eventually.
@@ -383,7 +384,9 @@ export class CompilerKernelImpl implements CompilerKernel {
             });
             if (result.isErr()) {
                 CompilerLog.error(result.inner());
-                CompilerLog.warn("failed to set plugin options. The output may be wrong.");
+                CompilerLog.warn(
+                    "failed to set plugin options. The output may be wrong.",
+                );
             } else {
                 CompilerLog.info("plugin options updated");
             }

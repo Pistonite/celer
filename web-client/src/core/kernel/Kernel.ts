@@ -13,6 +13,7 @@ import {
     viewActions,
 } from "core/store";
 import { isRecompileNeeded } from "core/doc";
+import { ExpoDoc, ExportRequest } from "low/celerc";
 import { console, Logger, isInDarkMode } from "low/utils";
 import type { FileSys, FsResult } from "low/fs";
 
@@ -21,7 +22,6 @@ import type { EditorKernel } from "./editor";
 import { KeyMgr } from "./KeyMgr";
 import { WindowMgr } from "./WindowMgr";
 import { AlertMgr } from "./AlertMgr";
-import { ExpoDoc, ExportRequest } from "low/celerc";
 
 type InitUiFunction = (
     kernel: Kernel,
@@ -196,7 +196,9 @@ export class Kernel {
         const state = this.store.getState();
         const stageMode = viewSelector(state).stageMode;
         if (stageMode !== "edit") {
-            this.log.error("compiler is not available in view mode. This is a bug!");
+            this.log.error(
+                "compiler is not available in view mode. This is a bug!",
+            );
             throw new Error("compiler is not available in view mode");
         }
         if (!this.compiler) {
@@ -357,7 +359,7 @@ export class Kernel {
             // TODO #184: export from server
             return {
                 error: "Export from server is not available yet. This is tracked by issue 184 on GitHub",
-            }
+            };
         }
     }
 }

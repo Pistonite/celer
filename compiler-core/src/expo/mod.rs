@@ -10,8 +10,8 @@
 //! The output is a [`ExpoContext`].
 use serde_json::Value;
 
-use crate::exec::ExecContext;
 use crate::comp::CompDoc;
+use crate::exec::ExecContext;
 use crate::macros::derive_wasm;
 
 /// Output of the export phase
@@ -134,9 +134,9 @@ impl<'p> CompDoc<'p> {
         for plugin in &mut plugins {
             if req.plugin_id == plugin.get_id() {
                 let result = match plugin.on_export_comp_doc(&req.export_id, &req.payload, self) {
-                    Ok(None) => { None },
-                    Ok(Some(expo_doc)) => { Some(expo_doc) },
-                    Err(e) => { Some(ExpoDoc::Error(e.to_string())) },
+                    Ok(None) => None,
+                    Ok(Some(expo_doc)) => Some(expo_doc),
+                    Err(e) => Some(ExpoDoc::Error(e.to_string())),
                 };
                 self.plugin_runtimes = plugins;
                 return result;
@@ -144,7 +144,10 @@ impl<'p> CompDoc<'p> {
         }
 
         self.plugin_runtimes = plugins;
-        Some(ExpoDoc::Error(format!("Plugin {} not found", req.plugin_id)))
+        Some(ExpoDoc::Error(format!(
+            "Plugin {} not found",
+            req.plugin_id
+        )))
     }
 }
 
@@ -155,10 +158,11 @@ impl<'p> ExecContext<'p> {
 
         for plugin in &mut plugins {
             if req.plugin_id == plugin.get_id() {
-                let result = match plugin.on_export_exec_doc(&req.export_id, req.payload, &self.exec_doc) {
-                    Ok(expo_doc) => { expo_doc },
-                    Err(e) => { ExpoDoc::Error(e.to_string()) },
-                };
+                let result =
+                    match plugin.on_export_exec_doc(&req.export_id, req.payload, &self.exec_doc) {
+                        Ok(expo_doc) => expo_doc,
+                        Err(e) => ExpoDoc::Error(e.to_string()),
+                    };
                 return result;
             }
         }

@@ -31,15 +31,26 @@ import {
     Video20Regular,
 } from "@fluentui/react-icons";
 
-import { AppStore, documentSelector, settingsActions, settingsSelector } from "core/store";
+import {
+    AppStore,
+    documentSelector,
+    settingsActions,
+    settingsSelector,
+} from "core/store";
 import { ExecDoc, ExpoDoc, ExportIcon, ExportMetadata } from "low/celerc";
 
-import { ControlComponentProps, ToolbarControl } from "./util";
 import { Kernel, useKernel } from "core/kernel";
-import { errorToString, sleep } from "low/utils";
-import { createExportRequest, getExportConfig, getExportLabel, isConfigNeeded } from "core/doc";
+import { errorToString } from "low/utils";
+import {
+    createExportRequest,
+    getExportConfig,
+    getExportLabel,
+    isConfigNeeded,
+} from "core/doc";
 import { ErrorBar, PrismEditor } from "ui/shared";
 import { useActions } from "low/store";
+
+import { ControlComponentProps, ToolbarControl } from "./util";
 
 export const Export: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
@@ -108,7 +119,11 @@ const ExportInternal: React.FC<ExportInternalProps> = ({
             <MenuPopover>
                 <MenuList>
                     {exportMetadata?.map((_, i) => (
-                        <ExportButton key={i} exportMetadata={exportMetadata} index={i} />
+                        <ExportButton
+                            key={i}
+                            exportMetadata={exportMetadata}
+                            index={i}
+                        />
                     ))}
                 </MenuList>
             </MenuPopover>
@@ -116,7 +131,10 @@ const ExportInternal: React.FC<ExportInternalProps> = ({
     );
 };
 
-const ExportButton: React.FC<{ exportMetadata: ExportMetadata[], index: number }> = ({ exportMetadata, index }) => {
+const ExportButton: React.FC<{
+    exportMetadata: ExportMetadata[];
+    index: number;
+}> = ({ exportMetadata, index }) => {
     const metadata = exportMetadata[index];
     const text = getExportLabel(metadata);
 
@@ -128,9 +146,11 @@ const ExportButton: React.FC<{ exportMetadata: ExportMetadata[], index: number }
             relationship="label"
             positioning="after"
         >
-            <MenuItem 
+            <MenuItem
                 icon={<ExportIconComponent name={metadata.icon} />}
-                onClick={() => runExportWizard(exportMetadata, index, kernel, store)}
+                onClick={() =>
+                    runExportWizard(exportMetadata, index, kernel, store)
+                }
             >
                 {text}
             </MenuItem>
@@ -163,15 +183,24 @@ const ExportIconComponent: React.FC<{ name: ExportIcon | undefined }> = ({
     }
 };
 
-const runExportWizard = async (exportMetadata: ExportMetadata[], index: number, kernel: Kernel, store: AppStore) => {
+const runExportWizard = async (
+    exportMetadata: ExportMetadata[],
+    index: number,
+    kernel: Kernel,
+    store: AppStore,
+) => {
     const state = store.getState();
     let selection = index;
     let error: string | undefined = undefined;
     // show the extra config dialog based on the initial selection
     const enableConfig = isConfigNeeded(exportMetadata[selection]);
-    let config: string = getExportConfig(exportMetadata[selection], settingsSelector(state));
+    let config: string = getExportConfig(
+        exportMetadata[selection],
+        settingsSelector(state),
+    );
     // eslint-disable-next-line no-constant-condition
-    while(true) {
+    while (true) {
+        // show extra config dialog if needed
         if (enableConfig) {
             const ok = await kernel.getAlertMgr().showRich({
                 title: "Export",
@@ -198,37 +227,25 @@ const runExportWizard = async (exportMetadata: ExportMetadata[], index: number, 
                 return;
             }
         }
-        store.dispatch(settingsActions.setExportConfig({metadata: exportMetadata[selection], config}));
-        const result = await kernel.getAlertMgr().showBlocking({
-            title: "Export",
-            component: () => {
-                return (
-                    <>
-                        <Body1 block>
-                            Generating the export file... Download will automatically start once done.
-                        </Body1>
-                        <div style={{padding: 16}}>
-                        <Spinner />
-                        </div>
-                    </>
-                );
-            }
-        }, async (): Promise<ExpoDoc> => {
-                const requestResult = createExportRequest(exportMetadata[selection], config);
-                if (requestResult.isErr()) {
-                    return {error: errorToString(requestResult.inner()) };
-                }
-                const request = requestResult.inner();
-                return await kernel.export(request);
-            });
+        // persist the config to settings
+        store.dispatch(
+            settingsActions.setExportConfig({
+                metadata: exportMetadata[selection],
+                config,
+            }),
+        );
+        const result = await runExportAndShowDialog(
+            kernel,
+            exportMetadata[selection],
+            config,
+        );
         if (result.isOk()) {
             const expoDoc = result.inner();
             if ("success" in expoDoc) {
-                const file = expoDoc.success;
-                // todo: download file
-                console.log(file);
+                // const _file = expoDoc.success;
+                // TODO #33: download file
                 return;
-            } 
+            }
 
             error = expoDoc.error;
         } else {
@@ -240,7 +257,7 @@ const runExportWizard = async (exportMetadata: ExportMetadata[], index: number, 
             error = errorToString(v);
         }
     }
-}
+};
 
 type ExportDialogProps = {
     /// All available export options
@@ -253,7 +270,7 @@ type ExportDialogProps = {
     /// The config string
     config: string;
     onConfigChange: (config: string) => void;
-}
+};
 const ExportDialog: React.FC<ExportDialogProps> = ({
     exportMetadata,
     initialSelectionIndex,
@@ -264,7 +281,6 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
 }) => {
     const { setExportConfigToDefault } = useActions(settingsActions);
 
-
     const [selectedIndex, setSelectedIndex] = useState(initialSelectionIndex);
     const [configValue, setConfigValue] = useState(config);
 
@@ -273,10 +289,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
 
     return (
         <>
-            <Field
-                label="Select the export format"
-                hint={metadata.description}
-            >
+            <Field label="Select the export format" hint={metadata.description}>
                 <Dropdown
                     value={getExportLabel(metadata)}
                     selectedOptions={[selectedIndex.toString()]}
@@ -286,40 +299,34 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
                         onSelectionChange(index);
                     }}
                 >
-                    {
-                        exportMetadata.map((metadata, i) => (
-                            <Option key={i} value={i.toString()} >
-                                {getExportLabel(metadata)}
-                            </Option>
-                        ))
-                    }
+                    {exportMetadata.map((metadata, i) => (
+                        <Option key={i} value={i.toString()}>
+                            {getExportLabel(metadata)}
+                        </Option>
+                    ))}
                 </Dropdown>
             </Field>
-            {enableConfig &&
+            {enableConfig && (
                 <>
-                    <Divider style={{marginTop: 8, marginBottom: 8}} />
-                    <Body1 block style={{marginBottom: 8}}>
+                    <Divider style={{ marginTop: 8, marginBottom: 8 }} />
+                    <Body1 block style={{ marginBottom: 8 }}>
                         This export option accepts extra configuration.
-                        {metadata.learnMore &&
+                        {metadata.learnMore && (
                             <>
                                 {" "}
-                                <Link
-                                    href={metadata.learnMore}
-                                    target="_blank"
-                                >
+                                <Link href={metadata.learnMore} target="_blank">
                                     Learn more
-                                    {
-                                        !(metadata.learnMore.startsWith("/") || metadata.learnMore.startsWith(window.location.origin)) && " (external link)"
-                                    }
+                                    {!(
+                                        metadata.learnMore.startsWith("/") ||
+                                        metadata.learnMore.startsWith(
+                                            window.location.origin,
+                                        )
+                                    ) && " (external link)"}
                                 </Link>
                             </>
-                        }
+                        )}
                     </Body1>
-                    { error && 
-                            <ErrorBar title="Error">
-                                {error}
-                            </ErrorBar>
-                    }
+                    {error && <ErrorBar title="Error">{error}</ErrorBar>}
                     <PrismEditor
                         language="yaml"
                         value={configValue}
@@ -328,16 +335,53 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
                             onConfigChange(x);
                         }}
                     />
-                    <Button onClick={() => {
-                        setExportConfigToDefault({metadata});
-                        const config = metadata.exampleConfig || "";
-                        setConfigValue(config);
-                        onConfigChange(config);
-                    }}>
+                    <Button
+                        onClick={() => {
+                            setExportConfigToDefault({ metadata });
+                            const config = metadata.exampleConfig || "";
+                            setConfigValue(config);
+                            onConfigChange(config);
+                        }}
+                    >
                         Reset configuration
                     </Button>
                 </>
-            }
+            )}
         </>
     );
-}
+};
+
+/// Run the export and show a blocking dialog
+const runExportAndShowDialog = async (
+    kernel: Kernel,
+    metadata: ExportMetadata,
+    config: string,
+) => {
+    const result = await kernel.getAlertMgr().showBlocking(
+        {
+            title: "Export",
+            component: () => {
+                return (
+                    <>
+                        <Body1 block>
+                            Generating the export file... Download will
+                            automatically start once done.
+                        </Body1>
+                        <div style={{ padding: 16 }}>
+                            <Spinner />
+                        </div>
+                    </>
+                );
+            },
+        },
+        async (): Promise<ExpoDoc> => {
+            const requestResult = createExportRequest(metadata, config);
+            if (requestResult.isErr()) {
+                return { error: errorToString(requestResult.inner()) };
+            }
+            const request = requestResult.inner();
+            return await kernel.export(request);
+        },
+    );
+    return result;
+};

@@ -92,15 +92,21 @@ export const setUserPluginConfig = withPayload<DocSettingsState, string>(
     },
 );
 
-export const setExportConfig = withPayload<DocSettingsState, {
-    metadata: ExportMetadata;
-    config: string;
-}>((state, {metadata, config}) => {
+export const setExportConfig = withPayload<
+    DocSettingsState,
+    {
+        metadata: ExportMetadata;
+        config: string;
+    }
+>((state, { metadata, config }) => {
     state.exportConfigs[getExporterId(metadata)] = config;
 });
 
-export const setExportConfigToDefault = withPayload<DocSettingsState, {
-    metadata: ExportMetadata;
-}>((state, {metadata}) => {
+export const setExportConfigToDefault = withPayload<
+    DocSettingsState,
+    {
+        metadata: ExportMetadata;
+    }
+>((state, { metadata }) => {
     delete state.exportConfigs[getExporterId(metadata)];
 });

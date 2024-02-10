@@ -40,7 +40,9 @@ export function setWorker(w: Worker, logger: Logger) {
             // Event handler
             const handler = workerHandlers[handleId];
             if (!handler) {
-                console.warn(`no worker handler for handleId=${handleId}. This could possibly be due to a previous panic from the worker.`);
+                console.warn(
+                    `no worker handler for handleId=${handleId}. This could possibly be due to a previous panic from the worker.`,
+                );
                 return;
             }
             const [resolve, reject, timeoutHandle] = handler;
