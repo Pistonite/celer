@@ -4,6 +4,7 @@
 
 export * from "./IdleMgr";
 export * from "./Debouncer";
+export * from "./error";
 export * from "./html";
 export * from "./Logger";
 export * from "./Pool";

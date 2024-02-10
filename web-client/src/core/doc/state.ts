@@ -47,6 +47,9 @@ export type DocSettingsState = {
 
     /// Additional user plugin configuration YAML string
     userPluginConfig: string;
+
+    /// Saved export configurations
+    exportConfigs: Record<string, string>;
 } & KeyBindingSettings;
 
 export type AppPluginType = "export-split";
@@ -83,6 +86,7 @@ export const initialDocSettingsState: DocSettingsState = {
     disabledPlugins: {},
     enableUserPlugins: false,
     userPluginConfig: '# See the "Learn more" link above for more information',
+    exportConfigs: {},
 };
 
 /// The document state type

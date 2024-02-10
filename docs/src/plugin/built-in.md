@@ -4,6 +4,7 @@ Here is a list of all built-in plugins. The `ID` column is what you put after `u
 |-|-|-|
 |[Link](./link.md)|`link`|Turns `link` tags into clickable links|
 |[Variables](./variables.md)|`variables`|Adds a variable system that can be used to track completion, item counts, etc.|
+|[Export LiveSplit](./export-livesplit.md)|`export-livesplit`|Export the route as LiveSplit splits|
 <!--
 |[Assertion](./assertion.md)|`assertion`|Adds an assertion system that can give warning when a value does not meet some condition|
 -->

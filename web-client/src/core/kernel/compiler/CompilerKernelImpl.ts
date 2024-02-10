@@ -8,8 +8,11 @@ import {
 } from "core/store";
 import {
     EntryPointsSorted,
+    ExpoDoc,
+    ExportRequest,
     PluginOptionsRaw,
     compile_document,
+    export_document,
     get_entry_points,
     set_plugin_options,
 } from "low/celerc";
@@ -22,6 +25,8 @@ import {
     Result,
     sleep,
     allocErr,
+    ReentrantLock,
+    errorToString,
 } from "low/utils";
 import { FileAccess, FsResultCodes } from "low/fs";
 
@@ -51,7 +56,10 @@ export class CompilerKernelImpl implements CompilerKernel {
     private fileAccess: FileAccess | undefined = undefined;
 
     private needCompile: boolean;
+    /// Flag used to prevent multiple compilation to run at the same time
     private compiling: boolean;
+    /// Lock to prevent compilation and other operations from running at the same time
+    private compilerLock: ReentrantLock;
     private lastPluginOptions: PluginOptionsRaw | undefined;
 
     private cleanup: () => void;
@@ -60,6 +68,7 @@ export class CompilerKernelImpl implements CompilerKernel {
         this.store = store;
         this.needCompile = false;
         this.compiling = false;
+        this.compilerLock = new ReentrantLock("compiler");
 
         this.cleanup = () => {
             // no cleanup needed for now
@@ -165,55 +174,93 @@ export class CompilerKernelImpl implements CompilerKernel {
 
         this.store.dispatch(viewActions.setCompileInProgress(true));
 
-        // wait to let the UI update first
-        await sleep(0);
-        // check if another compilation is running
-        // this is safe because there's no await between checking and setting (no other code can run)
-        if (this.compiling) {
-            CompilerLog.warn("compilation already in progress, skipping");
-            return;
-        }
-        this.compiling = true;
-        while (this.needCompile) {
-            // turn off the flag before compiling.
-            // if anyone calls triggerCompile during compilation, it will be turned on again
-            // to trigger another compile
-            this.needCompile = false;
-            const state = this.store.getState();
-            const { compilerUseCachedPrepPhase } = settingsSelector(state);
+        // lock the compiler so other operations can't run
+        await this.compilerLock.lockedScope(undefined, async () => {
+            // wait to let the UI update first
+            await sleep(0);
+            // check if another compilation is running
+            // this is safe because there's no await between checking and setting (no other code can run)
+            if (this.compiling) {
+                CompilerLog.warn("compilation already in progress, skipping");
+                return;
+            }
+            this.compiling = true;
+            while (this.needCompile) {
+                // turn off the flag before compiling.
+                // if anyone calls triggerCompile during compilation, it will be turned on again
+                // to trigger another compile
+                this.needCompile = false;
+                const state = this.store.getState();
+                const { compilerUseCachedPrepPhase } = settingsSelector(state);
 
-            const pluginOptions = getRawPluginOptions(state);
-            if (pluginOptions !== this.lastPluginOptions) {
-                this.lastPluginOptions = pluginOptions;
+                await this.updatePluginOptions();
+
+                CompilerLog.info("invoking compiler...");
                 const result = await wrapAsync(() => {
-                    return set_plugin_options(pluginOptions);
+                    return compile_document(
+                        validatedEntryPath,
+                        compilerUseCachedPrepPhase,
+                    );
                 });
+                // yielding just in case other things need to update
+                await sleep(0);
                 if (result.isErr()) {
                     CompilerLog.error(result.inner());
+                } else {
+                    const doc = result.inner();
+                    if (this.fileAccess && doc !== undefined) {
+                        this.store.dispatch(documentActions.setDocument(doc));
+                    }
                 }
             }
+            this.store.dispatch(viewActions.setCompileInProgress(false));
+            this.compiling = false;
+            CompilerLog.info("finished compiling");
+        });
+    }
 
-            CompilerLog.info("invoking compiler...");
+    public async export(request: ExportRequest): Promise<ExpoDoc> {
+        if (!this.fileAccess) {
+            return {
+                error: "Compiler not available. Please make sure a project is loaded.",
+            };
+        }
+
+        if (!(await this.ensureReady())) {
+            return {
+                error: "Compiler is not ready. Please try again later.",
+            };
+        }
+
+        const validatedEntryPathResult = await this.validateEntryPath();
+        if (validatedEntryPathResult.isErr()) {
+            return {
+                error: "Compiler entry path is invalid. Please check your settings.",
+            };
+        }
+        const validatedEntryPath = validatedEntryPathResult.inner();
+
+        return await this.compilerLock.lockedScope(undefined, async () => {
+            const { compilerUseCachedPrepPhase } = settingsSelector(
+                this.store.getState(),
+            );
+
+            await this.updatePluginOptions();
+
             const result = await wrapAsync(() => {
-                return compile_document(
+                return export_document(
                     validatedEntryPath,
                     compilerUseCachedPrepPhase,
+                    request,
                 );
             });
-            // yielding just in case other things need to update
-            await sleep(0);
+
             if (result.isErr()) {
                 CompilerLog.error(result.inner());
-            } else {
-                const doc = result.inner();
-                if (this.fileAccess && doc !== undefined) {
-                    this.store.dispatch(documentActions.setDocument(doc));
-                }
+                return { error: errorToString(result.inner()) };
             }
-        }
-        this.store.dispatch(viewActions.setCompileInProgress(false));
-        this.compiling = false;
-        CompilerLog.info("finished compiling");
+            return result.inner();
+        });
     }
 
     /// Try to wait for the compiler to be ready. Returns true if it becomes ready eventually.
@@ -325,5 +372,24 @@ export class CompilerKernelImpl implements CompilerKernel {
             }
         }
         return "";
+    }
+
+    private async updatePluginOptions() {
+        const pluginOptions = getRawPluginOptions(this.store.getState());
+        if (pluginOptions !== this.lastPluginOptions) {
+            this.lastPluginOptions = pluginOptions;
+            CompilerLog.info("updating plugin options...");
+            const result = await wrapAsync(() => {
+                return set_plugin_options(pluginOptions);
+            });
+            if (result.isErr()) {
+                CompilerLog.error(result.inner());
+                CompilerLog.warn(
+                    "failed to set plugin options. The output may be wrong.",
+                );
+            } else {
+                CompilerLog.info("plugin options updated");
+            }
+        }
     }
 }

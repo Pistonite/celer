@@ -235,29 +235,17 @@ const SectionModeSelector: React.FC<SectionModeSelectorProps> = ({
                     setValue(data.selectedOptions[0] as SectionMode);
                 }}
             >
-                <Option
-                    text={SectionModeTexts[SectionMode.All]}
-                    value={SectionMode.All}
-                >
-                    All
+                <Option value={SectionMode.All}>
+                    {SectionModeTexts[SectionMode.All]}
                 </Option>
-                <Option
-                    text={SectionModeTexts[SectionMode.CurrentHighlight]}
-                    value={SectionMode.CurrentHighlight}
-                >
-                    All (highlight current)
+                <Option value={SectionMode.CurrentHighlight}>
+                    {SectionModeTexts[SectionMode.CurrentHighlight]}
                 </Option>
-                <Option
-                    text={SectionModeTexts[SectionMode.Current]}
-                    value={SectionMode.Current}
-                >
-                    Current section
+                <Option value={SectionMode.Current}>
+                    {SectionModeTexts[SectionMode.Current]}
                 </Option>
-                <Option
-                    text={SectionModeTexts[SectionMode.None]}
-                    value={SectionMode.None}
-                >
-                    None
+                <Option value={SectionMode.None}>
+                    {SectionModeTexts[SectionMode.None]}
                 </Option>
             </Dropdown>
         </Field>
@@ -301,23 +289,14 @@ const LayerModeSelector: React.FC<DropdownProps & LayerModeSelectorProps> = ({
                     setValue(data.selectedOptions[0] as LayerMode);
                 }}
             >
-                <Option
-                    text={LayerModeTexts[LayerMode.CurrentOnly]}
-                    value={LayerMode.CurrentOnly}
-                >
-                    Current layer only
+                <Option value={LayerMode.CurrentOnly}>
+                    {LayerModeTexts[LayerMode.CurrentOnly]}
                 </Option>
-                <Option
-                    text={LayerModeTexts[LayerMode.CurrentAndAdjacent]}
-                    value={LayerMode.CurrentAndAdjacent}
-                >
-                    Current and adjacent layers
+                <Option value={LayerMode.CurrentAndAdjacent}>
+                    {LayerModeTexts[LayerMode.CurrentAndAdjacent]}
                 </Option>
-                <Option
-                    text={LayerModeTexts[LayerMode.All]}
-                    value={LayerMode.All}
-                >
-                    All layers
+                <Option value={LayerMode.All}>
+                    {LayerModeTexts[LayerMode.All]}
                 </Option>
             </Dropdown>
         </Field>

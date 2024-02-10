@@ -1,6 +1,8 @@
 //! core/doc
 //!
 //! Document viewer system
+
+export * from "./export";
 export * from "./state";
 export * from "./utils";
 export * as documentReducers from "./docReducers";

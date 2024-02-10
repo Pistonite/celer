@@ -13,6 +13,7 @@ import {
     viewActions,
 } from "core/store";
 import { isRecompileNeeded } from "core/doc";
+import { ExpoDoc, ExportRequest } from "low/celerc";
 import { console, Logger, isInDarkMode } from "low/utils";
 import type { FileSys, FsResult } from "low/fs";
 
@@ -80,6 +81,7 @@ export class Kernel {
         store.subscribe(
             watchSettings((newVal: SettingsState, oldVal: SettingsState) => {
                 // save settings to local storage
+                this.log.info("saving settings...");
                 saveSettings(newVal);
 
                 // switch theme
@@ -191,6 +193,14 @@ export class Kernel {
 
     /// Get or load the compiler
     public async getCompiler(): Promise<CompilerKernel> {
+        const state = this.store.getState();
+        const stageMode = viewSelector(state).stageMode;
+        if (stageMode !== "edit") {
+            this.log.error(
+                "compiler is not available in view mode. This is a bug!",
+            );
+            throw new Error("compiler is not available in view mode");
+        }
         if (!this.compiler) {
             const { initCompiler } = await import("./compiler");
             const compiler = initCompiler(this.store);
@@ -336,6 +346,20 @@ export class Kernel {
             );
         } else {
             this.store.dispatch(viewActions.updateFileSys(undefined));
+        }
+    }
+
+    public async export(request: ExportRequest): Promise<ExpoDoc> {
+        // TODO #33: inject split types
+        const stageMode = viewSelector(this.store.getState()).stageMode;
+        if (stageMode === "edit") {
+            const compiler = await this.getCompiler();
+            return await compiler.export(request);
+        } else {
+            // TODO #184: export from server
+            return {
+                error: "Export from server is not available yet. This is tracked by issue 184 on GitHub",
+            };
         }
     }
 }

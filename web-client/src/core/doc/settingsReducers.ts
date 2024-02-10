@@ -1,6 +1,7 @@
 //! Reducers for the document settings
 
 import { withPayload } from "low/store";
+import { ExportMetadata } from "low/celerc";
 
 import {
     AppPluginType,
@@ -8,6 +9,7 @@ import {
     KeyBinding,
     KeyBindingName,
 } from "./state";
+import { getExporterId } from "./export";
 
 export const setDocTheme = withPayload<DocSettingsState, string>(
     (state, theme) => {
@@ -89,3 +91,22 @@ export const setUserPluginConfig = withPayload<DocSettingsState, string>(
         state.userPluginConfig = value;
     },
 );
+
+export const setExportConfig = withPayload<
+    DocSettingsState,
+    {
+        metadata: ExportMetadata;
+        config: string;
+    }
+>((state, { metadata, config }) => {
+    state.exportConfigs[getExporterId(metadata)] = config;
+});
+
+export const setExportConfigToDefault = withPayload<
+    DocSettingsState,
+    {
+        metadata: ExportMetadata;
+    }
+>((state, { metadata }) => {
+    delete state.exportConfigs[getExporterId(metadata)];
+});

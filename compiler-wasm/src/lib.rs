@@ -1,4 +1,4 @@
-use celerc::PluginOptionsRaw;
+use celerc::{ExpoDoc, ExportRequest, PluginOptionsRaw};
 use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
@@ -9,7 +9,7 @@ use celerc::res::{ResPath, Resource};
 
 mod interop;
 use interop::OpaqueExpoContext;
-mod compile;
+mod compiler;
 mod loader;
 use loader::LoaderInWasm;
 mod logger;
@@ -39,7 +39,7 @@ pub fn init(
 /// If there is any error, this returns 0 entry points
 #[wasm_bindgen]
 pub async fn get_entry_points() -> Result<EntryPointsSorted, JsValue> {
-    let context_builder = compile::new_context_builder();
+    let context_builder = compiler::new_context_builder();
     let entry_points = match context_builder.get_entry_points().await {
         Ok(x) => x.path_only().into(),
         Err(_) => Default::default(),
@@ -54,7 +54,18 @@ pub async fn compile_document(
     entry_path: Option<String>,
     use_cache: bool,
 ) -> Result<OpaqueExpoContext, JsValue> {
-    compile::compile_document(entry_path, use_cache).await
+    compiler::compile_document(entry_path, use_cache).await
+}
+
+/// Export a document from web editor
+#[wasm_bindgen]
+#[inline]
+pub async fn export_document(
+    entry_path: Option<String>,
+    use_cache: bool,
+    req: ExportRequest,
+) -> Result<ExpoDoc, JsValue> {
+    compiler::export_document(entry_path, use_cache, req).await
 }
 
 /// Set user plugin options

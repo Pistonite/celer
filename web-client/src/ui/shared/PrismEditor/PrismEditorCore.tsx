@@ -1,4 +1,8 @@
-import { makeStyles, shorthands } from "@fluentui/react-components";
+import {
+    makeStyles,
+    mergeClasses,
+    shorthands,
+} from "@fluentui/react-components";
 import ReactSimpleCodeEditor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs";
 
@@ -41,10 +45,13 @@ function initStyles() {
             ...shorthands.border("1px", "solid", "#888"),
             ...shorthands.borderRadius("4px"),
             ...shorthands.padding("4px"),
+            backgroundColor: dark ? "#111" : "#eee",
             ":focus-within": {
                 ...shorthands.outline("1px", "solid", dark ? "white" : "black"),
             },
-            backgroundColor: dark ? "#111" : "#eee",
+        },
+        outerDisabled: {
+            backgroundColor: dark ? "#333" : "#ddd",
         },
     });
 }
@@ -52,20 +59,33 @@ const useStyles = initStyles();
 
 const PrismEditorCore: React.FC<PrismEditorProps> = ({
     language,
+    disabled,
     value,
     setValue,
 }) => {
     const styles = useStyles();
     return (
-        <div className={styles.outer}>
+        <div
+            className={mergeClasses(
+                styles.outer,
+                disabled && styles.outerDisabled,
+            )}
+        >
             <div className={styles.inner}>
                 <ReactSimpleCodeEditor
                     value={value}
                     onValueChange={(code) => setValue(code)}
-                    highlight={(code) =>
-                        highlight(code, languages[language], language)
-                    }
+                    highlight={(code) => {
+                        if (disabled) {
+                            const span = document.createElement("span");
+                            span.style.color = "#888";
+                            span.textContent = code;
+                            return span.outerHTML;
+                        }
+                        return highlight(code, languages[language], language);
+                    }}
                     padding={4}
+                    disabled={disabled}
                     onKeyDown={(e) => {
                         // prevent dialog from closing if the editor is
                         // inside a dialog

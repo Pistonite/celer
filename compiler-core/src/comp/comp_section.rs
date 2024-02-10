@@ -47,7 +47,7 @@ impl<'p> Compiler<'p> {
     pub async fn compile_section(
         &self,
         value: RouteBlobRef<'p>,
-        route: &Vec<CompSection>,
+        route: &[CompSection],
     ) -> Option<CompSection> {
         let result = match value.try_as_single_key_object() {
             RouteBlobSingleKeyObjectResult::Ok(key, value) => Ok((key, value)),

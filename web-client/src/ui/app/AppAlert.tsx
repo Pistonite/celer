@@ -69,16 +69,18 @@ export const AppAlert: React.FC = () => {
                         )}
                     </DialogContent>
                     <DialogActions fluid={alertExtraActions.length > 0}>
-                        <DialogTrigger disableButtonEnhancement>
-                            <Button
-                                appearance="primary"
-                                onClick={() => {
-                                    responseRef.current = true;
-                                }}
-                            >
-                                {alertOkButton}
-                            </Button>
-                        </DialogTrigger>
+                        {alertOkButton && (
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="primary"
+                                    onClick={() => {
+                                        responseRef.current = true;
+                                    }}
+                                >
+                                    {alertOkButton}
+                                </Button>
+                            </DialogTrigger>
+                        )}
                         {alertCancelButton && (
                             <DialogTrigger disableButtonEnhancement>
                                 <Button
