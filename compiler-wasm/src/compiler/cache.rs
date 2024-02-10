@@ -60,27 +60,3 @@ impl AsRef<PreparedContext<LoaderInWasm>> for CachedContextGuard {
         self.0.as_ref().unwrap()
     }
 }
-
-// pub async fn is_cache_valid(entry_path: Option<&String>) -> bool {
-//     let root_project_result = loader::load_file_check_changed("project.yaml").await;
-//     if !matches!(root_project_result, Ok(LoadFileOutput::NotModified)) {
-//         info!("root project.yaml is modified");
-//         return false;
-//     }
-//     if let Some(entry_path) = entry_path {
-//         let entry_path = match entry_path.strip_prefix('/') {
-//             Some(x) => x,
-//             None => entry_path,
-//         };
-//         let entry_result = loader::load_file_check_changed(entry_path).await;
-//         if !matches!(entry_result, Ok(LoadFileOutput::NotModified)) {
-//             info!("entry project.yaml is modified");
-//             return false;
-//         }
-//     }
-//     let is_same = CACHED_COMPILER_ENTRY_PATH.with_borrow(|x| x.as_ref() == entry_path);
-//     if !is_same {
-//         info!("entry changed");
-//         return false;
-//     }
-// }
