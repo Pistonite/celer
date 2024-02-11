@@ -15,17 +15,22 @@ import { ExecDoc } from "low/celerc";
 
 import { DocLine } from "./DocLine";
 import { DocSection } from "./DocSection";
-import {
-    DocContainer,
-    DocContentContainer,
-    DocLog,
-    DocScroll,
-    DocNoteContainer,
-} from "./utils";
+import { DocLog } from "./utils";
 import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
 import { DocController, initDocController } from "./DocController";
 import { Rich } from "./Rich";
 import { DocDiagnosticBlock } from "./DocDiagnosticBlock";
+import {
+    DocContainer,
+    DocContentContainer,
+    DocDiagnosticContainer,
+    DocEnd,
+    DocMainContainer,
+    DocNoteContainer,
+    DocPrefaceContainer,
+    DocScroll,
+} from "./dom";
+import { useDocStyles } from "./styles";
 
 export const DocRoot: React.FC = () => {
     const { stageMode, isEditingLayout, compileInProgress } =
@@ -101,6 +106,8 @@ const DocInternal: React.FC<DocInternalProps> = ({
 }) => {
     DocLog.info(`rendering document (serial=${serial})`);
 
+    const styles = useDocStyles();
+
     const flatNotes = document.route.reduce(
         (acc: DocNoteBlockProps[], section, i) => {
             section.lines.forEach((line, j) => {
@@ -120,14 +127,7 @@ const DocInternal: React.FC<DocInternalProps> = ({
     return (
         <div
             id={DocScroll.id}
-            style={{
-                height: "100%",
-                // make document scrollable
-                overflowY: "auto",
-                // Hide the horizontal scrollbar which could show during layout operations
-                overflowX: "hidden",
-                scrollBehavior: "smooth",
-            }}
+            className={styles.docScroll}
             onScroll={() => {
                 controller.onScroll();
             }}
@@ -146,7 +146,7 @@ const DocInternal: React.FC<DocInternalProps> = ({
                     ["--note-min-width" as string]: "48px",
                 }}
             >
-                <div>
+                <div id={DocDiagnosticContainer.id}>
                     {document.diagnostics.map((diagnostic, i) => (
                         <DocDiagnosticBlock
                             key={i}
@@ -155,7 +155,7 @@ const DocInternal: React.FC<DocInternalProps> = ({
                         />
                     ))}
                 </div>
-                <div id="docpreface-container">
+                <div id={DocPrefaceContainer.id}>
                     {document.preface.map((text, i) => (
                         <div key={i} className="docpreface-block">
                             <Rich content={text} size={400} />
@@ -169,7 +169,7 @@ const DocInternal: React.FC<DocInternalProps> = ({
                     }}
                 >
                     <div
-                        id="doc-main"
+                        id={DocMainContainer.id}
                         style={{
                             minWidth:
                                 "min(calc(100% - var(--note-min-width)), 380px)",
@@ -232,7 +232,7 @@ const DocInternal: React.FC<DocInternalProps> = ({
                     </div>
                 </div>
                 <div
-                    id="doc-end"
+                    id={DocEnd.id}
                     style={{
                         flex: 1,
                         textAlign: "center",

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import clsx from "clsx";
 import { Body2 } from "@fluentui/react-components";
 
 import { createFsFromDataTransferItem } from "low/fs";
@@ -16,7 +15,7 @@ export const EditorDropZone: React.FC = () => {
     return (
         <div
             id="editor-drop-zone"
-            className={clsx(isDragging && "editor-drop-zone-dragging")}
+            className={isDragging ? "editor-drop-zone-dragging" : ""}
             onDragEnter={() => {
                 setIsDragging(true);
             }}

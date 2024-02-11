@@ -10,10 +10,9 @@ import {
     getLineLocationFromElement,
     getScrollContainerOffsetY,
     findLineByIndex,
-    DocContentContainer,
-    DocNoteContainer,
-    DocSectionHead,
 } from "./utils";
+import { DocLineMainBannerClass, DocSectionHeadClass } from "./styles";
+import { DocContentContainer, DocNoteContainer } from "./dom";
 
 /// Layout notes based on the given position
 ///
@@ -246,12 +245,13 @@ type Intervals = number[];
 
 /// Find available intervals for the notes
 const findAvailableIntervals = (): Intervals => {
+    // try to not overlap with banners
     const rects: DOMRect[] = [];
     function add(e: Element) {
         rects.push(e.getBoundingClientRect());
     }
-    DocSectionHead.queryAll().forEach(add);
-    document.querySelectorAll(".docline-banner").forEach(add);
+    DocSectionHeadClass.queryAll().forEach(add);
+    DocLineMainBannerClass.queryAll().forEach(add);
 
     const end = DocContentContainer.get();
     if (!end) {

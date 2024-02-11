@@ -15,7 +15,7 @@ function checkFile(file, content) {
     const lines = content.split("\n");
     lines.forEach((line, index) => {
         if (containsConsole(line)) {
-            errors.push(`${index}: ${line}`);
+            errors.push(`${index + 1}: ${line}`);
         }
     });
     if (errors.length === 0) {

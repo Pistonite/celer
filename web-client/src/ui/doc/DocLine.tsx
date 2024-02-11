@@ -1,21 +1,31 @@
 //! Components for the document viewer
 
-import clsx from "clsx";
 import React from "react";
 import { Text } from "@fluentui/react-components";
 
 import { viewActions } from "core/store";
 import { DocDiagnostic, DocRichText, DocRichTextBlock } from "low/celerc";
 import { useActions } from "low/store";
+import { concatClassName, smartMergeClasses } from "low/utils";
 
 import { Rich } from "./Rich";
-import { DocLineContainerClass, getTagClassName } from "./utils";
-import {
-    BannerTextWidthClass,
-    BannerTextWithIconWidthClass,
-    BannerWidthClass,
-} from "./updateBannerWidths";
+import { getTagClassName } from "./utils";
 import { DocDiagnosticBlock } from "./DocDiagnosticBlock";
+import {
+    DocLineBodyClass,
+    DocLineContainerClass,
+    DocLineCounterClass,
+    DocLineCounterPrefix,
+    DocLineIconContainerClass,
+    DocLineMainBannerClass,
+    DocLineMainClass,
+    DocLineSplitClass,
+    DocLineTextContainerClass,
+    DocLineTextPrimaryClass,
+    DocLineTextSecondaryClass,
+    DocLineWithIconClass,
+    useDocStyles,
+} from "./styles";
 
 /// One line in the document
 type DocLineProps = {
@@ -60,23 +70,30 @@ export const DocLine: React.FC<DocLineProps> = ({
     splitType,
 }) => {
     const { setDocLocation } = useActions(viewActions);
+    const styles = useDocStyles();
     return (
         <div
-            className={clsx(
+            className={smartMergeClasses(
+                styles,
                 DocLineContainerClass,
-                isSplit && "docline-split",
-                counterType && `docline-counter-${counterType}`,
+                iconUrl && DocLineWithIconClass.className,
+                isSplit && DocLineSplitClass.className,
+                counterType &&
+                    concatClassName(DocLineCounterPrefix, counterType),
             )}
             data-section={sectionIndex}
             data-line={lineIndex}
             data-split-type={splitType}
         >
-            <div className="docline-main">
+            <div
+                className={smartMergeClasses(
+                    styles,
+                    DocLineMainClass,
+                    isBanner && DocLineMainBannerClass,
+                )}
+            >
                 <div
-                    className={clsx(
-                        "docline-head",
-                        iconUrl && "docline-icon-text",
-                    )}
+                    className={smartMergeClasses(styles, "docline-head")}
                     style={{
                         borderColor: lineColor,
                     }}
@@ -87,74 +104,86 @@ export const DocLine: React.FC<DocLineProps> = ({
                         });
                     }}
                 >
-                    {counterText && (
-                        <div
-                            className={clsx(
-                                "docline-counter",
-                                counterText.tag &&
-                                    getTagClassName(counterText.tag),
-                            )}
-                        >
-                            <Text size={500} font="monospace">
-                                {counterText.text}
-                            </Text>
-                        </div>
-                    )}
+                    <DocLineCounter text={counterText} />
                 </div>
-                {
+                <div className={smartMergeClasses(styles, DocLineBodyClass)}>
+                    <DocLineIcon src={iconUrl} />
                     <div
-                        className={clsx(
-                            "docline-body",
-                            isBanner && BannerWidthClass,
-                            isBanner && "docline-banner",
+                        className={smartMergeClasses(
+                            styles,
+                            DocLineTextContainerClass,
                         )}
                     >
-                        {iconUrl && (
-                            <div className="docline-icon-container">
-                                <img src={iconUrl} alt="icon" />
-                            </div>
-                        )}
-                        {
-                            <div
-                                className={clsx(
-                                    "docline-text-container",
-                                    isBanner &&
-                                        !iconUrl &&
-                                        BannerTextWidthClass,
-                                    isBanner &&
-                                        iconUrl &&
-                                        BannerTextWithIconWidthClass,
-                                )}
-                            >
-                                <div
-                                    className={clsx(
-                                        "docline-primary-text",
-                                        iconUrl && "docline-icon-text",
-                                    )}
-                                >
-                                    <Rich size={500} content={text} />
-                                </div>
-                                {secondaryText.length > 0 && (
-                                    <div
-                                        className={clsx(
-                                            "docline-secondary-text",
-                                            iconUrl && "docline-icon-text",
-                                        )}
-                                    >
-                                        <Rich
-                                            size={400}
-                                            content={secondaryText}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        }
+                        <DocLineTextPrimary text={text} />
+                        <DocLineTextSecondary text={secondaryText} />
                     </div>
-                }
+                </div>
             </div>
             {diagnostics.map((diagnostic, i) => (
                 <DocDiagnosticBlock key={i} diagnostic={diagnostic} showCaret />
             ))}
+        </div>
+    );
+};
+
+const DocLineCounter: React.FC<{ text?: DocRichTextBlock }> = ({
+    text: counterText,
+}) => {
+    const styles = useDocStyles();
+    if (!counterText) {
+        return null;
+    }
+    return (
+        <div
+            className={smartMergeClasses(
+                styles,
+                DocLineCounterClass,
+                // TODO
+                counterText.tag && getTagClassName(counterText.tag),
+            )}
+        >
+            <Text size={500} font="monospace">
+                {counterText.text}
+            </Text>
+        </div>
+    );
+};
+
+const DocLineIcon: React.FC<{ src?: string }> = ({ src }) => {
+    const styles = useDocStyles();
+    if (!src) {
+        return null;
+    }
+    return (
+        <div
+            className={smartMergeClasses(styles, DocLineIconContainerClass)}
+            aria-hidden="true"
+        >
+            <img src={src} />
+        </div>
+    );
+};
+
+type DocLineTextProps = {
+    text: DocRichText;
+};
+const DocLineTextPrimary: React.FC<DocLineTextProps> = ({ text }) => {
+    const styles = useDocStyles();
+    return (
+        <div className={smartMergeClasses(styles, DocLineTextPrimaryClass)}>
+            <Rich size={500} content={text} />
+        </div>
+    );
+};
+
+const DocLineTextSecondary: React.FC<DocLineTextProps> = ({ text }) => {
+    const styles = useDocStyles();
+    if (!text.length) {
+        return null;
+    }
+    return (
+        <div className={smartMergeClasses(styles, DocLineTextSecondaryClass)}>
+            <Rich size={400} content={text} />
         </div>
     );
 };

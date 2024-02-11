@@ -94,7 +94,7 @@
 .docline-container[data-split-type="Koroks"] .docline-body{
     background-color: #c07ba0 !important;
 } 
-.docline-container[data-split-type="Koroks"] .docline-primary-text span{
+.docline-container[data-split-type="Koroks"] .docline-text-primary span{
     color: black !important;
 } 
 

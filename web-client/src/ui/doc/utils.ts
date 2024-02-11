@@ -1,27 +1,11 @@
 //! Utilities
 
 import { DocTagColor, DocTag } from "low/celerc";
-import { DOMClass, DOMId, DOMStyleInject, Logger } from "low/utils";
+import { DOMId, DOMStyleInject, Logger } from "low/utils";
+import { DocLineContainerClass, DocSectionContainerClass } from "./styles";
+import { DocScroll } from "./dom";
 
 export const DocLog = new Logger("doc");
-
-// Constants
-
-/// The scrolling div of the document (parent of container)
-export const DocScroll = new DOMId<HTMLElement>("doc-scroll");
-/// The container div of the document
-export const DocContainer = new DOMId<HTMLElement>("doc-container");
-/// The container div of main doc content (excluding preface)
-export const DocContentContainer = new DOMId<HTMLElement>(
-    "doccontent-container",
-);
-/// The note panel
-export const DocNoteContainer = new DOMId<HTMLElement>("doc-side");
-/// Class for the doc line container
-export const DocLineContainerClass = "docline-container";
-
-/// Class for the section heads (title) in the document
-export const DocSectionHead = new DOMClass("docsection-head");
 
 /// Scroll view type
 export type ScrollView = {
@@ -63,8 +47,8 @@ export const getLineLocationFromElement = (
 /// use DocContentContainer for relative to the main content
 ///
 /// line.getBoundingClientRect().y - containerOffsetY = line position relative to container
-export const getScrollContainerOffsetY = <E extends HTMLElement>(
-    element: DOMId<E>,
+export const getScrollContainerOffsetY = (
+    element: DOMId<string, HTMLElement>,
 ): number => {
     const containerElement = element.get();
     if (!containerElement) {
@@ -78,10 +62,9 @@ export const findLineByIndex = (
     sectionIndex: number,
     lineIndex: number,
 ): HTMLElement | undefined => {
-    const e = document.querySelector(
-        `.${DocLineContainerClass}[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
+    return DocLineContainerClass.query(
+        `[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
     );
-    return (e as HTMLElement) ?? undefined;
 };
 
 /// Find a note container element by its section and line indices
@@ -99,10 +82,7 @@ export const findNoteByIndex = (
 export const findSectionByIndex = (
     sectionIndex: number,
 ): HTMLElement | undefined => {
-    const e = document.querySelector(
-        `.docsection-container[data-section="${sectionIndex}"]`,
-    );
-    return (e as HTMLElement) ?? undefined;
+    return DocSectionContainerClass.query(`[data-section="${sectionIndex}"]`);
 };
 
 /// Get a line's scroll position view

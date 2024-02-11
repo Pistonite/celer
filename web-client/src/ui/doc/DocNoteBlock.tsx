@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { DocNote } from "low/celerc";
 
 import { Rich } from "./Rich";
-import { DocScroll } from "./utils";
+import { DocScroll } from "./dom";
 
 /// Class name for expanded note blocks
 export const DocNoteExpandedClass = "docnote-container-expanded";
@@ -24,6 +24,24 @@ export const DocNoteBlock: React.FC<DocNoteBlockProps> = ({
     notes,
 }) => {
     const ref = useRef<HTMLDivElement>(null);
+
+    // const handleExpand = (e: React.MouseEvent<HTMLDivElement>) => {
+    //     const target = ref.current;
+    //     if (!target) {
+    //         return;
+    //     }
+    //     const { width } = target.getBoundingClientRect();
+    //     if (width <= 100 && !target.classList.contains(DocNoteExpandedClass)) {
+    //         target.classList.add(DocNoteExpandedClass);
+    //         const docWidth = DocScroll.get()?.clientWidth;
+    //         if (docWidth) {
+    //             target.style.width = `${docWidth}px`;
+    //         } else {
+    //             target.style.width = "100vw";
+    //         }
+    //     }
+    //     e.stopPropagation();
+    // };
     return (
         <div
             ref={ref}

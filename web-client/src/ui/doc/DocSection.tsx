@@ -1,11 +1,15 @@
 import { PropsWithChildren } from "react";
-import { Text, mergeClasses } from "@fluentui/react-components";
+import { Text } from "@fluentui/react-components";
 
-import { SectionBannerWidthClass } from "./updateBannerWidths";
-import { DocSectionHead } from "./utils";
-import { useDocStyles } from "./styles";
+import { smartMergeClasses } from "low/utils";
 
-/// Component for one section in the document
+import {
+    useDocStyles,
+    DocSectionHeadClass,
+    DocSectionContainerClass,
+    DocSectionBodyClass,
+} from "./styles";
+
 type DocSectionProps = {
     /// The section name
     name: string;
@@ -13,6 +17,7 @@ type DocSectionProps = {
     index: number;
 };
 
+/// Component for one section in the document
 export const DocSection: React.FC<PropsWithChildren<DocSectionProps>> = ({
     name,
     index,
@@ -20,16 +25,14 @@ export const DocSection: React.FC<PropsWithChildren<DocSectionProps>> = ({
 }) => {
     const styles = useDocStyles();
     return (
-        <div className="docsection-container" data-section={index}>
-            <div
-                className={mergeClasses(
-                    DocSectionHead.styledClassName(styles),
-                    SectionBannerWidthClass,
-                )}
-            >
+        <div
+            className={DocSectionContainerClass.className}
+            data-section={index}
+        >
+            <div className={smartMergeClasses(styles, DocSectionHeadClass)}>
                 <Text size={700}>{name || "\u00a0"}</Text>
             </div>
-            <div className="docsection-body">{children}</div>
+            <div className={DocSectionBodyClass.className}>{children}</div>
         </div>
     );
 };

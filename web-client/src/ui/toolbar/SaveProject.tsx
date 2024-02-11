@@ -20,7 +20,6 @@ import {
     SaveEdit20Regular,
     SaveSync20Regular,
 } from "@fluentui/react-icons";
-import clsx from "clsx";
 
 import { useKernel } from "core/kernel";
 import { settingsSelector, viewSelector } from "core/store";
@@ -120,7 +119,7 @@ const getIcon = (
     if (saveInProgress) {
         return (
             <SaveEdit20Regular
-                className={clsx(autoSaveEnabled && "color-success")}
+                className={autoSaveEnabled ? "color-success" : ""}
             />
         );
     }

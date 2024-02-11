@@ -1,3 +1,4 @@
+import { mergeClasses } from "@fluentui/react-components";
 import {
     Folder16Filled,
     Document16Regular,
@@ -8,7 +9,6 @@ import {
     CodePy16Filled,
     CodeBlock16Filled,
 } from "@fluentui/react-icons";
-import clsx from "clsx";
 
 export type TreeIconProps = {
     // If this is true, then the icon will be a folder icon.
@@ -52,7 +52,10 @@ export const TreeIcon: React.FC<TreeIconProps> = (props) => {
     const [fileType, icon] = getFileTypeAndIcon(props);
     return (
         <span
-            className={clsx("editor-tree-item-icon", `file-type-${fileType}`)}
+            className={mergeClasses(
+                "editor-tree-item-icon",
+                `file-type-${fileType}`,
+            )}
         >
             {icon}
         </span>

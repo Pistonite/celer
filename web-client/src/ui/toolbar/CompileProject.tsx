@@ -1,6 +1,5 @@
 //! Control for compiling the project
 
-import clsx from "clsx";
 import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
@@ -47,7 +46,7 @@ const useCompileProjectControl = () => {
 
     const icon = (
         <ArrowSync20Regular
-            className={clsx(compileInProgress && "spinning-infinite")}
+            className={compileInProgress ? "spinning-infinite" : ""}
         />
     );
     const tooltip = getTooltip(!!rootPath, compileInProgress);

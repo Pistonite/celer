@@ -24,9 +24,9 @@ import {
     useIsOverflowItemVisible,
     useOverflowMenu,
     useIsOverflowGroupVisible,
+    mergeClasses,
 } from "@fluentui/react-components";
 import { MoreHorizontal20Filled } from "@fluentui/react-icons";
-import clsx from "clsx";
 import React, { PropsWithChildren, useMemo } from "react";
 import { useSelector } from "react-redux";
 
@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
     }, [stageMode, editorMode]);
 
     return (
-        <header className={clsx("celer-header", toolbarAnchor)}>
+        <header className={mergeClasses("celer-header", toolbarAnchor)}>
             <Card
                 size="small"
                 appearance="filled-alternative"

@@ -2,7 +2,6 @@
 
 import "./SettingsDialog.css";
 
-import clsx from "clsx";
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -12,6 +11,7 @@ import {
     Dropdown,
     Option,
     Field,
+    mergeClasses,
 } from "@fluentui/react-components";
 import {
     Document20Regular,
@@ -105,7 +105,9 @@ export const SettingsDialog: React.FC = () => {
     return (
         <div
             id="settings-dialog"
-            className={clsx(verticalTabs ? "vertical-tabs" : "horizontal-tabs")}
+            className={mergeClasses(
+                verticalTabs ? "vertical-tabs" : "horizontal-tabs",
+            )}
         >
             {verticalTabs ? (
                 <TabList
@@ -142,9 +144,7 @@ export const SettingsDialog: React.FC = () => {
             )}
             <Divider
                 id="settings-separator"
-                className={clsx(
-                    verticalTabs ? "vertical-tabs" : "horizontal-tabs",
-                )}
+                className={verticalTabs ? "vertical-tabs" : "horizontal-tabs"}
                 vertical={verticalTabs}
             />
             <div id="settings-panel">

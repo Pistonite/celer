@@ -1,7 +1,18 @@
+/* 
+* NOTES: 
+* - Prefer using Griffel style engine (re-exported from FluentUI)
+* - The second option is the home-made style engine from low/utils. It doesn't have minification
+*   so use it only when necessary.
+*
+* ONLY use this file for:
+* - Things that need to be outside of FluentProvider
+* - Hacks to libraries
+* - Other exceptional cases
+*/
 :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
+    /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
+    /* line-height: 1.5; */
+    /* font-weight: 400; */
 
     color-scheme: light dark;
 
@@ -17,6 +28,10 @@
     --link-text-background-dark: transparent;
 }
 
+* {
+    min-width: 0;
+}
+
 body {
     margin: 0;
     place-items: center;
@@ -24,40 +39,22 @@ body {
     overflow: hidden;
 }
 
-div#style-root {
+/* This needs to be here so it can still apply in case of render error */
+#react-root > div {
     height: 100vh;
 }
 
-div.widget-container {
-    box-sizing: border-box;
-    display: flex;
-}
-
-div.widget-container.editing {
-    border: 1px solid #888;
-    border-radius: 2px;
-}
-
-div.widget-toolbar-top {
-    flex-direction: column;
-}
-
-div.widget-toolbar-bottom {
-    flex-direction: column-reverse;
-}
-
-div.widget {
-    flex: 1 1 auto;
-    min-width: 0;
-    min-height: 0;
-}
-
+/*
+* HACKS
+*/
 /* react-grid-layout drag handle */
 /* make sure its always on top */
 .react-grid-item > .react-resizable-handle::after {
     z-index: 99999;
 }
 
+/* react-grid-layout drag handle */
+/* adapt to dark mode */
 @media (prefers-color-scheme: dark) {
     .react-grid-item > .react-resizable-handle::after {
         border-color: rgba(255, 255, 255, 0.4);

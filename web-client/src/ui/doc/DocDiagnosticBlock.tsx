@@ -1,12 +1,18 @@
 //! The diagnostic text block
 
-import clsx from "clsx";
-import { Text, makeStyles, shorthands } from "@fluentui/react-components";
+import { Text } from "@fluentui/react-components";
 
 import { DocDiagnostic } from "low/celerc";
-import { DOMClass } from "low/utils";
+import { concatClassName, smartMergeClasses } from "low/utils";
 
 import { Poor } from "./Poor";
+import {
+    useDocStyles,
+    DocLineDiagnosticHeadClass,
+    DocLineDiagnosticBodyClass,
+    DocLineDiagnosticPrefix,
+    DocLineDiagnosticClass,
+} from "./styles";
 
 export type DocDiagnosticBlockProps = {
     /// The diagnostic to display
@@ -15,43 +21,32 @@ export type DocDiagnosticBlockProps = {
     showCaret: boolean;
 };
 
-const PREFIX = "docline-diagnostic";
-
-const DocDiagnosticHeadClass = new DOMClass(`${PREFIX}-head`);
-const DocDiagnosticBodyClass = new DOMClass(`${PREFIX}-body`);
-const useStyles = makeStyles({
-    [DocDiagnosticHeadClass.className]: {
-        ...shorthands.padding("4px 4px 0 4px"),
-    },
-    [DocDiagnosticBodyClass.className]: {
-        ...shorthands.padding("4px 0 4px 4px"),
-        wordBreak: "break-word",
-    },
-});
-
 export const DocDiagnosticBlock: React.FC<DocDiagnosticBlockProps> = ({
     diagnostic,
     showCaret,
 }) => {
     const { msg, source, type } = diagnostic;
-    const styles = useStyles();
+    const styles = useDocStyles();
+    const extraClass = concatClassName(DocLineDiagnosticPrefix, type);
     return (
-        <div className={PREFIX}>
+        <div className={DocLineDiagnosticClass.className}>
             <div
-                className={clsx(
-                    DocDiagnosticHeadClass.styledClassName(styles),
-                    `${PREFIX}-${type}`,
+                className={smartMergeClasses(
+                    styles,
+                    DocLineDiagnosticHeadClass,
+                    extraClass,
                 )}
             >
                 <Text size={300} font="monospace">
-                    {showCaret ? "^^^ " : ""}
+                    {showCaret && <span aria-hidden="true">{"^^^ "}</span>}
                     {type}: {source}:
                 </Text>
             </div>
             <div
-                className={clsx(
-                    DocDiagnosticBodyClass.styledClassName(styles),
-                    `${PREFIX}-${type}`,
+                className={smartMergeClasses(
+                    styles,
+                    DocLineDiagnosticBodyClass,
+                    extraClass,
                 )}
             >
                 <Poor

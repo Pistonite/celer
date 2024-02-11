@@ -1,5 +1,6 @@
+import { mergeClasses } from "@fluentui/react-components";
 import { ChevronRight16Regular } from "@fluentui/react-icons";
-import clsx from "clsx";
+
 import { TreeIcon } from "./TreeIcon";
 
 export type TreeItemProps = {
@@ -31,7 +32,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
 
     return (
         <div
-            className={clsx(
+            className={mergeClasses(
                 "editor-tree-item",
                 isSelected && "editor-tree-item-selected",
             )}
@@ -41,7 +42,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             }}
         >
             <span
-                className={clsx(
+                className={mergeClasses(
                     "editor-tree-item-icon",
                     isExpanded && "editor-tree-item-expanded",
                 )}

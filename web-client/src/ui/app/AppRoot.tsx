@@ -1,10 +1,10 @@
 import "react-grid-layout/css/styles.css";
-import "./AppRoot.css";
 
-import clsx from "clsx";
 import React, { Suspense, useCallback, useMemo } from "react";
 import { useSelector } from "react-redux";
 import ReactGridLayout from "react-grid-layout";
+import { mergeClasses } from "@fluentui/react-components";
+
 import { Header } from "ui/toolbar";
 import { LoadScreen, useWindowSize } from "ui/shared";
 import { settingsActions, settingsSelector, viewSelector } from "core/store";
@@ -17,7 +17,10 @@ import {
     useCurrentUserLayout,
 } from "core/layout";
 import { useActions } from "low/store";
+
 import { AppAlert } from "./AppAlert";
+import { useAppStyles } from "./styles";
+
 const Map: React.FC = React.lazy(() => import("ui/map"));
 const Doc: React.FC = React.lazy(() => import("ui/doc"));
 const Editor: React.FC = React.lazy(() => import("ui/editor"));
@@ -38,10 +41,11 @@ export const AppRoot: React.FC = () => {
     // compute layout numbers
     const rowHeight = (windowHeight - (GridFull + 1) * margin) / GridFull;
 
+    const styles = useAppStyles();
+
     return (
         <>
             <ReactGridLayout
-                className="layout-root"
                 layout={widgets}
                 cols={GridFull}
                 width={windowWidth}
@@ -53,17 +57,21 @@ export const AppRoot: React.FC = () => {
             >
                 {widgets.map((widget) => (
                     <div
-                        className={clsx(
-                            "widget-container",
-                            isEditingLayout && "editing",
-                            `widget-toolbar-${layout.toolbarAnchor}`,
+                        className={mergeClasses(
+                            styles.widgetContainer,
+                            // "widget-container",
+                            isEditingLayout && styles.widgetContainerEditing, //"editing",
+                            layout.toolbarAnchor === "top"
+                                ? styles.widgetToolbarTop
+                                : styles.widgetToolbarBottom,
+                            // `widget-toolbar-${layout.toolbarAnchor}`,
                         )}
                         key={widget.i}
                     >
                         {layout.toolbar === widget.i && (
                             <Header toolbarAnchor={layout.toolbarAnchor} />
                         )}
-                        <div className="widget">
+                        <div className={styles.widget}>
                             {widget.i === "map" && (
                                 <Suspense
                                     fallback={<LoadScreen color="green" />}

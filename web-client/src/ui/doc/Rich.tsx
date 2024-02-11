@@ -1,7 +1,6 @@
 //! Rich text component
 
-import { Text, TextProps } from "@fluentui/react-components";
-import clsx from "clsx";
+import { Text, TextProps, mergeClasses } from "@fluentui/react-components";
 
 import { DocRichText, DocRichTextBlock } from "low/celerc";
 
@@ -44,7 +43,10 @@ const RichBlock: React.FC<RichBlockProps> = ({ text, tag, link, ...rest }) => {
     return (
         <Text
             as="span"
-            className={clsx(RichTextClassName, tag && getTagClassName(tag))}
+            className={mergeClasses(
+                RichTextClassName,
+                tag && getTagClassName(tag),
+            )}
             {...rest}
         >
             {link ? (

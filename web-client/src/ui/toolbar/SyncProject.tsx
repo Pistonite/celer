@@ -12,7 +12,6 @@ import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { FolderArrowUp20Regular } from "@fluentui/react-icons";
-import clsx from "clsx";
 
 import { useKernel } from "core/kernel";
 import { settingsSelector, viewActions, viewSelector } from "core/store";
@@ -87,7 +86,7 @@ const useSyncProjectControl = () => {
 const getIcon = (lastLoadError: boolean) => {
     return (
         <FolderArrowUp20Regular
-            className={clsx(lastLoadError && "color-error")}
+            className={lastLoadError ? "color-error" : ""}
         />
     );
 };
