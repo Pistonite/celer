@@ -10,10 +10,6 @@
 * - Other exceptional cases
 */
 :root {
-    /* font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; */
-    /* line-height: 1.5; */
-    /* font-weight: 400; */
-
     color-scheme: light dark;
 
     font-synthesis: none;
@@ -22,6 +18,7 @@
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
 
+    /* links in document */
     --link-text-color-light: #0000ee;
     --link-text-color-dark: #8888ff;
     --link-text-background-light: transparent;
@@ -47,6 +44,7 @@ body {
 /*
 * HACKS
 */
+
 /* react-grid-layout drag handle */
 /* make sure its always on top */
 .react-grid-item > .react-resizable-handle::after {

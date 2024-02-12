@@ -57,8 +57,21 @@ export function injectDOMStyle(id: string, style: string) {
             styleTags.forEach((tag) => tag.remove());
         }, 0);
     } else {
-        (styleTags[0] as HTMLStyleElement).innerText = style;
+        const e = styleTags[0] as HTMLStyleElement;
+        if (e.innerText !== style) {
+            e.innerText = style;
+        }
     }
+}
+
+/// Wrap CSS inside a query
+export function cssQuery(selector: string, css: string): string {
+    return `${selector}{${css}}`;
+}
+
+/// Get the media query for the given theme
+export function prefersColorScheme(theme: "light" | "dark"): string {
+    return `@media(prefers-color-scheme: ${theme})`
 }
 
 function addCssObjectToMap(
@@ -92,14 +105,17 @@ export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
     }
 
     /// Inject a raw css map into the head that targets this class
-    public style(style: Record<string, unknown>) {
+    public style(style: Record<string, unknown>, query?: string) {
         const map = {};
         addCssObjectToMap(`.${this.className}`, style, map);
-        const css = Object.entries(map)
+        let css = Object.entries(map)
             .map(([selector, group]) => {
                 return `${selector}{${group}}`;
             })
             .join("");
+        if (query) {
+            css = cssQuery(query, css);
+        }
         injectDOMStyle(`c-${this.className}-styles`, css);
     }
 
@@ -128,26 +144,24 @@ export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
 }
 
 /// Merge a set of DOMClasses and raw class names into a single class name.
-/// The stable classnames from DOMClasses are put at the end
 export function smartMergeClasses<N extends string>(
     style: Record<N, string>,
     ...classes: (DOMClass<N> | string | false | undefined | null | 0)[]
 ): string {
     const inputs = [];
-    const stables = [];
     for (let i = 0; i < classes.length; i++) {
         const c = classes[i];
         if (!c) {
             continue;
         }
         if (typeof c === "string") {
-            stables.push(c);
+            inputs.push(c);
         } else {
             inputs.push(style[c.className]);
-            stables.push(c.className);
+            inputs.push(c.className);
         }
     }
-    return mergeClasses(...inputs, ...stables);
+    return mergeClasses(...inputs);
 }
 
 export function concatClassName<TBase extends string, TName extends string>(

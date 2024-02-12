@@ -4,8 +4,7 @@ import { smartMergeClasses } from "low/utils";
 
 import { DocLineProps } from "./props";
 import { useDocStyles } from "./styles";
-import { getTagClassName } from "ui/doc/utils";
-import { DocLineCounterClass } from "./dom";
+import { DocLineCounterClass, RichTextColorClass, getTagClassName } from "./dom";
 
 export type DocLineCounterProps = Pick<DocLineProps, "counterText">;
 
@@ -20,7 +19,7 @@ export const DocLineCounter: React.FC<DocLineCounterProps> = ({ counterText }) =
             className={smartMergeClasses(
                 styles,
                 DocLineCounterClass,
-                // TODO
+                RichTextColorClass,
                 counterText.tag && getTagClassName(counterText.tag),
             )}
         >

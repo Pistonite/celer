@@ -1,7 +1,6 @@
 //! Utilities
 
-import { DocTagColor, DocTag } from "low/celerc";
-import { DOMId, Logger, injectDOMStyle } from "low/utils";
+import { DOMId, Logger } from "low/utils";
 import { DocLineContainerClass, DocSectionContainerClass, DocScroll } from "./components";
 
 export const DocLog = new Logger("doc");
@@ -96,61 +95,3 @@ export const getLineScrollView = (
     };
 };
 
-export const RichTextClassName = "rich-text";
-
-/// Update the styles/classes for rich tags
-export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
-    const css = Object.entries(tags)
-        .map(([tag, data]) => {
-            let css = `.${getTagClassName(tag)}{`;
-            if (data.bold) {
-                css += "font-weight:bold;";
-            }
-            if (data.italic) {
-                css += "font-style:italic;";
-            }
-            if (data.strikethrough || data.underline) {
-                css += "text-decoration:";
-                if (data.strikethrough) {
-                    css += "line-through ";
-                }
-                if (data.underline) {
-                    css += "underline";
-                }
-                css += ";";
-            }
-            if (data.color) {
-                css += createCssStringForColor(data.color, "fg");
-            }
-            if (data.background) {
-                css += createCssStringForColor(data.background, "bg");
-            }
-            return css + "}";
-        })
-        .join("");
-    injectDOMStyle("rich-text", css);
-    DocLog.info("rich text css updated.");
-};
-
-const createCssStringForColor = (color: DocTagColor, type: "fg" | "bg") => {
-    if (typeof color === "string") {
-        return `--rich-text-${type}-light:${color};--rich-text-${type}-dark:${color};`;
-    }
-    let css = "";
-    if (color.light) {
-        css += `--rich-text-${type}-light:${color.light};`;
-    }
-    if (color.dark) {
-        css += `--rich-text-${type}-dark:${color.dark};`;
-    }
-    return css;
-};
-
-export const getTagClassName = (tag: string) => {
-    return `rich-text-tag--${getTagCanonicalName(tag)}`;
-};
-
-/// Clean the tag name and only keep alphanumerical values and dashes
-const getTagCanonicalName = (tag: string) => {
-    return tag.toLowerCase().replaceAll(/[^a-z0-9-]/g, "-");
-};

@@ -27,7 +27,6 @@ import {
     getLineScrollView,
     getScrollContainerOffsetY,
     getScrollView,
-    updateDocTagsStyle,
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
 import {
@@ -36,6 +35,7 @@ import {
 } from "./updateNotePositions";
 import { updateBannerWidths } from "./updateBannerWidths";
 import { DocContainer, DocScroll, DocLineCurrentClass } from "./components";
+import { updateDocTagsStyle } from "./updateDocTagsStyle";
 
 /// Storing doc state as window global because HMR will cause the doc to be recreated
 declare global {

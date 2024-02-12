@@ -56,16 +56,56 @@ export const DocLineMainBannerClass = new DOMClass("docline-main-banner");
 export const DocLineTextContainerClass = new DOMClass("docline-text-container");
 export const DocLineTextPrimaryClass = new DOMClass("docline-text-primary");
 export const DocLineTextSecondaryClass = new DOMClass("docline-text-secondary");
+export const DocPrefaceBlockClass = new DOMClass("docpreface-block");
 export const DocSectionHeadClass = new DOMClass("docsection-head");
 
 // Marker-only, no styles
+
+/// Marks the current line container
 export const DocLineCurrentClass = new DOMClass("docline-current");
+/// Marks the line is a split
 export const DocLineSplitClass = new DOMClass("docline-split");
+/// Marks the line has icon
 export const DocLineWithIconClass = new DOMClass("docline-with-icon");
+
 export const DocSectionContainerClass = new DOMClass("docsection-container");
+
 export const DocSectionBodyClass = new DOMClass("docsection-body");
+/// Mark the text is rich text in the document (not in the counter)
+export const DocLineTextRichClass = new DOMClass("docline-text-rich");
 
 // Dynamic banner
 export const DocContainerWidthVariable = new CSSVariable(
     "--doc-container-width",
 );
+
+// Rich Text
+/// Marks receiver of rich text color
+export const RichTextColorClass = new DOMClass("rich-text-color");
+export const RichTextVariables = {
+    fg: {
+        light: new CSSVariable("--tag-fg-l"),
+        dark: new CSSVariable("--tag-fg-d"),
+    },
+    bg: {
+        light: new CSSVariable("--tag-bg-l"),
+        dark: new CSSVariable("--tag-bg-d"),
+    }
+} as const;
+
+export const getTagClassName = (tag: string) => {
+    return `tag-${getTagId(tag)}`;
+};
+
+const tagIdMap = new Map<string, number>();
+
+function getTagId(tag: string) {
+    const id = tagIdMap.get(tag);
+    if (id) {
+        return id;
+    }
+    const nextTagId = tagIdMap.size + 1;
+    tagIdMap.set(tag, nextTagId);
+    return nextTagId;
+}
+

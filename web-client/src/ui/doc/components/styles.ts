@@ -1,13 +1,15 @@
 import { makeStyles, shorthands } from "@fluentui/react-components";
 
-import { px } from "low/utils";
-import { DocContainerWidthVariable, DocLineBodyClass, DocLineContainerClass, DocLineCounterClass, DocLineCurrentClass, DocLineDiagnosticBodyClass, DocLineDiagnosticHeadClass, DocLineHeadClass, DocLineIconContainerClass, DocLineMainBannerClass, DocLineMainClass, DocLineTextContainerClass, DocLineTextPrimaryClass, DocLineTextSecondaryClass, DocSectionHeadClass } from "./dom";
+import { prefersColorScheme, px } from "low/utils";
+import { DocContainerWidthVariable, DocLineBodyClass, DocLineContainerClass, DocLineCounterClass, DocLineCurrentClass, DocLineDiagnosticBodyClass, DocLineDiagnosticHeadClass, DocLineHeadClass, DocLineIconContainerClass, DocLineMainBannerClass, DocLineMainClass, DocLineTextContainerClass, DocLineTextPrimaryClass, DocLineTextSecondaryClass, DocPrefaceBlockClass, DocSectionHeadClass, RichTextColorClass, RichTextVariables } from "./dom";
 
-DocLineCurrentClass.style({
-    [` .${DocLineHeadClass.className}`]: {
-        "border-right-width": "24px",
-    }
-});
+// DocLineCurrentClass.style({
+//     [` .${DocLineHeadClass.className}`]: {
+//         "border-right-width": "24px",
+//     }
+// });
+
+// DocRichTextColorClass.style({});
 
 // Style constants
 export const DOC_ICON_WIDTH = 50;
@@ -89,6 +91,9 @@ export const useDocStyles = makeStyles({
         textAlign: "right",
         transitionDuration: "0.1s",
         cursor: "pointer",
+        [`:global(.${DocLineCurrentClass.className})`]: {
+            borderRightWidth: "24px",
+        }
     },
     [DocLineIconContainerClass.className]: {
         minWidth: px(DOC_ICON_WIDTH),
@@ -116,6 +121,10 @@ export const useDocStyles = makeStyles({
             wordWrap: "break-word",
         },
     },
+    [DocPrefaceBlockClass.className]: {
+        ...shorthands.padding("4px", 0, "4px", "8px"),
+        boxSizing: "border-box",
+    },
     [DocSectionHeadClass.className]: {
         boxSizing: "border-box",
         ...shorthands.padding("16px", 0, "16px", px(DOC_HEAD_WIDTH)),
@@ -124,4 +133,18 @@ export const useDocStyles = makeStyles({
         },
         width: `${DocContainerWidthVariable.fallback("initial")} !important`,
     },
+
+    // These provide the baseline for changing rich text
+    // color with color scheme. Each theme should override
+    // this based on if each surface has light or dark background
+    [RichTextColorClass.className]: {
+        [prefersColorScheme("light")]: {
+            color: RichTextVariables.fg.light.fallback("inherit"),
+            backgroundColor: RichTextVariables.bg.light.fallback("inherit"),
+        },
+        [prefersColorScheme("dark")]: {
+            color: RichTextVariables.fg.dark.fallback("inherit"),
+            backgroundColor: RichTextVariables.bg.dark.fallback("inherit"),
+        },
+    }
 });

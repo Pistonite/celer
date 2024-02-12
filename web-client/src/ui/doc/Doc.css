@@ -1,17 +1,3 @@
-/* .docline-head { */
-/*     min-width: 64px; */
-/*     border-right: 4px solid; */
-/*     box-sizing: border-box; */
-/*     position: relative; */
-/*     text-align: right; */
-/*     transition-duration: 0.1s; */
-/*     cursor: pointer; */
-/* } */
-/*  */
-/* .docline-current .docline-head { */
-/*     border-right: 24px solid; */
-/* } */
-
 .docnote-block {
     padding: 4px;
     box-sizing: border-box;
@@ -51,30 +37,5 @@
     }
     .docnote-container:hover .docnote-block span {
         white-space: normal;
-    }
-}
-
-.docpreface-block {
-    padding: 4px 0px 4px 8px;
-    box-sizing: border-box;
-}
-
-/* 
- * These provide the baseline for changing rich text
- * color with color scheme. Each theme should override
- * this based on if each surface has light or dark background
- */
-@media (prefers-color-scheme: light) {
-    span.rich-text,
-    div.docline-counter {
-        color: var(--rich-text-fg-light, inherit);
-        background-color: var(--rich-text-bg-light, inherit);
-    }
-}
-@media (prefers-color-scheme: dark) {
-    span.rich-text,
-    div.docline-counter {
-        color: var(--rich-text-fg-dark, inherit);
-        background-color: var(--rich-text-bg-dark, inherit);
     }
 }

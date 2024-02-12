@@ -1,10 +1,11 @@
 import { ExecDoc } from "low/celerc";
+import { smartMergeClasses } from "low/utils";
 
 import { DocContainerComp } from "./DocContainerComp";
 import { DocEndComp } from "./DocEndComp";
 import { DocMainPanel } from "./DocMainPanel";
 import { DocNotePanel } from "./DocNotePanel";
-import { DocContentContainer, DocDiagnosticContainer, DocPrefaceContainer } from "./dom";
+import { DocContentContainer, DocDiagnosticContainer, DocPrefaceBlockClass, DocPrefaceContainer } from "./dom";
 import { Rich } from "./Rich";
 import { DocDiagnosticBlock } from "./DocDiagnosticBlock";
 import { useDocStyles } from "./styles";
@@ -50,7 +51,7 @@ export const DocRoot: React.FC<DocRootProps> = ({
             </div>
             <div id={DocPrefaceContainer.id}>
                 {document.preface.map((text, i) => (
-                    <div key={i} className="docpreface-block">
+                    <div key={i} className={smartMergeClasses(styles, DocPrefaceBlockClass)}>
                         <Rich content={text} size={400} />
                     </div>
                 ))}
