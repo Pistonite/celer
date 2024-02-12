@@ -15,7 +15,7 @@ export function updateDocTagsStyle(tags: Readonly<Record<string, DocTag>>) {
     const underlineClasses: string[] = [];
     const strikethroughClasses: string[] = [];
     const underlineStrikethroughClasses: string[] = [];
-    tagKeys .forEach((tag) => {
+    tagKeys.forEach((tag) => {
         const data = tags[tag];
         const tagClass = "." + getTagClassName(tag);
         if (data.bold) {
@@ -57,40 +57,55 @@ export function updateDocTagsStyle(tags: Readonly<Record<string, DocTag>>) {
     injectDOMStyle("rich-text-i", italicCss);
     let underlineCss = "";
     if (underlineClasses.length > 0) {
-        underlineCss = `${underlineClasses.join(",")}{text-decoration:underline;}`;
+        underlineCss = `${underlineClasses.join(
+            ",",
+        )}{text-decoration:underline;}`;
     }
     injectDOMStyle("rich-text-u", underlineCss);
     let strikethroughCss = "";
     if (strikethroughClasses.length > 0) {
-        strikethroughCss = `${strikethroughClasses.join(",")}{text-decoration:line-through;}`;
+        strikethroughCss = `${strikethroughClasses.join(
+            ",",
+        )}{text-decoration:line-through;}`;
     }
     injectDOMStyle("rich-text-s", strikethroughCss);
     let underlineStrikethroughCss = "";
     if (underlineStrikethroughClasses.length > 0) {
-        underlineStrikethroughCss = `${underlineStrikethroughClasses.join(",")}{text-decoration:underline line-through;}`;
+        underlineStrikethroughCss = `${underlineStrikethroughClasses.join(
+            ",",
+        )}{text-decoration:underline line-through;}`;
     }
     injectDOMStyle("rich-text-us", underlineStrikethroughCss);
 
     DocLog.info("rich text css updated.");
 }
 
-function addColor(color: DocTagColor, type: "fg" | "bg", map: Map<string, string[]>, tagClass: string) {
+function addColor(
+    color: DocTagColor,
+    type: "fg" | "bg",
+    map: Map<string, string[]>,
+    tagClass: string,
+) {
     const lightVar = RichTextVariables[type].light.name;
     const darkVar = RichTextVariables[type].dark.name;
     if (typeof color === "string") {
-        addClassToRule( `${lightVar}:${color};` , tagClass, map);
-        addClassToRule( `${darkVar}:${color};` , tagClass, map);
+        addClassToRule(`${lightVar}:${color};`, tagClass, map);
+        addClassToRule(`${darkVar}:${color};`, tagClass, map);
         return;
     }
     if (color.light) {
-        addClassToRule( `${lightVar}:${color.light};` , tagClass, map);
+        addClassToRule(`${lightVar}:${color.light};`, tagClass, map);
     }
     if (color.dark) {
-        addClassToRule( `${darkVar}:${color.dark};` , tagClass, map);
+        addClassToRule(`${darkVar}:${color.dark};`, tagClass, map);
     }
 }
 
-function addClassToRule(rule: string, tagClass: string, map: Map<string, string[]>) {
+function addClassToRule(
+    rule: string,
+    tagClass: string,
+    map: Map<string, string[]>,
+) {
     const existing = map.get(rule);
     if (existing) {
         existing.push(tagClass);

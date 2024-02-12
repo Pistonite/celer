@@ -1,7 +1,11 @@
 //! Utilities
 
 import { DOMId, Logger } from "low/utils";
-import { DocLineContainerClass, DocSectionContainerClass, DocScroll } from "./components";
+import {
+    DocLineContainerClass,
+    DocSectionContainerClass,
+    DocScroll,
+} from "./components";
 
 export const DocLog = new Logger("doc");
 
@@ -94,4 +98,3 @@ export const getLineScrollView = (
         scrollBottom: top + line.clientHeight,
     };
 };
-

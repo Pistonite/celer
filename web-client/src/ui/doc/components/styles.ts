@@ -1,7 +1,26 @@
 import { makeStyles, shorthands } from "@fluentui/react-components";
 
 import { prefersColorScheme, px } from "low/utils";
-import { DocContainerWidthVariable, DocLineBodyClass, DocLineContainerClass, DocLineCounterClass, DocLineCurrentClass, DocLineDiagnosticBodyClass, DocLineDiagnosticHeadClass, DocLineHeadClass, DocLineIconContainerClass, DocLineMainBannerClass, DocLineMainClass, DocLineTextContainerClass, DocLineTextPrimaryClass, DocLineTextSecondaryClass, DocPrefaceBlockClass, DocSectionHeadClass, RichTextColorClass, RichTextVariables } from "./dom";
+import {
+    DocContainerWidthVariable,
+    DocLineBodyClass,
+    DocLineContainerClass,
+    DocLineCounterClass,
+    DocLineCurrentClass,
+    DocLineDiagnosticBodyClass,
+    DocLineDiagnosticHeadClass,
+    DocLineHeadClass,
+    DocLineIconContainerClass,
+    DocLineMainBannerClass,
+    DocLineMainClass,
+    DocLineTextContainerClass,
+    DocLineTextPrimaryClass,
+    DocLineTextSecondaryClass,
+    DocPrefaceBlockClass,
+    DocSectionHeadClass,
+    RichTextColorClass,
+    RichTextVariables,
+} from "./dom";
 
 // DocLineCurrentClass.style({
 //     [` .${DocLineHeadClass.className}`]: {
@@ -34,10 +53,12 @@ export const useDocStyles = makeStyles({
         ["--note-min-width" as string]: px(DOC_NOTE_MIN_WIDTH),
     },
     docContentContainer: {
-        display: "flex"
+        display: "flex",
     },
     docMainContainer: {
-        minWidth: `min(calc(100% - ${px(DOC_NOTE_MIN_WIDTH)}), ${px(DOC_MAIN_MAX_WIDTH)})`,
+        minWidth: `min(calc(100% - ${px(DOC_NOTE_MIN_WIDTH)}), ${px(
+            DOC_MAIN_MAX_WIDTH,
+        )})`,
         maxWidth: px(DOC_MAIN_MAX_WIDTH),
     },
     docNoteContainer: {
@@ -93,7 +114,7 @@ export const useDocStyles = makeStyles({
         cursor: "pointer",
         [`:global(.${DocLineCurrentClass.className})`]: {
             borderRightWidth: "24px",
-        }
+        },
     },
     [DocLineIconContainerClass.className]: {
         minWidth: px(DOC_ICON_WIDTH),
@@ -146,5 +167,5 @@ export const useDocStyles = makeStyles({
             color: RichTextVariables.fg.dark.fallback("inherit"),
             backgroundColor: RichTextVariables.bg.dark.fallback("inherit"),
         },
-    }
+    },
 });

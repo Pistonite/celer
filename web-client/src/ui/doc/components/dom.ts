@@ -90,7 +90,7 @@ export const RichTextVariables = {
     bg: {
         light: new CSSVariable("--tag-bg-l"),
         dark: new CSSVariable("--tag-bg-d"),
-    }
+    },
 } as const;
 
 export const getTagClassName = (tag: string) => {
@@ -108,4 +108,3 @@ function getTagId(tag: string) {
     tagIdMap.set(tag, nextTagId);
     return nextTagId;
 }
-

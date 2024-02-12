@@ -5,7 +5,11 @@ import { Text, TextProps } from "@fluentui/react-components";
 import { DocRichText, DocRichTextBlock } from "low/celerc";
 import { smartMergeClasses } from "low/utils";
 
-import { DocLineTextRichClass, RichTextColorClass, getTagClassName } from "./dom";
+import {
+    DocLineTextRichClass,
+    RichTextColorClass,
+    getTagClassName,
+} from "./dom";
 import { useDocStyles } from "./styles";
 
 /// Rich text display component

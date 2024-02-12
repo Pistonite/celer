@@ -7,7 +7,13 @@ import { DocLineIcon } from "./DocLineIcon";
 import { DocLineTextSecondary } from "./DocLineTextSecondary";
 import { Rich } from "./Rich";
 import { useDocStyles } from "./styles";
-import { DocLineBodyClass, DocLineMainBannerClass, DocLineMainClass, DocLineTextContainerClass, DocLineTextPrimaryClass } from "./dom";
+import {
+    DocLineBodyClass,
+    DocLineMainBannerClass,
+    DocLineMainClass,
+    DocLineTextContainerClass,
+    DocLineTextPrimaryClass,
+} from "./dom";
 
 /// Root container of a document line
 export const DocLineMain: React.FC<DocLineProps> = ({
@@ -31,8 +37,9 @@ export const DocLineMain: React.FC<DocLineProps> = ({
         >
             <DocLineHead
                 sectionIndex={sectionIndex}
-                lineIndex={lineIndex} 
-                lineColor={lineColor}>
+                lineIndex={lineIndex}
+                lineColor={lineColor}
+            >
                 <DocLineCounter counterText={counterText} />
             </DocLineHead>
             <div className={smartMergeClasses(styles, DocLineBodyClass)}>
@@ -43,7 +50,12 @@ export const DocLineMain: React.FC<DocLineProps> = ({
                         DocLineTextContainerClass,
                     )}
                 >
-                    <div className={smartMergeClasses(styles, DocLineTextPrimaryClass)}>
+                    <div
+                        className={smartMergeClasses(
+                            styles,
+                            DocLineTextPrimaryClass,
+                        )}
+                    >
                         <Rich size={500} content={text} />
                     </div>
                     <DocLineTextSecondary secondaryText={secondaryText} />
@@ -51,4 +63,4 @@ export const DocLineMain: React.FC<DocLineProps> = ({
             </div>
         </div>
     );
-}
+};

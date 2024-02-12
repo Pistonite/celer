@@ -9,7 +9,10 @@ export type DocContainerProps = PropsWithChildren<{
 }>;
 
 /// Scrolling container for the document
-export const DocContainerComp: React.FC<DocContainerProps> = ({ onScroll, children }) => {
+export const DocContainerComp: React.FC<DocContainerProps> = ({
+    onScroll,
+    children,
+}) => {
     const styles = useDocStyles();
     return (
         <div
@@ -22,12 +25,9 @@ export const DocContainerComp: React.FC<DocContainerProps> = ({ onScroll, childr
                 e.preventDefault();
             }}
         >
-            <div
-                id={DocContainer.id}
-                className={styles.docContainer}
-            >
+            <div id={DocContainer.id} className={styles.docContainer}>
                 {children}
             </div>
         </div>
     );
-}
+};

@@ -26,10 +26,10 @@ export const DocNotePanel: React.FC<DocNotePanelProps> = ({ document }) => {
         [],
     );
     return (
-        <div id={DocNoteContainer.id} className={styles.docNoteContainer} >
+        <div id={DocNoteContainer.id} className={styles.docNoteContainer}>
             {flatNotes.map((props, i) => (
                 <DocNoteBlock key={i} {...props} />
             ))}
         </div>
     );
-}
+};

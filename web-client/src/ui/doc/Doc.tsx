@@ -52,7 +52,11 @@ export const Doc: React.FC = () => {
         );
     }
 
-    if (document.preface.length === 0 && document.route.length === 0 && document.diagnostics.length === 0) {
+    if (
+        document.preface.length === 0 &&
+        document.route.length === 0 &&
+        document.diagnostics.length === 0
+    ) {
         return <HintScreen>This document has no content</HintScreen>;
     }
 

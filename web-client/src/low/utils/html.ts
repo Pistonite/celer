@@ -71,7 +71,7 @@ export function cssQuery(selector: string, css: string): string {
 
 /// Get the media query for the given theme
 export function prefersColorScheme(theme: "light" | "dark"): string {
-    return `@media(prefers-color-scheme: ${theme})`
+    return `@media(prefers-color-scheme: ${theme})`;
 }
 
 function addCssObjectToMap(

@@ -4,7 +4,11 @@ import { ExecDoc } from "low/celerc";
 
 import { smartMergeClasses } from "low/utils";
 import { useDocStyles } from "./styles";
-import { DocSectionBodyClass, DocSectionContainerClass, DocSectionHeadClass } from "./dom";
+import {
+    DocSectionBodyClass,
+    DocSectionContainerClass,
+    DocSectionHeadClass,
+} from "./dom";
 import { DocLine } from "./DocLine";
 
 export type DocSectionProps = {
@@ -37,9 +41,10 @@ export const DocSection: React.FC<DocSectionProps> = ({
                 {section.lines.map((line, j) => {
                     const { counterText, icon } = line;
                     const counterTag = counterText?.tag || undefined;
-                    const splitType = counterTag && project.tags[counterTag] ?.splitType;
+                    const splitType =
+                        counterTag && project.tags[counterTag]?.splitType;
                     const isSplit = splitType && splitTypes.has(splitType);
-                    const iconUrl = icon ? project.icons[ icon ] : undefined;
+                    const iconUrl = icon ? project.icons[icon] : undefined;
                     return (
                         <DocLine
                             sectionIndex={index}

@@ -8,11 +8,16 @@ import { DocDiagnosticBlock } from "./DocDiagnosticBlock";
 import { DocLineProps } from "./props";
 import { DocLineMain } from "./DocLineMain";
 import { useDocStyles } from "./styles";
-import { DocLineContainerClass, DocLineCounterPrefix, DocLineSplitClass, DocLineWithIconClass } from "./dom";
+import {
+    DocLineContainerClass,
+    DocLineCounterPrefix,
+    DocLineSplitClass,
+    DocLineWithIconClass,
+} from "./dom";
 
 /// One line in the document
 export const DocLine: React.FC<DocLineProps> = (props) => {
-    const  {
+    const {
         sectionIndex,
         lineIndex,
         iconUrl,
@@ -43,4 +48,3 @@ export const DocLine: React.FC<DocLineProps> = (props) => {
         </div>
     );
 };
-

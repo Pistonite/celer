@@ -7,7 +7,9 @@ import { DocLineTextSecondaryClass } from "./dom";
 
 export type DocLineTextSecondaryProps = Pick<DocLineProps, "secondaryText">;
 
-export const DocLineTextSecondary: React.FC<DocLineTextSecondaryProps> = ({ secondaryText }) => {
+export const DocLineTextSecondary: React.FC<DocLineTextSecondaryProps> = ({
+    secondaryText,
+}) => {
     const styles = useDocStyles();
     if (!secondaryText.length) {
         return null;
