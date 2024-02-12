@@ -6,13 +6,8 @@ import { DocDiagnostic } from "low/celerc";
 import { concatClassName, smartMergeClasses } from "low/utils";
 
 import { Poor } from "./Poor";
-import {
-    useDocStyles,
-    DocLineDiagnosticHeadClass,
-    DocLineDiagnosticBodyClass,
-    DocLineDiagnosticPrefix,
-    DocLineDiagnosticClass,
-} from "./styles";
+import { useDocStyles, } from "./styles";
+import { DocLineDiagnosticBodyClass, DocLineDiagnosticClass, DocLineDiagnosticHeadClass, DocLineDiagnosticPrefix } from "./dom";
 
 export type DocDiagnosticBlockProps = {
     /// The diagnostic to display

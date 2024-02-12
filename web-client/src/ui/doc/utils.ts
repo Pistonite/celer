@@ -1,9 +1,8 @@
 //! Utilities
 
 import { DocTagColor, DocTag } from "low/celerc";
-import { DOMId, DOMStyleInject, Logger } from "low/utils";
-import { DocLineContainerClass, DocSectionContainerClass } from "./styles";
-import { DocScroll } from "./dom";
+import { DOMId, Logger, injectDOMStyle } from "low/utils";
+import { DocLineContainerClass, DocSectionContainerClass, DocScroll } from "./components";
 
 export const DocLog = new Logger("doc");
 
@@ -99,8 +98,6 @@ export const getLineScrollView = (
 
 export const RichTextClassName = "rich-text";
 
-const RichTextStyles = new DOMStyleInject("rich-text");
-
 /// Update the styles/classes for rich tags
 export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
     const css = Object.entries(tags)
@@ -131,7 +128,7 @@ export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
             return css + "}";
         })
         .join("");
-    RichTextStyles.setStyle(css);
+    injectDOMStyle("rich-text", css);
     DocLog.info("rich text css updated.");
 };
 

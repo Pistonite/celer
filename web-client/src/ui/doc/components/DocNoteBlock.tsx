@@ -2,8 +2,8 @@ import { useRef } from "react";
 
 import { DocNote } from "low/celerc";
 
-import { Rich } from "./Rich";
 import { DocScroll } from "./dom";
+import { Rich } from "./Rich";
 
 /// Class name for expanded note blocks
 export const DocNoteExpandedClass = "docnote-container-expanded";

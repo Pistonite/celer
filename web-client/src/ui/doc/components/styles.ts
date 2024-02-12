@@ -1,44 +1,19 @@
 import { makeStyles, shorthands } from "@fluentui/react-components";
 
-import { CSSVariable, DOMClass, concatClassName, px } from "low/utils";
+import { px } from "low/utils";
+import { DocContainerWidthVariable, DocLineBodyClass, DocLineContainerClass, DocLineCounterClass, DocLineCurrentClass, DocLineDiagnosticBodyClass, DocLineDiagnosticHeadClass, DocLineHeadClass, DocLineIconContainerClass, DocLineMainBannerClass, DocLineMainClass, DocLineTextContainerClass, DocLineTextPrimaryClass, DocLineTextSecondaryClass, DocSectionHeadClass } from "./dom";
+
+DocLineCurrentClass.style({
+    [` .${DocLineHeadClass.className}`]: {
+        "border-right-width": "24px",
+    }
+});
 
 // Style constants
 export const DOC_ICON_WIDTH = 50;
 export const DOC_HEAD_WIDTH = 64;
-
-// Classes - please keep sorted
-// These class names are kept stable because they are used in the theme stylesheets
-export const DocLineCounterPrefix = "docline-counter";
-export const DocLineDiagnosticPrefix = "docline-diagnostic";
-
-export const DocLineBodyClass = new DOMClass("docline-body");
-export const DocLineContainerClass = new DOMClass("docline-container");
-export const DocLineCounterClass = new DOMClass(DocLineCounterPrefix);
-export const DocLineDiagnosticBodyClass = new DOMClass(
-    concatClassName(DocLineDiagnosticPrefix, "body"),
-);
-export const DocLineDiagnosticClass = new DOMClass(DocLineDiagnosticPrefix);
-export const DocLineDiagnosticHeadClass = new DOMClass(
-    concatClassName(DocLineDiagnosticPrefix, "head"),
-);
-export const DocLineIconContainerClass = new DOMClass("docline-icon-container");
-export const DocLineMainClass = new DOMClass("docline-main");
-export const DocLineMainBannerClass = new DOMClass("docline-main-banner");
-export const DocLineTextContainerClass = new DOMClass("docline-text-container");
-export const DocLineTextPrimaryClass = new DOMClass("docline-text-primary");
-export const DocLineTextSecondaryClass = new DOMClass("docline-text-secondary");
-export const DocSectionHeadClass = new DOMClass("docsection-head");
-
-// Marker-only, no styles
-export const DocLineSplitClass = new DOMClass("docline-split");
-export const DocLineWithIconClass = new DOMClass("docline-with-icon");
-export const DocSectionContainerClass = new DOMClass("docsection-container");
-export const DocSectionBodyClass = new DOMClass("docsection-body");
-
-// Dynamic banner
-export const DocContainerWidthVariable = new CSSVariable(
-    "--doc-container-width",
-);
+export const DOC_MAIN_MAX_WIDTH = 380;
+export const DOC_NOTE_MIN_WIDTH = 48;
 
 export const useDocStyles = makeStyles({
     // by id
@@ -49,6 +24,33 @@ export const useDocStyles = makeStyles({
         // Hide the horizontal scrollbar which could show during layout operations
         overflowX: "hidden",
         scrollBehavior: "smooth",
+    },
+    docContainer: {
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        ["--note-min-width" as string]: px(DOC_NOTE_MIN_WIDTH),
+    },
+    docContentContainer: {
+        display: "flex"
+    },
+    docMainContainer: {
+        minWidth: `min(calc(100% - ${px(DOC_NOTE_MIN_WIDTH)}), ${px(DOC_MAIN_MAX_WIDTH)})`,
+        maxWidth: px(DOC_MAIN_MAX_WIDTH),
+    },
+    docNoteContainer: {
+        // need this because note blocks have position: absolute
+        position: "relative",
+        ...shorthands.flex(1),
+        minWidth: px(DOC_NOTE_MIN_WIDTH),
+        // need for container query on the notes
+        containerType: "size",
+    },
+    docEnd: {
+        ...shorthands.flex(1),
+        textAlign: "center",
+        ...shorthands.padding("32px"),
+        color: "#888",
     },
 
     // by class
@@ -78,6 +80,15 @@ export const useDocStyles = makeStyles({
     [DocLineDiagnosticBodyClass.className]: {
         ...shorthands.padding("4px", 0, "4px", "4px"),
         wordBreak: "break-word",
+    },
+    [DocLineHeadClass.className]: {
+        minWidth: px(DOC_HEAD_WIDTH),
+        ...shorthands.borderRight("4px", "solid"),
+        boxSizing: "border-box",
+        position: "relative",
+        textAlign: "right",
+        transitionDuration: "0.1s",
+        cursor: "pointer",
     },
     [DocLineIconContainerClass.className]: {
         minWidth: px(DOC_ICON_WIDTH),

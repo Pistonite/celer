@@ -11,8 +11,7 @@ import {
     getScrollContainerOffsetY,
     findLineByIndex,
 } from "./utils";
-import { DocLineMainBannerClass, DocSectionHeadClass } from "./styles";
-import { DocContentContainer, DocNoteContainer } from "./dom";
+import { DocContentContainer, DocLineMainBannerClass, DocNoteContainer, DocSectionHeadClass } from "./components";
 
 /// Layout notes based on the given position
 ///

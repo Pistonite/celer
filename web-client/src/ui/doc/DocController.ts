@@ -35,7 +35,7 @@ import {
     updateNotePositionsAnchored,
 } from "./updateNotePositions";
 import { updateBannerWidths } from "./updateBannerWidths";
-import { DocContainer, DocScroll } from "./dom";
+import { DocContainer, DocScroll, DocLineCurrentClass } from "./components";
 
 /// Storing doc state as window global because HMR will cause the doc to be recreated
 declare global {
@@ -43,9 +43,6 @@ declare global {
         __theDocController: DocController | null;
     }
 }
-
-/// Class for the current line indicator
-export const DocCurrentLineClass = "doc-current-line";
 
 DocLog.info("loading doc module");
 
@@ -315,11 +312,11 @@ export class DocController {
     private removeCurrentLineIndicator(section: number, line: number) {
         const lineElement = findLineByIndex(section, line);
         if (lineElement) {
-            lineElement.classList.remove(DocCurrentLineClass);
+            DocLineCurrentClass.removeFrom(lineElement);
         }
         const noteElement = findNoteByIndex(section, line);
         if (noteElement) {
-            noteElement.classList.remove(DocCurrentLineClass);
+            DocLineCurrentClass.removeFrom(noteElement);
         }
     }
 
@@ -343,7 +340,7 @@ export class DocController {
                 newView.currentLine,
             );
             if (newCurrentLine) {
-                newCurrentLine.classList.add(DocCurrentLineClass);
+                DocLineCurrentClass.addTo(newCurrentLine);
             } else {
                 // Try to scroll to the section instead if the line is not found
                 newCurrentLine = findSectionByIndex(newView.currentSection);
@@ -371,7 +368,7 @@ export class DocController {
             newView.currentLine,
         );
         if (newCurrentNote) {
-            newCurrentNote.classList.add(DocCurrentLineClass);
+            DocLineCurrentClass.addTo(newCurrentNote);
             newCurrentNote.style.zIndex = `${++nextNoteZIndex}`;
         }
 

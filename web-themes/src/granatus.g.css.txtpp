@@ -107,7 +107,7 @@
         background-color: #333333;
         border: 1px solid #eeeeee;
     }
-    .docnote-container.doc-current-line {
+    .docnote-container.docline-current {
         background-color: #666666;
     }
     .docnote-container span.rich-text, .docnote-container span.rich-text * {
@@ -121,7 +121,7 @@
         color: black;
         background-color: #eeeeee;
     }
-    .docnote-container.doc-current-line {
+    .docnote-container.docline-current {
         background-color: #bbbbbb;
     }
     .docnote-container span.rich-text, .docnote-container span.rich-text * {

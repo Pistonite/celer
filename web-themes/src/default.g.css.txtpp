@@ -91,7 +91,7 @@
 .docnote-container:nth-child(even) {
     background-color: #ffcc33;
 }
-.docnote-container.doc-current-line {
+.docnote-container.docline-current {
     background-color: #a2c4c4;
 }
 /* Use light colors for notes */

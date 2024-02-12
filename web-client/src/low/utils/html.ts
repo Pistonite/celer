@@ -41,30 +41,23 @@ export class DOMId<N extends string, E extends HTMLElement = HTMLElement> {
                 return `${selector}{${group}}`;
             })
             .join("");
-        new DOMStyleInject(`${this.id}-styles-byid`).setStyle(css);
+        injectDOMStyle(`${this.id}-styles-byid`, css);
     }
 }
 
-/// Accessor for runtime injected style tag
-export class DOMStyleInject {
-    readonly id: string;
-    constructor(id: string) {
-        this.id = id;
-    }
-
-    public setStyle(style: string) {
-        let styleTag = document.querySelector(`style[data-inject="${this.id}"`);
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.setAttribute("data-inject", this.id);
-            const head = document.querySelector("head");
-            if (!head) {
-                return;
-            } else {
-                head.appendChild(styleTag);
-            }
-        }
-        (styleTag as HTMLStyleElement).innerText = style;
+/// Inject a css string into a style tag identified by the id
+export function injectDOMStyle(id: string, style: string) {
+    const styleTags = document.querySelectorAll(`style[data-inject="${id}"`);
+    if (styleTags.length !== 1) {
+        const styleTag = document.createElement("style");
+        styleTag.setAttribute("data-inject", id);
+        styleTag.innerText = style;
+        document.head.appendChild(styleTag);
+        setTimeout(() => {
+            styleTags.forEach((tag) => tag.remove());
+        }, 0);
+    } else {
+        (styleTags[0] as HTMLStyleElement).innerText = style;
     }
 }
 
@@ -93,23 +86,13 @@ function addCssObjectToMap(
 
 /// Accessor for DOM Class
 export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
-    private readonly _className: N;
+    readonly className: N;
     constructor(className: N) {
-        this._className = className;
+        this.className = className;
     }
-
-    public get className(): N {
-        return this._className;
-    }
-
-    // /// Get the combined class name from the given Griffel style map
-    // public styledClassName(style: Record<N, string>) {
-    //     // put stable class as last to override styles
-    //     return mergeClasses(style[this.className], this.className);
-    // }
 
     /// Inject a raw css map into the head that targets this class
-    public injectStyle(style: Record<string, string>) {
+    public style(style: Record<string, unknown>) {
         const map = {};
         addCssObjectToMap(`.${this.className}`, style, map);
         const css = Object.entries(map)
@@ -117,7 +100,7 @@ export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
                 return `${selector}{${group}}`;
             })
             .join("");
-        new DOMStyleInject(`c-${this.className}-styles`).setStyle(css);
+        injectDOMStyle(`c-${this.className}-styles`, css);
     }
 
     public query(selector?: string): E | undefined {
@@ -133,6 +116,14 @@ export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
 
     public queryAllIn(element: HTMLElement, selector?: string): NodeListOf<E> {
         return element.querySelectorAll(`.${this.className}${selector || ""}`);
+    }
+
+    public addTo(element: HTMLElement) {
+        element.classList.add(this.className);
+    }
+
+    public removeFrom(element: HTMLElement) {
+        element.classList.remove(this.className);
     }
 }
 

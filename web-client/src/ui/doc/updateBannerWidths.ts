@@ -1,11 +1,8 @@
 //! Logic for updating the width of banners upon updates
 
-import { DOMStyleInject } from "low/utils";
+import { injectDOMStyle } from "low/utils";
 import { DocLog } from "./utils";
-import { DocContainerWidthVariable } from "./styles";
-import { DocContainer } from "./dom";
-
-const BannerWidthStyles = new DOMStyleInject("dynamic-banner-width");
+import { DocContainer, DocContainerWidthVariable } from "./components";
 
 export const updateBannerWidths = (): void => {
     const container = DocContainer.get();
@@ -14,6 +11,6 @@ export const updateBannerWidths = (): void => {
     }
     const containerWidth = container.getBoundingClientRect().width;
     const style = `:root {${DocContainerWidthVariable.name}:${containerWidth}px;}`;
-    BannerWidthStyles.setStyle(style);
+    injectDOMStyle("dynamic-banner-width", style);
     DocLog.info("banner width css updated.");
 };

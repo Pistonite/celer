@@ -1,5 +1,4 @@
-import { DocContainer } from "./dom";
-import { DocLineContainerClass } from "./styles";
+import { DocContainer, DocLineContainerClass } from "./components";
 import {
     getScrollContainerOffsetY,
     getScrollView,

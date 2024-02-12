@@ -1,49 +1,15 @@
-/* .docline-container { */
+/* .docline-head { */
+/*     min-width: 64px; */
+/*     border-right: 4px solid; */
 /*     box-sizing: border-box; */
-/* } */
-
-/* .docline-main { */
-/*     display: flex; */
-/* } */
-
-.docline-head {
-    min-width: 64px;
-    border-right: 4px solid;
-    box-sizing: border-box;
-    position: relative;
-    text-align: right;
-    transition-duration: 0.1s;
-    cursor: pointer;
-}
-
-.doc-current-line .docline-head {
-    border-right: 24px solid;
-}
-
-/* .docline-counter { */
-/*     /* place counter on top of the border line */
-*/
-/*     position: absolute; */
-/*     top: 0; */
-/*     left: 0; */
-/*     width: 64px; */
-/*     box-sizing: border-box; */
-/*     height: 32px; */
-/*     padding: 4px; */
-/*     text-overflow: ellipsis; */
-/*     overflow: hidden; */
+/*     position: relative; */
+/*     text-align: right; */
+/*     transition-duration: 0.1s; */
+/*     cursor: pointer; */
 /* } */
 /*  */
-/* .doc-current-line .docline-counter { */
-/*     right: -24px; */
-/* } */
-
-/* .docline-body { */
-/*     box-sizing: border-box; */
-/*     padding: 4px; */
-/*     flex-grow: 1; */
-/*     display: flex; */
-/*     /* width: min(calc(100% - var(--note-min-width)) - 64px, 316px); /* TODO */ */ */
+/* .docline-current .docline-head { */
+/*     border-right: 24px solid; */
 /* } */
 
 .docnote-block {

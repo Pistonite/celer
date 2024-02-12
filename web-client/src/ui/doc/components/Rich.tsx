@@ -4,7 +4,7 @@ import { Text, TextProps, mergeClasses } from "@fluentui/react-components";
 
 import { DocRichText, DocRichTextBlock } from "low/celerc";
 
-import { RichTextClassName, getTagClassName } from "./utils";
+import { RichTextClassName, getTagClassName } from "ui/doc/utils";
 
 /// Rich text display component
 type RichProps = {
