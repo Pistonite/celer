@@ -1,6 +1,5 @@
 //! The doc component
 
-import "./Doc.css";
 import React, { memo, useMemo } from "react";
 import { useSelector, useStore } from "react-redux";
 import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";

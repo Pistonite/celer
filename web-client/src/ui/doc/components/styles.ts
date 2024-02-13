@@ -16,19 +16,18 @@ import {
     DocLineTextContainerClass,
     DocLineTextPrimaryClass,
     DocLineTextSecondaryClass,
+    DocNoteBlockClass,
+    DocNoteContainerClass,
+    DocNoteContainerExpandedClass,
     DocPrefaceBlockClass,
     DocSectionHeadClass,
     RichTextColorClass,
     RichTextVariables,
 } from "./dom";
 
-// DocLineCurrentClass.style({
-//     [` .${DocLineHeadClass.className}`]: {
-//         "border-right-width": "24px",
-//     }
-// });
-
-// DocRichTextColorClass.style({});
+DocNoteContainerExpandedClass.style({
+    "z-index": "99999",
+});
 
 // Style constants
 export const DOC_ICON_WIDTH = 50;
@@ -141,6 +140,37 @@ export const useDocStyles = makeStyles({
         "& span": {
             wordWrap: "break-word",
         },
+    },
+    [DocNoteBlockClass.className]: {
+        ...shorthands.padding("4px"),
+        boxSizing: "border-box",
+        [`:global(.${DocNoteContainerExpandedClass.className})`]: {
+            height: "auto !important",
+        },
+    },
+    [DocNoteContainerClass.className]: {
+        display: "none", // hidden by default
+        transitionDuration: "0.1s",
+        // left: 0,
+        right: 0,
+        boxSizing: "border-box",
+
+        "@container (max-width: 100px)": {
+            width: "100%", // need this so 100% can be propagated to children
+            [`& .${DocNoteBlockClass.className}`]: {
+                height: "32px",
+                minHeight: "32px",
+                width: "100%",
+                ...shorthands.overflow("hidden"),
+                textOverflow: "ellipsis",
+            },
+            [`& .${DocNoteBlockClass.className} span`]: {
+                whiteSpace: "nowrap",
+            },
+            [`&:hover .${DocNoteBlockClass.className} span`]: {
+                whiteSpace: "normal",
+            }
+        }
     },
     [DocPrefaceBlockClass.className]: {
         ...shorthands.padding("4px", 0, "4px", "8px"),

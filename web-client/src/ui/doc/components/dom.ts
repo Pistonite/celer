@@ -56,6 +56,8 @@ export const DocLineMainBannerClass = new DOMClass("docline-main-banner");
 export const DocLineTextContainerClass = new DOMClass("docline-text-container");
 export const DocLineTextPrimaryClass = new DOMClass("docline-text-primary");
 export const DocLineTextSecondaryClass = new DOMClass("docline-text-secondary");
+export const DocNoteBlockClass = new DOMClass("docnote-block");
+export const DocNoteContainerClass = new DOMClass("docnote-container");
 export const DocPrefaceBlockClass = new DOMClass("docpreface-block");
 export const DocSectionHeadClass = new DOMClass("docsection-head");
 
@@ -73,6 +75,8 @@ export const DocSectionContainerClass = new DOMClass("docsection-container");
 export const DocSectionBodyClass = new DOMClass("docsection-body");
 /// Mark the text is rich text in the document (not in the counter)
 export const DocLineTextRichClass = new DOMClass("docline-text-rich");
+/// Mark the note container as expanded (hovered when note column is small)
+export const DocNoteContainerExpandedClass = new DOMClass("docnote-container-expanded");
 
 // Dynamic banner
 export const DocContainerWidthVariable = new CSSVariable(

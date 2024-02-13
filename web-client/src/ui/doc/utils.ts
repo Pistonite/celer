@@ -5,6 +5,7 @@ import {
     DocLineContainerClass,
     DocSectionContainerClass,
     DocScroll,
+    DocNoteContainerClass,
 } from "./components";
 
 export const DocLog = new Logger("doc");
@@ -74,10 +75,9 @@ export const findNoteByIndex = (
     sectionIndex: number,
     lineIndex: number,
 ): HTMLElement | undefined => {
-    const e = document.querySelector(
-        `.docnote-container[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
+    return DocNoteContainerClass.query(
+        `[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
     );
-    return (e as HTMLElement) ?? undefined;
 };
 
 /// Find a section container element by its section index
