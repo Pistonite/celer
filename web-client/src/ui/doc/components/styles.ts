@@ -169,8 +169,8 @@ export const useDocStyles = makeStyles({
             },
             [`&:hover .${DocNoteBlockClass.className} span`]: {
                 whiteSpace: "normal",
-            }
-        }
+            },
+        },
     },
     [DocPrefaceBlockClass.className]: {
         ...shorthands.padding("4px", 0, "4px", "8px"),

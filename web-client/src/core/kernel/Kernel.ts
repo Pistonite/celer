@@ -191,6 +191,19 @@ export class Kernel {
         return this.editor;
     }
 
+    // public async tryGetEditor(attempts: number): Promise<EditorKernel | null> {
+    //     for (let i = 0; i < attempts; i++) {
+    //         const editor = this.getEditor();
+    //         if (editor) {
+    //             return editor;
+    //         }
+    //         this.log.warn("editor not available. retrying in 1s...");
+    //         await sleep(1000);
+    //     }
+    //     this.log.warn("editor not available after max retries");
+    //     return null;
+    // }
+
     /// Get or load the compiler
     public async getCompiler(): Promise<CompilerKernel> {
         const state = this.store.getState();

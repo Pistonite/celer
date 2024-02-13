@@ -76,7 +76,9 @@ export const DocSectionBodyClass = new DOMClass("docsection-body");
 /// Mark the text is rich text in the document (not in the counter)
 export const DocLineTextRichClass = new DOMClass("docline-text-rich");
 /// Mark the note container as expanded (hovered when note column is small)
-export const DocNoteContainerExpandedClass = new DOMClass("docnote-container-expanded");
+export const DocNoteContainerExpandedClass = new DOMClass(
+    "docnote-container-expanded",
+);
 
 // Dynamic banner
 export const DocContainerWidthVariable = new CSSVariable(

@@ -1,6 +1,7 @@
 import * as monaco from "monaco-editor";
 
 import { AppDispatcher, viewActions } from "core/store";
+import { EditorContainerDOM } from "core/editor";
 import {
     FileAccess,
     FileSys,
@@ -17,12 +18,7 @@ import {
     sleep,
 } from "low/utils";
 
-import {
-    EditorContainerId,
-    EditorLog,
-    detectLanguageByFileName,
-    toFsPath,
-} from "./utils";
+import { EditorLog, detectLanguageByFileName, toFsPath } from "./utils";
 
 type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -410,11 +406,11 @@ export class FileMgr implements FileAccess {
     }
 
     private async attachEditor() {
-        let div = document.getElementById(EditorContainerId);
+        let div = EditorContainerDOM.get();
         while (!div) {
             EditorLog.warn("editor container not found. Will try again.");
             await sleep(100);
-            div = document.getElementById(EditorContainerId);
+            div = EditorContainerDOM.get();
         }
         let alreadyAttached = false;
         div.childNodes.forEach((node) => {

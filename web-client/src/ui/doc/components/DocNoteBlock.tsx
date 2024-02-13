@@ -3,7 +3,12 @@ import { useRef } from "react";
 import { DocNote } from "low/celerc";
 import { smartMergeClasses } from "low/utils";
 
-import { DocNoteBlockClass, DocNoteContainerClass, DocNoteContainerExpandedClass, DocScroll } from "./dom";
+import {
+    DocNoteBlockClass,
+    DocNoteContainerClass,
+    DocNoteContainerExpandedClass,
+    DocScroll,
+} from "./dom";
 import { Rich } from "./Rich";
 import { useDocStyles } from "./styles";
 
