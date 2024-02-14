@@ -5,7 +5,6 @@
 //! The toolbar contains a list of controls available to the user.
 //!
 //! The toolbar can be below or on top of the title depending on the layout.
-import "./Header.css";
 
 import {
     Card,
@@ -33,6 +32,7 @@ import { useSelector } from "react-redux";
 import { documentSelector, settingsSelector, viewSelector } from "core/store";
 import { getHeaderControls } from "./getHeaderControls";
 import { HeaderControlList } from "./util";
+import { useHeaderStyles } from "./styles";
 
 /// The header props
 type HeaderProps = {
@@ -53,23 +53,30 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
         return getHeaderControls(stageMode, editorMode);
     }, [stageMode, editorMode]);
 
+    const styles = useHeaderStyles();
+
     return (
-        <header className={mergeClasses("celer-header", toolbarAnchor)}>
+        <header className={mergeClasses(styles.header, styles[toolbarAnchor])}>
             <Card
                 size="small"
                 appearance="filled-alternative"
-                className="celer-title"
+                className={styles.title}
             >
                 <CardHeader
                     image={
-                        <img src="/static/celer-3.svg" className="celer-logo" />
+                        <img
+                            src="/static/celer-3.svg"
+                            className={styles.logo}
+                        />
                     }
                 />
-                <Subtitle1 as="h1">{title}</Subtitle1>
+                <Subtitle1 as="h1" className={styles.titleText}>
+                    {title}
+                </Subtitle1>
             </Card>
 
             <Overflow padding={130} minimumVisible={1}>
-                <Toolbar className="celer-toolbar">
+                <Toolbar className={styles.toolbar}>
                     {headerControls.map((group, i) => (
                         <React.Fragment key={i}>
                             {group.controls.map((Control, j) => (

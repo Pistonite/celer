@@ -1,7 +1,6 @@
 import "./main.css";
-import "./common.css";
-import { Kernel } from "core/kernel";
 import { initAppRoot } from "ui/app";
+import { Kernel } from "core/kernel";
 
 const kernel = new Kernel(initAppRoot);
 kernel.init();
