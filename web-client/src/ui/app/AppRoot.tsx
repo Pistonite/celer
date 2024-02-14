@@ -59,12 +59,10 @@ export const AppRoot: React.FC = () => {
                     <div
                         className={mergeClasses(
                             styles.widgetContainer,
-                            // "widget-container",
-                            isEditingLayout && styles.widgetContainerEditing, //"editing",
+                            isEditingLayout && styles.widgetContainerEditing,
                             layout.toolbarAnchor === "top"
                                 ? styles.widgetToolbarTop
                                 : styles.widgetToolbarBottom,
-                            // `widget-toolbar-${layout.toolbarAnchor}`,
                         )}
                         key={widget.i}
                     >

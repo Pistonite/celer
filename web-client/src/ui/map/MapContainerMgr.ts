@@ -7,8 +7,6 @@ import { MapLog } from "./utils";
 
 /// Container div id
 export const MapContainer = new DOMId("map-root");
-// /// Leaflet map container div id
-// const LMapContainerId = "lmap-container";
 
 /// Map container manager
 //.

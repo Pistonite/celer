@@ -42,8 +42,6 @@ export class Kernel {
     /// The kernel owns the store. The store is shared
     /// between app boots (i.e. when switching routes)
     private store: AppStore;
-    // /// The link tag that loads the theme css
-    // private themeLinkTag: HTMLLinkElement | null = null;
     /// The function to initialize react
     private initReact: InitUiFunction;
     /// The function to unmount react
@@ -71,8 +69,6 @@ export class Kernel {
     private initStore(): AppStore {
         this.log.info("initializing store...");
         const store = initStore();
-        // // switch theme on boot base on store settings
-        // this.switchTheme(settingsSelector(store.getState()).theme);
 
         const watchSettings = reduxWatch(() =>
             settingsSelector(store.getState()),
@@ -83,11 +79,6 @@ export class Kernel {
                 // save settings to local storage
                 this.log.info("saving settings...");
                 saveSettings(newVal);
-
-                // // switch theme
-                // if (newVal.theme !== oldVal.theme) {
-                //     this.switchTheme(newVal.theme);
-                // }
             }),
         );
 
@@ -163,26 +154,6 @@ export class Kernel {
         };
     }
 
-    // /// Switch theme to the given theme
-    // ///
-    // /// This replaces the theme css link tag.
-    // /// The theme files are built by the web-themes project.
-    // public switchTheme(theme: string) {
-    //     if (!this.themeLinkTag) {
-    //         const e = document.createElement("link");
-    //         e.rel = "stylesheet";
-    //         e.type = "text/css";
-    //         this.themeLinkTag = e;
-    //         const head = document.querySelector("head");
-    //         if (!head) {
-    //             this.log.error("Could not find head tag to attach theme to");
-    //             return;
-    //         }
-    //         head.appendChild(e);
-    //     }
-    //     this.themeLinkTag.href = `/themes/${theme}.min.css`;
-    // }
-
     public getAlertMgr(): AlertMgr {
         return this.alertMgr;
     }
@@ -190,19 +161,6 @@ export class Kernel {
     public getEditor(): EditorKernel | null {
         return this.editor;
     }
-
-    // public async tryGetEditor(attempts: number): Promise<EditorKernel | null> {
-    //     for (let i = 0; i < attempts; i++) {
-    //         const editor = this.getEditor();
-    //         if (editor) {
-    //             return editor;
-    //         }
-    //         this.log.warn("editor not available. retrying in 1s...");
-    //         await sleep(1000);
-    //     }
-    //     this.log.warn("editor not available after max retries");
-    //     return null;
-    // }
 
     /// Get or load the compiler
     public async getCompiler(): Promise<CompilerKernel> {
