@@ -1,11 +1,16 @@
 //! Rich text component
 
 import { Text, TextProps } from "@fluentui/react-components";
-import clsx from "clsx";
 
 import { DocRichText, DocRichTextBlock } from "low/celerc";
+import { smartMergeClasses } from "low/utils";
 
-import { RichTextClassName, getTagClassName } from "./utils";
+import {
+    DocLineTextRichClass,
+    RichTextColorClass,
+    getTagClassName,
+} from "./dom";
+import { useDocStyles } from "./styles";
 
 /// Rich text display component
 type RichProps = {
@@ -33,6 +38,7 @@ export const Rich: React.FC<RichProps> = ({ content, size }) => {
 type RichBlockProps = DocRichTextBlock & Partial<TextProps>;
 
 const RichBlock: React.FC<RichBlockProps> = ({ text, tag, link, ...rest }) => {
+    const styles = useDocStyles();
     if (!tag) {
         return (
             <Text as="span" {...rest}>
@@ -44,7 +50,12 @@ const RichBlock: React.FC<RichBlockProps> = ({ text, tag, link, ...rest }) => {
     return (
         <Text
             as="span"
-            className={clsx(RichTextClassName, tag && getTagClassName(tag))}
+            className={smartMergeClasses(
+                styles,
+                RichTextColorClass,
+                DocLineTextRichClass.className,
+                tag && getTagClassName(tag),
+            )}
             {...rest}
         >
             {link ? (

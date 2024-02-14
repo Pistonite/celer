@@ -12,8 +12,8 @@ import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { FolderArrowUp20Regular } from "@fluentui/react-icons";
-import clsx from "clsx";
 
+import { CommonStyles, useCommonStyles } from "ui/shared";
 import { useKernel } from "core/kernel";
 import { settingsSelector, viewActions, viewSelector } from "core/store";
 
@@ -53,9 +53,11 @@ const useSyncProjectControl = () => {
     const { editorMode } = useSelector(settingsSelector);
     const { incFileSysSerial } = useActions(viewActions);
 
+    const styles = useCommonStyles();
+
     const isOpened = rootPath !== undefined;
     const enabled = isOpened && !loadInProgress && editorMode === "web";
-    const icon = getIcon(lastLoadError);
+    const icon = getIcon(styles, lastLoadError);
     const tooltip = getTooltip(isOpened, loadInProgress, lastLoadError);
 
     const handler = useCallback(async () => {
@@ -84,10 +86,10 @@ const useSyncProjectControl = () => {
     return { tooltip, enabled, icon, handler };
 };
 
-const getIcon = (lastLoadError: boolean) => {
+const getIcon = (styles: CommonStyles, lastLoadError: boolean) => {
     return (
         <FolderArrowUp20Regular
-            className={clsx(lastLoadError && "color-error")}
+            className={lastLoadError ? styles.colorError : ""}
         />
     );
 };

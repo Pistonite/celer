@@ -8,4 +8,5 @@ export * from "./ErrorBoundary";
 export * from "./HintScreen";
 export * from "./LoadScreen";
 export * from "./PrismEditor";
+export * from "./useCommonStyles";
 export * from "./useWindowSize";

@@ -1,27 +1,14 @@
 //! Utilities
 
-import { DocTagColor, DocTag } from "low/celerc";
-import { DOMClass, DOMId, DOMStyleInject, Logger } from "low/utils";
+import { DOMId, Logger } from "low/utils";
+import {
+    DocLineContainerClass,
+    DocSectionContainerClass,
+    DocScroll,
+    DocNoteContainerClass,
+} from "./components";
 
 export const DocLog = new Logger("doc");
-
-// Constants
-
-/// The scrolling div of the document (parent of container)
-export const DocScroll = new DOMId<HTMLElement>("doc-scroll");
-/// The container div of the document
-export const DocContainer = new DOMId<HTMLElement>("doc-container");
-/// The container div of main doc content (excluding preface)
-export const DocContentContainer = new DOMId<HTMLElement>(
-    "doccontent-container",
-);
-/// The note panel
-export const DocNoteContainer = new DOMId<HTMLElement>("doc-side");
-/// Class for the doc line container
-export const DocLineContainerClass = "docline-container";
-
-/// Class for the section heads (title) in the document
-export const DocSectionHead = new DOMClass("docsection-head");
 
 /// Scroll view type
 export type ScrollView = {
@@ -63,8 +50,8 @@ export const getLineLocationFromElement = (
 /// use DocContentContainer for relative to the main content
 ///
 /// line.getBoundingClientRect().y - containerOffsetY = line position relative to container
-export const getScrollContainerOffsetY = <E extends HTMLElement>(
-    element: DOMId<E>,
+export const getScrollContainerOffsetY = (
+    element: DOMId<string, HTMLElement>,
 ): number => {
     const containerElement = element.get();
     if (!containerElement) {
@@ -78,10 +65,9 @@ export const findLineByIndex = (
     sectionIndex: number,
     lineIndex: number,
 ): HTMLElement | undefined => {
-    const e = document.querySelector(
-        `.${DocLineContainerClass}[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
+    return DocLineContainerClass.query(
+        `[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
     );
-    return (e as HTMLElement) ?? undefined;
 };
 
 /// Find a note container element by its section and line indices
@@ -89,20 +75,16 @@ export const findNoteByIndex = (
     sectionIndex: number,
     lineIndex: number,
 ): HTMLElement | undefined => {
-    const e = document.querySelector(
-        `.docnote-container[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
+    return DocNoteContainerClass.query(
+        `[data-section="${sectionIndex}"][data-line="${lineIndex}"]`,
     );
-    return (e as HTMLElement) ?? undefined;
 };
 
 /// Find a section container element by its section index
 export const findSectionByIndex = (
     sectionIndex: number,
 ): HTMLElement | undefined => {
-    const e = document.querySelector(
-        `.docsection-container[data-section="${sectionIndex}"]`,
-    );
-    return (e as HTMLElement) ?? undefined;
+    return DocSectionContainerClass.query(`[data-section="${sectionIndex}"]`);
 };
 
 /// Get a line's scroll position view
@@ -115,65 +97,4 @@ export const getLineScrollView = (
         scrollTop: top,
         scrollBottom: top + line.clientHeight,
     };
-};
-
-export const RichTextClassName = "rich-text";
-
-const RichTextStyles = new DOMStyleInject("rich-text");
-
-/// Update the styles/classes for rich tags
-export const updateDocTagsStyle = (tags: Readonly<Record<string, DocTag>>) => {
-    const css = Object.entries(tags)
-        .map(([tag, data]) => {
-            let css = `.${getTagClassName(tag)}{`;
-            if (data.bold) {
-                css += "font-weight:bold;";
-            }
-            if (data.italic) {
-                css += "font-style:italic;";
-            }
-            if (data.strikethrough || data.underline) {
-                css += "text-decoration:";
-                if (data.strikethrough) {
-                    css += "line-through ";
-                }
-                if (data.underline) {
-                    css += "underline";
-                }
-                css += ";";
-            }
-            if (data.color) {
-                css += createCssStringForColor(data.color, "fg");
-            }
-            if (data.background) {
-                css += createCssStringForColor(data.background, "bg");
-            }
-            return css + "}";
-        })
-        .join("");
-    RichTextStyles.setStyle(css);
-    DocLog.info("rich text css updated.");
-};
-
-const createCssStringForColor = (color: DocTagColor, type: "fg" | "bg") => {
-    if (typeof color === "string") {
-        return `--rich-text-${type}-light:${color};--rich-text-${type}-dark:${color};`;
-    }
-    let css = "";
-    if (color.light) {
-        css += `--rich-text-${type}-light:${color.light};`;
-    }
-    if (color.dark) {
-        css += `--rich-text-${type}-dark:${color.dark};`;
-    }
-    return css;
-};
-
-export const getTagClassName = (tag: string) => {
-    return `rich-text-tag--${getTagCanonicalName(tag)}`;
-};
-
-/// Clean the tag name and only keep alphanumerical values and dashes
-const getTagCanonicalName = (tag: string) => {
-    return tag.toLowerCase().replaceAll(/[^a-z0-9-]/g, "-");
 };

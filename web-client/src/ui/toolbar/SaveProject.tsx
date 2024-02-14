@@ -20,8 +20,8 @@ import {
     SaveEdit20Regular,
     SaveSync20Regular,
 } from "@fluentui/react-icons";
-import clsx from "clsx";
 
+import { CommonStyles, useCommonStyles } from "ui/shared";
 import { useKernel } from "core/kernel";
 import { settingsSelector, viewSelector } from "core/store";
 
@@ -59,9 +59,11 @@ const useSaveProjectControl = () => {
         useSelector(viewSelector);
     const { autoSaveEnabled, editorMode } = useSelector(settingsSelector);
 
+    const styles = useCommonStyles();
     const isOpened = rootPath !== undefined;
     const enabled = isOpened && editorMode === "web" && !saveInProgress;
     const icon = getIcon(
+        styles,
         isOpened,
         saveInProgress,
         lastSaveError,
@@ -109,6 +111,7 @@ const useSaveProjectControl = () => {
 };
 
 const getIcon = (
+    styles: CommonStyles,
     isOpened: boolean,
     saveInProgress: boolean,
     lastSaveError: boolean,
@@ -120,15 +123,15 @@ const getIcon = (
     if (saveInProgress) {
         return (
             <SaveEdit20Regular
-                className={clsx(autoSaveEnabled && "color-success")}
+                className={autoSaveEnabled ? styles.colorSuccess : ""}
             />
         );
     }
     if (lastSaveError) {
-        return <Save20Regular className="color-error" />;
+        return <Save20Regular className={styles.colorError} />;
     }
     if (autoSaveEnabled) {
-        return <SaveSync20Regular className="color-success" />;
+        return <SaveSync20Regular className={styles.colorSuccess} />;
     }
     return <Save20Regular />;
 };

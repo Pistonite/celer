@@ -1,9 +1,9 @@
 import { useState } from "react";
-import clsx from "clsx";
-import { Body2 } from "@fluentui/react-components";
+import { Body2, mergeClasses } from "@fluentui/react-components";
 
 import { createFsFromDataTransferItem } from "low/fs";
 import { useKernel } from "core/kernel";
+import { useEditorStyles } from "./styles";
 
 /// Shown when no project is loaded, for user to drag and drop a folder in
 ///
@@ -13,10 +13,13 @@ export const EditorDropZone: React.FC = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [isOpening, setIsOpening] = useState(false);
     const kernel = useKernel();
+    const styles = useEditorStyles();
     return (
         <div
-            id="editor-drop-zone"
-            className={clsx(isDragging && "editor-drop-zone-dragging")}
+            className={mergeClasses(
+                styles.editorDropZone,
+                isDragging && styles.editorDropZoneDragging,
+            )}
             onDragEnter={() => {
                 setIsDragging(true);
             }}

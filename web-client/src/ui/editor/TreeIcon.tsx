@@ -1,3 +1,4 @@
+import { mergeClasses } from "@fluentui/react-components";
 import {
     Folder16Filled,
     Document16Regular,
@@ -8,7 +9,8 @@ import {
     CodePy16Filled,
     CodeBlock16Filled,
 } from "@fluentui/react-icons";
-import clsx from "clsx";
+
+import { useEditorStyles } from "./styles";
 
 export type TreeIconProps = {
     // If this is true, then the icon will be a folder icon.
@@ -17,42 +19,43 @@ export type TreeIconProps = {
     file: string;
 };
 
-const getFileTypeAndIcon = ({
-    isDirectory,
-    file,
-}: TreeIconProps): [string, JSX.Element] => {
+const getFileTypeAndIcon = ({ isDirectory, file }: TreeIconProps) => {
     if (isDirectory) {
-        return ["folder", <Folder16Filled />];
+        return ["Folder", <Folder16Filled />] as const;
     }
     if (file.match(/\.(m|c)?jsx?$/i)) {
-        return ["js", <CodeJs16Filled />];
+        return ["Js", <CodeJs16Filled />] as const;
     }
     if (file.match(/\.(m|c)?tsx?$/i)) {
-        return ["ts", <CodeTs16Filled />];
+        return ["Ts", <CodeTs16Filled />] as const;
     }
     if (file.match(/\.py$/i)) {
-        return ["py", <CodePy16Filled />];
+        return ["Py", <CodePy16Filled />] as const;
     }
     if (file.match(/\.json$/i)) {
-        return ["json", <CodeBlock16Filled />];
+        return ["Json", <CodeBlock16Filled />] as const;
     }
     if (file.match(/\.ya?ml$/i)) {
-        return ["yaml", <CodeBlock16Filled />];
+        return ["Yaml", <CodeBlock16Filled />] as const;
     }
     if (file.match(/\.md$/i)) {
-        return ["md", <Info16Filled />];
+        return ["Md", <Info16Filled />] as const;
     }
     if (file.match(/\.(png|jpe?g|gif|webp)$/i)) {
-        return ["image", <Image16Filled />];
+        return ["Image", <Image16Filled />] as const;
     }
-    return ["unknown", <Document16Regular />];
+    return ["Unknown", <Document16Regular />] as const;
 };
 
 export const TreeIcon: React.FC<TreeIconProps> = (props) => {
+    const styles = useEditorStyles();
     const [fileType, icon] = getFileTypeAndIcon(props);
     return (
         <span
-            className={clsx("editor-tree-item-icon", `file-type-${fileType}`)}
+            className={mergeClasses(
+                styles.editorTreeItemIcon,
+                styles[`fileType${fileType}`],
+            )}
         >
             {icon}
         </span>

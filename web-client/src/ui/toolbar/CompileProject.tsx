@@ -1,14 +1,14 @@
 //! Control for compiling the project
 
-import clsx from "clsx";
 import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { ArrowSync20Regular } from "@fluentui/react-icons";
 
+import { useCommonStyles } from "ui/shared";
 import { useKernel } from "core/kernel";
-
 import { viewSelector } from "core/store";
+
 import { ToolbarControl } from "./util";
 
 export const CompileProject: ToolbarControl = {
@@ -45,9 +45,11 @@ const useCompileProjectControl = () => {
         kernel.compile();
     }, [kernel]);
 
+    const styles = useCommonStyles();
+
     const icon = (
         <ArrowSync20Regular
-            className={clsx(compileInProgress && "spinning-infinite")}
+            className={compileInProgress ? styles.spinningInfinite : ""}
         />
     );
     const tooltip = getTooltip(!!rootPath, compileInProgress);

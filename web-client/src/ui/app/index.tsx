@@ -4,19 +4,17 @@
 
 import React from "react";
 import ReactDOM from "react-dom/client";
-import {
-    FluentProvider,
-    webDarkTheme,
-    webLightTheme,
-} from "@fluentui/react-components";
 import { Provider as ReduxProvider } from "react-redux";
 
 import { ErrorBoundary } from "ui/shared";
 import type { AppStore } from "core/store";
 import { Kernel, KernelContext } from "core/kernel";
+import { console } from "low/utils";
 
 import { AppRoot } from "./AppRoot";
 import { AppErrorBoundary } from "./AppErrorBoundary";
+import { FluentProviderWrapper } from "./FluentProviderWrapper";
+import { ReactRootDiv } from "./dom";
 
 /// Mount the react app root
 ///
@@ -29,22 +27,22 @@ export const initAppRoot = (
     /// Whether the ui should render in dark mode
     isDarkMode: boolean,
 ) => {
-    const root = ReactDOM.createRoot(
-        document.getElementById("react-root") as HTMLElement,
-    );
+    const rootDiv = ReactRootDiv.get();
+    if (!rootDiv) {
+        console.error("Root div not found");
+        return () => undefined;
+    }
+    const root = ReactDOM.createRoot(rootDiv);
     root.render(
         <React.StrictMode>
             <AppErrorBoundary>
                 <KernelContext.Provider value={kernel}>
                     <ReduxProvider store={store}>
-                        <FluentProvider
-                            id="style-root"
-                            theme={isDarkMode ? webDarkTheme : webLightTheme}
-                        >
+                        <FluentProviderWrapper isDarkMode={isDarkMode}>
                             <ErrorBoundary>
                                 <AppRoot />
                             </ErrorBoundary>
-                        </FluentProvider>
+                        </FluentProviderWrapper>
                     </ReduxProvider>
                 </KernelContext.Provider>
             </AppErrorBoundary>

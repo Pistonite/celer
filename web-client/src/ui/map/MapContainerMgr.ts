@@ -1,12 +1,12 @@
 //! MapContainerMgr
 import L from "leaflet";
 
+import { DOMId } from "low/utils";
+
 import { MapLog } from "./utils";
 
 /// Container div id
-export const RootContainerId = "map-root";
-/// Leaflet map container div id
-const LMapContainerId = "lmap-container";
+export const MapContainer = new DOMId("map-root");
 
 /// Map container manager
 //.
@@ -17,8 +17,10 @@ export class MapContainerMgr {
 
     public createMapContainer(): HTMLElement {
         const container = document.createElement("div");
-        container.id = LMapContainerId;
         container.style.backgroundColor = "#000000";
+        container.style.width = "100%";
+        container.style.height = "100%";
+        container.style.overflow = "hidden";
         return container;
     }
 
@@ -57,7 +59,7 @@ export class MapContainerMgr {
     /// Return true if the map ends up being attached to a container,
     /// either it is already attached, or newly attached.
     private attachInternal(map: L.Map): boolean {
-        const root = document.getElementById(RootContainerId);
+        const root = MapContainer.get();
         if (!root) {
             return false;
         }

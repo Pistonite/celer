@@ -1,19 +1,19 @@
 //! Map component connected to Leaflet
 
-import "./Map.css";
-
 import { useEffect, useRef } from "react";
 import { useSelector, useStore } from "react-redux";
 import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";
 import { AppStore, documentSelector, viewSelector } from "core/store";
 
 import { MapState, initMap } from "./MapState";
-import { RootContainerId } from "./MapContainerMgr";
+import { MapContainer } from "./MapContainerMgr";
+import { useMapStyles } from "./styles";
 
 /// Map root container that the leaflet map instance binds to
 export const MapRoot: React.FC = () => {
     const { serial, document } = useSelector(documentSelector);
     const { stageMode, compileInProgress } = useSelector(viewSelector);
+    const styles = useMapStyles();
     const store = useStore();
     const mapState = useRef<MapState | null>(null);
     /* eslint-disable react-hooks/exhaustive-deps*/
@@ -50,7 +50,7 @@ export const MapRoot: React.FC = () => {
 
     return (
         <ErrorBoundary>
-            <div id={RootContainerId}></div>
+            <div id={MapContainer.id} className={styles.mapContainer} />
         </ErrorBoundary>
     );
 };

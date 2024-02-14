@@ -16,7 +16,7 @@ import {
     SettingsState,
 } from "core/store";
 import { FileAccess, FileSys, FsResult } from "low/fs";
-import { isInDarkMode, IdleMgr } from "low/utils";
+import { isInDarkMode, IdleMgr, DOMId } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
 import { EditorLog, KernelAccess, toFsPath } from "./utils";
@@ -44,6 +44,11 @@ export const initWebEditor = (
     return new WebEditorKernel(kernelAccess, fileSys, store);
 };
 
+const MonacoEditorDOM = new DOMId("monaco-editor");
+MonacoEditorDOM.style({
+    height: "100%",
+});
+
 class WebEditorKernel implements EditorKernel {
     private deleted = false;
     private store: AppStore;
@@ -70,7 +75,7 @@ class WebEditorKernel implements EditorKernel {
         );
 
         const monacoDom = document.createElement("div");
-        monacoDom.id = "monaco-editor";
+        monacoDom.id = MonacoEditorDOM.id;
         const monacoEditor = monaco.editor.create(monacoDom, {
             theme: isInDarkMode() ? "vs-dark" : "vs",
             tabSize: 2,

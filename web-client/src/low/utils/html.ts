@@ -1,6 +1,6 @@
 //! Basic utilities for working in browser environments.
 
-import clsx from "clsx";
+import { mergeClasses } from "@fluentui/react-components";
 
 export const isInDarkMode = () =>
     !!(
@@ -14,11 +14,18 @@ export const isInDarkMode = () =>
 export const sleep = (ms: number) =>
     new Promise((resolve) => setTimeout(resolve, ms));
 
+/// Append "px" to a number
+export const px = (n: number) => `${n}px`;
+
 /// Accessor for DOM element of type E identified by an id
-export class DOMId<E extends HTMLElement> {
-    readonly id: string;
-    constructor(id: string) {
+export class DOMId<N extends string, E extends HTMLElement = HTMLElement> {
+    readonly id: N;
+    constructor(id: N) {
         this.id = id;
+    }
+
+    public as<E2 extends E>(): DOMId<N, E2> {
+        return this as unknown as DOMId<N, E2>;
     }
 
     public get(): E | undefined {
@@ -34,31 +41,37 @@ export class DOMId<E extends HTMLElement> {
                 return `${selector}{${group}}`;
             })
             .join("");
-        new DOMStyleInject(`${this.id}-styles-byid`).setStyle(css);
+        injectDOMStyle(`${this.id}-styles-byid`, css);
     }
 }
 
-/// Accessor for runtime injected style tag
-export class DOMStyleInject {
-    readonly id: string;
-    constructor(id: string) {
-        this.id = id;
-    }
-
-    public setStyle(style: string) {
-        let styleTag = document.querySelector(`style[data-inject="${this.id}"`);
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.setAttribute("data-inject", this.id);
-            const head = document.querySelector("head");
-            if (!head) {
-                return;
-            } else {
-                head.appendChild(styleTag);
-            }
+/// Inject a css string into a style tag identified by the id
+export function injectDOMStyle(id: string, style: string) {
+    const styleTags = document.querySelectorAll(`style[data-inject="${id}"`);
+    if (styleTags.length !== 1) {
+        const styleTag = document.createElement("style");
+        styleTag.setAttribute("data-inject", id);
+        styleTag.innerText = style;
+        document.head.appendChild(styleTag);
+        setTimeout(() => {
+            styleTags.forEach((tag) => tag.remove());
+        }, 0);
+    } else {
+        const e = styleTags[0] as HTMLStyleElement;
+        if (e.innerText !== style) {
+            e.innerText = style;
         }
-        (styleTag as HTMLStyleElement).innerText = style;
     }
+}
+
+/// Wrap CSS inside a query
+export function cssQuery(selector: string, css: string): string {
+    return `${selector}{${css}}`;
+}
+
+/// Get the media query for the given theme
+export function prefersColorScheme(theme: "light" | "dark"): string {
+    return `@media(prefers-color-scheme: ${theme})`;
 }
 
 function addCssObjectToMap(
@@ -91,21 +104,19 @@ export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
         this.className = className;
     }
 
-    /// Get the combined class name from the given Griffel style map
-    public styledClassName(style: Record<N, string>) {
-        return clsx(this.className, style[this.className]);
-    }
-
     /// Inject a raw css map into the head that targets this class
-    public injectStyle(style: Record<string, string>) {
+    public style(style: Record<string, unknown>, query?: string) {
         const map = {};
         addCssObjectToMap(`.${this.className}`, style, map);
-        const css = Object.entries(map)
+        let css = Object.entries(map)
             .map(([selector, group]) => {
                 return `${selector}{${group}}`;
             })
             .join("");
-        new DOMStyleInject(`${this.className}-styles`).setStyle(css);
+        if (query) {
+            css = cssQuery(query, css);
+        }
+        injectDOMStyle(`c-${this.className}-styles`, css);
     }
 
     public query(selector?: string): E | undefined {
@@ -117,5 +128,63 @@ export class DOMClass<N extends string, E extends HTMLElement = HTMLElement> {
 
     public queryAll(selector?: string): NodeListOf<E> {
         return document.querySelectorAll(`.${this.className}${selector || ""}`);
+    }
+
+    public queryAllIn(element: HTMLElement, selector?: string): NodeListOf<E> {
+        return element.querySelectorAll(`.${this.className}${selector || ""}`);
+    }
+
+    public addTo(element: HTMLElement) {
+        element.classList.add(this.className);
+    }
+
+    public removeFrom(element: HTMLElement) {
+        element.classList.remove(this.className);
+    }
+}
+
+/// Merge a set of DOMClasses and raw class names into a single class name.
+export function smartMergeClasses<N extends string>(
+    style: Record<N, string>,
+    ...classes: (DOMClass<N> | string | false | undefined | null | 0)[]
+): string {
+    const inputs = [];
+    for (let i = 0; i < classes.length; i++) {
+        const c = classes[i];
+        if (!c) {
+            continue;
+        }
+        if (typeof c === "string") {
+            inputs.push(c);
+        } else {
+            inputs.push(style[c.className]);
+            inputs.push(c.className);
+        }
+    }
+    return mergeClasses(...inputs);
+}
+
+export function concatClassName<TBase extends string, TName extends string>(
+    base: TBase,
+    name: TName,
+): `${TBase}-${TName}` {
+    return `${base}-${name}`;
+}
+
+/// Wrapper for a CSS variable
+export class CSSVariable<N extends `--${string}`> {
+    readonly name: N;
+    constructor(name: N) {
+        this.name = name;
+    }
+
+    /// Get the var(name) expression
+    public varExpr() {
+        return `var(${this.name})` as const;
+    }
+
+    /// Get the var(name, fallback) expression
+    public fallback<S>(value: S) {
+        return `var(${this.name}, ${value})` as const;
     }
 }

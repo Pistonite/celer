@@ -42,8 +42,6 @@ export class Kernel {
     /// The kernel owns the store. The store is shared
     /// between app boots (i.e. when switching routes)
     private store: AppStore;
-    /// The link tag that loads the theme css
-    private themeLinkTag: HTMLLinkElement | null = null;
     /// The function to initialize react
     private initReact: InitUiFunction;
     /// The function to unmount react
@@ -71,23 +69,16 @@ export class Kernel {
     private initStore(): AppStore {
         this.log.info("initializing store...");
         const store = initStore();
-        // switch theme on boot base on store settings
-        this.switchTheme(settingsSelector(store.getState()).theme);
 
         const watchSettings = reduxWatch(() =>
             settingsSelector(store.getState()),
         );
 
         store.subscribe(
-            watchSettings((newVal: SettingsState, oldVal: SettingsState) => {
+            watchSettings((newVal: SettingsState, _oldVal: SettingsState) => {
                 // save settings to local storage
                 this.log.info("saving settings...");
                 saveSettings(newVal);
-
-                // switch theme
-                if (newVal.theme !== oldVal.theme) {
-                    this.switchTheme(newVal.theme);
-                }
             }),
         );
 
@@ -161,26 +152,6 @@ export class Kernel {
             unlistenKeyMgr();
             unlistenWindowMgr();
         };
-    }
-
-    /// Switch theme to the given theme
-    ///
-    /// This replaces the theme css link tag.
-    /// The theme files are built by the web-themes project.
-    public switchTheme(theme: string) {
-        if (!this.themeLinkTag) {
-            const e = document.createElement("link");
-            e.rel = "stylesheet";
-            e.type = "text/css";
-            this.themeLinkTag = e;
-            const head = document.querySelector("head");
-            if (!head) {
-                this.log.error("Could not find head tag to attach theme to");
-                return;
-            }
-            head.appendChild(e);
-        }
-        this.themeLinkTag.href = `/themes/${theme}.min.css`;
     }
 
     public getAlertMgr(): AlertMgr {

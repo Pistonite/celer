@@ -1,6 +1,8 @@
+import { mergeClasses } from "@fluentui/react-components";
 import { ChevronRight16Regular } from "@fluentui/react-icons";
-import clsx from "clsx";
+
 import { TreeIcon } from "./TreeIcon";
+import { useEditorStyles } from "./styles";
 
 export type TreeItemProps = {
     // Displayed file name
@@ -28,12 +30,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     isDirty,
 }) => {
     const LEVEL_INDENT = 8; /* px */
+    const styles = useEditorStyles();
 
     return (
         <div
-            className={clsx(
-                "editor-tree-item",
-                isSelected && "editor-tree-item-selected",
+            className={mergeClasses(
+                styles.editorTreeItem,
+                isSelected && styles.editorTreeItemSelected,
             )}
             style={{ paddingLeft: level * LEVEL_INDENT }}
             onClick={() => {
@@ -41,15 +44,15 @@ export const TreeItem: React.FC<TreeItemProps> = ({
             }}
         >
             <span
-                className={clsx(
-                    "editor-tree-item-icon",
-                    isExpanded && "editor-tree-item-expanded",
+                className={mergeClasses(
+                    styles.editorTreeItemIcon,
+                    isExpanded && styles.editorTreeItemIconExpanded,
                 )}
             >
                 {isDirectory ? <ChevronRight16Regular /> : null}
             </span>
             <TreeIcon file={file} isDirectory={isDirectory} />
-            <span className="editor-tree-item-name">
+            <span className={styles.editorTreeItemName}>
                 {file}
                 {isLoading && " (loading...)"}
                 {isDirty && "*"}

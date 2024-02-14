@@ -1,4 +1,4 @@
-//! Ensure react hooks are used consistently
+//! Ensure react names are used consistently
 //!
 //! Error if used like React.useXXX
 
@@ -15,7 +15,7 @@ function checkFile(_file, content) {
     const lines = content.split("\n");
     lines.forEach((line, index) => {
         if (!checkLine(line)) {
-            errors.push(`${index}: ${line}`);
+            errors.push(`${index + 1}: ${line}`);
         }
     });
     if (errors.length > 0) {

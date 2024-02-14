@@ -8,6 +8,7 @@ import reduxWatch from "redux-watch";
 import isEqual from "is-equal";
 
 import {
+    AppState,
     AppStore,
     documentSelector,
     settingsSelector,
@@ -18,9 +19,7 @@ import { Debouncer, sleep } from "low/utils";
 import { GameCoord } from "low/celerc";
 
 import {
-    DocContainer,
     DocLog,
-    DocScroll,
     findLineByIndex,
     findNoteByIndex,
     findSectionByIndex,
@@ -28,7 +27,6 @@ import {
     getLineScrollView,
     getScrollContainerOffsetY,
     getScrollView,
-    updateDocTagsStyle,
 } from "./utils";
 import { findVisibleLines } from "./findVisibleLines";
 import {
@@ -36,6 +34,8 @@ import {
     updateNotePositionsAnchored,
 } from "./updateNotePositions";
 import { updateBannerWidths } from "./updateBannerWidths";
+import { DocContainer, DocScroll, DocLineCurrentClass } from "./components";
+import { updateDocTagsStyle } from "./updateDocTagsStyle";
 
 /// Storing doc state as window global because HMR will cause the doc to be recreated
 declare global {
@@ -43,9 +43,6 @@ declare global {
         __theDocController: DocController | null;
     }
 }
-
-/// Class for the current line indicator
-export const DocCurrentLineClass = "doc-current-line";
 
 DocLog.info("loading doc module");
 
@@ -85,60 +82,13 @@ export class DocController {
             this.onScrollUpdate();
         });
 
+        this.updateThemeStylesheet(settingsSelector(store.getState()).theme);
+
         // Subscribe to store updates
         const watchStore = reduxWatch(store.getState);
         const unwatchStore = store.subscribe(
-            watchStore(async (newState, oldState) => {
-                const newDoc = documentSelector(newState);
-                const newDocSerial = newDoc.serial;
-                const oldDocSerial = documentSelector(oldState).serial;
-                const newView = viewSelector(newState);
-                const oldView = viewSelector(oldState);
-                const newSettings = settingsSelector(newState);
-                const oldSettings = settingsSelector(oldState);
-
-                let needFullUpdate = false;
-                if (newDocSerial !== oldDocSerial) {
-                    // Document update
-                    if (newDoc.document) {
-                        updateDocTagsStyle(newDoc.document.project.tags);
-                        needFullUpdate = true;
-                    }
-                }
-                if (
-                    !newView.isEditingLayout &&
-                    newView.isEditingLayout !== oldView.isEditingLayout
-                ) {
-                    // layout has changed
-                    needFullUpdate = true;
-                } else if (
-                    !newView.isResizingWindow &&
-                    newView.isResizingWindow !== oldView.isResizingWindow
-                ) {
-                    // window is resized
-                    needFullUpdate = true;
-                } else if (!isEqual(newSettings, oldSettings)) {
-                    // settings has changed
-                    needFullUpdate = true;
-                }
-                if (needFullUpdate) {
-                    // Make sure UI finishes updating
-                    await sleep(0);
-                    await this.onFullUpdate();
-                    return;
-                }
-                if (
-                    newView.currentSection === oldView.currentSection &&
-                    newView.currentLine === oldView.currentLine
-                ) {
-                    // position didn't change
-                    return;
-                }
-                this.removeCurrentLineIndicator(
-                    oldView.currentSection,
-                    oldView.currentLine,
-                );
-                await this.onLocationUpdate();
+            watchStore((newState, oldState) => {
+                this.onStoreUpdate(oldState, newState);
             }),
         );
 
@@ -150,6 +100,97 @@ export class DocController {
     public delete() {
         DocLog.info("deleting doc controller");
         this.cleanup();
+    }
+
+    /// Callback when any store update happens
+    private async onStoreUpdate(oldState: AppState, newState: AppState) {
+        const newDoc = documentSelector(newState);
+        const newDocSerial = newDoc.serial;
+        const oldDocSerial = documentSelector(oldState).serial;
+        const newView = viewSelector(newState);
+        const oldView = viewSelector(oldState);
+        const newSettings = settingsSelector(newState);
+        const oldSettings = settingsSelector(oldState);
+
+        // always try to update theme stylesheet
+        // will only modify the DOM if update is needed
+        this.updateThemeStylesheet(newSettings.theme);
+
+        let needFullUpdate = false;
+        if (newDocSerial !== oldDocSerial) {
+            // Document update
+            if (newDoc.document) {
+                updateDocTagsStyle(newDoc.document.project.tags);
+                needFullUpdate = true;
+            }
+        }
+        if (!needFullUpdate) {
+            if (
+                !newView.isEditingLayout &&
+                newView.isEditingLayout !== oldView.isEditingLayout
+            ) {
+                // layout has changed
+                needFullUpdate = true;
+            } else if (
+                !newView.isResizingWindow &&
+                newView.isResizingWindow !== oldView.isResizingWindow
+            ) {
+                // window is resized
+                needFullUpdate = true;
+            } else if (!isEqual(newSettings, oldSettings)) {
+                // settings has changed
+                needFullUpdate = true;
+            }
+        }
+        if (needFullUpdate && newDoc.document) {
+            // Make sure UI finishes updating
+            await sleep(0);
+            await this.onFullUpdate();
+            return;
+        }
+        if (
+            newView.currentSection === oldView.currentSection &&
+            newView.currentLine === oldView.currentLine
+        ) {
+            // position didn't change
+            return;
+        }
+        this.removeCurrentLineIndicator(
+            oldView.currentSection,
+            oldView.currentLine,
+        );
+        await this.onLocationUpdate();
+    }
+
+    private updateThemeStylesheet(theme: string) {
+        const head = document.head;
+        const newHref = `/themes/${theme}.min.css`;
+        const oldTags = head.querySelectorAll("link[data-id=celer-doc-theme]");
+        // ensure the theme is the last tag in head, so it has higher priority
+        if (oldTags.length !== 1 || oldTags[0] !== head.lastChild) {
+            const newTag = document.createElement("link");
+            newTag.dataset.id = "celer-doc-theme";
+            newTag.rel = "stylesheet";
+            newTag.type = "text/css";
+            newTag.href = newHref;
+            head.appendChild(newTag);
+            if (oldTags.length) {
+                DocLog.info(`re-prioritized theme stylesheet for ${theme}.`);
+                // flickers without setTimeout
+                setTimeout(() => oldTags.forEach((x) => x.remove()), 0);
+            } else {
+                DocLog.info(`created theme stylesheet for ${theme}.`);
+            }
+        } else {
+            const oldTag = oldTags[0] as HTMLLinkElement;
+            if (
+                oldTag.href !== `${window.location.origin}${newHref}` &&
+                oldTag.href !== newHref
+            ) {
+                DocLog.info(`switching theme to ${theme}...`);
+                oldTag.href = newHref;
+            }
+        }
     }
 
     /// Check if there is a newer update event and the current event should be cancelled.
@@ -271,11 +312,11 @@ export class DocController {
     private removeCurrentLineIndicator(section: number, line: number) {
         const lineElement = findLineByIndex(section, line);
         if (lineElement) {
-            lineElement.classList.remove(DocCurrentLineClass);
+            DocLineCurrentClass.removeFrom(lineElement);
         }
         const noteElement = findNoteByIndex(section, line);
         if (noteElement) {
-            noteElement.classList.remove(DocCurrentLineClass);
+            DocLineCurrentClass.removeFrom(noteElement);
         }
     }
 
@@ -299,7 +340,7 @@ export class DocController {
                 newView.currentLine,
             );
             if (newCurrentLine) {
-                newCurrentLine.classList.add(DocCurrentLineClass);
+                DocLineCurrentClass.addTo(newCurrentLine);
             } else {
                 // Try to scroll to the section instead if the line is not found
                 newCurrentLine = findSectionByIndex(newView.currentSection);
@@ -327,7 +368,7 @@ export class DocController {
             newView.currentLine,
         );
         if (newCurrentNote) {
-            newCurrentNote.classList.add(DocCurrentLineClass);
+            DocLineCurrentClass.addTo(newCurrentNote);
             newCurrentNote.style.zIndex = `${++nextNoteZIndex}`;
         }
 

@@ -1,9 +1,8 @@
+import { DocContainer, DocLineContainerClass } from "./components";
 import {
-    DocContainer,
     getScrollContainerOffsetY,
     getScrollView,
     getLineScrollView,
-    DocLineContainerClass,
 } from "./utils";
 
 /// Find all the lines that are visible in the document container
@@ -28,9 +27,7 @@ export const findVisibleLines = (): HTMLElement[] => {
     // get all lines
     // This is always in the right order because querySelectorAll uses pre-order traversal
     // Therefore we can optimize the search
-    const lineElements = containerElement.querySelectorAll<HTMLElement>(
-        `.${DocLineContainerClass}`,
-    );
+    const lineElements = DocLineContainerClass.queryAllIn(containerElement);
     // binary search to find first visible line
     let lo = 0;
     let hi = lineElements.length - 1;

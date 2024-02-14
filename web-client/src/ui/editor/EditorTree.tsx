@@ -1,48 +1,55 @@
-import "./EditorTree.css";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+
+import { useKernel } from "core/kernel";
+import { settingsSelector, viewSelector } from "core/store";
+
 import { TreeItem } from "./TreeItem";
+import { useEditorStyles } from "./styles";
 
-export type EditorTreeProps = {
-    /// Name of the root directory
-    rootName: string;
+export const EditorTree: React.FC = () => {
+    const kernel = useKernel();
+    const { serial, rootPath, openedFile, unsavedFiles } =
+        useSelector(viewSelector);
+    const { showFileTree } = useSelector(settingsSelector);
+    const styles = useEditorStyles();
 
-    /// Currently opened file
-    openedFile: string | undefined;
+    // We are using serial to signal when to update
+    // A new listDir reference will cause the tree to update
+    /* eslint-disable react-hooks/exhaustive-deps*/
+    const listDir = useCallback(
+        async (paths: string[]): Promise<string[]> => {
+            const editor = kernel.getEditor();
+            if (!editor) {
+                return [];
+            }
+            return editor.listDir(paths);
+        },
+        [serial],
+    );
+    /* eslint-enable react-hooks/exhaustive-deps*/
 
-    /// List of unsaved files
-    unsavedFiles: string[];
-
-    /// Callback for listing a directory.
-    ///
-    /// The path is path segments from the root directory.
-    /// Each segment does not contain any "/".
-    /// Empty array means the root directory.
-    ///
-    /// Returns the file and directory names in the directory.
-    /// For directories, the returned name should end with "/".
-    listDir: (path: string[]) => Promise<string[]>;
-
-    /// Callback when a file is clicked.
-    onClickFile: (path: string[]) => void;
-};
-
-export const EditorTree: React.FC<EditorTreeProps> = ({
-    rootName,
-    listDir,
-    onClickFile,
-    openedFile,
-    unsavedFiles,
-}) => {
     const [expandedPaths, setExpandedPaths] = useState<string[]>([""]);
+
+    if (!showFileTree && openedFile) {
+        return null;
+    }
     return (
-        <div id="editor-tree-root">
+        <div className={styles.editorTreeContainer}>
             <TreeDirNode
-                name={rootName}
+                name={rootPath || ""}
                 path={[]}
                 openedFile={openedFile}
                 unsavedFiles={unsavedFiles}
                 listDir={listDir}
-                onClickFile={onClickFile}
+                onClickFile={async (path) => {
+                    const editor = kernel.getEditor();
+                    if (!editor) {
+                        return;
+                    }
+                    editor.notifyActivity();
+                    editor.openFile(path);
+                }}
                 getIsExpanded={(path) => expandedPaths.includes(path.join("/"))}
                 setIsExpanded={(path, isExpanded) => {
                     const pathStr = path.join("/");
