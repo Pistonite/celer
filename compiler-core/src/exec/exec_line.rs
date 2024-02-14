@@ -29,8 +29,6 @@ pub struct ExecLine {
     pub counter_text: Option<DocRichTextBlock>,
     /// The notes
     pub notes: Vec<DocNote>,
-    /// The split name, if different from text
-    pub split_name: Option<String>,
     /// If the line text is a banner
     pub is_banner: bool,
 }
@@ -130,7 +128,7 @@ impl CompLine {
             });
         }
 
-        let split_name = self.split_name.map(|x| x.to_string());
+        // let split_name = self.split_name.map(|x| x.to_string());
         ExecLine {
             is_banner: self.is_banner,
             section: section_number,
@@ -143,7 +141,7 @@ impl CompLine {
             counter_text: self.counter_text,
             notes: self.notes,
             map_coords,
-            split_name,
+            // split_name,
         }
     }
 }
@@ -462,34 +460,34 @@ mod test {
         );
     }
 
-    #[test]
-    fn test_split_name() {
-        let test_split_name = DocRichText(vec![
-            DocRichTextBlock {
-                tag: None,
-                text: "test1".to_string(),
-                link: None,
-            },
-            DocRichTextBlock {
-                tag: Some("something".to_string()),
-                text: " test ".to_string(),
-                link: None,
-            },
-            DocRichTextBlock {
-                tag: None,
-                text: "test3".to_string(),
-                link: None,
-            },
-        ]);
-
-        let test_line = CompLine {
-            split_name: Some(test_split_name.clone()),
-            ..Default::default()
-        };
-
-        let exec_line = test_line.exec(&Default::default(), 0, 0, &mut MapBuilder::default());
-        assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
-    }
+    // #[test]
+    // fn test_split_name() {
+    //     let test_split_name = DocRichText(vec![
+    //         DocRichTextBlock {
+    //             tag: None,
+    //             text: "test1".to_string(),
+    //             link: None,
+    //         },
+    //         DocRichTextBlock {
+    //             tag: Some("something".to_string()),
+    //             text: " test ".to_string(),
+    //             link: None,
+    //         },
+    //         DocRichTextBlock {
+    //             tag: None,
+    //             text: "test3".to_string(),
+    //             link: None,
+    //         },
+    //     ]);
+    //
+    //     let test_line = CompLine {
+    //         split_name: Some(test_split_name.clone()),
+    //         ..Default::default()
+    //     };
+    //
+    //     let exec_line = test_line.exec(&Default::default(), 0, 0, &mut MapBuilder::default());
+    //     assert_eq!(exec_line.split_name.unwrap(), "test1 test test3");
+    // }
 
     #[test]
     fn test_missing_icons() {

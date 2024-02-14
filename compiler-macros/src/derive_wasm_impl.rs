@@ -50,6 +50,7 @@ pub fn expand(input: TokenStream) -> TokenStream {
     let vis = &parsed.vis;
 
     let expanded = quote::quote! {
+        #[allow(non_snake_case)]
         #[automatically_derived]
         mod #derive_wasm_mod {
             use super::*;
@@ -63,7 +64,6 @@ pub fn expand(input: TokenStream) -> TokenStream {
             #parsed
 
             #cfg_feature_wasm
-            #[automatically_derived]
             impl #impl_generics #name #ty_generics #where_clause {
                 /// Serialize this struct to a JsValue using serde_wasm_bindgen
                 #[inline]

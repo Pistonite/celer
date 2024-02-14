@@ -26,4 +26,13 @@ impl PluginRuntime for ExportLiveSplitPlugin {
         };
         Ok(Some(vec![metadata]))
     }
+
+    fn on_export_comp_doc(
+        &mut self,
+        _export_id: &str,
+        payload: &Value,
+        doc: &CompDoc,
+    ) -> PluginResult<Option<ExpoDoc>> {
+        
+    }
 }
