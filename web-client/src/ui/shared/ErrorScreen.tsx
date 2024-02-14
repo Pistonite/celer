@@ -1,6 +1,12 @@
 //! The error screen component
 
-import { Body1, Button, Subtitle1, makeStyles, shorthands } from "@fluentui/react-components";
+import {
+    Body1,
+    Button,
+    Subtitle1,
+    makeStyles,
+    shorthands,
+} from "@fluentui/react-components";
 
 import { saveLog } from "low/utils";
 
@@ -24,7 +30,7 @@ const useStyles = makeStyles({
         position: "relative",
         marginTop: "20px",
         ...shorthands.padding("10px"),
-    }
+    },
 });
 
 type ErrorScreenProps = {

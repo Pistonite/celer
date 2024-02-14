@@ -13,7 +13,7 @@ const useStyles = makeStyles({
         textAlign: "center",
         "& span": {
             textAlign: "center",
-        }
+        },
     },
 });
 

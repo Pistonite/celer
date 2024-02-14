@@ -1,5 +1,9 @@
 //! Component for rendering a loading spinner
-import { makeStyles, mergeClasses, shorthands } from "@fluentui/react-components";
+import {
+    makeStyles,
+    mergeClasses,
+    shorthands,
+} from "@fluentui/react-components";
 
 const useStyles = makeStyles({
     container: {
@@ -31,7 +35,7 @@ const useStyles = makeStyles({
         position: "relative",
         ...shorthands.overflow("hidden"),
         // 3d effect
-        boxShadow: "inset 0 -1px 1px rgba(0, 0, 0, 0.4)" ,
+        boxShadow: "inset 0 -1px 1px rgba(0, 0, 0, 0.4)",
 
         // animated stripes
         "&:after": {
@@ -55,7 +59,7 @@ const useStyles = makeStyles({
                 "100%": {
                     backgroundPositionX: "50px",
                     backgroundPositionY: "50px",
-                }
+                },
             },
             backgroundImage: `
                 linear-gradient(
@@ -68,7 +72,7 @@ const useStyles = makeStyles({
                     transparent 75%,
                     transparent
                 )`,
-        }
+        },
     },
     // theme colors
     green: {
@@ -97,7 +101,9 @@ export const LoadScreen: React.FC<LoadScreenProps> = ({ color }) => {
         <div className={styles.container}>
             <img className={styles.logo} src={`/static/celer-${color}.svg`} />
             <div className={styles.bar}>
-                <span className={mergeClasses(styles.barSpan, styles[color])}></span>
+                <span
+                    className={mergeClasses(styles.barSpan, styles[color])}
+                ></span>
             </div>
         </div>
     );
