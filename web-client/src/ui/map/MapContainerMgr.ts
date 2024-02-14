@@ -17,7 +17,6 @@ export class MapContainerMgr {
 
     public createMapContainer(): HTMLElement {
         const container = document.createElement("div");
-        // container.id = LMapContainerId;
         container.style.backgroundColor = "#000000";
         container.style.width = "100%";
         container.style.height = "100%";
