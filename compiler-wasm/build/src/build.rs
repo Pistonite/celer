@@ -124,10 +124,13 @@ fn process_typescript() -> io::Result<()> {
                                 Some(key) => key,
                                 None => match line.strip_prefix("export type ") {
                                     Some(key) => key,
-                                    None => line
+                                    None => line,
                                 },
                             };
-                            if export_blocks.insert(key.to_string(), vec![Cow::from(line)]).is_some() {
+                            if export_blocks
+                                .insert(key.to_string(), vec![Cow::from(line)])
+                                .is_some()
+                            {
                                 panic!("duplicate export block");
                             }
                             last_block = export_blocks.get_mut(key);
@@ -137,7 +140,7 @@ fn process_typescript() -> io::Result<()> {
                                 None => gen_lines.push(Cow::from(line)),
                             }
                         }
-                    },
+                    }
                     Some(fn_def) => {
                         let mut fn_def = fn_def.splitn(2, '(');
                         let fn_name = fn_def.next().expect("cannot get function name");

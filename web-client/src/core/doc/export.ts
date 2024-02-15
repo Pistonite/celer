@@ -59,7 +59,5 @@ export function createExportRequest(
 
 /// Get the plugin configs when the "Export Split" option is enabled
 export function getSplitExportPluginConfigs() {
-    return [
-        { use: "export-livesplit" }
-    ];
+    return [{ use: "export-livesplit" }];
 }

@@ -244,7 +244,9 @@ const runExportWizard = async (
             const expoDoc = result.inner();
             if ("success" in expoDoc) {
                 const { fileName, fileContent } = expoDoc.success;
-                console.info(`received exported content with type: ${fileContent.type}`);
+                console.info(
+                    `received exported content with type: ${fileContent.type}`,
+                );
                 let data: string | Uint8Array;
                 switch (fileContent.type) {
                     case "text": {
@@ -256,7 +258,10 @@ const runExportWizard = async (
                         break;
                     }
                     case "base64Gzip": {
-                        const compressed = Buffer.from(fileContent.data, "base64");
+                        const compressed = Buffer.from(
+                            fileContent.data,
+                            "base64",
+                        );
                         data = ungzip(compressed);
                     }
                 }

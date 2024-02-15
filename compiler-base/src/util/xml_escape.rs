@@ -8,10 +8,10 @@ macro_rules! escape {
                 vec.extend_from_slice(&$s.as_bytes()[0..$i]);
                 vec.extend_from_slice($bytes);
                 $escaped = Some(vec);
-            },
+            }
             Some(vec) => vec.extend_from_slice($bytes),
         }
-    }
+    };
 }
 
 /// Escapes a string for XML.
@@ -30,19 +30,19 @@ pub fn xml_escape(s: &str) -> Cow<str> {
         match b {
             b'&' => {
                 escape!(escaped, b"&amp;", s, i, 5);
-            },
+            }
             b'<' => {
                 escape!(escaped, b"&lt;", s, i, 5);
-            },
+            }
             b'>' => {
                 escape!(escaped, b"&gt;", s, i, 5);
-            },
+            }
             b'\'' => {
                 escape!(escaped, b"&apos;", s, i, 5);
-            },
+            }
             b'"' => {
                 escape!(escaped, b"&quot;", s, i, 5);
-            },
+            }
             _ => {
                 if let Some(vec) = &mut escaped {
                     vec.push(b);
