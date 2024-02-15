@@ -10,16 +10,16 @@ Routers define plugins in the routes to augment the compiler, and viewers
 can use plugins to personalize their view of the document (See [here](./settings.md) for more info)
 
 ## Concept
-A plugin in Celer is a piece of program that runs as part of the compiler. The (simplified) process goes as the following:
+Celer has 3 types of plugins:
+1. **Compiler Plugins**: These run as part of the compiler and can change the route programmatically.
+2. **Exporter Plugins**: These run after the compilation is done. They take the route as the input and produce some other file as the output.
+3. **Custom Widgets**: These are custom UI that can be used to display extra information in the document.
 
-1. The compiler parses the income files and celer-specific syntax like presets
-2. The compiler hands the compiled document to a plugin
-3. The plugin is free to make any changes to the document. Then it hands the document to the next plugin in line.
-4. After the last plugin is done modifying the document, it hands the document back to the compiler.
+Compiler and Exporter plugins are loaded into the route. Both route makers and route viewers can do this.
+Custom widgets can only be added by viewers.
 
-
-## Route Configuration
-To add a plugin to the compiler, use the `plugins` property in your `config`.
+## Compiler/Exporter Configuration
+To add a plugin to the route, use the `plugins` property in your `config`.
 
 The example below adds the built-in [Link Plugin](./link.md) to the compiler, which transforms `link` tags into clickable links.
 ```yaml
@@ -43,7 +43,7 @@ config:
   - use: foo/bar/path/to/plugin.js
 ```
 
-## Additional Settings
+### Additional Settings
 Some plugins take additional settings through the `with` property
 ```yaml
 config:
@@ -56,7 +56,7 @@ config:
 Please refer to the documentation for the plugin you are using on what settings are available.
 
 
-## Allow Duplicates
+### Allow Duplicates
 By default, celer will give an error if you specify the same plugin multiple times.
 Most of the time it's due to a mistake, but if you actually want to, you can use the `allow-duplicate` property:
 ```yaml
@@ -68,3 +68,6 @@ config:
 ```
 
 External plugins are considered duplicates if they point to the same path or url.
+
+## Custom Widgets Configuration
+Coming Soon

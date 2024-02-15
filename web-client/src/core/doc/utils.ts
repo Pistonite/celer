@@ -143,7 +143,8 @@ const RecompileNeededDebouncer = new Debouncer(
     (oldState: AppState, newState: AppState) => {
         const oldSettings = settingsSelector(oldState);
         const newSettings = settingsSelector(newState);
-        for (const key of RECOMPILE_ON_SETTINGS) {
+        for (let i = 0; i < RECOMPILE_ON_SETTINGS.length; i++) {
+            const key = RECOMPILE_ON_SETTINGS[i];
             if (oldSettings[key] !== newSettings[key]) {
                 return true;
             }

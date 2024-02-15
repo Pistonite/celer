@@ -27,7 +27,7 @@ impl PluginRuntime for ExportLiveSplitPlugin {
             extension: Some("lss".to_string()),
             export_id: None,
             example_config: Some(include_str!("./livesplit.yaml").to_string()),
-            learn_more: Some("/docs/plugin/export-livesplit".to_string()),
+            learn_more: Some("/docs/plugin/export-livesplit#export-livesplit".to_string()),
         };
         Ok(Some(vec![metadata]))
     }

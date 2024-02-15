@@ -54,6 +54,19 @@ Some keys like `Up` and `Down` conflicts with the browser's default behavior to 
 `Alt + Up` and `Alt + Down` to avoid this issue. You can also bind the keys to something that doesn't conflict, for example, `J` and `K`
 :::
 
+## Splits
+The split setting allow you to choose where you want to split for the "Previous/Next Split" keyboard action
+and when exporting splits.
+
+To configure the splits, first load a document, then:
+1. Click on <FluentIcon name="Settings20Regular" /> `Settings`.
+2. Select the <FluentIcon name="Document20Regular" /> `Document` category.
+3. Under `Splits`, check the places you want to split
+4. Clicking `Reset split types` will reset the setting to what's provided by the document.
+:::tip
+The split types are defined in the document. If you don't see any checkboxes, contact the author of the route.
+:::
+
 ## Sync Map to Doc
-By default, the map will automatically change its view after scolling on the document so that all the lines visible in the document are also
+By default, the map will automatically change its view after scrolling on the document so that all the lines visible in the document are also
 visible in the map. You can turn this off in the settings.

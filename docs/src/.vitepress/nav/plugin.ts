@@ -9,17 +9,21 @@ export const pluginsSideBar = {
             text: "General",
             items: [
                 { text: "Getting Started", link: "/plugin/getting-started" },
-                { text: "Built-in Plugins", link: "/plugin/built-in" },
                 { text: "Settings", link: "/plugin/settings" },
             ],
         },
         {
-            text: "Built-in References",
+            text: "Built-in Compiler Plugins",
             items: [
                 { text: "Link", link: "/plugin/link" },
                 { text: "Variables", link: "/plugin/variables" },
-                // { text: "Assertion", link: "/plugin/assertion" },
                 // { text: "Compatibility", link: "/plugin/compat" },
+            ],
+        },
+        {
+            text: "Built-in Exporter Plugins",
+            items: [
+                { text: "Export LiveSplit", link: "/plugin/export-livesplit" },
             ],
         },
         {
