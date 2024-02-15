@@ -30,6 +30,7 @@ import {
     Image20Regular,
     Video20Regular,
 } from "@fluentui/react-icons";
+import { ungzip } from "pako";
 
 import {
     AppStore,
@@ -40,7 +41,7 @@ import {
 import { ExecDoc, ExpoDoc, ExportIcon, ExportMetadata } from "low/celerc";
 
 import { Kernel, useKernel } from "core/kernel";
-import { errorToString } from "low/utils";
+import { console, errorToString, saveAs } from "low/utils";
 import {
     createExportRequest,
     getExportConfig,
@@ -242,8 +243,25 @@ const runExportWizard = async (
         if (result.isOk()) {
             const expoDoc = result.inner();
             if ("success" in expoDoc) {
-                // const _file = expoDoc.success;
-                // TODO #33: download file
+                const { fileName, fileContent } = expoDoc.success;
+                console.info(`received exported content with type: ${fileContent.type}`);
+                let data: string | Uint8Array;
+                switch (fileContent.type) {
+                    case "text": {
+                        data = fileContent.data;
+                        break;
+                    }
+                    case "base64": {
+                        data = Buffer.from(fileContent.data, "base64");
+                        break;
+                    }
+                    case "base64Gzip": {
+                        const compressed = Buffer.from(fileContent.data, "base64");
+                        data = ungzip(compressed);
+                    }
+                }
+                console.info(`saving file: ${fileName}`);
+                saveAs(data, fileName);
                 return;
             }
 

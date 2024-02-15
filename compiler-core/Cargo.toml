@@ -22,6 +22,8 @@ tokio = { version = "1.36.0", features = [
 instant = "0.1.12"
 log = "0.4.20"
 roman = "0.1.6"
+flate2 = "1.0.28"
+base64 = "0.21.7"
 
 [dev-dependencies]
 map-macro = "0.2.6"

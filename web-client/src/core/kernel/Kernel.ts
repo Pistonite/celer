@@ -11,8 +11,9 @@ import {
     settingsSelector,
     viewSelector,
     viewActions,
+    documentSelector,
 } from "core/store";
-import { isRecompileNeeded } from "core/doc";
+import { getDefaultSplitTypes, getSplitExportPluginConfigs, isRecompileNeeded } from "core/doc";
 import { ExpoDoc, ExportRequest } from "low/celerc";
 import { console, Logger, isInDarkMode } from "low/utils";
 import type { FileSys, FsResult } from "low/fs";
@@ -321,8 +322,30 @@ export class Kernel {
     }
 
     public async export(request: ExportRequest): Promise<ExpoDoc> {
+        const splitExportConfigs = getSplitExportPluginConfigs();
+        if (splitExportConfigs.find((c) => c.use === request.pluginId)) {
+            if (request.payload && typeof request.payload === "object") {
+                const payload = request.payload as Record<string, unknown>;
+                if (!payload["split-types"]) {
+                    const { splitTypes } = settingsSelector(this.store.getState())
+                    let injected: string[];
+                    if (splitTypes) {
+                        injected = splitTypes;
+                    } else {
+                        const { document } = documentSelector(this.store.getState());
+                        if (document) {
+                            injected = getDefaultSplitTypes(document);
+                        } else {
+                            injected = [];
+                        }
+                    }
+                    payload["split-types"] = injected;
+                    this.log.info(`injected ${injected.length} split types into export request payload.`);
+                }
+            }
+        }
         // TODO #33: inject split types
-        const stageMode = viewSelector(this.store.getState()).stageMode;
+        const { stageMode } = viewSelector(this.store.getState());
         if (stageMode === "edit") {
             const compiler = await this.getCompiler();
             return await compiler.export(request);
