@@ -30,9 +30,7 @@ config:
 :::tip
 Note that the `use` property takes `"link"`, which is not any of the syntax mentioned in
 [File structure](../route/file-structure.md). This signals Celer that you want to use a built-in
-plugin. Built-in plugins are implemented in Rust and has higher performance.
-
-See [here](./built-in.md) for a full list of built-in plugins
+plugin.
 :::
 
 To specify an external plugin, use the `<user>/<repo>/<path>` syntax similar
