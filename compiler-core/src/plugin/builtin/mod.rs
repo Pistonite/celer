@@ -13,6 +13,7 @@ mod botw_unstable;
 mod link;
 mod livesplit;
 mod metrics;
+mod split_format;
 mod variables;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,6 +24,7 @@ pub enum BuiltInPlugin {
     ExportLiveSplit,
     Link,
     Metrics,
+    SplitFormat,
     Variables,
 }
 

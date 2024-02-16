@@ -17,6 +17,7 @@ export const pluginsSideBar = {
             items: [
                 { text: "Link", link: "/plugin/link" },
                 { text: "Variables", link: "/plugin/variables" },
+                { text: "Split Format", link: "/plugin/split-format" },
                 // { text: "Compatibility", link: "/plugin/compat" },
             ],
         },

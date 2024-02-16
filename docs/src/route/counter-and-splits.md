@@ -64,7 +64,46 @@ config:
 
 Now, go to the split settings and click on `Reset`. You should see the `My Counters` type getting checked by default.
 
+## Export Split Files
+See [Export](../export.md)
+
 ## Format Split Names
-:::info
-Not implemented yet. Tracked by [TODO #21](https://github.com/Pistonite/celer/issues/21)
+:::tip
+This section explains how split names are set manually with the `split-name` property.
+Most of the time, it's easier to use the [`split-format`](../plugin/split-format.md) plugin
+to set this property automatically based on the split type.
 :::
+By default, the split names in the exported split files are the same as the primary text of the line.
+You can change it with the `split-name` property.
+
+```yaml
+route:
+- Example Section:
+  # This split will have name "Split 1"
+  - Split 1: 
+      counter: my-counter
+  # This split will have name "Split 2"
+  - Some text:
+      counter: my-counter
+      split-name: Split 2
+```
+
+The [`variables`](../plugin/variables.md) plugin can be used to interpolate variables into the split name
+
+```yaml
+config:
+- plugins:
+  - use: variables
+
+route:
+- Example Section:
+  # This split will have name "Split 1"
+  - Split 1: 
+      counter: my-counter
+      vars:
+        x: 1
+  # This split will have name "x is 1"
+  - Some text:
+      counter: my-counter
+      split-name: x is .var(x)
+```
