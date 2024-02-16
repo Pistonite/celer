@@ -64,6 +64,7 @@ pub fn expand(input: TokenStream) -> TokenStream {
             #parsed
 
             #cfg_feature_wasm
+            #[automatically_derived]
             impl #impl_generics #name #ty_generics #where_clause {
                 /// Serialize this struct to a JsValue using serde_wasm_bindgen
                 #[inline]
