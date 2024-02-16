@@ -50,6 +50,7 @@ pub fn expand(input: TokenStream) -> TokenStream {
     let vis = &parsed.vis;
 
     let expanded = quote::quote! {
+        #[allow(non_snake_case)]
         #[automatically_derived]
         mod #derive_wasm_mod {
             use super::*;

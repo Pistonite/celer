@@ -14,6 +14,7 @@ import {
 } from "low/celerc";
 import { Debouncer, shallowArrayEqual } from "low/utils";
 import { parseUserConfigOptions } from "./useDocCurrentUserPluginConfig";
+import { getSplitExportPluginConfigs } from "./export";
 
 /// Get the previous or next <delta>-th split.
 export const getRelativeSplitLocation = (
@@ -142,7 +143,8 @@ const RecompileNeededDebouncer = new Debouncer(
     (oldState: AppState, newState: AppState) => {
         const oldSettings = settingsSelector(oldState);
         const newSettings = settingsSelector(newState);
-        for (const key of RECOMPILE_ON_SETTINGS) {
+        for (let i = 0; i < RECOMPILE_ON_SETTINGS.length; i++) {
+            const key = RECOMPILE_ON_SETTINGS[i];
             if (oldSettings[key] !== newSettings[key]) {
                 return true;
             }
@@ -230,7 +232,7 @@ export const getRawPluginOptions = (
         : [];
     const add = [];
     if (enabledAppPlugins["export-split"]) {
-        add.push({ use: "export-livesplit" });
+        getSplitExportPluginConfigs().forEach((config) => add.push(config));
     }
     if (enableUserPlugins) {
         const [result] = parseUserConfigOptions(userPluginConfig, document);

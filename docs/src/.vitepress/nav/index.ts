@@ -16,6 +16,7 @@ export const homeSideBar = {
                 { text: "Toolbar", link: "/toolbar" },
                 { text: "Document", link: "/doc" },
                 { text: "Map", link: "/map" },
+                { text: "Export", link: "/export" },
             ],
         },
         {

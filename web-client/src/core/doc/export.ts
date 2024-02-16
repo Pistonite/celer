@@ -8,42 +8,42 @@ import { DocSettingsState } from "./state";
 /// Get a unique identifier for the export metadata
 ///
 /// Used as the key in config storage
-export const getExporterId = (metadata: ExportMetadata): string => {
+export function getExporterId(metadata: ExportMetadata): string {
     return `${metadata.pluginId}${metadata.pluginId.length}${
         metadata.exportId || ""
     }`;
-};
+}
 
 /// Check if the export needs a config to be set
 ///
 /// An exporter must provide an example config string, if it wants to take config as input
-export const isConfigNeeded = (metadata: ExportMetadata): boolean => {
+export function isConfigNeeded(metadata: ExportMetadata): boolean {
     return !!metadata.exampleConfig;
-};
+}
 
 /// Get the config string for the export from settings, or use the default from the metadata
-export const getExportConfig = (
+export function getExportConfig(
     metadata: ExportMetadata,
     state: DocSettingsState,
-): string => {
+): string {
     const id = getExporterId(metadata);
     if (id in state.exportConfigs) {
         return state.exportConfigs[id];
     }
     return metadata.exampleConfig || "";
-};
+}
 
 /// Get the display label for the export, with the name and file extension
-export const getExportLabel = (metadata: ExportMetadata): string => {
+export function getExportLabel(metadata: ExportMetadata): string {
     return metadata.extension
         ? `${metadata.name} (*.${metadata.extension})`
         : metadata.name;
-};
+}
 
-export const createExportRequest = (
+export function createExportRequest(
     metadata: ExportMetadata,
     config: string,
-): Result<ExportRequest, unknown> => {
+): Result<ExportRequest, unknown> {
     try {
         const configPayload = YAML.load(config);
         const request: ExportRequest = {
@@ -55,4 +55,9 @@ export const createExportRequest = (
     } catch (e) {
         return allocErr(e);
     }
-};
+}
+
+/// Get the plugin configs when the "Export Split" option is enabled
+export function getSplitExportPluginConfigs() {
+    return [{ use: "export-livesplit" }];
+}

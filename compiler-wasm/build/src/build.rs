@@ -1,6 +1,7 @@
 //! Build wasm package and copy it to the web-client directory.
 
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -61,10 +62,14 @@ fn wasm_pack_build() -> io::Result<()> {
         }
     }
 
-    #[cfg(debug_assertions)]
-    let mut command = build_wasm_pack_command(&["--dev"]);
-    #[cfg(not(debug_assertions))]
-    let mut command = build_wasm_pack_command(&["--release"]);
+    let mut command = if cfg!(debug_assertions) {
+        println!("building in debug mode");
+        build_wasm_pack_command(&["--dev"])
+    } else {
+        println!("building in release mode");
+        build_wasm_pack_command(&["--release"])
+    };
+
     let result = command.spawn()?.wait_with_output()?;
 
     if !result.status.success() {
@@ -74,9 +79,8 @@ fn wasm_pack_build() -> io::Result<()> {
             io::ErrorKind::Other,
             "wasm-pack build failed",
         ));
-    } else {
-        println!("{}", String::from_utf8_lossy(&result.stdout));
     }
+    println!("{}", String::from_utf8_lossy(&result.stdout));
 
     Ok(())
 }
@@ -103,6 +107,9 @@ fn process_typescript() -> io::Result<()> {
     let mut gen_lines = vec![];
     gen_lines.push(Cow::from(include_str!("./prelude.ts")));
     let mut funcs = vec![];
+    let mut export_blocks = BTreeMap::new();
+    let mut last_block: Option<&mut Vec<Cow<str>>> = None;
+
     while let Some(line) = lines.next() {
         if line == "declare namespace wasm_bindgen {" {
             for line in lines.by_ref() {
@@ -111,7 +118,29 @@ fn process_typescript() -> io::Result<()> {
                 }
                 let line = line.strip_prefix('\t').expect("expecting namespace indent");
                 match line.strip_prefix("export function ") {
-                    None => gen_lines.push(Cow::from(line)),
+                    None => {
+                        if line.starts_with("export ") {
+                            let key = match line.strip_prefix("export interface ") {
+                                Some(key) => key,
+                                None => match line.strip_prefix("export type ") {
+                                    Some(key) => key,
+                                    None => line,
+                                },
+                            };
+                            if export_blocks
+                                .insert(key.to_string(), vec![Cow::from(line)])
+                                .is_some()
+                            {
+                                panic!("duplicate export block");
+                            }
+                            last_block = export_blocks.get_mut(key);
+                        } else {
+                            match last_block.as_mut() {
+                                Some(x) => x.push(Cow::from(line)),
+                                None => gen_lines.push(Cow::from(line)),
+                            }
+                        }
+                    }
                     Some(fn_def) => {
                         let mut fn_def = fn_def.splitn(2, '(');
                         let fn_name = fn_def.next().expect("cannot get function name");
@@ -169,6 +198,12 @@ fn process_typescript() -> io::Result<()> {
                 }
             }
             break;
+        }
+    }
+
+    for lines in export_blocks.into_values() {
+        for line in lines {
+            gen_lines.push(line);
         }
     }
 

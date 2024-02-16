@@ -14,6 +14,9 @@ use crate::comp::CompDoc;
 use crate::exec::ExecContext;
 use crate::macros::derive_wasm;
 
+mod blob;
+pub use blob::*;
+
 /// Output of the export phase
 #[derive_wasm]
 pub struct ExpoContext<'p> {
@@ -90,6 +93,7 @@ pub struct ExportRequest {
 #[derive_wasm]
 pub enum ExpoDoc {
     /// Success output. Contains file name and the bytes
+    #[serde(rename_all = "camelCase")]
     Success {
         file_name: String,
         file_content: ExpoBlob,
@@ -98,14 +102,14 @@ pub enum ExpoDoc {
     Error(String),
 }
 
-/// The data in the export
-#[derive(Debug, Clone)]
-#[derive_wasm]
-pub enum ExpoBlob {
-    /// UTF-8 text
-    Text(String),
-    /// Binary data encoded in base64
-    Base64(String),
+#[macro_export]
+macro_rules! export_error {
+    ($msg:literal) => {
+        Ok(Some(ExpoDoc::Error($msg.to_string())))
+    };
+    ($msg:expr) => {
+        Ok(Some(ExpoDoc::Error($msg)))
+    };
 }
 
 impl<'p> ExecContext<'p> {

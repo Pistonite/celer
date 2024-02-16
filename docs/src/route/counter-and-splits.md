@@ -64,7 +64,7 @@ config:
 
 Now, go to the split settings and click on `Reset`. You should see the `My Counters` type getting checked by default.
 
-## Exporting Splits
+## Format Split Names
 :::info
-Not implemented yet. Tracked by [TODO #33](https://github.com/Pistonite/celer/issues/33)
+Not implemented yet. Tracked by [TODO #21](https://github.com/Pistonite/celer/issues/21)
 :::
