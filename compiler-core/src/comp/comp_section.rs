@@ -57,9 +57,8 @@ impl<'p> Compiler<'p> {
             RouteBlobSingleKeyObjectResult::Empty => {
                 if route.is_empty() {
                     return None;
-                } 
+                }
                 Err(CompError::EmptyObjectCannotBeSection.into_diagnostic())
-                
             }
             RouteBlobSingleKeyObjectResult::TooManyKeys => {
                 if route.is_empty() {
