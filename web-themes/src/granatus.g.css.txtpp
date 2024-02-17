@@ -21,7 +21,7 @@
     border-top: 3px solid #446666;
 }
 /* Preface always have light background */
-.docpreface-block .docline-text-rich {
+.docpreface-block .docline-text-rich * {
     /*TXTPP#include shared/rich-text-light.css
      *TXTPP# */
 }
@@ -51,7 +51,7 @@
     background-color: #ffd866;
 }
 /* Always use light color*/
-.docline-body .docline-text-rich {
+.docline-body .docline-text-rich * {
     /*TXTPP#include shared/rich-text-light.css
      *TXTPP# */
 }
@@ -64,9 +64,9 @@
     background-color: black;
     color: white;
 }
-.docline-counter-counter-shrine .docline-body .docline-text-rich,
-.docline-counter-counter-tower .docline-body .docline-text-rich,
-.docline-split .docline-body .docline-text-rich
+.docline-counter-counter-shrine .docline-body .docline-text-rich *,
+.docline-counter-counter-tower .docline-body .docline-text-rich *,
+.docline-split .docline-body .docline-text-rich *
 {
     /*TXTPP#include shared/rich-text-dark.css
      *TXTPP# */
@@ -74,7 +74,7 @@
 .docline-counter-counter-warp .docline-body{
     background-color: #a2c4c4 !important;
 }
-.docline-counter-counter-warp .docline-body .docline-text-rich
+.docline-counter-counter-warp .docline-body .docline-text-rich *
 {
     /*TXTPP#include shared/rich-text-light.css
      *TXTPP# */
@@ -83,7 +83,7 @@
 {
     background-color: #ff8484 !important;
 }
-.docline-container[data-split-type="Bosses"] .docline-body .docline-text-rich
+.docline-container[data-split-type="Bosses"] .docline-body .docline-text-rich *
 {
     /*TXTPP#include shared/rich-text-light.css
      *TXTPP# */
@@ -107,7 +107,7 @@
     .docnote-container.docline-current {
         background-color: #666666;
     }
-    .docnote-container .docline-text-rich {
+    .docnote-container .docline-text-rich * {
         /*TXTPP#include shared/rich-text-dark.css
          *TXTPP# */
     }
@@ -121,7 +121,7 @@
     .docnote-container.docline-current {
         background-color: #bbbbbb;
     }
-    .docnote-container .docline-text-rich {
+    .docnote-container .docline-text-rich * {
         /*TXTPP#include shared/rich-text-light.css
          *TXTPP# */
     }

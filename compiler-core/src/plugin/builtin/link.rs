@@ -48,7 +48,6 @@ impl PluginRuntime for LinkPlugin {
             if let Some(t) = line.counter_text.as_mut() {
                 transform_link_tag(t);
             }
-            line
         });
 
         Ok(())

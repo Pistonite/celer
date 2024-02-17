@@ -10,19 +10,21 @@ use crate::pack::CompileContext;
 use super::{PluginResult, PluginRuntime};
 
 mod botw_unstable;
+mod export_livesplit;
 mod link;
-mod livesplit;
 mod metrics;
+mod split_format;
 mod variables;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BuiltInPlugin {
-    BotwAbilityUnstable,
+    BotwAbilityUnstable, // TODO #24: remove this
     #[serde(rename = "export-livesplit")]
     ExportLiveSplit,
     Link,
     Metrics,
+    SplitFormat,
     Variables,
 }
 
@@ -36,12 +38,15 @@ impl BuiltInPlugin {
             BuiltInPlugin::BotwAbilityUnstable => Ok(Box::new(
                 botw_unstable::BotwAbilityUnstablePlugin::from_props(props),
             )),
-            BuiltInPlugin::ExportLiveSplit => Ok(Box::new(livesplit::ExportLiveSplitPlugin)),
+            BuiltInPlugin::ExportLiveSplit => Ok(Box::new(export_livesplit::ExportLiveSplitPlugin)),
             BuiltInPlugin::Link => Ok(Box::new(link::LinkPlugin)),
             BuiltInPlugin::Metrics => Ok(Box::new(metrics::MetricsPlugin::from_props(
                 props,
                 &ctx.start_time,
             ))),
+            BuiltInPlugin::SplitFormat => {
+                Ok(Box::new(split_format::SplitFormatPlugin::from_props(props)))
+            }
             BuiltInPlugin::Variables => Ok(Box::new(variables::VariablesPlugin::from_props(props))),
         }
     }

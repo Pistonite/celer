@@ -151,11 +151,12 @@ export const useDocStyles = makeStyles({
     [DocNoteContainerClass.className]: {
         display: "none", // hidden by default
         transitionDuration: "0.1s",
-        // left: 0,
+        left: 0,
         right: 0,
         boxSizing: "border-box",
 
         "@container (max-width: 100px)": {
+            left: "unset",
             width: "100%", // need this so 100% can be propagated to children
             [`& .${DocNoteBlockClass.className}`]: {
                 height: "32px",

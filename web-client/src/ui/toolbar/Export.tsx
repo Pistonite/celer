@@ -235,49 +235,13 @@ const runExportWizard = async (
                 config,
             }),
         );
-        const result = await runExportAndShowDialog(
+        error = await runExportAndShowDialog(
             kernel,
             exportMetadata[selection],
             config,
         );
-        if (result.isOk()) {
-            const expoDoc = result.inner();
-            if ("success" in expoDoc) {
-                const { fileName, fileContent } = expoDoc.success;
-                console.info(
-                    `received exported content with type: ${fileContent.type}`,
-                );
-                let data: string | Uint8Array;
-                switch (fileContent.type) {
-                    case "text": {
-                        data = fileContent.data;
-                        break;
-                    }
-                    case "base64": {
-                        data = Buffer.from(fileContent.data, "base64");
-                        break;
-                    }
-                    case "base64Gzip": {
-                        const compressed = Buffer.from(
-                            fileContent.data,
-                            "base64",
-                        );
-                        data = ungzip(compressed);
-                    }
-                }
-                console.info(`saving file: ${fileName}`);
-                saveAs(data, fileName);
-                return;
-            }
-
-            error = expoDoc.error;
-        } else {
-            const v = result.inner();
-            if (v === false) {
-                // cancel
-                return;
-            }
-            error = errorToString(v);
+        if (!error) {
+            return;
         }
     }
 };
@@ -375,11 +339,14 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
 };
 
 /// Run the export and show a blocking dialog
-const runExportAndShowDialog = async (
+///
+/// Return error string or empty string for success
+async function runExportAndShowDialog(
     kernel: Kernel,
     metadata: ExportMetadata,
     config: string,
-) => {
+): Promise<string> {
+    let cancelled = false;
     const result = await kernel.getAlertMgr().showBlocking(
         {
             title: "Export",
@@ -397,14 +364,56 @@ const runExportAndShowDialog = async (
                 );
             },
         },
-        async (): Promise<ExpoDoc> => {
+        async (): Promise<string> => {
             const requestResult = createExportRequest(metadata, config);
             if (requestResult.isErr()) {
-                return { error: errorToString(requestResult.inner()) };
+                return errorToString(requestResult.inner());
             }
             const request = requestResult.inner();
-            return await kernel.export(request);
+            const expoDoc = await kernel.export(request);
+            if (cancelled) {
+                return "";
+            }
+            return downloadExport(expoDoc);
         },
     );
-    return result;
-};
+    if (result.isErr()) {
+        const error = result.inner();
+        if (error === false) {
+            // cancel
+            cancelled = true;
+            return "";
+        }
+        return errorToString(error);
+    }
+    return result.inner();
+}
+
+function downloadExport(expoDoc: ExpoDoc): string {
+    if ("success" in expoDoc) {
+        const { fileName, fileContent } = expoDoc.success;
+        console.info(
+            `received exported content with type: ${fileContent.type}`,
+        );
+        let data: string | Uint8Array;
+        switch (fileContent.type) {
+            case "text": {
+                data = fileContent.data;
+                break;
+            }
+            case "base64": {
+                data = Buffer.from(fileContent.data, "base64");
+                break;
+            }
+            case "base64Gzip": {
+                const compressed = Buffer.from(fileContent.data, "base64");
+                data = ungzip(compressed);
+            }
+        }
+        console.info(`saving file: ${fileName}`);
+        saveAs(data, fileName);
+        return "";
+    }
+
+    return expoDoc.error;
+}

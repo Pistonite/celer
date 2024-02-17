@@ -2,11 +2,9 @@
 macro_rules! for_each_line {
     ($line:ident in $comp_doc:ident $fun:block) => {
         for section in $comp_doc.route.iter_mut() {
-            let lines = std::mem::take(&mut section.lines);
             #[allow(unused_mut)]
-            for mut $line in lines.into_iter() {
-                let l = $fun;
-                section.lines.push(l);
+            for $line in section.lines.iter_mut() {
+                $fun;
             }
         }
     };
