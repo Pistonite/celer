@@ -7,13 +7,13 @@ use std::collections::BTreeMap;
 
 use serde_json::Value;
 
+use crate::comp::{CompDoc, CompLine};
 use crate::json::Coerce;
 use crate::lang::{self, DocRichText};
-use crate::comp::{CompDoc, CompLine};
 use crate::plugin::{operation, PluginResult, PluginRuntime};
 
 pub struct SplitFormatPlugin {
-    formats: BTreeMap<String, DocRichText>
+    formats: BTreeMap<String, DocRichText>,
 }
 
 impl SplitFormatPlugin {
@@ -54,7 +54,7 @@ impl PluginRuntime for SplitFormatPlugin {
             }
             if let Some(format) = format {
                 let mut format = (*format).clone();
-                transform_format(&mut format, &line);
+                transform_format(&mut format, line);
                 line.split_name = Some(format);
             }
         });
@@ -81,7 +81,11 @@ fn transform_format(format: &mut DocRichText, line: &CompLine) {
                 block.text = line.secondary_text.to_string();
             }
             "counter" => {
-                block.text = line.counter_text.as_ref().map(|x| x.text.to_string()).unwrap_or_default();
+                block.text = line
+                    .counter_text
+                    .as_ref()
+                    .map(|x| x.text.to_string())
+                    .unwrap_or_default();
             }
             _ => {}
         }

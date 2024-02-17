@@ -44,9 +44,9 @@ impl BuiltInPlugin {
                 props,
                 &ctx.start_time,
             ))),
-            BuiltInPlugin::SplitFormat => Ok(Box::new(split_format::SplitFormatPlugin::from_props(
-                props,
-            ))),
+            BuiltInPlugin::SplitFormat => {
+                Ok(Box::new(split_format::SplitFormatPlugin::from_props(props)))
+            }
             BuiltInPlugin::Variables => Ok(Box::new(variables::VariablesPlugin::from_props(props))),
         }
     }

@@ -243,45 +243,6 @@ const runExportWizard = async (
         if (!error) {
             return;
         }
-        // if (result.isOk()) {
-        //     const expoDoc = result.inner();
-        //     if ("success" in expoDoc) {
-        //         const { fileName, fileContent } = expoDoc.success;
-        //         console.info(
-        //             `received exported content with type: ${fileContent.type}`,
-        //         );
-        //         let data: string | Uint8Array;
-        //         switch (fileContent.type) {
-        //             case "text": {
-        //                 data = fileContent.data;
-        //                 break;
-        //             }
-        //             case "base64": {
-        //                 data = Buffer.from(fileContent.data, "base64");
-        //                 break;
-        //             }
-        //             case "base64Gzip": {
-        //                 const compressed = Buffer.from(
-        //                     fileContent.data,
-        //                     "base64",
-        //                 );
-        //                 data = ungzip(compressed);
-        //             }
-        //         }
-        //         console.info(`saving file: ${fileName}`);
-        //         saveAs(data, fileName);
-        //         return;
-        //     }
-        //
-        //     error = expoDoc.error;
-        // } else {
-        //     const v = result.inner();
-        //     if (v === false) {
-        //         // cancel
-        //         return;
-        //     }
-        //     error = errorToString(v);
-        // }
     }
 };
 
@@ -440,10 +401,7 @@ function downloadExport(expoDoc: ExpoDoc): string {
                 break;
             }
             case "base64Gzip": {
-                const compressed = Buffer.from(
-                    fileContent.data,
-                    "base64",
-                );
+                const compressed = Buffer.from(fileContent.data, "base64");
                 data = ungzip(compressed);
             }
         }
