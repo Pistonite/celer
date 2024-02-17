@@ -44,7 +44,7 @@ config:
   - use: split-format
     with:
       My Counters: Counter
-      Shrines: "[.var(pad03):counter-shrine] .prop(text)"
+      Shrines: "[.var(pad03:counter-shrine)] .prop(text)"
 ```
 The `prop` tag can be used to access properties of the line:
 - `.prop(text)` becomes the primary text 

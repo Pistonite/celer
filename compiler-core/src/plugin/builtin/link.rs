@@ -48,14 +48,13 @@ impl PluginRuntime for LinkPlugin {
             if let Some(t) = line.counter_text.as_mut() {
                 transform_link_tag(t);
             }
-            line
         });
 
         Ok(())
     }
 
     fn get_id(&self) -> Cow<'static, str> {
-        Cow::Owned(super::BuiltInPlugin::Link.id())
+        Cow::Owned(super::BuiltInPlugin::Metrics.id())
     }
 }
 

@@ -317,7 +317,6 @@ impl PluginRuntime for VariablesPlugin {
                 line.properties.insert(prop::VALS.to_string(), self.get_vals());
             }
             self.clear_temporary();
-            line
         });
 
         Ok(())
