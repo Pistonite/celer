@@ -346,6 +346,7 @@ async function runExportAndShowDialog(
     metadata: ExportMetadata,
     config: string,
 ): Promise<string> {
+    let cancelled = false;
     const result = await kernel.getAlertMgr().showBlocking(
         {
             title: "Export",
@@ -370,6 +371,9 @@ async function runExportAndShowDialog(
             }
             const request = requestResult.inner();
             const expoDoc = await kernel.export(request);
+            if (cancelled) {
+                return "";
+            }
             return downloadExport(expoDoc);
         },
     );
@@ -377,6 +381,7 @@ async function runExportAndShowDialog(
         const error = result.inner();
         if (error === false) {
             // cancel
+            cancelled = true;
             return "";
         }
         return errorToString(error);

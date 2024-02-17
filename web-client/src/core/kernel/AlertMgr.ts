@@ -2,7 +2,7 @@
 
 import { AlertExtraAction, ModifyAlertActionPayload } from "core/stage";
 import { AppDispatcher, viewActions } from "core/store";
-import { Result, allocErr, allocOk } from "low/utils";
+import { Result, allocErr, allocOk, console } from "low/utils";
 
 /// Options for showing a simple alert
 export type AlertOptions<TExtra extends AlertExtraAction[]> = {
@@ -128,6 +128,7 @@ export class AlertMgr {
                 // when alert is notified through user action,
                 // it means cancel
                 cancelled = true;
+                console.info("user cancelled the operation");
                 resolve(allocErr(false));
             }, component);
             this.store.dispatch(
