@@ -1,5 +1,5 @@
 //! Resource resolving and loading
-use std::borrow::Cow;
+use std::ops::Deref;
 
 use base64::Engine;
 use serde_json::Value;
@@ -68,7 +68,7 @@ pub type ResResult<T> = Result<T, ResError>;
 #[async_trait(auto)]
 pub trait Loader {
     /// Load a resource as raw bytes
-    async fn load_raw<'s>(&'s self, path: &ResPath<'_>) -> ResResult<Cow<'s, [u8]>>;
+    async fn load_raw(&self, path: &ResPath) -> ResResult<RefCounted<[u8]>>;
 }
 
 /// A Resource is an absolute reference to a resource that can be loaded.
@@ -105,22 +105,16 @@ where
     }
 
     /// Load the resource as raw bytes
-    pub async fn load_raw(&self) -> ResResult<Cow<'_, [u8]>> {
+    pub async fn load_raw(&self) -> ResResult<RefCounted<[u8]>> {
         self.loader.load_raw(&self.path).await
     }
 
     /// Load the resource as UTF-8 string
-    pub async fn load_utf8(&self) -> ResResult<Cow<'_, str>> {
+    pub async fn load_utf8(&self) -> ResResult<String> {
         let bytes = self.loader.load_raw(&self.path).await?;
-        match bytes {
-            Cow::Borrowed(bytes) => match std::str::from_utf8(bytes) {
-                Ok(v) => Ok(Cow::from(v)),
-                Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
-            },
-            Cow::Owned(bytes) => match String::from_utf8(bytes) {
-                Ok(v) => Ok(Cow::from(v)),
-                Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
-            },
+        match std::str::from_utf8(&bytes) {
+            Ok(v) => Ok(v.to_string()),
+            Err(_) => Err(ResError::InvalidUtf8(self.path.to_string())),
         }
     }
 
@@ -129,6 +123,9 @@ where
         match self.path.get_type() {
             Some(ResType::Yaml) => {
                 let bytes = self.loader.load_raw(&self.path).await?;
+                if std::str::from_utf8(&bytes).is_err() {
+                    return Err(ResError::InvalidUtf8(self.path.to_string()));
+                }
                 match serde_yaml::from_slice(&bytes) {
                     Ok(v) => Ok(v),
                     Err(e) => Err(ResError::InvalidYaml(self.path.to_string(), e)),
@@ -136,6 +133,9 @@ where
             }
             Some(ResType::Json) => {
                 let bytes = self.loader.load_raw(&self.path).await?;
+                if std::str::from_utf8(&bytes).is_err() {
+                    return Err(ResError::InvalidUtf8(self.path.to_string()));
+                }
                 match serde_json::from_slice(&bytes) {
                     Ok(v) => Ok(v),
                     Err(e) => Err(ResError::InvalidJson(self.path.to_string(), e)),
@@ -161,7 +161,7 @@ where
         // load the bytes
         let bytes = self.loader.load_raw(&self.path).await?;
         // encode the bytes and append to the data url
-        base64::engine::general_purpose::STANDARD.encode_string(bytes, &mut data_url);
+        base64::engine::general_purpose::STANDARD.encode_string(bytes.deref(), &mut data_url);
 
         Ok(data_url)
     }

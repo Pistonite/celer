@@ -40,15 +40,19 @@ export const MetaSettings: React.FC = () => {
     }, [stageMode]);
     return (
         <>
-            <SettingsSection title="Document">
-                <InfoField label="Title" value={project?.title || ""} />
-                <InfoField label="Version" value={project?.version || ""} />
-                <InfoField label="Source" value={project?.source || ""} />
-                {project &&
-                    Object.entries(project.stats).map(([key, value], i) => (
-                        <InfoField label={key} value={value} key={i} />
-                    ))}
-            </SettingsSection>
+            {
+                !!project && (
+                    <SettingsSection title="Document">
+                        <InfoField label="Title" value={project?.title || ""} />
+                        <InfoField label="Version" value={project?.version || ""} />
+                        <InfoField label="Source" value={project?.source || ""} />
+                        {project &&
+                            Object.entries(project.stats).map(([key, value], i) => (
+                                <InfoField label={key} value={value} key={i} />
+                            ))}
+                    </SettingsSection>
+                )
+            }
             <SettingsSection title="Build">
                 <InfoField
                     label="Client Version"

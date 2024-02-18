@@ -77,7 +77,7 @@ export const SettingsDialog: React.FC = () => {
             },
             {
                 id: "meta",
-                text: "Meta",
+                text: "Info",
                 Icon: Info20Regular,
                 Page: MetaSettings,
             },

@@ -10,7 +10,7 @@ use js_sys::{Array, Function, Uint8Array};
 use log::info;
 use wasm_bindgen::prelude::*;
 
-use celerc::env::yield_budget;
+use celerc::env::{yield_budget, RefCounted};
 use celerc::macros::async_trait;
 use celerc::res::{Loader, ResError, ResPath, ResResult};
 
@@ -46,7 +46,7 @@ pub struct LoaderInWasm;
 
 #[async_trait(?Send)]
 impl Loader for LoaderInWasm {
-    async fn load_raw<'s>(&'s self, path: &ResPath<'_>) -> ResResult<Cow<'s, [u8]>> {
+    async fn load_raw(&self, path: &ResPath) -> ResResult<RefCounted<[u8]>> {
         let result = match path {
             ResPath::Local(path) => {
                 info!("loading local {path}");
@@ -58,7 +58,7 @@ impl Loader for LoaderInWasm {
             }
         };
         yield_budget(1).await;
-        result.map(Cow::Owned)
+        result.map(RefCounted::from)
     }
 }
 

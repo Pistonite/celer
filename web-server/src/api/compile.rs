@@ -37,11 +37,12 @@ macro_rules! cache_key {
 
 #[cached(
     size=32,
-    time=600,
+    time=301,
     key="String",
-    convert=r#"{ cache_key!(_owner, _repo, _path, _reference) }"#
+    convert=r#"{ cache_key!(_owner, _repo, _path, _reference) }"#,
+    sync_writes=true
 )]
-async fn compile(_owner: &str, _repo: &str, _path: Option<&str>, _reference: Option<&str>) -> String {
+async fn get_context(owner: &str, repo: &str, path: Option<&str>, reference: Option<&str>) -> PreparedContext<$0> {
     // create root resource (root of repo)
     // load project entry points
     //
