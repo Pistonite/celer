@@ -6,7 +6,7 @@ members = [
     "compiler-macros/",
     "compiler-wasm/",
     "compiler-wasm/build/",
-    "web-server/",
+    "server/",
 ]
 
 [profile.release]

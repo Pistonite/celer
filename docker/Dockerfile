@@ -2,7 +2,7 @@ FROM alpine:latest
 EXPOSE 80
 ENV APP_DIR=/opt/app
 COPY ./dist $APP_DIR
-RUN chmod +x $APP_DIR/bin/celerserver
+RUN chmod +x $APP_DIR/bin/celery
 
 WORKDIR $APP_DIR
 
@@ -13,4 +13,4 @@ ENV CELERSERVER_LOG=INFO \
     CELERSERVER_APP_DIR=/opt/app/app \
     CELERSERVER_GZIP=true
 
-CMD ["./bin/celerserver"]
+CMD ["./bin/celery"]

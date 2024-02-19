@@ -1,38 +1,35 @@
 version: '3'
 
 includes:
-  compiler-base:
+  base:
     taskfile: ./compiler-base
-    aliases: [base]
     dir: ./compiler-base
 
-  compiler-core:
+  core:
     taskfile: ./compiler-core
-    aliases: [core]
     dir: ./compiler-core
 
-  compiler-wasm:
+  wasm:
     taskfile: ./compiler-wasm
-    aliases: [wasm]
     dir: ./compiler-wasm
 
   docs:
     taskfile: ./docs
     dir: ./docs
 
-  web-client:
+  client:
     taskfile: ./web-client
-    aliases: [client, c]
+    aliases: [c]
     dir: ./web-client
 
-  web-server:
-    taskfile: ./web-server
-    aliases: [server, s]
-    dir: ./web-server
+  server:
+    taskfile: ./server
+    aliases: [s]
+    dir: ./server
 
-  web-themes:
+  themes:
     taskfile: ./web-themes
-    aliases: [themes, th]
+    aliases: [th]
     dir: ./web-themes
 
   docker:
@@ -70,7 +67,7 @@ tasks:
     - cargo clippy --package compiler-core --features native --all-targets -- -D warnings -D clippy::todo
     - cargo clippy --package compiler-core --features wasm --all-targets -- -D warnings -D clippy::todo
     - cargo clippy --package compiler-wasm --all-targets -- -D warnings -D clippy::todo
-    - cargo clippy --package web-server --all-targets -- -D warnings -D clippy::todo
+    - cargo clippy --package celery --all-targets -- -D warnings -D clippy::todo
     - cargo fmt --check
 
   fix:rs:
@@ -87,10 +84,9 @@ tasks:
   build:server:
     deps:
     - base:grammar
-    dir: ./web-server
+    dir: ./server
     cmds:
-    - rustup default stable
-    - cross build --bin celerserver --release --target x86_64-unknown-linux-musl
+    - cross build --bin celery --release --target x86_64-unknown-linux-musl
 
   build:client:
     deps:
