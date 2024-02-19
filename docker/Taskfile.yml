@@ -10,7 +10,7 @@ tasks:
     - mkdir -p dist/bin
     - cp -r ../docs/src/.vitepress/dist/* dist/docs
     - cp -r ../web-client/dist/* dist/app
-    - cp ../target/x86_64-unknown-linux-musl/release/celerserver dist/bin
+    - cp ../target/x86_64-unknown-linux-musl/release/celery dist/bin
     - chmod +x ./make-version.sh
     - ./make-version.sh 0.0.0-dev docker
 

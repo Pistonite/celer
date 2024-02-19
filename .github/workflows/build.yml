@@ -13,29 +13,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: arduino/setup-task@v1
+    - uses: arduino/setup-task@v2
       with:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: 18.x
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
     - uses: Swatinem/rust-cache@v2
-    - uses: baptiste0928/cargo-install@v2
+    - uses: baptiste0928/cargo-install@v3
       with:
         crate: regen-lang
-    - uses: baptiste0928/cargo-install@v2
+    - uses: baptiste0928/cargo-install@v3
       with:
         crate: wasm-pack
-    - uses: baptiste0928/cargo-install@v2
+    - uses: baptiste0928/cargo-install@v3
       with:
         crate: txtpp
     - run: task themes:ci client:ci --output group
     - run: task build:client --output group
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: web-client/dist
         name: app
@@ -46,22 +46,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: arduino/setup-task@v1
+    - uses: arduino/setup-task@v2
       with:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: 18.x
     - uses: dtolnay/rust-toolchain@stable
     - uses: Swatinem/rust-cache@v2
-    - uses: baptiste0928/cargo-install@v2
+    - uses: baptiste0928/cargo-install@v3
       with:
         crate: txtpp
         features: cli
     - run: task docs:ci
     - run: task docs:build
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: docs/src/.vitepress/dist
         name: docs
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: arduino/setup-task@v1
+    - uses: arduino/setup-task@v2
       with:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -83,15 +83,15 @@ jobs:
       with:
         targets: x86_64-unknown-linux-musl
     - uses: Swatinem/rust-cache@v2
-    - uses: baptiste0928/cargo-install@v2
+    - uses: baptiste0928/cargo-install@v3
       with:
         crate: regen-lang
     - run: task base:grammar
-    - run: cargo build --bin celerserver --release --target x86_64-unknown-linux-musl
-      working-directory: ./web-server
-    - uses: actions/upload-artifact@v3
+    - run: cargo build --bin celery --release --target x86_64-unknown-linux-musl
+      working-directory: ./server
+    - uses: actions/upload-artifact@v4
       with:
-        path: target/x86_64-unknown-linux-musl/release/celerserver
+        path: target/x86_64-unknown-linux-musl/release/celery
         name: bin
         retention-days: 3
 

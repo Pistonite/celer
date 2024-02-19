@@ -318,6 +318,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50d30906286121d95be3d479533b458f87493b30a4b5f79a607db8f5d11aa91f"
 
 [[package]]
+name = "celery"
+version = "0.0.0"
+dependencies = [
+ "axum",
+ "axum-macros",
+ "axum-server",
+ "cached",
+ "compiler-core",
+ "envconfig",
+ "flate2",
+ "futures",
+ "http-body 0.4.5",
+ "instant",
+ "once_cell",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2048,31 +2073,6 @@ name = "wasm-bindgen-shared"
 version = "0.2.89"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ab9b36309365056cd639da3134bf87fa8f3d86008abf99e612384a6eecd459f"
-
-[[package]]
-name = "web-server"
-version = "0.0.0"
-dependencies = [
- "axum",
- "axum-macros",
- "axum-server",
- "cached",
- "compiler-core",
- "envconfig",
- "flate2",
- "futures",
- "http-body 0.4.5",
- "instant",
- "once_cell",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
-]
 
 [[package]]
 name = "web-sys"

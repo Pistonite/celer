@@ -15,7 +15,7 @@ tasks:
       CELERSERVER_SITE_ORIGIN: https://pistonite.local:8173
       CELERSERVER_GZIP: "false"
     cmds:
-    - cargo watch -B 1 -s "cargo run --bin celerserver {{.CLI_ARGS}}"
+    - cargo watch -B 1 -s "cargo run --bin celery {{.CLI_ARGS}}"
 
   watch:
     desc: Run server tests in watch mode
