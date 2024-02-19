@@ -12,7 +12,10 @@ where
     pub(crate) inner: Rc<T>,
 }
 
-impl<T> Clone for RefCounted<T> where T: ?Sized {
+impl<T> Clone for RefCounted<T>
+where
+    T: ?Sized,
+{
     #[inline]
     fn clone(&self) -> Self {
         Self {

@@ -1,8 +1,10 @@
 use celerc::pack::PackError;
 use instant::Instant;
 
-use celerc::{CompDoc, CompileContext, Compiler, ContextBuilder, ExpoContext, PluginOptions, PreparedContext};
 use celerc::res::{self, ResPath, Resource};
+use celerc::{
+    CompDoc, CompileContext, Compiler, ContextBuilder, ExpoContext, PluginOptions, PreparedContext,
+};
 
 mod loader;
 pub use loader::*;
@@ -10,14 +12,22 @@ mod cache;
 pub use cache::*;
 
 /// Create a context builder for a project
-pub fn new_context_builder(owner: &str, repo: &str, reference: Option<&str>) -> ContextBuilder<ServerResourceLoader> {
+pub fn new_context_builder(
+    owner: &str,
+    repo: &str,
+    reference: Option<&str>,
+) -> ContextBuilder<ServerResourceLoader> {
     let resource = new_root_resource(owner, repo, reference);
     let source = format!("{}/{}/{}", owner, repo, reference.unwrap_or("main"));
     ContextBuilder::new(source, resource)
 }
 
 /// Create a root resource for a project
-pub fn new_root_resource(owner: &str, repo: &str, reference: Option<&str>) -> Resource<'static, ServerResourceLoader> {
+pub fn new_root_resource(
+    owner: &str,
+    repo: &str,
+    reference: Option<&str>,
+) -> Resource<'static, ServerResourceLoader> {
     let loader = loader::get_loader();
     let base_url = res::base_url(owner, repo, reference);
     let res_path = ResPath::new_remote_unchecked(base_url, "project.yaml");
@@ -25,9 +35,9 @@ pub fn new_root_resource(owner: &str, repo: &str, reference: Option<&str>) -> Re
 }
 
 pub async fn compile(
-    prep_ctx: &PreparedContext<ServerResourceLoader>, 
+    prep_ctx: &PreparedContext<ServerResourceLoader>,
     start_time: Option<Instant>,
-    plugin_options: Option<PluginOptions>
+    plugin_options: Option<PluginOptions>,
 ) -> ExpoContext {
     let mut comp_ctx = prep_ctx.new_compilation(start_time).await;
     match comp_ctx.configure_plugins(plugin_options).await {
@@ -39,10 +49,7 @@ pub async fn compile(
     }
 }
 
-async fn compile_with_pack_error(
-    context: CompileContext<'_>,
-    error: PackError,
-) -> ExpoContext {
+async fn compile_with_pack_error(context: CompileContext<'_>, error: PackError) -> ExpoContext {
     let comp_doc = CompDoc::from_diagnostic(error, context);
     let exec_ctx = comp_doc.execute().await;
     exec_ctx.prepare_exports()
@@ -53,40 +60,3 @@ async fn compile_with_compiler(compiler: Compiler<'_>) -> ExpoContext {
     let exec_ctx = comp_doc.execute().await;
     exec_ctx.prepare_exports()
 }
-
-// /// Convert and normalize input path to the path to project.yaml
-// fn project_yaml_path(path: Option<&str>) -> Cow<str> {
-//     match path {
-//         None => Cow::Borrowed("project.yaml"),
-//         Some(p) => {
-//             let mut path = PathBuf::from(p.trim_start_matches('/'));
-//             path.push("project.yaml");
-//             Cow::Owned(path .to_string())
-//         }
-//     }
-// }
-
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//
-//     #[test]
-//     fn test_project_yaml_path_empty() {
-//         assert_eq!(project_yaml_path(None), "project.yaml");
-//         assert_eq!(project_yaml_path(Some("")), "project.yaml");
-//     }
-//
-//     #[test]
-//     fn test_project_yaml_path_relative() {
-//         assert_eq!(project_yaml_path(Some("foo")), "foo/project.yaml");
-//         assert_eq!(project_yaml_path(Some("foo/bar")), "foo/bar/project.yaml");
-//         assert_eq!(project_yaml_path(Some("foo/../bar")), "foo/../bar/project.yaml");
-//     }
-//
-//     #[test]
-//     fn test_project_yaml_path_absolute() {
-//         assert_eq!(project_yaml_path(Some("/foo")), "foo/project.yaml");
-//         assert_eq!(project_yaml_path(Some("/foo/bar")), "foo/bar/project.yaml");
-//         assert_eq!(project_yaml_path(Some("///foo/../bar")), "foo/../bar/project.yaml");
-//     }
-// }

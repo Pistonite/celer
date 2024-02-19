@@ -3,7 +3,6 @@
 //! The resource loader is backed by JS functions binded to the WASM instance
 //! at init time
 
-use std::borrow::Cow;
 use std::cell::RefCell;
 
 use js_sys::{Array, Function, Uint8Array};

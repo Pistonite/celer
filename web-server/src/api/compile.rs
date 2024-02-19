@@ -1,8 +1,8 @@
-use instant::Instant;
-use serde::{Deserialize, Serialize};
-use axum::{Json, Router};
 use axum::extract::Path;
 use axum::routing::get;
+use axum::{Json, Router};
+use instant::Instant;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
@@ -11,12 +11,12 @@ use crate::compiler;
 
 pub fn init_compile_api() -> Router {
     Router::new()
-    .route("/:owner/:repo/:reference", get(compile_owner_repo_ref))
-    .route("/:owner/:repo/:reference/*path", get(compile_owner_repo_ref_path))
-    .layer(
-            ServiceBuilder::new()
-            .layer(CompressionLayer::new())
+        .route("/:owner/:repo/:reference", get(compile_owner_repo_ref))
+        .route(
+            "/:owner/:repo/:reference/*path",
+            get(compile_owner_repo_ref_path),
         )
+        .layer(ServiceBuilder::new().layer(CompressionLayer::new()))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,7 +27,7 @@ pub enum CompileResponse {
 }
 
 async fn compile_owner_repo_ref(
-    Path((owner, repo, reference)): Path<(String, String, String)>
+    Path((owner, repo, reference)): Path<(String, String, String)>,
 ) -> Json<CompileResponse> {
     let response = compile_internal(&owner, &repo, None, &reference).await;
     Json(response)
@@ -48,7 +48,7 @@ async fn compile_internal(
 ) -> CompileResponse {
     // TODO #192: plugin options
     let start_time = Instant::now();
-    let prep_ctx = match compiler::get_context(&owner, &repo, path, &reference).await {
+    let prep_ctx = match compiler::get_context(owner, repo, path, reference).await {
         Ok(ctx) => ctx,
         Err(e) => return CompileResponse::Failure(e.to_string()),
     };

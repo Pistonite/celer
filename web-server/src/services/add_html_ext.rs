@@ -15,7 +15,7 @@ where
     F: Service<Request<ReqBody>, Response = Response<FResBody>, Error = Infallible> + Clone,
     F::Future: Send + 'static,
     FResBody: HttpBody<Data = Bytes> + Send + 'static,
-    <FResBody as HttpBody>::Error: Send + Sync + std::error::Error
+    FResBody::Error: std::error::Error + Send + Sync,
 {
     type Response = <ServeDir<F> as Service<Request<ReqBody>>>::Response;
     type Error = <ServeDir<F> as Service<Request<ReqBody>>>::Error;
