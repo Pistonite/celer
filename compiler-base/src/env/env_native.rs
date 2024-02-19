@@ -12,11 +12,14 @@ where
     pub(crate) inner: Arc<T>,
 }
 
-impl<T> Clone for RefCounted<T> {
+impl<T> Clone for RefCounted<T>
+where
+    T: ?Sized,
+{
     #[inline]
     fn clone(&self) -> Self {
         Self {
-            inner: self.inner.clone(),
+            inner: Arc::clone(&self.inner),
         }
     }
 }
@@ -35,6 +38,15 @@ impl From<&str> for RefCounted<str> {
     fn from(s: &str) -> Self {
         Self {
             inner: Arc::from(s),
+        }
+    }
+}
+
+impl<T> From<Vec<T>> for RefCounted<[T]> {
+    #[inline]
+    fn from(v: Vec<T>) -> Self {
+        Self {
+            inner: Arc::from(v),
         }
     }
 }

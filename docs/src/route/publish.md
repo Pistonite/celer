@@ -1,6 +1,6 @@
 # Publish the Route
 :::info
-Incomplete. Tracked by [TODO #25](https://github.com/Pistonite/celer/issues/25)
+Incomplete. Tracked by [TODO #26](https://github.com/Pistonite/celer/issues/26)
 :::
 To publish or share your route, you need to upload it to GitHub. Everyone can then use Celer to view it. You need a GitHub account for this.
 

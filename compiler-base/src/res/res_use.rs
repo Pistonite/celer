@@ -54,11 +54,9 @@ impl Display for ValidUse {
                 path,
                 reference,
             } => {
-                write!(f, "{}/{}/{}", owner, repo, path)?;
-                if let Some(reference) = reference {
-                    write!(f, ":{}", reference)?;
-                }
-                Ok(())
+                let reference = reference.as_ref().map(|s| s.as_str());
+                let v = format_remote_use(owner, repo, path, reference);
+                write!(f, "{}", v)
             }
         }
     }
@@ -157,12 +155,23 @@ impl ValidUse {
                 reference,
                 ..
             } => {
-                let branch = reference.as_deref().unwrap_or("main");
-                let url = format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/");
-                Some(url)
+                let reference = reference.as_ref().map(|s| s.as_str());
+                Some(base_url(owner, repo, reference))
             }
         }
     }
+}
+
+pub fn format_remote_use(owner: &str, repo: &str, path: &str, reference: Option<&str>) -> String {
+    match reference {
+        Some(reference) => format!("{owner}/{repo}/{path}:{reference}"),
+        None => format!("{owner}/{repo}/{path}"),
+    }
+}
+
+pub fn base_url(owner: &str, repo: &str, reference: Option<&str>) -> String {
+    let branch = reference.unwrap_or("main");
+    format!("https://raw.githubusercontent.com/{owner}/{repo}/{branch}/")
 }
 
 #[cfg(test)]

@@ -15,4 +15,14 @@ tasks:
       CELERSERVER_SITE_ORIGIN: https://pistonite.local:8173
       CELERSERVER_GZIP: "false"
     cmds:
-    - cargo watch -B 1 -s "cargo run --bin celerserver -- {{.CLI_ARGS}}"
+    - cargo watch -B 1 -s "cargo run --bin celerserver {{.CLI_ARGS}}"
+
+  watch:
+    desc: Run server tests in watch mode
+    cmds:
+    - cargo watch -x test
+
+  test:
+    desc: Run server tests
+    cmds:
+    - cargo test {{.CLI_ARGS}}

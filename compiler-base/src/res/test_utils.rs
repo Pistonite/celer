@@ -1,6 +1,5 @@
 //! Test utilities for resource
-use std::borrow::Cow;
-
+use crate::env::RefCounted;
 use crate::macros::async_trait;
 
 use super::{Loader, ResPath, ResResult};
@@ -9,7 +8,7 @@ use super::{Loader, ResPath, ResResult};
 pub struct StubLoader;
 #[async_trait(auto)]
 impl Loader for StubLoader {
-    async fn load_raw<'s>(&'s self, _: &ResPath<'_>) -> ResResult<Cow<'s, [u8]>> {
+    async fn load_raw(&self, _: &ResPath) -> ResResult<RefCounted<[u8]>> {
         panic!("stub loader called")
     }
 }

@@ -1,9 +1,8 @@
 use std::convert::Infallible;
 use std::task::{Context, Poll};
 
-use axum::body::Bytes;
+use axum::body::{Bytes, HttpBody};
 use axum::http::{Request, Response};
-use http_body::Body;
 use tower::Service;
 use tower_http::services::ServeDir;
 
@@ -15,8 +14,8 @@ impl<ReqBody, F, FResBody> Service<Request<ReqBody>> for AddHtmlExtService<F>
 where
     F: Service<Request<ReqBody>, Response = Response<FResBody>, Error = Infallible> + Clone,
     F::Future: Send + 'static,
-    FResBody: Body<Data = Bytes> + Send + 'static,
-    FResBody::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
+    FResBody: HttpBody<Data = Bytes> + Send + 'static,
+    FResBody::Error: std::error::Error + Send + Sync,
 {
     type Response = <ServeDir<F> as Service<Request<ReqBody>>>::Response;
     type Error = <ServeDir<F> as Service<Request<ReqBody>>>::Error;

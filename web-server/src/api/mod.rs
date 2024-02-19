@@ -1,10 +1,17 @@
-use axum::{Router, routing};
+use axum::{routing, Router};
 use tracing::info;
 
 use crate::env;
 
 mod compile;
-pub fn init_api_v1(router: Router) -> Router {
+
+pub fn init_api(router: Router) -> Router {
     info!("initializing api routes");
-    router.route("/api/v1/version", routing::get(|| async { env::version() }))
+    router.nest("/api/v1", init_api_v1())
+}
+
+pub fn init_api_v1() -> Router {
+    Router::new()
+        .route("/version", routing::get(|| async { env::version() }))
+        .nest("/compile", compile::init_compile_api())
 }

@@ -32,6 +32,8 @@ const createHttpsConfig = () => {
     return undefined;
 };
 
+const https = createHttpsConfig();
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
@@ -42,7 +44,7 @@ export default defineConfig({
         topLevelAwait(),
     ],
     server: {
-        https: createHttpsConfig(),
+        https,
         proxy: {
             "/docs": {
                 target: "http://localhost:3173",
@@ -50,6 +52,11 @@ export default defineConfig({
             },
             "^/docs/.*": {
                 target: "http://localhost:3173",
+                changeOrigin: false,
+            },
+            "^/api/.*": {
+                target: (https ? "https" : "http") + "://0.0.0.0:8173",
+                secure: false,
                 changeOrigin: false,
             },
         },

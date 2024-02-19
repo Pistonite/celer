@@ -85,7 +85,7 @@ where
                     let script = script_resource.load_utf8().await?;
                     Plugin::Script(ScriptPlugin {
                         id: script_resource.path().to_string(),
-                        script: script.into_owned(),
+                        script: script.to_string(),
                     })
                 }
             }
