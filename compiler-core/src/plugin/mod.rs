@@ -38,7 +38,7 @@ pub struct PluginMetadata {
 ///
 /// A runtime of a plugin can store states that the plugin needs during the compilation.
 /// Each compilation will spawn a new runtime with [`PluginInstance::create_runtime`]
-pub trait PluginRuntime {
+pub trait PluginRuntime: Send + Sync {
     /// Get the id of the plugin
     ///
     /// This is used to identify the plugin, and should be either the name of

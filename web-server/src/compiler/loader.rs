@@ -1,11 +1,11 @@
 
-use std::borrow::Cow;
 use std::io::Read;
 
 use cached::{Cached, TimedSizedCache};
 use flate2::read::GzDecoder;
+use once_cell::sync::Lazy;
 use reqwest::{Client, StatusCode};
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::Mutex;
 use tracing::{info, error};
 
 use celerc::env::RefCounted;
@@ -13,21 +13,40 @@ use celerc::res::{Loader, ResError, ResPath, ResResult};
 use celerc::macros::async_trait;
 
 const MAX_RESOURCE_SIZE: usize = 1024 * 1024 * 10; // 10 MB
+static LOADER: Lazy<RefCounted<ServerResourceLoader>> = Lazy::new(|| RefCounted::new(ServerResourceLoader::default()));
+
+pub fn get_loader() -> RefCounted<ServerResourceLoader> {
+    RefCounted::clone(&LOADER)
+}
 
 /// Loader for loading resources from the web
-pub struct ResourceLoader {
+pub struct ServerResourceLoader {
     http_client: Client,
     cache: Mutex<TimedSizedCache<String, RefCounted<[u8]>>>
 }
 
-impl ResourceLoader {
+impl Default for ServerResourceLoader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ServerResourceLoader {
+    pub fn new() -> Self {
+        let http_client= Client::new();
+        let cache = Mutex::new(TimedSizedCache::with_size_and_lifespan(128, 301));
+        Self {
+            http_client,
+            cache
+        }
+    }
     /// Load a resource from Url or cache. On error, returns an additional should_retry flag.
     async fn load_url(&self, url: &str) -> Result<RefCounted<[u8]>, (ResError, bool)> {
         let mut cache = self.cache.lock().await;
-        if let Some(data) = cache.cache_get(&url) {
+        if let Some(data) = cache.cache_get(url) {
             return Ok(RefCounted::clone(data));
         }
-        let response = self.http_client.get(&url)
+        let response = self.http_client.get(url)
             .header("User-Agent", "celery")
             .header("Accept-Encoding", "gzip")
             .send()
@@ -86,8 +105,8 @@ impl ResourceLoader {
 }
 
 #[async_trait]
-impl Loader for ResourceLoader {
-    async fn load_raw(&self, path: &ResPath<'_>) -> ResResult<RefCounted<[u8]>> { 
+impl Loader for ServerResourceLoader {
+    async fn load_raw(&self, path: &ResPath) -> ResResult<RefCounted<[u8]>> { 
         let url = match path {
             ResPath::Local(path) => {
                 error!("Local path not supported! This is not supposed to happen.");

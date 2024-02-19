@@ -5,7 +5,8 @@
 //! Alternatively, you can use a CDN such as Cloudflare to proxy the website.
 
 use axum::response::Redirect;
-use axum::{routing, Router, Server};
+use axum::{routing, Router};
+use axum_server::Server;
 use std::io;
 use std::path::{Path, PathBuf};
 use tower_http::services::{ServeDir, ServeFile};
@@ -53,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &env.app_dir,
         &["/celerc", "/static", "/assets", "/themes"],
     )?;
-    let router = api::init_api_v1(router);
+    let router = api::init_api(router);
 
     let router = router.layer(
         tower_http::trace::TraceLayer::new_for_http()
@@ -70,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .await?;
     } else {
         info!("starting server on http://{address}");
-        Server::bind(&address)
+        Server::bind(address)
             .serve(router.into_make_service())
             .await?;
     }

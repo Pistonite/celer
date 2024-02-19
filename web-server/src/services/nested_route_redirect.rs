@@ -1,11 +1,10 @@
 use std::convert::Infallible;
 use std::task::{Context, Poll};
 
-use axum::body::Bytes;
+use axum::body::{Bytes, HttpBody};
 use axum::http::{Request, StatusCode};
 use axum::response::{IntoResponse, Response};
 use futures::future::BoxFuture;
-use http_body::Body;
 use tower::Service;
 use tower_http::services::ServeDir;
 
@@ -31,7 +30,7 @@ where
         + Send
         + 'static,
     F::Future: Send + 'static,
-    FResBody: Body<Data = Bytes> + Send + 'static,
+    FResBody: HttpBody<Data = Bytes> + Send + 'static,
     FResBody::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
     ReqBody: Send + 'static,
 {

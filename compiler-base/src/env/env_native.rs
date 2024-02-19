@@ -42,7 +42,7 @@ impl From<&str> for RefCounted<str> {
 impl<T> From<Vec<T>> for RefCounted<[T]> {
     #[inline]
     fn from(v: Vec<T>) -> Self {
-        Self { inner: Rc::from(v) }
+        Self { inner: Arc::from(v) }
     }
 }
 

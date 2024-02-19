@@ -50,3 +50,4 @@ jobs:
         crate: regen-lang
     - run: task base:test -- --release
     - run: task core:test -- --release
+    - run: task server:test -- --release

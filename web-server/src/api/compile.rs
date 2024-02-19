@@ -1,55 +1,62 @@
+use instant::Instant;
+use serde::{Deserialize, Serialize};
+use axum::{Json, Router};
 use axum::extract::Path;
-use cached::proc_macro::cached;
-// use celerc::types::ExecDoc;
+use axum::routing::get;
+use serde_json::Value;
+use tower::ServiceBuilder;
+use tower_http::compression::CompressionLayer;
 
-pub async fn compile_owner_repo(Path((_owner, _repo)): Path<(String, String)>) -> String {
-    // TODO #25: implement this
-    "".to_string()
+use crate::compiler;
+
+pub fn init_compile_api() -> Router {
+    Router::new()
+    .route("/:owner/:repo/:reference", get(compile_owner_repo_ref))
+    .route("/:owner/:repo/:reference/*path", get(compile_owner_repo_ref_path))
+    .layer(
+            ServiceBuilder::new()
+            .layer(CompressionLayer::new())
+        )
 }
 
-pub async fn compile_owner_repo_path(
-    Path((_owner, _repo, _path)): Path<(String, String, String)>,
-) -> String {
-    // TODO #25: implement this
-    "".to_string()
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type", content = "data")]
+pub enum CompileResponse {
+    Success(Value),
+    Failure(String),
 }
 
-/// Separate string into before `:` and after
-fn separate_ref(path: &str) -> (&str, Option<&str>) {
-    let mut parts = path.splitn(2, ':');
-    let path = parts.next().unwrap_or("");
-    (path, parts.next())
+async fn compile_owner_repo_ref(
+    Path((owner, repo, reference)): Path<(String, String, String)>
+) -> Json<CompileResponse> {
+    let response = compile_internal(&owner, &repo, None, &reference).await;
+    Json(response)
 }
 
-macro_rules! cache_key {
-    ($owner:ident, $repo:ident, $path:ident, $reference:ident) => {
-        {
-            let r = $reference.clone().unwrap_or("main");
-            let owner = $owner;
-            let repo = $repo;
-            match $path.as_ref() {
-                Some(x) => format!("{owner}/{repo}/{r}/{x}"),
-                None => format!("{owner}/{repo}/{r}"),
-            }
-        }
-    }
+async fn compile_owner_repo_ref_path(
+    Path((owner, repo, reference, path)): Path<(String, String, String, String)>,
+) -> Json<CompileResponse> {
+    let response = compile_internal(&owner, &repo, Some(&path), &reference).await;
+    Json(response)
 }
 
-#[cached(
-    size=32,
-    time=301,
-    key="String",
-    convert=r#"{ cache_key!(_owner, _repo, _path, _reference) }"#,
-    sync_writes=true
-)]
-async fn get_context(owner: &str, repo: &str, path: Option<&str>, reference: Option<&str>) -> PreparedContext<$0> {
-    // create root resource (root of repo)
-    // load project entry points
-    //
-    // compile and return
-    // TODO #25: implement this
-    "".to_string()
+async fn compile_internal(
+    owner: &str,
+    repo: &str,
+    path: Option<&str>,
+    reference: &str,
+) -> CompileResponse {
+    // TODO #192: plugin options
+    let start_time = Instant::now();
+    let prep_ctx = match compiler::get_context(&owner, &repo, path, &reference).await {
+        Ok(ctx) => ctx,
+        Err(e) => return CompileResponse::Failure(e.to_string()),
+    };
+
+    let expo_ctx = compiler::compile(&prep_ctx, Some(start_time), None).await;
+    let expo_ctx_json = match serde_json::to_value(expo_ctx) {
+        Ok(v) => v,
+        Err(e) => return CompileResponse::Failure(e.to_string()),
+    };
+    CompileResponse::Success(expo_ctx_json)
 }
-
-
-

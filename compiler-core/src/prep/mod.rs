@@ -335,9 +335,13 @@ where
             }
             None => "(unspecified)".into(),
         };
+        let source = match &self.entry_point {
+            Some(entry_point) => format!("{} ({})", self.source, entry_point),
+            None => self.source.clone(),
+        };
 
         Ok(RouteMetadata {
-            source: self.source.clone(),
+            source,
             title,
             version,
         })
