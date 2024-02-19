@@ -5,7 +5,7 @@ scheme://celer.placeholder.domain/api/v1
 ```
 For example:
 ```
-scheme://celer.placeholder.domain/api/v1/version
+https://celer.pistonite.org/api/v1/version
 ```
 
 ## `GET /version`
@@ -25,17 +25,29 @@ Response
 0.0.4-alpha fccf5909de655bc2c81ccd8ed8001111a753bbf5
 ```
 
-## `GET /compile/{owner}/{repo}[/{entry_point}][:{ref}]`
-Compiles the document and returns an ExecDoc in JSON
+## `GET /compile/{owner}/{repo}/{ref}[/{path}]`
+Compiles the document and returns an ExpoContext in JSON
 ### Parameters
 |Name|Description|
 |-|-|
 |`owner`|Owner of the GitHub repo to pull the route from|
 |`repo`|The GitHub repo name (`owner/repo` makes up the repo)|
-|`entry_point`| (Optional) An entry point defined in the root `project.yaml`. When omitted, it uses the `default` entry point if defined, or the root `project.yaml` itself.|
-|`ref`| (Optional) The branch, tag, or commit for the repo to pull the route from. When omitted, defaults to `main`|
+|`ref`| The branch, tag, or commit for the repo to pull the route from. |
+|`path`| (Optional) Either a path in the repo to the directory containing the `project.yaml`, or an alias defined in the `entry-points` of the root `project.yaml`. When omitted, it uses the `default` entry point if defined, or the root `project.yaml` itself.|
 ### Returns
-|Status|When|Response|
-|-|-|-|
-|`200`|OK|Route compiles without internal errors (errors during compilation will show in the document)|
-|`404`|Project path is invalid|Empty|
+It should always return status `200 OK`.
+
+If the compilation is successful, it will return the following. `data` contains ExpoContext serialized to JSON.
+```json
+{
+    "type": "success",
+    "data": { ... }
+}
+```
+Otherwise, it will return
+```json
+{
+    "type": "failure",
+    "data": "error message here"
+}
+```
