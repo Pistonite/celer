@@ -17,17 +17,17 @@ jobs:
       with:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: 18.x
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
     - uses: Swatinem/rust-cache@v2
-    - uses: baptiste0928/cargo-install@v2
+    - uses: baptiste0928/cargo-install@v3
       with:
         crate: regen-lang
-    - uses: baptiste0928/cargo-install@v2
+    - uses: baptiste0928/cargo-install@v3
       with:
         crate: wasm-pack
     - run: task client:ci --output group
@@ -45,7 +45,7 @@ jobs:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: dtolnay/rust-toolchain@stable
     - uses: Swatinem/rust-cache@v2
-    - uses: baptiste0928/cargo-install@v2
+    - uses: baptiste0928/cargo-install@v3
       with:
         crate: regen-lang
     - run: task base:test -- --release
