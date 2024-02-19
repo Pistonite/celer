@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: arduino/setup-task@v1
+    - uses: arduino/setup-task@v2
       with:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: arduino/setup-task@v1
+    - uses: arduino/setup-task@v2
       with:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: arduino/setup-task@v1
+    - uses: arduino/setup-task@v2
       with:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
@@ -87,11 +87,11 @@ jobs:
       with:
         crate: regen-lang
     - run: task base:grammar
-    - run: cargo build --bin celerserver --release --target x86_64-unknown-linux-musl
-      working-directory: ./web-server
+    - run: cargo build --bin celery --release --target x86_64-unknown-linux-musl
+      working-directory: ./server
     - uses: actions/upload-artifact@v4
       with:
-        path: target/x86_64-unknown-linux-musl/release/celerserver
+        path: target/x86_64-unknown-linux-musl/release/celery
         name: bin
         retention-days: 3
 
