@@ -3,6 +3,7 @@
 //! Document viewer system
 
 export * from "./export";
+export * from "./loader";
 export * from "./state";
 export * from "./utils";
 export * as documentReducers from "./docReducers";

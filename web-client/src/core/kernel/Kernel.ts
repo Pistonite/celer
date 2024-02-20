@@ -17,9 +17,10 @@ import {
     getDefaultSplitTypes,
     getSplitExportPluginConfigs,
     isRecompileNeeded,
+    loadDocumentFromCurrentUrl,
 } from "core/doc";
 import { ExpoDoc, ExportRequest } from "low/celerc";
-import { console, Logger, isInDarkMode } from "low/utils";
+import { console, Logger, isInDarkMode, sleep } from "low/utils";
 import type { FileSys, FsResult } from "low/fs";
 
 import type { CompilerKernel } from "./compiler";
@@ -130,6 +131,9 @@ export class Kernel {
 
             this.store.dispatch(viewActions.setStageMode("edit"));
         } else {
+            setTimeout(() => {
+                this.reloadDocument();
+            }, 0);
             this.store.dispatch(viewActions.setStageMode("view"));
         }
     }
@@ -363,6 +367,36 @@ export class Kernel {
             return {
                 error: "Export from server is not available yet. This is tracked by issue 184 on GitHub",
             };
+        }
+    }
+
+    /// Reload the document from the server based on the current URL
+    private async reloadDocument() {
+        let retry = true;
+        while (retry) {
+            this.log.info("reloading document from server");
+            const result = await loadDocumentFromCurrentUrl();
+            if (result.type === "failure") {
+                this.store.dispatch(documentActions.setDocument(undefined));
+                this.log.info("failed to load document from server");
+                this.log.error(result.data);
+                retry = await this.getAlertMgr().show({
+                    title: "Failed to load route",
+                    message: result.data,
+                    learnMoreLink: result.help,
+                    okButton: "Retry",
+                    cancelButton: "Cancel",
+                });
+                if (!retry) {
+                    return;
+                }
+                this.log.warn("retrying in 1s...")
+                await sleep(1000);
+                continue;
+            }
+            this.log.info("received document from server");
+            this.store.dispatch(documentActions.setDocument(result.data));
+            break;
         }
     }
 }
