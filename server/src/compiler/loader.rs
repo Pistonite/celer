@@ -1,5 +1,6 @@
 use std::io::Read;
 
+use axum::http::header;
 use cached::{Cached, TimedSizedCache};
 use flate2::read::GzDecoder;
 use once_cell::sync::Lazy;
@@ -46,8 +47,8 @@ impl ServerResourceLoader {
         let response = self
             .http_client
             .get(url)
-            .header("User-Agent", "celery")
-            .header("Accept-Encoding", "gzip")
+            .header(header::USER_AGENT.as_str(), "celery")
+            .header(header::ACCEPT_ENCODING.as_str(), "gzip")
             .send()
             .await
             .map_err(|e| {
@@ -68,7 +69,7 @@ impl ServerResourceLoader {
         }
 
         // check Content-Encoding
-        let is_gzipped = match response.headers().get("Content-Encoding") {
+        let is_gzipped = match response.headers().get(header::CONTENT_ENCODING.as_str()) {
             Some(encoding) => {
                 if encoding != "gzip" {
                     let encoding = encoding.to_str().unwrap_or("unknown");

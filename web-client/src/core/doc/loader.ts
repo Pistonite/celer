@@ -37,15 +37,23 @@ export async function loadDocumentFromCurrentUrl(): Promise<LoadDocumentResult> 
         return createLoadError("Invalid document reference. Please double check you have the correct URL.", HELP_URL);
     }
     let reference = "main";
+    let realRepo = repo;
     if (rest.length > 0) {
         const [last, ref] = rest[rest.length - 1].split(":", 2);
         rest[rest.length - 1] = last;
         if (ref) {
             reference = ref;
         }
+    } else {
+        // :reference might be in repo
+        const [last, ref] = repo.split(":", 2);
+        realRepo = last;
+        if (ref) {
+            reference = ref;
+        }
     }
     const path = rest.join("/");
-    return await loadDocument(owner, repo, reference, path);
+    return await loadDocument(owner, realRepo, reference, path);
 }
 
 function createLoadError(message: string, help: string | undefined): LoadDocumentResult {

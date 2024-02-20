@@ -97,7 +97,7 @@ export class Kernel {
                         const compiler = await this.getCompiler();
                         compiler.compile();
                     } else {
-                        // TODO #26: reload doc from server
+                        this.reloadDocument();
                     }
                 }
             }),
@@ -125,6 +125,7 @@ export class Kernel {
         this.log.info("initializing stage...");
         const path = window.location.pathname;
         if (path === "/edit") {
+            document.title = "Celer Editor";
             const { initCompiler } = await import("./compiler");
             const compiler = initCompiler(this.store);
             this.compiler = compiler;
@@ -395,7 +396,22 @@ export class Kernel {
                 continue;
             }
             this.log.info("received document from server");
-            this.store.dispatch(documentActions.setDocument(result.data));
+            const doc = result.data;
+            try {
+                const { title, version } = doc.execDoc.project;
+                if (!title) {
+                    document.title = "Celer Viewer";
+                } else if (!version) {
+                    document.title = title;
+                } else {
+                    document.title = `${title} - ${version}`;
+                }
+            } catch (e) {
+                this.log.warn("failed to set document title");
+                this.log.error(e);
+                document.title = "Celer Viewer";
+            }
+            this.store.dispatch(documentActions.setDocument(doc));
             break;
         }
     }

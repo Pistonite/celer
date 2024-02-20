@@ -1,45 +1,46 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="og:site_name" content="celer.placeholder.domain" />
-        <meta name="og:type" content="website" />
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="og:site_name" content="celer.placeholder.domain">
+        <meta name="og:type" content="website">
         <!-- VIEWER -->
-        <meta name="theme-color" content="rgb(255,225,153)" />
+        <meta name="theme-color" content="#FFE199">
         <link rel="icon" type="image/svg+xml" href="/static/celer-yellow.svg" />
-        <!-- SERVER_TITLE -->
-        <!-- SERVER_OG_TITLE -->
-        <!-- SERVER_OG_URL -->
-        <!-- SERVER_OG_DESCRIPTION -->
-        <meta name="og:image" content="scheme://celer.placeholder.domain/static/celer-yellow.png" />
+        <!-- SERVER_INJECTED_TAGS -->
+        <meta name="og:image" content="scheme://celer.placeholder.domain/static/celer-yellow.png">
         <!-- VIEWER -->
         <!-- EDITOR -->
-        <meta name="theme-color" content="rgb(176,186,255)" />
+        <meta name="theme-color" content="#B0BAFD">
         <link rel="icon" type="image/svg+xml" href="/static/celer-blue.svg" />
-        <title>Celer Editor</title>
-        <meta name="og:title" content="Celer Editor" />
-        <meta name="og:image" content="scheme://celer.placeholder.domain/static/celer-blue.png" />
-        <meta name="og:url" content="scheme://celer.placeholder.domain/edit" />
-        <meta name="og:description" content="Create your route with the web editor" />
+        <meta name="og:title" content="Celer Editor">
+        <meta name="og:image" content="scheme://celer.placeholder.domain/static/celer-blue.png">
+        <meta name="og:url" content="scheme://celer.placeholder.domain/edit">
+        <meta name="og:description" content="Create your route with the web editor">
         <!-- EDITOR -->
+        <script>document.title='Loading...'</script>
         <script>window.__CELER_VERSION='0.0.0-dev unknown'</script>
     </head>
     <body>
         <div id="react-root">
             <style>
-                #pre-loading {
+                .pre-loading {
                     height: calc(100vh - 16px);
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
+                    gap: 20px;
+                    text-align: center;
+                    font-size: 36px;
+                    font-family: sans-serif;
                 }
                 @media (prefers-color-scheme: dark) {
                     body {
                         background-color: rgb(32, 32, 32);
                     }
-                    #pre-loading {
+                    .pre-loading {
                         color: white;
                     }
                 }
@@ -47,25 +48,16 @@
                     body {
                         background-color: rgb(220, 220, 220);
                     }
-                    #pre-loading {
+                    .pre-loading {
                         color: #333;
                     }
                 }
             </style>
-            <div id="pre-loading">
+            <div class="pre-loading">
                 <div style="width: 200px; max-width: 100vw">
                     <img src="/static/celer-3.svg" width="100%" />
                 </div>
-                <div
-                    style="
-                        text-align: center;
-                        font-size: 2em;
-                        font-family: sans-serif;
-                        margin-top: 20px;
-                    "
-                >
-                    Celer
-                </div>
+                <div>Celer</div>
             </div>
         </div>
         <script type="module" src="/src/main.tsx"></script>

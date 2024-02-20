@@ -21,7 +21,7 @@ export default defineConfig({
             { rel: "icon", href: "/static/celer-3.svg", type: "image/svg+xml" },
         ],
         // Color
-        ["meta", { property: "theme-color", content: "rgb(173,255,184)" }],
+        ["meta", { property: "theme-color", content: "#adfeb8" }],
         // Open Graph
         [
             "meta",

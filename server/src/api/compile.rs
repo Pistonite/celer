@@ -1,6 +1,8 @@
-use axum::extract::Path;
-use axum::routing::get;
+//! The `/compile` API endpoint.
+
 use axum::{Json, Router};
+use axum::extract::Path;
+use axum::routing;
 use instant::Instant;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -9,12 +11,12 @@ use tower_http::compression::CompressionLayer;
 
 use crate::compiler;
 
-pub fn init_compile_api() -> Router {
+pub fn init_api() -> Router {
     Router::new()
-        .route("/:owner/:repo/:reference", get(compile_owner_repo_ref))
+        .route("/:owner/:repo/:reference", routing::get(compile_owner_repo_ref))
         .route(
             "/:owner/:repo/:reference/*path",
-            get(compile_owner_repo_ref_path),
+            routing::get(compile_owner_repo_ref_path),
         )
         .layer(ServiceBuilder::new().layer(CompressionLayer::new()))
 }
