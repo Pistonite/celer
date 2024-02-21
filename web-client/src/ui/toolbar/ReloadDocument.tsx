@@ -11,9 +11,9 @@ import { viewSelector } from "core/store";
 
 import { ToolbarControl } from "./util";
 
-export const CompileProject: ToolbarControl = {
+export const ReloadDocument: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {
-        const { handler, disabled, icon, tooltip } = useCompileProjectControl();
+        const { handler, disabled, icon, tooltip } = useReloadDocumentControl();
         return (
             <Tooltip content={tooltip} relationship="label">
                 <ToolbarButton
@@ -26,7 +26,7 @@ export const CompileProject: ToolbarControl = {
         );
     }),
     MenuItem: () => {
-        const { handler, disabled, icon, tooltip } = useCompileProjectControl();
+        const { handler, disabled, icon, tooltip } = useReloadDocumentControl();
         return (
             <Tooltip content={tooltip} relationship="label">
                 <MenuItem icon={icon} disabled={disabled} onClick={handler}>
@@ -37,12 +37,12 @@ export const CompileProject: ToolbarControl = {
     },
 };
 
-const useCompileProjectControl = () => {
+function useReloadDocumentControl() {
     const kernel = useKernel();
-    const { rootPath, compileInProgress, compilerReady } =
+    const { stageMode, rootPath, compileInProgress, compilerReady } =
         useSelector(viewSelector);
     const handler = useCallback(() => {
-        kernel.compile();
+        kernel.reloadDocument();
     }, [kernel]);
 
     const styles = useCommonStyles();
@@ -52,17 +52,32 @@ const useCompileProjectControl = () => {
             className={compileInProgress ? styles.spinningInfinite : ""}
         />
     );
-    const tooltip = getTooltip(!!rootPath, compileInProgress);
+    let tooltip;
+    let disabled;
+    if (stageMode === "edit") {
+        tooltip = getEditorTooltip(!!rootPath, compileInProgress);
+        disabled = !rootPath || compileInProgress || !compilerReady;
+    } else {
+        tooltip = getViewerTooltip(compileInProgress);
+        disabled = compileInProgress;
+    }
 
     return {
         handler,
-        disabled: !rootPath || compileInProgress || !compilerReady,
+        disabled,
         icon,
         tooltip,
     };
-};
+}
 
-const getTooltip = (isOpened: boolean, compileInProgress: boolean) => {
+function getViewerTooltip(compileInProgress: boolean) {
+        if (compileInProgress) {
+            return "Loading...";
+        }
+        return "Reload Document";
+}
+
+function getEditorTooltip(isOpened: boolean, compileInProgress: boolean) {
     if (isOpened) {
         if (compileInProgress) {
             return "Compiling...";
@@ -70,4 +85,4 @@ const getTooltip = (isOpened: boolean, compileInProgress: boolean) => {
         return "Click to compile the project";
     }
     return "Compile project";
-};
+}

@@ -19,8 +19,9 @@ import { FileAccess, FileSys, FsResult } from "low/fs";
 import { isInDarkMode, IdleMgr, DOMId } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
-import { EditorLog, KernelAccess, toFsPath } from "./utils";
+import { EditorLog, toFsPath } from "./utils";
 import { FileMgr } from "./FileMgr";
+import { KernelAccess } from "./KernelAccess";
 
 EditorLog.info("loading web editor kernel");
 
@@ -161,7 +162,7 @@ class WebEditorKernel implements EditorKernel {
         const result = await this.idleMgr.pauseIdleScope(async () => {
             return await this.fileMgr.loadChangesFromFs();
         });
-        this.kernelAccess.compile();
+        this.kernelAccess.reloadDocument();
         return result;
     }
 
@@ -229,7 +230,7 @@ class WebEditorKernel implements EditorKernel {
         // do this last so we can get the latest save status after auto-save
         this.fileMgr.updateDirtyFileList(unsavedFiles);
         if (this.shouldRecompile) {
-            this.kernelAccess.compile();
+            this.kernelAccess.reloadDocument();
             this.shouldRecompile = false;
         }
     }

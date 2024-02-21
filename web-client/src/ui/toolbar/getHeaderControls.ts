@@ -12,7 +12,7 @@ import { SelectSection } from "./SelectSection";
 import { OpenCloseProject } from "./OpenCloseProject";
 import { SyncProject } from "./SyncProject";
 import { SaveProject } from "./SaveProject";
-import { CompileProject } from "./CompileProject";
+import { ReloadDocument } from "./ReloadDocument";
 import { OpenDocs } from "./OpenDocs";
 import { Export } from "./Export";
 
@@ -33,14 +33,15 @@ export const getHeaderControls = (
         // Doc Controls
         {
             priority: 40,
-            controls: [SelectSection, ViewDiagnostics, Export],
+            controls: [
+                ...(mode === "view" ? [ReloadDocument] : []), SelectSection, ViewDiagnostics, Export],
         },
         // Map Controls
         {
             priority: 20,
             controls: [SwitchMapLayer, ZoomIn, ZoomOut],
         },
-        // Eitor
+        // Editor
         ...(mode !== "edit"
             ? []
             : [
@@ -59,7 +60,7 @@ export const getHeaderControls = (
 
 const getEditorControls = (editorMode: EditorMode): ToolbarControl[] => {
     if (editorMode === "web") {
-        return [CompileProject, SaveProject, SyncProject, OpenCloseProject];
+        return [ReloadDocument, SaveProject, SyncProject, OpenCloseProject];
     }
-    return [CompileProject, OpenCloseProject];
+    return [ReloadDocument, OpenCloseProject];
 };

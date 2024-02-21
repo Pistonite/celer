@@ -24,7 +24,7 @@ import { console, Logger, isInDarkMode, sleep } from "low/utils";
 import type { FileSys, FsResult } from "low/fs";
 
 import type { CompilerKernel } from "./compiler";
-import type { EditorKernel } from "./editor";
+import type { EditorKernel, KernelAccess } from "./editor";
 import { KeyMgr } from "./KeyMgr";
 import { WindowMgr } from "./WindowMgr";
 import { AlertMgr } from "./AlertMgr";
@@ -40,7 +40,7 @@ type InitUiFunction = (
 /// The kernel owns all global resources like the redux store.
 /// It is also responsible for mounting react to the DOM and
 /// handles the routing.
-export class Kernel {
+export class Kernel implements KernelAccess {
     /// The logger
     private log: Logger;
     /// The store
@@ -93,12 +93,7 @@ export class Kernel {
             watchAll(async (newVal: AppState, oldVal: AppState) => {
                 if (await isRecompileNeeded(newVal, oldVal)) {
                     console.info("reloading document due to state change...");
-                    if (viewSelector(newVal).stageMode === "edit") {
-                        const compiler = await this.getCompiler();
-                        compiler.compile();
-                    } else {
-                        this.reloadDocument();
-                    }
+                    await this.reloadDocument();
                 }
             }),
         );
@@ -304,9 +299,13 @@ export class Kernel {
         console.info("project opened.");
     }
 
-    public async compile() {
-        const compiler = await this.getCompiler();
-        compiler.compile();
+    public async reloadDocument() {
+        if (viewSelector(this.store.getState()).stageMode === "edit") {
+            const compiler = await this.getCompiler();
+            compiler.compile();
+            return;
+        } 
+        await this.reloadDocumentFromServer();
     }
 
     public async closeFileSys() {
@@ -372,7 +371,15 @@ export class Kernel {
     }
 
     /// Reload the document from the server based on the current URL
-    private async reloadDocument() {
+    private async reloadDocumentFromServer() {
+        this.store.dispatch(documentActions.setDocument(undefined));
+        // let UI update
+        await sleep(0);
+        // show progress spinner if reload takes longer than 200ms
+        const handle = setTimeout(() => {
+            this.store.dispatch(viewActions.setCompileInProgress(true));
+        }, 200);
+
         let retry = true;
         while (retry) {
             this.log.info("reloading document from server");
@@ -389,7 +396,13 @@ export class Kernel {
                     cancelButton: "Cancel",
                 });
                 if (!retry) {
-                    return;
+                    await this.alertMgr.show({
+                        title: "Load cancelled",
+                        message: "You can retry at any time by refreshing the page, or by clicking \"Reload Document\" from the toolbar.",
+                        okButton: "Got it",
+                        cancelButton: "",
+                    });
+                    break;
                 }
                 this.log.warn("retrying in 1s...")
                 await sleep(1000);
@@ -414,5 +427,7 @@ export class Kernel {
             this.store.dispatch(documentActions.setDocument(doc));
             break;
         }
+        clearTimeout(handle);
+        this.store.dispatch(viewActions.setCompileInProgress(false));
     }
 }

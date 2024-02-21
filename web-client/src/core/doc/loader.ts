@@ -85,6 +85,10 @@ export async function loadDocument(
     console.info(`received resposne in ${elapsed}ms`);
     if (response.type === "success") {
         injectLoadTime(response.data, elapsed);
+    } else {
+        if (!response.help) {
+            response.help = HELP_URL;
+        }
     }
     
     return result.inner();
