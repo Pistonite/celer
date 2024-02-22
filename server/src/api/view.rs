@@ -177,7 +177,7 @@ async fn view_internal(owner: &str, repo: &str, reference: &str, path: &str) -> 
             url.push('/');
             url.push_str(path);
         }
-        if !reference.is_empty() {
+        if !reference.is_empty() && reference != "main" {
             url.push(':');
             url.push_str(reference);
         }
