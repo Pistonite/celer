@@ -4,19 +4,19 @@ use std::fs;
 use std::io;
 use std::sync::OnceLock;
 
-use axum::http::header;
-use axum::http::HeaderValue;
-use axum::http::StatusCode;
-use axum::routing;
 use axum::extract::Path;
+use axum::http::header;
+use axum::http::{HeaderValue, StatusCode};
+use axum::routing;
 use axum::Router;
 use cached::proc_macro::cached;
-use celerc::env;
-use celerc::util;
 use tower::ServiceBuilder;
 use tower_http::compression::CompressionLayer;
 use tower_http::set_header::SetResponseHeaderLayer;
 use tracing::error;
+
+use celerc::env;
+use celerc::util;
 
 use crate::compiler;
 
@@ -26,17 +26,21 @@ pub fn init_api(app_dir: &str) -> Result<Router, io::Error> {
     let router = Router::new()
         .route("/:owner/:repo", routing::get(view_owner_repo))
         .route("/:owner/:repo/*path", routing::get(view_owner_repo_path))
-        .layer(ServiceBuilder::new()
-            .layer(CompressionLayer::new())
-            .layer(SetResponseHeaderLayer::overriding(
-                header::CONTENT_TYPE,  HeaderValue::from_static("text/html;charset=utf-8")
-            ))
-            .layer(SetResponseHeaderLayer::overriding(
-                header::CACHE_CONTROL,  HeaderValue::from_static("public,max-age=600")
-            ))
-            .layer(SetResponseHeaderLayer::overriding(
-                header::EXPIRES,  HeaderValue::from_static("600")
-            ))
+        .layer(
+            ServiceBuilder::new()
+                .layer(CompressionLayer::new())
+                .layer(SetResponseHeaderLayer::overriding(
+                    header::CONTENT_TYPE,
+                    HeaderValue::from_static("text/html;charset=utf-8"),
+                ))
+                .layer(SetResponseHeaderLayer::overriding(
+                    header::CACHE_CONTROL,
+                    HeaderValue::from_static("public,max-age=600"),
+                ))
+                .layer(SetResponseHeaderLayer::overriding(
+                    header::EXPIRES,
+                    HeaderValue::from_static("600"),
+                )),
         );
 
     Ok(router)
@@ -67,7 +71,9 @@ fn get_tail() -> Result<&'static str, StatusCode> {
 }
 
 fn init_view_html(app_dir: &str) -> Result<(), io::Error> {
-    let view_path = std::path::Path::new(app_dir).join("view.html").canonicalize()?;
+    let view_path = std::path::Path::new(app_dir)
+        .join("view.html")
+        .canonicalize()?;
     let view_html = fs::read_to_string(view_path)?;
 
     let mut split = view_html.split(SERVER_INJECTED_TAGS);
@@ -76,7 +82,10 @@ fn init_view_html(app_dir: &str) -> Result<(), io::Error> {
             VIEW_HTML_HEAD.get_or_init(|| head.to_string());
         }
         None => {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "view.html missing head".to_string()));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "view.html missing head".to_string(),
+            ));
         }
     };
     match split.next() {
@@ -84,11 +93,17 @@ fn init_view_html(app_dir: &str) -> Result<(), io::Error> {
             VIEW_HTML_TAIL.get_or_init(|| tail.to_string());
         }
         None => {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "view.html missing tail".to_string()));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "view.html missing tail".to_string(),
+            ));
         }
     };
     if split.next().is_some() {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "view.html has multiple inject tags".to_string()));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "view.html has multiple inject tags".to_string(),
+        ));
     }
 
     Ok(())
@@ -103,10 +118,7 @@ async fn view_owner_repo(
         Some(repo) => repo,
         None => return view_fallback(),
     };
-    let reference = match repo_parts.next() {
-        Some(reference) => reference,
-        None => "main",
-    };
+    let reference = repo_parts.next().unwrap_or("main");
     view_internal(&owner, repo, reference, "").await
 }
 
@@ -115,25 +127,24 @@ async fn view_owner_repo_path(
 ) -> Result<String, StatusCode> {
     // try to separate path:reference:remaining
     let mut path_parts = path.splitn(3, ':');
-    let path = match path_parts.next() {
-        Some(path) => path,
-        None => "",
-    };
-    let reference = match path_parts.next() {
-        Some(reference) => reference,
-        None => "main",
-    };
+    let path = path_parts.next().unwrap_or("");
+    let reference = path_parts.next().unwrap_or("main");
     view_internal(&owner, &repo, reference, path).await
 }
 
 #[cached(
-    size=128, 
-    time=600,
-    key= "String",
-    convert=r#"{ format!("{owner}/{repo}/{reference}/{path}") }"#,
+    size = 128,
+    time = 600,
+    key = "String",
+    convert = r#"{ format!("{owner}/{repo}/{reference}/{path}") }"#,
     result = true
 )]
-async fn view_internal(owner: &str, repo: &str, reference: &str, path: &str) -> Result<String, StatusCode> {
+async fn view_internal(
+    owner: &str,
+    repo: &str,
+    reference: &str,
+    path: &str,
+) -> Result<String, StatusCode> {
     let mut builder = compiler::new_context_builder(owner, repo, Some(reference));
     if !path.is_empty() {
         builder = builder.entry_point(Some(path.to_string()));
@@ -143,7 +154,7 @@ async fn view_internal(owner: &str, repo: &str, reference: &str, path: &str) -> 
         Err(e) => {
             error!("Error getting metadata for project {owner}/{repo}/{reference}/{path}: {e}");
             return view_fallback();
-        },
+        }
         Ok(metadata) => metadata,
     };
     let title = &metadata.title;
@@ -183,9 +194,18 @@ async fn view_internal(owner: &str, repo: &str, reference: &str, path: &str) -> 
         }
         url
     };
-    let title_tag = format!("<meta name=\"og:title\" content=\"{}\">", util::html_attr_escape(&title));
-    let description_tag = format!("<meta name=\"og:description\" content=\"{}\">", util::html_attr_escape(&description));
-    let url_tag = format!("<meta name=\"og:url\" content=\"{}\">", util::html_attr_escape(&view_url));
+    let title_tag = format!(
+        "<meta name=\"og:title\" content=\"{}\">",
+        util::html_attr_escape(&title)
+    );
+    let description_tag = format!(
+        "<meta name=\"og:description\" content=\"{}\">",
+        util::html_attr_escape(&description)
+    );
+    let url_tag = format!(
+        "<meta name=\"og:url\" content=\"{}\">",
+        util::html_attr_escape(&view_url)
+    );
 
     let head = get_head()?;
     let tail = get_tail()?;
@@ -199,7 +219,6 @@ async fn view_internal(owner: &str, repo: &str, reference: &str, path: &str) -> 
     );
 
     Ok(html)
-    
 }
 
 fn view_fallback() -> Result<String, StatusCode> {

@@ -304,7 +304,7 @@ export class Kernel implements KernelAccess {
             const compiler = await this.getCompiler();
             compiler.compile();
             return;
-        } 
+        }
         await this.reloadDocumentFromServer();
     }
 
@@ -398,13 +398,14 @@ export class Kernel implements KernelAccess {
                 if (!retry) {
                     await this.alertMgr.show({
                         title: "Load cancelled",
-                        message: "You can retry at any time by refreshing the page, or by clicking \"Reload Document\" from the toolbar.",
+                        message:
+                            'You can retry at any time by refreshing the page, or by clicking "Reload Document" from the toolbar.',
                         okButton: "Got it",
                         cancelButton: "",
                     });
                     break;
                 }
-                this.log.warn("retrying in 1s...")
+                this.log.warn("retrying in 1s...");
                 await sleep(1000);
                 continue;
             }

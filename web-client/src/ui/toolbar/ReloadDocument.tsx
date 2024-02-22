@@ -71,10 +71,10 @@ function useReloadDocumentControl() {
 }
 
 function getViewerTooltip(compileInProgress: boolean) {
-        if (compileInProgress) {
-            return "Loading...";
-        }
-        return "Reload Document";
+    if (compileInProgress) {
+        return "Loading...";
+    }
+    return "Reload Document";
 }
 
 function getEditorTooltip(isOpened: boolean, compileInProgress: boolean) {

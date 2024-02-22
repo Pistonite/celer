@@ -105,12 +105,16 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
     );
 };
 
-function useTitle(stageMode: string, document: ExecDoc | undefined, compileInProgress: boolean) {
+function useTitle(
+    stageMode: string,
+    document: ExecDoc | undefined,
+    compileInProgress: boolean,
+) {
     if (document) {
         // if document is loaded, return the document title
         return document?.project.title;
     }
-    if (stageMode ==="edit"){
+    if (stageMode === "edit") {
         // if in edit mode, return the editor title
         return "Celer Editor";
     }

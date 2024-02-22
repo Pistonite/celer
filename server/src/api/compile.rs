@@ -1,8 +1,8 @@
 //! The `/compile` API endpoint.
 
-use axum::{Json, Router};
 use axum::extract::Path;
 use axum::routing;
+use axum::{Json, Router};
 use instant::Instant;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -13,7 +13,10 @@ use crate::compiler;
 
 pub fn init_api() -> Router {
     Router::new()
-        .route("/:owner/:repo/:reference", routing::get(compile_owner_repo_ref))
+        .route(
+            "/:owner/:repo/:reference",
+            routing::get(compile_owner_repo_ref),
+        )
         .route(
             "/:owner/:repo/:reference/*path",
             routing::get(compile_owner_repo_ref_path),

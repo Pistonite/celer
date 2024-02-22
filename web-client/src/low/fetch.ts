@@ -17,7 +17,7 @@ export const fetchAsJson = <T>(url: string): Promise<T> => {
     return doFetch(url, (response) => {
         return response.json();
     });
-}
+};
 
 const API_PREFIX = "/api/v1";
 export const getApiUrl = (path: string) => {

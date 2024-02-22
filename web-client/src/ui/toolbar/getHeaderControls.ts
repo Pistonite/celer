@@ -34,7 +34,11 @@ export const getHeaderControls = (
         {
             priority: 40,
             controls: [
-                ...(mode === "view" ? [ReloadDocument] : []), SelectSection, ViewDiagnostics, Export],
+                ...(mode === "view" ? [ReloadDocument] : []),
+                SelectSection,
+                ViewDiagnostics,
+                Export,
+            ],
         },
         // Map Controls
         {

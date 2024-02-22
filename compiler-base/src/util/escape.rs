@@ -44,7 +44,7 @@ macro_rules! escape_impl {
 /// - `"` becomes `&quot;`
 /// - `'` becomes `&apos;`
 pub fn xml_escape(s: &str) -> Cow<str> {
-    escape_impl!{
+    escape_impl! {
         s,
         b'&' => b"&amp;",
         b'<' => b"&lt;",
@@ -63,7 +63,7 @@ pub fn xml_escape(s: &str) -> Cow<str> {
 /// - `"` becomes `&quot;`
 /// - `'` becomes `&#39;`
 pub fn html_attr_escape(s: &str) -> Cow<str> {
-    escape_impl!{
+    escape_impl! {
         s,
         b'&' => b"&amp;",
         b'<' => b"&lt;",
