@@ -1,3 +1,5 @@
+import { ResultHandle } from "pure/result";
+
 import { FsResult } from "./FsResult";
 
 /// Interface for the compiler to access files
@@ -8,6 +10,7 @@ export interface FileAccess {
     /// pointed to by the path was changed since the last time getFileContent was called.
     /// If it was not changed, the implementation could return NotModified as the error code.
     getFileContent(
+        r: ResultHandle,
         path: string,
         checkChanged: boolean,
     ): Promise<FsResult<Uint8Array>>;

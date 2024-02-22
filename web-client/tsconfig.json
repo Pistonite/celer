@@ -22,7 +22,7 @@
 
         "baseUrl": "src",
         "paths": {
-            "pure/result": ["../libs/pure/result"],
+            "pure/result": ["../../libs/pure/result"],
         }
     },
     "include": ["src", "../libs/pure/result"],

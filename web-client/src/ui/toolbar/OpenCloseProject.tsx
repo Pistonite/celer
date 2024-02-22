@@ -9,6 +9,7 @@ import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { Dismiss20Regular, FolderOpen20Regular } from "@fluentui/react-icons";
+import { tryInvokeAsync } from "pure/result";
 
 import { useKernel } from "core/kernel";
 import { viewSelector } from "core/store";
@@ -61,7 +62,7 @@ const useOpenCloseProjectControl = () => {
             await kernel.closeFileSys();
         } else {
             const { showDirectoryPicker } = await import("low/fs");
-            const result = await showDirectoryPicker();
+            const result = await tryInvokeAsync(showDirectoryPicker);
             await kernel.handleOpenFileSysResult(result);
         }
     }, [kernel, rootPath]);

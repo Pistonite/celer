@@ -1,5 +1,7 @@
 //! Utils for creating FileSys
-import { console, allocErr, allocOk } from "low/utils";
+import { ResultHandle } from "pure/result";
+
+import { console } from "low/utils";
 
 import {
     FileEntriesApiFileSys,
@@ -13,7 +15,7 @@ import {
 import { FsResult, FsResultCodes } from "./FsResult";
 import { FileApiFileSys } from "./FileApiFileSys";
 
-export const showDirectoryPicker = async (): Promise<FsResult<FileSys>> => {
+export async function showDirectoryPicker(r: ResultHandle): Promise<FsResult<FileSys>> => {
     if (isFileSystemAccessApiSupported()) {
         try {
             // @ts-expect-error showDirectoryPicker is not in the TS lib

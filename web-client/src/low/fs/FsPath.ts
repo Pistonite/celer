@@ -1,4 +1,5 @@
-import { allocErr, allocOk } from "low/utils";
+import { ResultHandle } from "pure/result";
+
 import { FsResult, FsResultCodes } from "./FsResult";
 
 /// File system path
@@ -20,7 +21,7 @@ export interface FsPath {
     /// If this path is the root directory, return IsRoot.
     ///
     /// This does not check if the path exists.
-    readonly parent: FsResult<FsPath>;
+    getParent(r: ResultHandle): FsResult<FsPath>;
 
     /// Get the name of this path.
     ///
@@ -32,7 +33,7 @@ export interface FsPath {
     ///     "/foo/bar" -> "bar"
     ///     "/foo/bar/" -> "bar"
     ///     "/" -> IsRoot
-    readonly name: FsResult<string>;
+    getName(r: ResultHandle): FsResult<string>;
 
     /// Get the full path as string representation.
     ///
@@ -46,7 +47,7 @@ export interface FsPath {
     /// Resolve a sibling path.
     ///
     /// Returns IsRoot if this is the root directory.
-    resolveSibling(path: string): FsResult<FsPath>;
+    resolveSibling(r: ResultHandle, path: string): FsResult<FsPath>;
 }
 
 class FsPathImpl implements FsPath {
@@ -64,28 +65,28 @@ class FsPathImpl implements FsPath {
         return this.underlying === "";
     }
 
-    get parent(): FsResult<FsPath> {
+    getParent(r: ResultHandle): FsResult<FsPath> {
         if (this.underlying === "") {
-            return allocErr(FsResultCodes.IsRoot);
+            return r.putErr(FsResultCodes.IsRoot);
         }
 
         const i = this.underlying.lastIndexOf("/");
         if (i < 0) {
-            return allocOk(fsRootPath);
+            return r.putOk(fsRootPath);
         }
-        return allocOk(new FsPathImpl(this.underlying.substring(0, i)));
+        return r.putOk(new FsPathImpl(this.underlying.substring(0, i)));
     }
 
-    get name(): FsResult<string> {
+    getName(r: ResultHandle): FsResult<string> {
         if (this.underlying === "") {
-            return allocErr(FsResultCodes.IsRoot);
+            return r.putErr(FsResultCodes.IsRoot);
         }
 
         const i = this.underlying.lastIndexOf("/");
         if (i < 0) {
-            return allocOk(this.underlying);
+            return r.putOk(this.underlying);
         }
-        return allocOk(this.underlying.substring(i + 1));
+        return r.putOk(this.underlying.substring(i + 1));
     }
 
     get path(): string {
@@ -102,8 +103,12 @@ class FsPathImpl implements FsPath {
         return new FsPathImpl(this.underlying + "/" + cleanPath(path));
     }
 
-    public resolveSibling(path: string): FsResult<FsPath> {
-        return this.parent.map((parent) => parent.resolve(path));
+    public resolveSibling(r: ResultHandle, path: string): FsResult<FsPath> {
+        r.put(this.getParent(r));
+        if (r.isErr()) {
+            return r;
+        }
+        return r.putOk(r.value.resolve(path));
     }
 }
 

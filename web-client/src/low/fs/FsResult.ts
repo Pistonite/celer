@@ -1,4 +1,4 @@
-import { Result } from "low/utils";
+import { Result, StableResult } from "pure/result";
 
 /// Result type for file system operations
 export const FsResultCodes = {
@@ -25,3 +25,4 @@ export const FsResultCodes = {
 export type FsResultCode = (typeof FsResultCodes)[keyof typeof FsResultCodes];
 
 export type FsResult<T> = Result<T, FsResultCode>;
+export type FsStableResult<T> = StableResult<T, FsResultCode>;

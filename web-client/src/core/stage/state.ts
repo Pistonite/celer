@@ -12,15 +12,6 @@ export type StageViewState = {
     settingsTab: SettingsTab;
     isResizingWindow: boolean;
 };
-export type AlertExtraAction = {
-    id: string;
-    text: string;
-};
-export type ModifyAlertActionPayload = {
-    okButton?: string;
-    cancelButton?: string;
-    extraActions?: AlertExtraAction[];
-};
 
 export type StageMode = "view" | "edit";
 

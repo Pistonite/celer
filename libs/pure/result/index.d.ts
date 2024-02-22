@@ -92,7 +92,7 @@ export function tryInvoke<T, E>(fn: (r: ResultHandle) => Result<T, E>): StableRe
 /// Invoke an async function that takes a ResultHandle and return a Promsie<Result>
 ///
 /// Note that if the async function throws, it will NOT be captured
-export function tryInvokeAsync<T, E>(fn: (r: ResultHandle) => Promise<StableResult<T, E>>): Promise<StableResult<T, E>>;
+export function tryInvokeAsync<T, E>(fn: (r: ResultHandle) => Promise<Result<T, E>>): Promise<StableResult<T, E>>;
 
 /// Wrap a function that may throw an error and return a Result, capturing the error
 export function tryCatch<T>(fn: () => T): StableResult<T, unknown>;

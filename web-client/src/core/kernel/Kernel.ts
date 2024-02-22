@@ -20,14 +20,14 @@ import {
     loadDocumentFromCurrentUrl,
 } from "core/doc";
 import { ExpoDoc, ExportRequest } from "low/celerc";
-import { console, Logger, isInDarkMode, sleep } from "low/utils";
-import type { FileSys, FsResult } from "low/fs";
+import { console, Logger, isInDarkMode, sleep, AlertMgr } from "low/utils";
+import type { FileSys, FsResult, FsStableResult } from "low/fs";
 
 import type { CompilerKernel } from "./compiler";
 import type { EditorKernel, KernelAccess } from "./editor";
 import { KeyMgr } from "./KeyMgr";
 import { WindowMgr } from "./WindowMgr";
-import { AlertMgr } from "./AlertMgr";
+import { AlertMgrImpl } from "./AlertMgr";
 
 type InitUiFunction = (
     kernel: Kernel,
@@ -68,7 +68,7 @@ export class Kernel implements KernelAccess {
         this.initReact = initReact;
         this.log.info("starting application");
         this.store = this.initStore();
-        this.alertMgr = new AlertMgr(this.store);
+        this.alertMgr = new AlertMgrImpl(this.store);
     }
 
     /// Initialize the store
@@ -185,6 +185,8 @@ export class Kernel implements KernelAccess {
         return this.compiler;
     }
 
+    // put this in low/fs
+
     /// Handle the result of opening a project
     ///
     /// This will show error message accordingly if the result is failure.
@@ -192,12 +194,12 @@ export class Kernel implements KernelAccess {
     ///
     /// This function eats the error because alerts will be shown to the user
     public async handleOpenFileSysResult(
-        fileSysResult: FsResult<FileSys>,
+        fileSysResult: FsStableResult<FileSys>,
     ): Promise<void> {
         console.info("opening file system...");
         const { FsResultCodes } = await import("low/fs");
         if (fileSysResult.isErr()) {
-            const code = fileSysResult.inner();
+            const code = fileSysResult.error;
             if (code === FsResultCodes.UserAbort) {
                 console.info("opening file system aborted.");
                 return;
@@ -213,7 +215,7 @@ export class Kernel implements KernelAccess {
                 await this.getAlertMgr().show({
                     title: "Error",
                     message:
-                        "You dropped a file. Make sure you are dropping the project folder and not individual files.",
+                        "You opened a file. Make sure you are opening the project folder and not individual files.",
                     okButton: "Close",
                 });
             } else {
@@ -226,7 +228,7 @@ export class Kernel implements KernelAccess {
             return;
         }
         console.info("initializing new file system...");
-        const fileSys = fileSysResult.inner();
+        const fileSys = fileSysResult.value;
         let result = await fileSys.init();
         while (result.isErr()) {
             let retry = false;
@@ -269,7 +271,6 @@ export class Kernel implements KernelAccess {
                     return;
                 }
                 this.store.dispatch(settingsActions.setEditorMode("external"));
-                // make sure store is updated for the next check
             }
         }
 
@@ -308,6 +309,7 @@ export class Kernel implements KernelAccess {
         await this.reloadDocumentFromServer();
     }
 
+    // put this in editor kernel
     public async closeFileSys() {
         console.info("closing file system...");
         this.store.dispatch(documentActions.setDocument(undefined));
@@ -319,6 +321,7 @@ export class Kernel implements KernelAccess {
         compiler.uninit();
     }
 
+    // put this in editor kernel
     private updateRootPathInStore(fileSys: FileSys | undefined) {
         if (fileSys) {
             this.store.dispatch(

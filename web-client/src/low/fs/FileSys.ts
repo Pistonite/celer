@@ -1,3 +1,5 @@
+import { ResultHandle } from "pure/result";
+
 import { FsPath } from "./FsPath";
 import { FsResult } from "./FsResult";
 
@@ -7,7 +9,7 @@ export interface FileSys {
     ///
     /// The FileSys implementation may need to do some async initialization.
     /// For example, request permission from the user.
-    init: () => Promise<FsResult<void>>;
+    init: (r: ResultHandle) => Promise<FsResult<void>>;
 
     /// Get the root path of the file system for display
     ///
@@ -21,12 +23,12 @@ export interface FileSys {
     /// Directory names end with a slash.
     ///
     /// Returns Fail if the underlying file system operation fails.
-    listDir: (path: FsPath) => Promise<FsResult<string[]>>;
+    listDir: (r: ResultHandle, path: FsPath) => Promise<FsResult<string[]>>;
 
     /// Read the file as a File object
     ///
     /// Returns Fail if the underlying file system operation fails.
-    readFile: (path: FsPath) => Promise<FsResult<File>>;
+    readFile: (r: ResultHandle, path: FsPath) => Promise<FsResult<File>>;
 
     /// Returns if this implementation supports writing to a file
     isWritable: () => boolean;
@@ -44,6 +46,7 @@ export interface FileSys {
     /// Returns Fail if the underlying file system operation fails.
     /// Returns NotSupported if the browser does not support this
     writeFile: (
+        r: ResultHandle,
         path: FsPath,
         content: string | Uint8Array,
     ) => Promise<FsResult<void>>;
