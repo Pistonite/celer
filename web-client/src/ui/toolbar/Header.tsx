@@ -30,6 +30,8 @@ import React, { PropsWithChildren, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import { documentSelector, settingsSelector, viewSelector } from "core/store";
+import type { ExecDoc } from "low/celerc";
+
 import { getHeaderControls } from "./getHeaderControls";
 import { HeaderControlList } from "./util";
 import { useHeaderStyles } from "./styles";
@@ -43,11 +45,9 @@ type HeaderProps = {
 /// The header component
 export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
     const { document } = useSelector(documentSelector);
-    const { stageMode } = useSelector(viewSelector);
+    const { stageMode, compileInProgress } = useSelector(viewSelector);
     const { editorMode } = useSelector(settingsSelector);
-    const title =
-        document?.project.title ??
-        (stageMode === "edit" ? "Celer Editor" : "Loading...");
+    const title = useTitle(stageMode, document, compileInProgress);
 
     const headerControls = useMemo(() => {
         return getHeaderControls(stageMode, editorMode);
@@ -104,6 +104,28 @@ export const Header: React.FC<HeaderProps> = ({ toolbarAnchor }) => {
         </header>
     );
 };
+
+function useTitle(
+    stageMode: string,
+    document: ExecDoc | undefined,
+    compileInProgress: boolean,
+) {
+    if (document) {
+        // if document is loaded, return the document title
+        return document?.project.title;
+    }
+    if (stageMode === "edit") {
+        // if in edit mode, return the editor title
+        return "Celer Editor";
+    }
+    // viewer
+    if (compileInProgress) {
+        return "Loading...";
+    }
+    // if in view mode, but is not loading (e.g. user cancelled the loading)
+    // return the viewer title
+    return "Celer Viewer";
+}
 
 /// Wrapper for ToolbarDivider in the overflow
 ///

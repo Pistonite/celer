@@ -1,7 +1,7 @@
 import { AppStore, settingsSelector } from "core/store";
 import { FileSys } from "low/fs";
 
-import { KernelAccess } from "./utils";
+import { KernelAccess } from "./KernelAccess";
 import { EditorKernel } from "./EditorKernel";
 
 declare global {

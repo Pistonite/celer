@@ -54,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &env.app_dir,
         &["/celerc", "/static", "/assets", "/themes"],
     )?;
-    let router = api::init_api(router);
+    let router = api::init_api(router, &env.app_dir)?;
 
     let router = router.layer(
         tower_http::trace::TraceLayer::new_for_http()

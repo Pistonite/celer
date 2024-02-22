@@ -10,6 +10,19 @@ path = "../compiler-core"
 features = ["native"]
 default-features = false
 
+# tower
+[dependencies.tower]
+version = "0.4.13"
+
+[dependencies.tower-http]
+version = "0.5.1"
+features = [
+    "fs", 
+    "trace", 
+    "compression-gzip",
+    "set-header"
+]
+
 [dependencies]
 axum = "0.7.4"
 axum-macros = "0.4.1"
@@ -18,8 +31,6 @@ envconfig = "0.10.0"
 futures = "0.3.28"
 http-body = "0.4.5"
 tokio = { version = "1.36.0", features=["macros", "rt-multi-thread"] }
-tower = "0.4.13"
-tower-http = { version = "0.5.1", features = ["fs", "trace", "compression-gzip"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["ansi"] }
 flate2 = "1.0.28"

@@ -11,7 +11,8 @@ import {
 import { IdleMgr, Yielder, createYielder, allocOk } from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
-import { EditorLog, KernelAccess, toFsPath } from "./utils";
+import { EditorLog, toFsPath } from "./utils";
+import { KernelAccess } from "./KernelAccess";
 
 EditorLog.info("loading external editor kernel");
 
@@ -65,7 +66,7 @@ class ExternalEditorKernel implements EditorKernel, FileAccess {
         if (changed) {
             this.lastCompiledTime = Date.now();
             this.notifyActivity();
-            this.kernelAccess.compile();
+            this.kernelAccess.reloadDocument();
         }
     }
 
