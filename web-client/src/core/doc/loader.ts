@@ -81,7 +81,7 @@ export async function loadDocument(
         return createLoadError("There was an error loading the document from the server.", undefined);
     }
     const response = result.inner();
-    const elapsed = performance.now() - startTime;
+    const elapsed = Math.round(performance.now() - startTime);
     console.info(`received resposne in ${elapsed}ms`);
     if (response.type === "success") {
         injectLoadTime(response.data, elapsed);
