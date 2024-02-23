@@ -1,4 +1,7 @@
+import { ResultHandle } from "pure/result";
+
 import { console, allocErr, allocOk, wrapAsync } from "low/utils";
+
 import { FileSys } from "./FileSys";
 import { FsPath } from "./FsPath";
 import { FsResult, FsResultCodes } from "./FsResult";
@@ -103,38 +106,40 @@ export class FileSystemAccessApiFileSys implements FileSys {
         return result.makeOk(entries);
     }
 
-    async resolveDir(
+    private async resolveDir(
+        r: ResultHandle,
         path: FsPath,
     ): Promise<FsResult<FileSystemDirectoryHandle>> {
         if (path.isRoot) {
-            return allocOk(this.rootHandle);
+            return r.putOk(this.rootHandle);
         }
 
-        const parentPathResult = path.parent;
-        if (parentPathResult.isErr()) {
-            return parentPathResult;
+        r.put(path.getParent(r));
+        if (r.isErr()) {
+            return r.ret();
+        }
+        const parentPath = r.value;
+
+        r.put(await this.resolveDir(r = r.erase(), parentPath));
+        if (r.isErr()) {
+            return r;
+        }
+        const parentDirHandle = r.value;
+
+        r.put(path.getName(r = r.erase()));
+        if (r.isErr()) {
+            return r.ret();
+        }
+        const pathName = r.value;
+
+        r = r.erase();
+        r.put(await r.tryCatchAsync(r, parentDirHandle.getDirectoryHandle(pathName)));
+        if (r.isErr()) {
+            console.error(r.error);
+            return r.putErr(FsResultCodes.Fail);
         }
 
-        const parentDirResult = await this.resolveDir(parentPathResult.inner());
-        if (parentDirResult.isErr()) {
-            return parentDirResult;
-        }
-
-        const parentDirHandle = parentDirResult.inner();
-        const pathNameResult = path.name;
-        if (pathNameResult.isErr()) {
-            return pathNameResult;
-        }
-
-        const result = await wrapAsync(() => {
-            return parentDirHandle.getDirectoryHandle(pathNameResult.inner());
-        });
-        if (result.isErr()) {
-            console.error(result.inner());
-            return result.makeErr(FsResultCodes.Fail);
-        }
-
-        return result;
+        return r.ret();
     }
 
     public async readFile(path: FsPath): Promise<FsResult<File>> {

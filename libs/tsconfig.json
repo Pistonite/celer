@@ -20,11 +20,8 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
 
-        "baseUrl": "src",
-        "paths": {
-            "pure/*": ["../../libs/pure/src/*"],
-        }
+        "baseUrl": ".",
     },
-    "include": ["src", "../libs/pure/src"],
+    "include": ["pure/src"],
     "references": [{ "path": "./tsconfig.node.json" }]
 }

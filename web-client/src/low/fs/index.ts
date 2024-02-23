@@ -11,4 +11,4 @@ export * from "./FileSys";
 export * from "./FsResult";
 export * from "./FsFile";
 export * from "./FsPath";
-export * from "./create";
+export * from "./open";

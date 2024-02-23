@@ -26,12 +26,12 @@ class ResultImpl {
         return r;
     }
 
-    async tryCatchAsync(r, promise) {
+    async tryCatchAsync(r, fn) {
         if (this !== r) {
             console.warn("pure/result: Violation! You must pass the same handle to tryCatchAsync() as the handle it's invoked from (i.e. x.tryCatch(x))!");
         }
         try {
-            r.putOk(await promise);
+            r.putOk(await fn());
         } catch (e) {
             r.putErr(e);
         }
@@ -112,9 +112,9 @@ export function tryCatch(fn) {
     }
 }
 
-export async function tryCatchAsync(promise) {
+export async function tryCatchAsync(fn) {
     try {
-        return new StableOk(await promise);
+        return new StableOk(await fn());
     } catch (e) {
         return new StableErr(e);
     }

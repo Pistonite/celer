@@ -1,4 +1,5 @@
-//! Utils for creating FileSys
+//! Utils for opening FileSys
+
 import { ResultHandle } from "pure/result";
 
 import { console } from "low/utils";
@@ -15,7 +16,7 @@ import {
 import { FsResult, FsResultCodes } from "./FsResult";
 import { FileApiFileSys } from "./FileApiFileSys";
 
-export async function showDirectoryPicker(r: ResultHandle): Promise<FsResult<FileSys>> => {
+export async function showDirectoryPicker(r: ResultHandle): Promise<FsResult<FileSys>> {
     if (isFileSystemAccessApiSupported()) {
         try {
             // @ts-expect-error showDirectoryPicker is not in the TS lib
@@ -54,7 +55,9 @@ export async function showDirectoryPicker(r: ResultHandle): Promise<FsResult<Fil
         });
         inputElement.click();
     });
-};
+}
+
+function 
 
 export const createFsFromDataTransferItem = async (
     item: DataTransferItem,

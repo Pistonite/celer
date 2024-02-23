@@ -216,12 +216,11 @@ const result = await tryInvokeAsync((r) => multiplyFormatAsync(r, "a", "b", "ans
 const result = tryCatch(() => JSON.parse<MyData>(...));
 // result has type StableResult<MyData, unknown>
 
-// 4. Use tryCatchAsync to await on a promise that can throw
-// note that it takes the promise directly, not the function
+// 4. Use tryCatchAsync to wrap an async function that can throw
 async function doStuff() {
     throw "oops";
 }
-const result = await tryCatchAsync(doStuff());
+const result = await tryCatchAsync(doStuff);
 ```
 
 ## Innermost call site
@@ -248,7 +247,7 @@ async function doSomethingThatCouldThrowAsync(): Promise<FooType> {
 async function foo(r: ResultHandle): Promise<Result<void, Error>> {
     // r.erase() is only needed if there are previous usage of r
     // in this function
-    r.put(await r.tryCatchAsync(r = r.erase(), doSomethingThatCouldThrowAsync()));
+    r.put(await r.tryCatchAsync(r = r.erase(), doSomethingThatCouldThrowAsync));
     // type of r is Result<FooType, unknown>
 }
 ```

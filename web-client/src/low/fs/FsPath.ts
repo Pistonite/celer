@@ -103,13 +103,13 @@ class FsPathImpl implements FsPath {
         return new FsPathImpl(this.underlying + "/" + cleanPath(path));
     }
 
-    public resolveSibling(r: ResultHandle, path: string): FsResult<FsPath> {
-        r.put(this.getParent(r));
-        if (r.isErr()) {
-            return r;
-        }
-        return r.putOk(r.value.resolve(path));
-    }
+    // public resolveSibling(r: ResultHandle, path: string): FsResult<FsPath> {
+    //     r.put(this.getParent(r));
+    //     if (r.isErr()) {
+    //         return r;
+    //     }
+    //     return r.putOk(r.value.resolve(path));
+    // }
 }
 
 const cleanPath = (path: string) => {

@@ -23,7 +23,7 @@ export interface ResultHandle {
 
     /// Await a throwing promise inside a result-handling function,
     /// capturing the result inside this handle
-    tryCatchAsync: <T>(r: ResultHandle, promise: Promise<T>) => Promise<Result<T, unknown>>,
+    tryCatchAsync: <T>(r: ResultHandle, fn: () => Promise<T>) => Promise<Result<T, unknown>>,
 
     /// Put an ok value into this handle
     ///
@@ -98,5 +98,5 @@ export function tryInvokeAsync<T, E>(fn: (r: ResultHandle) => Promise<Result<T, 
 export function tryCatch<T>(fn: () => T): StableResult<T, unknown>;
 
 /// Wrap a promise that may throw when awaited and return a Result, capturing the error
-export function tryCatchAsync<T>(x: Promise<T>): Promise<StableResult<T, unknown>>;
+export function tryCatchAsync<T>(fn: () => Promise<T>): Promise<StableResult<T, unknown>>;
 

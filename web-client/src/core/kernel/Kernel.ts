@@ -293,7 +293,7 @@ export class Kernel implements KernelAccess {
         this.editor = editor;
         this.updateRootPathInStore(fileSys);
         const compiler = await this.getCompiler();
-        await compiler.init(this.editor.getFileAccess());
+        await compiler.init(editor.getFileAccess());
 
         // trigger a first run when loading new project
         compiler.compile();

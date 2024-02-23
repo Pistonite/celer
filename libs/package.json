@@ -1,0 +1,9 @@
+{
+    "name": "libs",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "dependencies": {
+        "denque": "^2.1.0"
+    }
+}
