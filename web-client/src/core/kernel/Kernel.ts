@@ -24,7 +24,7 @@ import {
 import type { CompilerKernel } from "core/compiler";
 import type { EditorKernel, EditorKernelAccess } from "core/editor";
 import { ExpoDoc, ExportRequest } from "low/celerc";
-import { console, Logger, isInDarkMode, sleep, AlertMgr } from "low/utils";
+import { consoleKernel as console, isInDarkMode, sleep, AlertMgr } from "low/utils";
 
 import { KeyMgr } from "./KeyMgr";
 import { WindowMgr } from "./WindowMgr";
@@ -42,8 +42,6 @@ type InitUiFunction = (
 /// It is also responsible for mounting react to the DOM and
 /// handles the routing.
 export class Kernel implements EditorKernelAccess {
-    /// The logger
-    private log: Logger;
     /// The store
     ///
     /// The kernel owns the store. The store is shared
@@ -65,16 +63,15 @@ export class Kernel implements EditorKernelAccess {
     private compiler: CompilerKernel | null = null;
 
     constructor(initReact: InitUiFunction) {
-        this.log = new Logger("ker");
         this.initReact = initReact;
-        this.log.info("starting application");
+        console.info("starting application");
         this.store = this.initStore();
         this.alertMgr = new AlertMgrImpl(this.store);
     }
 
     /// Initialize the store
     private initStore(): AppStore {
-        this.log.info("initializing store...");
+        console.info("initializing store...");
         const store = initStore();
 
         const watchSettings = reduxWatch(() =>
@@ -84,7 +81,7 @@ export class Kernel implements EditorKernelAccess {
         store.subscribe(
             watchSettings((newVal: SettingsState, _oldVal: SettingsState) => {
                 // save settings to local storage
-                this.log.info("saving settings...");
+                console.info("saving settings...");
                 saveSettings(newVal);
             }),
         );
@@ -118,7 +115,7 @@ export class Kernel implements EditorKernelAccess {
 
     /// Initialize stage info based on window.location
     private async initStage() {
-        this.log.info("initializing stage...");
+        console.info("initializing stage...");
         const path = window.location.pathname;
         if (path === "/edit") {
             document.title = "Celer Editor";
@@ -137,9 +134,9 @@ export class Kernel implements EditorKernelAccess {
 
     /// Initialize UI related stuff
     private initUi() {
-        this.log.info("initializing ui...");
+        console.info("initializing ui...");
         if (this.cleanupUi) {
-            this.log.info("unmounting previous ui");
+            console.info("unmounting previous ui");
             this.cleanupUi();
         }
         const isDarkMode = isInDarkMode();
@@ -173,7 +170,7 @@ export class Kernel implements EditorKernelAccess {
         const state = this.store.getState();
         const stageMode = viewSelector(state).stageMode;
         if (stageMode !== "edit") {
-            this.log.error(
+            console.error(
                 "compiler is not available in view mode. This is a bug!",
             );
             throw new Error("compiler is not available in view mode");
@@ -188,78 +185,17 @@ export class Kernel implements EditorKernelAccess {
 
     // put this in low/fs
 
-    /// Handle the result of opening a project
-    ///
-    /// This will show error message accordingly if the result is failure.
-    /// On success, it will initialize the file system and the editor.
+    /// Open a project file system
     ///
     /// This function eats the error because alerts will be shown to the user
-    public async handleOpenFileSysResult(
-        fileSysResult: FsStableResult<FileSys>,
-    ): Promise<void> {
+    public async openProjectFileSystem(fs: FsFileSystem): Promise<void> {
         console.info("opening file system...");
-        const { FsResultCodes } = await import("low/fs");
-        if (fileSysResult.isErr()) {
-            const code = fileSysResult.error;
-            if (code === FsResultCodes.UserAbort) {
-                console.info("opening file system aborted.");
-                return;
-            }
-            if (code === FsResultCodes.NotSupported) {
-                await this.getAlertMgr().show({
-                    title: "Not Supported",
-                    message: "Your browser does not support this feature.",
-                    okButton: "Close",
-                    learnMoreLink: "/docs/route/editor/web#browser-os-support",
-                });
-            } else if (code === FsResultCodes.IsFile) {
-                await this.getAlertMgr().show({
-                    title: "Error",
-                    message:
-                        "You opened a file. Make sure you are opening the project folder and not individual files.",
-                    okButton: "Close",
-                });
-            } else {
-                await this.getAlertMgr().show({
-                    title: "Error",
-                    message: `Cannot open the project. Make sure you have access to the folder or contact support. (Error code ${code}}`,
-                    okButton: "Close",
-                });
-            }
-            return;
-        }
-        console.info("initializing new file system...");
-        const fileSys = fileSysResult.value;
-        let result = await fileSys.init();
-        while (result.isErr()) {
-            let retry = false;
-            const code = result.inner();
-            if (code === FsResultCodes.PermissionDenied) {
-                retry = await this.getAlertMgr().show({
-                    title: "Permission Denied",
-                    message:
-                        "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
-                    okButton: "Grant Permission",
-                    cancelButton: "Cancel",
-                });
-            } else {
-                retry = await this.getAlertMgr().show({
-                    title: "Error",
-                    message: `Failed to initialize the project. Please try again. (Error code ${code})`,
-                    okButton: "Retry",
-                    cancelButton: "Cancel",
-                });
-            }
-            if (!retry) {
-                return;
-            }
-            result = await fileSys.init();
-        }
 
         const { editorMode } = settingsSelector(this.store.getState());
+        const { write, live } = fs.capabilities;
         if (editorMode === "web") {
             // must be able to save to use web editor
-            if (!fileSys.isWritable()) {
+            if (!write) {
                 const yes = await this.getAlertMgr().show({
                     title: "Save not supported",
                     message:
@@ -275,7 +211,7 @@ export class Kernel implements EditorKernelAccess {
             }
         }
 
-        if (fileSys.isStale()) {
+        if (!live) {
             const yes = await this.getAlertMgr().show({
                 title: "Heads up!",
                 message:
@@ -289,16 +225,31 @@ export class Kernel implements EditorKernelAccess {
             }
         }
 
-        const { initEditor } = await import("./editor");
-        const editor = await initEditor(this, fileSys, this.store);
+        const { initEditor } = await import("core/editor");
+        const editor = await initEditor(this, fs, this.store);
         this.editor = editor;
-        this.updateRootPathInStore(fileSys);
+        this.updateRootPathInStore(fs);
         const compiler = await this.getCompiler();
         await compiler.init(editor.getFileAccess());
 
         // trigger a first run when loading new project
         compiler.compile();
         console.info("project opened.");
+    }
+
+    public async closeProjectFileSystem() {
+        console.info("closing file system...");
+        this.store.dispatch(documentActions.setDocument(undefined));
+        this.updateRootPathInStore(undefined);
+        this.editor = null;
+        const { deleteEditor } = await import("core/editor");
+        deleteEditor();
+        const compiler = await this.getCompiler();
+        compiler.uninit();
+    }
+
+    private updateRootPathInStore(fs: FsFileSystem | undefined) {
+        this.store.dispatch(viewActions.updateFileSys(fs?.root ?? undefined));
     }
 
     public async reloadDocument() {
@@ -308,23 +259,6 @@ export class Kernel implements EditorKernelAccess {
             return;
         }
         await this.reloadDocumentFromServer();
-    }
-
-    // put this in editor kernel
-    public async closeFileSys() {
-        console.info("closing file system...");
-        this.store.dispatch(documentActions.setDocument(undefined));
-        this.updateRootPathInStore(undefined);
-        this.editor = null;
-        const { deleteEditor } = await import("./editor");
-        deleteEditor();
-        const compiler = await this.getCompiler();
-        compiler.uninit();
-    }
-
-    // put this in editor kernel
-    private updateRootPathInStore(fs: FsFileSystem | undefined) {
-        this.store.dispatch(viewActions.updateFileSys(fs?.root ?? undefined));
     }
 
     public async export(request: ExportRequest): Promise<ExpoDoc> {
@@ -350,7 +284,7 @@ export class Kernel implements EditorKernelAccess {
                         }
                     }
                     payload["split-types"] = injected;
-                    this.log.info(
+                    console.info(
                         `injected ${injected.length} split types into export request payload.`,
                     );
                 }
@@ -380,12 +314,12 @@ export class Kernel implements EditorKernelAccess {
 
         let retry = true;
         while (retry) {
-            this.log.info("reloading document from server");
+            console.info("reloading document from server");
             const result = await loadDocumentFromCurrentUrl();
             if (result.type === "failure") {
                 this.store.dispatch(documentActions.setDocument(undefined));
-                this.log.info("failed to load document from server");
-                this.log.error(result.data);
+                console.info("failed to load document from server");
+                console.error(result.data);
                 retry = await this.getAlertMgr().show({
                     title: "Failed to load route",
                     message: result.data,
@@ -403,11 +337,11 @@ export class Kernel implements EditorKernelAccess {
                     });
                     break;
                 }
-                this.log.warn("retrying in 1s...");
+                console.warn("retrying in 1s...");
                 await sleep(1000);
                 continue;
             }
-            this.log.info("received document from server");
+            console.info("received document from server");
             const doc = result.data;
             try {
                 const { title, version } = doc.execDoc.project;
@@ -419,8 +353,8 @@ export class Kernel implements EditorKernelAccess {
                     document.title = `${title} - ${version}`;
                 }
             } catch (e) {
-                this.log.warn("failed to set document title");
-                this.log.error(e);
+                console.warn("failed to set document title");
+                console.error(e);
                 document.title = "Celer Viewer";
             }
             this.store.dispatch(documentActions.setDocument(doc));

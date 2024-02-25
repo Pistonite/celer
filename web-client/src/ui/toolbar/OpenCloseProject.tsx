@@ -9,7 +9,8 @@ import { forwardRef, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { Dismiss20Regular, FolderOpen20Regular } from "@fluentui/react-icons";
-import { tryInvokeAsync } from "pure/result";
+
+import { fsOpenReadWrite } from "pure/fs";
 
 import { useKernel } from "core/kernel";
 import { viewSelector } from "core/store";
@@ -59,11 +60,18 @@ const useOpenCloseProjectControl = () => {
                 }
             }
 
-            await kernel.closeFileSys();
+            await kernel.closeProjectFileSystem();
         } else {
-            const { showDirectoryPicker } = await import("low/fs");
-            const result = await tryInvokeAsync(showDirectoryPicker);
-            await kernel.handleOpenFileSysResult(result);
+            // open
+            // only import editor when needed, since
+            // header controls are initialized in view mode as well
+            const { createRetryOpenHandler } = await import("core/editor");
+            const retryHandler = createRetryOpenHandler(kernel.getAlertMgr());
+            const fs = await fsOpenReadWrite(retryHandler);
+            if (fs.err) {
+                return;
+            }
+            await kernel.openProjectFileSystem(fs.val);
         }
     }, [kernel, rootPath]);
 

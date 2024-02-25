@@ -1,4 +1,3 @@
-import { console } from "./Logger";
 /// A lock to prevent concurrent async operations
 ///
 /// The lock uses a token to prevent deadlocks. It will not block
@@ -22,12 +21,11 @@ export class ReentrantLock {
     ): Promise<T> {
         if (this.lockingToken !== undefined && token !== this.lockingToken) {
             if (token !== undefined) {
-                console.error(
+                window.console.error(
                     `invalid lock token passed to ${this.name} lock!`,
                 );
             }
             // someone else is holding the lock, wait for it to be released
-            console.info(`waiting for ${this.name} lock...`);
             await new Promise((resolve) => {
                 if (this.lockingToken === undefined) {
                     resolve(undefined);
@@ -37,7 +35,7 @@ export class ReentrantLock {
         }
         if (this.lockingToken === undefined) {
             if (token !== undefined) {
-                console.error(
+                window.console.error(
                     `invalid lock token passed to ${this.name} lock!`,
                 );
             }

@@ -1,7 +1,8 @@
-import { AppStore, settingsSelector } from "core/store";
-import { FileSys } from "low/fs";
+import { FsFileSystem } from "pure/fs";
 
-import { KernelAccess } from "./KernelAccess";
+import { AppStore, settingsSelector } from "core/store";
+
+import { EditorKernelAccess } from "./EditorKernelAccess";
 import { EditorKernel } from "./EditorKernel";
 
 declare global {
@@ -11,8 +12,8 @@ declare global {
 }
 
 export const initEditor = async (
-    kernel: KernelAccess,
-    fileSys: FileSys,
+    kernel: EditorKernelAccess,
+    fs: FsFileSystem,
     store: AppStore,
 ): Promise<EditorKernel> => {
     deleteEditor();
@@ -20,10 +21,10 @@ export const initEditor = async (
     let editor;
     if (editorMode === "web") {
         const { initWebEditor } = await import("./WebEditorKernel");
-        editor = initWebEditor(kernel, fileSys, store);
+        editor = initWebEditor(kernel, fs, store);
     } else {
         const { initExternalEditor } = await import("./ExternalEditorKernel");
-        editor = initExternalEditor(kernel, fileSys);
+        editor = initExternalEditor(kernel, fs);
     }
 
     window.__theEditorKernel = editor;

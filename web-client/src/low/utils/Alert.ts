@@ -1,4 +1,4 @@
-import { Result, ResultHandle } from "pure/result";
+import { Result } from "pure/result";
 
 export type AlertExtraAction = {
     id: string;
@@ -75,7 +75,6 @@ export interface AlertMgr {
     ///
     /// If f throws, the alert will be cleared, and Err(e) will be returned.
     showBlocking<T>(
-        r: ResultHandle,
         options: BlockingAlertOptions,
         fn: () => Promise<T>
     ): Promise<Result<T, unknown>>;

@@ -1,6 +1,6 @@
 //! Manager for modal alerts
 
-import { Result, ResultHandle } from "pure/result";
+import { Result, tryAsync } from "pure/result";
 
 import { AppDispatcher, viewActions } from "core/store";
 import { AlertExtraAction, AlertIds, AlertMgr, AlertOptions, BlockingAlertOptions, ModifyAlertActionPayload, RichAlertOptions, console } from "low/utils";
@@ -71,7 +71,6 @@ export class AlertMgrImpl implements AlertMgr {
     }
 
     public showBlocking<T>(
-        r: ResultHandle,
         { title, component, cancelButton }: BlockingAlertOptions,
         f: () => Promise<T>,
     ): Promise<Result<T, boolean | unknown>> {
@@ -82,7 +81,7 @@ export class AlertMgrImpl implements AlertMgr {
                 // it means cancel
                 cancelled = true;
                 console.info("user cancelled the operation");
-                resolve(r.putErr(false));
+                resolve({ err: false });
             }, component);
             this.store.dispatch(
                 viewActions.setAlert({
@@ -95,20 +94,11 @@ export class AlertMgrImpl implements AlertMgr {
                 }),
             );
             // let the UI update first
-            setTimeout(() => {
-                f()
-                    .then((result) => {
-                        if (!cancelled) {
-                            this.clearAlertAndThen(() =>
-                                resolve(r.putOk(result)),
-                            );
-                        }
-                    })
-                    .catch((e) => {
-                        if (!cancelled) {
-                            this.clearAlertAndThen(() => resolve(r.putErr(e)));
-                        }
-                    });
+            setTimeout(async () => {
+                const result = await tryAsync(f);
+                if (!cancelled) {
+                    resolve(result);
+                }
             }, ALERT_TIMEOUT);
         });
     }

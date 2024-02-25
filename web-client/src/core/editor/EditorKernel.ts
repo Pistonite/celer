@@ -1,7 +1,5 @@
 //! Editor logic that wraps monaco editor
 
-import { FsResult, FsVoid } from "pure/fs";
-
 import { CompilerFileAccess } from "core/compiler";
 
 /// Interface used to access editor API
@@ -38,7 +36,7 @@ export interface EditorKernel {
     loadFromFs(): Promise<void>;
 
     /// Save changes to the file system for the opened files
-    saveToFs(): Promise<FsVoid>;
+    saveToFs(): Promise<void>;
 
     /// Get a CompilerFileAccess implementation
     getFileAccess(): CompilerFileAccess;

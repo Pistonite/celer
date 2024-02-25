@@ -1,6 +1,6 @@
 import * as monaco from "monaco-editor";
 
-import { FsErr, FsError, FsFile, FsFileSystem, FsResult, fsErr } from "pure/fs";
+import { FsError, FsFile, FsFileSystem, FsResult } from "pure/fs";
 import { RwLock } from "pure/utils";
 
 import { AppDispatcher, viewActions } from "core/store";
@@ -9,16 +9,17 @@ import {
     Yielder,
     createYielder,
     sleep,
+    consoleEditor as console,
 } from "low/utils";
 
 import { EditorContainerDOM } from "./dom";
-import { EditorLog, detectLanguageByFileName } from "./utils";
+import { ModifyTimeTracker } from "./ModifyTimeTracker";
 
 type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
 
 /// File manager
 ///
-/// This manages the opened files in the editor
+/// This manages the opened files in the web editor
 export class FileMgr implements CompilerFileAccess {
     /// Using a RwLock to ensure the tracked files don't change
     /// while being iterated. Generall, write lock is needed
@@ -46,6 +47,8 @@ export class FileMgr implements CompilerFileAccess {
     private fsYield: Yielder;
     private dispatcher: AppDispatcher;
 
+    private modifyTracker: ModifyTimeTracker;
+
     constructor(
         fs: FsFileSystem,
         monacoDom: HTMLDivElement,
@@ -58,6 +61,7 @@ export class FileMgr implements CompilerFileAccess {
         this.monacoDom = monacoDom;
         this.monacoEditor = monacoEditor;
         this.fsYield = createYielder(64);
+        this.modifyTracker = new ModifyTimeTracker();
         // this.fsLock = new ReentrantLock("file mgr");
     }
 
@@ -99,14 +103,14 @@ export class FileMgr implements CompilerFileAccess {
         const { val: entries, err } = await fs.listDir(path);
         if (err) {
             const { code, message } = err;
-            EditorLog.error(`listDir failed with code ${code}: ${message}`);
+            console.error(`listDir failed with code ${code}: ${message}`);
             return [];
         }
         return entries;
     }
 
     public openFile(path: string,): Promise<void> {
-        EditorLog.info(`opening ${path}`);
+        console.info(`opening ${path}`);
         return this.fs.scopedWrite(async (fs) => {
             return this.openFileWithFs(fs, path);
         });
@@ -117,7 +121,7 @@ export class FileMgr implements CompilerFileAccess {
         const { val, err } = await fsFile.getText();
         if (err) {
             const { code, message } = err;
-            EditorLog.error(`openFile failed with code ${code}: ${message}`);
+            console.error(`openFile failed with code ${code}: ${message}`);
             this.updateEditor(fsFile, undefined);
             return;
         }
@@ -125,7 +129,7 @@ export class FileMgr implements CompilerFileAccess {
     }
 
     public async loadFromFs(): Promise<void> {
-        EditorLog.info("syncing files from file system to editor...");
+        console.info("syncing files from file system to editor...");
         const handle = window.setTimeout(() => {
             this.dispatcher.dispatch(viewActions.startFileSysLoad());
         }, 200);
@@ -157,7 +161,7 @@ export class FileMgr implements CompilerFileAccess {
         // );
         window.clearTimeout(handle);
         this.dispatcher.dispatch(viewActions.endFileSysLoad(success));
-        EditorLog.info("sync completed");
+        console.info("sync completed");
         // return success ? allocOk() : allocErr(FsResultCodes.Fail);
     }
 
@@ -211,12 +215,12 @@ export class FileMgr implements CompilerFileAccess {
 
         if (loadError) {
             const { code, message } = loadError;
-            EditorLog.error(`sync failed with code ${code}: ${message}`);
+            console.error(`sync failed with code ${code}: ${message}`);
             if (!fsFile.isDirty()) {
                 // if the file is not dirty, we close the file
                 // in case it doesn't exist on disk anymore
                 // and to avoid error on the next save
-                EditorLog.info(`closing ${path} due to sync error`);
+                console.info(`closing ${path} due to sync error`);
                 if (isCurrentFile) {
                     this.closeEditor();
                 }
@@ -303,12 +307,12 @@ export class FileMgr implements CompilerFileAccess {
 
     public async saveToFs(): Promise<boolean> {
         if (!this.supportsSave) {
-            EditorLog.error("save not supported!");
-            EditorLog.warn("saveToFs should only be called if save is supported");
+            console.error("save not supported!");
+            console.warn("saveToFs should only be called if save is supported");
             return false;
         }
 
-        EditorLog.info("saving changes...");
+        console.info("saving changes...");
         const handle = window.setTimeout(() => {
             this.dispatcher.dispatch(viewActions.startFileSysSave());
         }, 200);
@@ -338,7 +342,7 @@ export class FileMgr implements CompilerFileAccess {
 
         window.clearTimeout(handle);
         this.dispatcher.dispatch(viewActions.endFileSysSave(success));
-        EditorLog.info("save completed");
+        console.info("save completed");
         return success;
     }
 
@@ -359,7 +363,7 @@ export class FileMgr implements CompilerFileAccess {
         const { err } = await fs.getFile(path).writeIfNewer();
         if (err) {
             const { code, message } = err;
-            EditorLog.error(`save failed with code ${code}: ${message}`);
+            console.error(`save failed with code ${code}: ${message}`);
             return false;
         }
         return true;
@@ -526,7 +530,6 @@ export class FileMgr implements CompilerFileAccess {
         this.dispatcher.dispatch(viewActions.setUnsavedFiles(newList));
     }
 
-    private modifiedTimeWhenLastAccessed: { [path: string]: number } = {};
     public getFileContent(
         path: string,
         checkChanged: boolean,
@@ -539,19 +542,9 @@ export class FileMgr implements CompilerFileAccess {
     private async getFileContentWithFs(fs: FsFileSystem, path: string, checkChanged: boolean): Promise<FsResult<Uint8Array>> {
         const fsFile = fs.getFile(path);
         if (checkChanged) {
-            const modifiedTimeCurrent = await fsFile.getLastModified();
-            if (modifiedTimeCurrent.err) {
-                return modifiedTimeCurrent;
-            }
-            const modifiedTimeLast = this.modifiedTimeWhenLastAccessed[path];
-            this.modifiedTimeWhenLastAccessed[path] = modifiedTimeCurrent.val;
-            if (
-                modifiedTimeLast &&
-                    modifiedTimeLast >= modifiedTimeCurrent.val
-            ) {
-                // 1. file was accessed before
-                // 2. file was not modified since last access
-                return { err: fsErr(FsErr.NotModified, "Not modified") };
+            const notModified = await this.modifyTracker.checkModifiedSinceLastAccess(fsFile);
+            if (notModified.err) {
+                return notModified;
             }
         }
         return await fsFile.getBytes();
@@ -560,7 +553,7 @@ export class FileMgr implements CompilerFileAccess {
     private async attachEditor() {
         let div = EditorContainerDOM.get();
         while (!div) {
-            EditorLog.warn("editor container not found. Will try again.");
+            console.warn("editor container not found. Will try again.");
             await sleep(100);
             div = EditorContainerDOM.get();
         }
@@ -575,7 +568,7 @@ export class FileMgr implements CompilerFileAccess {
         if (!alreadyAttached) {
             div.appendChild(this.monacoDom);
             await this.resizeEditor();
-            EditorLog.info("editor attached");
+            console.info("editor attached");
         }
         this.isEditorOpen = true;
     }
@@ -584,4 +577,17 @@ export class FileMgr implements CompilerFileAccess {
         this.monacoDom.remove();
         this.isEditorOpen = false;
     }
+}
+
+function detectLanguageByFileName(fileName: string): string {
+    if (fileName.match(/\.(j|t)s$/i)) {
+        return "typescript";
+    }
+    if (fileName.match(/\.ya?ml/i)) {
+        return "yaml";
+    }
+    if (fileName.match(/\.json/i)) {
+        return "json";
+    }
+    return "text";
 }

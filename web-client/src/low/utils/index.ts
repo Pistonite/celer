@@ -6,11 +6,10 @@ export * from "./Alert";
 export * from "./IdleMgr";
 export * from "./Debouncer";
 export * from "./html";
-export * from "./Logger";
-export * from "./FileSaver";
 export * from "./ReentrantLock";
 export * from "./WorkerHost";
 export * from "./Yielder";
+export * from "./logging";
 
 export const shallowArrayEqual = <T>(a: T[], b: T[]): boolean => {
     if (a.length !== b.length) {
@@ -23,3 +22,4 @@ export const shallowArrayEqual = <T>(a: T[], b: T[]): boolean => {
     }
     return true;
 };
+

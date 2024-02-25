@@ -1,4 +1,6 @@
-import { Logger, console } from "./Logger";
+import { Logger } from "pure/log";
+
+import { consoleCompiler as console } from "low/utils";
 
 let worker: Worker;
 /* eslint-disable @typescript-eslint/no-explicit-any */

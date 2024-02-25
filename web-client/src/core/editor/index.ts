@@ -1,9 +1,10 @@
 //! core/editor
 //! Web Editor module
+import { consoleEditor as console } from "low/utils";
 
-import { EditorLog } from "./utils";
-
-EditorLog.info("loading editor module");
+console.info("loading editor module");
 
 export * from "./EditorKernelAccess";
 export * from "./EditorKernel";
+export * from "./initEditor";
+export * from "./openHandler";
