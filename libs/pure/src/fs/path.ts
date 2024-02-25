@@ -7,7 +7,6 @@
 //! - Empty string denotes root
 //! - Paths cannot lead outside of root
 
-import { ResultHandle } from "../result";
 import { FsErr, FsResult, fsErr } from "./error";
 
 /// Get the root path. Current implementation is empty string.
@@ -31,15 +30,16 @@ export function fsIsRoot(p: string): boolean {
 /// Get the base name of a path (i.e. remove the last component)
 ///
 /// If this path is the root directory, return InvalidPath.
-export function fsGetBase(r: ResultHandle, p: string): FsResult<string> {
+export function fsGetBase(p: string): FsResult<string> {
     if (fsIsRoot(p)) {
-        return r.putErr(fsErr(FsErr.InvalidPath, "Trying to get the parent of root"));
+        const err = fsErr(FsErr.InvalidPath, "Trying to get the base of root");
+        return { err };
     }
     const i = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
     if (i < 0) {
-        return r.putOk(fsRoot());
+        return { val: fsRoot() };
     }
-    return r.putOk(p.substring(0, i));
+    return { val: p.substring(0, i) };
 }
 
 /// Get the name of a path (i.e. the last component)
@@ -48,35 +48,36 @@ export function fsGetBase(r: ResultHandle, p: string): FsResult<string> {
 /// Does not include leading or trailing slashes.
 ///
 /// If this path is the root directory, return IsRoot.
-export function fsGetName(r: ResultHandle, p: string): FsResult<string> {
+export function fsGetName(p: string): FsResult<string> {
     p = stripTrailingSlashes(p);
     if (fsIsRoot(p)) {
-        return r.putErr(fsErr(FsErr.IsRoot, "Root directory has no name"));
+        const err = fsErr(FsErr.IsRoot, "Root directory has no name");
+        return { err };
     }
     const i = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
     if (i < 0) {
-        return r.putOk(p);
+        return { val: p };
     }
-    return r.putOk(p.substring(i + 1));
+    return { val: p.substring(i + 1) };
 }
 
 /// Normalize .. and . in a path
 ///
 /// Returns InvalidPath if the path tries to escape the root directory.
-export function fsNormalize(r: ResultHandle, p: string): FsResult<string> {
+export function fsNormalize(p: string): FsResult<string> {
     let s = fsRoot();
     for (const comp of fsComponents(p)) {
         if (comp === "..") {
-            r.put(fsGetBase(r, s));
-            if (r.isErr()) {
-                return r;
+            const base = fsGetBase(s);
+            if (base.err) {
+                return base;
             }
-            s = r.value;
+            s = base.val;
             continue;
         }
         s = fsJoin(s, comp);
     }
-    return r.putOk(s);
+    return { val: s };
 }
 
 /// Join two paths

@@ -1,6 +1,8 @@
 //! Editor logic that wraps monaco editor
 
-import { FileAccess, FsResult } from "low/fs";
+import { FsResult, FsVoid } from "pure/fs";
+
+import { CompilerFileAccess } from "core/compiler";
 
 /// Interface used to access editor API
 ///
@@ -11,9 +13,6 @@ export interface EditorKernel {
     /// Delete the editor instance
     delete(): void;
 
-    // /// Reset the editor with a new file system. Unsaved changes will be lost
-    // setFileSys(fs: FileSys): Promise<void>;
-
     /// Nofity the editor that the user is active
     notifyActivity(): void;
 
@@ -21,10 +20,10 @@ export interface EditorKernel {
     ///
     /// See EditorTree for input/output format
     /// On failure this returns empty array. This function will not throw
-    listDir(path: string[]): Promise<string[]>;
+    listDir(path: string): Promise<string[]>;
 
     /// Open a file in the editor
-    openFile(path: string[]): Promise<FsResult<void>>;
+    openFile(path: string): Promise<void>;
 
     /// Check if there are unsaved changes
     hasUnsavedChanges(): Promise<boolean>;
@@ -35,12 +34,12 @@ export interface EditorKernel {
     /// a synchronous context, like window.onbeforeunload
     hasUnsavedChangesSync(): boolean;
 
-    /// Load changes from the file system for the opened files
-    loadChangesFromFs(): Promise<FsResult<void>>;
+    /// Load changes from the file system for the opened non-dirty files
+    loadFromFs(): Promise<void>;
 
     /// Save changes to the file system for the opened files
-    saveChangesToFs(): Promise<FsResult<void>>;
+    saveToFs(): Promise<FsVoid>;
 
-    /// Get a FileAccess implementation
-    getFileAccess(): FileAccess;
+    /// Get a CompilerFileAccess implementation
+    getFileAccess(): CompilerFileAccess;
 }

@@ -8,9 +8,6 @@ to provide different levels of integration with file system in web apps.
 Basically, user can select a directory as a mount point, and browser can access
 read and sometimes write in the directory.
 
-## Dependency
-This library depends on `pure/result`
-
 ## Support
 Use `fsGetSupportStatus()` to inspect which implementation will be used.
 
@@ -52,7 +49,6 @@ with `capabilities` afterward.
 
 This is an example drop zone implementation in TypeScript
 ```typescript
-import { tryInvokeAsync } from "pure/result";
 import { fsOpenReadWriteFrom } from "pure/fs";
 
 const div = document.createElement("div");
@@ -71,13 +67,13 @@ div.addEventListener("drop", async (e) => {
         return;
     }
 
-    const result = await tryInvokeAsync((r) => fsOpenReadWriteFrom(r, item));
-    if (result.isErr()) {
-        console.error(result.error);
+    const result = await fsOpenReadWriteFrom(item);
+    if (result.err) {
+        console.error(result.err);
         return;
     }
 
-    const fs = result.value;
+    const fs = result.val;
     const { write, live } = fs.capabilities;
     // check capabilities and use fs
     // ...
@@ -86,21 +82,21 @@ div.addEventListener("drop", async (e) => {
 
 ## Retry open
 You can pass in a retry handler and return true to retry, when opening fails.
-The handler is async so you can ask user. It uses the `pure/result` library.
+The handler is async so you can ask user.
 
 ```typescript
-import { ResultHandle, tryInvokeAsync } from "pure/result";
 import { FsError, FsResult } from "pure/fs";
 
-async function shouldRetry(r: ResultHandle, error: FsError, attempt: number): Promise<FsResult<boolean>> {
-    if (retryCount < 10 && error === FsError.PermissionDenied) {
+async function shouldRetry(error: FsError, attempt: number): Promise<FsResult<boolean>> {
+    if (attempt < 10 && error === FsError.PermissionDenied) {
         alert("you must give permission to use this feature!");
-        return r.putOk(true);
+        return { val: true };
     }
-    return r.putOk(false);
+    return { val: false };
 }
 
-const result = await tryInvokeAsync((r) => fsOpenReadWrite(r, shouldRetry));
+const result = await fsOpenReadWrite(shouldRetry);
 ```
+
 
 

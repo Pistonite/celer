@@ -15,12 +15,14 @@ import {
     layoutViewReducers,
 } from "core/layout";
 import { MapViewState, initialMapViewState, mapViewReducers } from "core/map";
+
+import { configureSlice } from "low/store";
+
 import {
     EditorViewState,
     initialEditorViewState,
     editorViewReducers,
-} from "core/editor";
-import { configureSlice } from "low/store";
+} from "./editor";
 
 export type ViewState = LayoutViewState &
     MapViewState &

@@ -1,41 +1,198 @@
 //! FsFileSystem implementation for FileSystemAccess API 
 
-import { ResultHandle } from "../../result";
+import { tryAsync } from "pure/result";
+import { errstr } from "pure/utils";
+
 import { FsFileSystem, FsFileSystemUninit } from "../FsFileSystem";
-import { FsErr, FsError, FsResult, fsErr } from "../error";
+import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "../error";
+import { FsCapabilities } from "../support";
+import { FsFile } from "../FsFile";
+import { fsComponents, fsGetBase, fsGetName, fsIsRoot, fsNormalize } from "../path";
+import { FsFileMgr } from "./FsFileMgr";
+import { FsFileSystemInternal } from "./FsFileSystemInternal";
 
 type PermissionStatus = "granted" | "denied" | "prompt";
 
-/// FileSys implementation that uses FileSystem Access API
+/// FsFileSystem implementation that uses FileSystem Access API
 /// This is only supported in Chrome/Edge
-export class FsImplFsa implements FsFileSystemUninit {
+export class FsImplFsa implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
+    public root: string;
+    public capabilities: FsCapabilities;
     /// If app requested write access
-    private write: boolean;
-    private rootPath: string;
+    private writeMode: boolean;
     private rootHandle: FileSystemDirectoryHandle;
     private permissionStatus: PermissionStatus;
+
+    private mgr: FsFileMgr;
 
     constructor(
         rootPath: string,
         rootHandle: FileSystemDirectoryHandle,
         write: boolean,
     ) {
-        this.rootPath = rootPath;
+        this.root = rootPath;
         this.rootHandle = rootHandle;
-        this.write = write;
+        this.writeMode = write;
         this.permissionStatus = "prompt";
+        this.capabilities = {
+            write,
+            live: true,
+        };
+        this.mgr = new FsFileMgr();
     }
 
-    public async init(r: ResultHandle): Promise<FsResult<FsFileSystem>> {
+    public async init(): Promise<FsResult<FsFileSystem>> {
         // @ts-expect-error ts lib does not have requestPermission
         this.permissionStatus = await this.rootHandle.requestPermission({
-            mode: this.write ? "readwrite" : "read",
+            mode: this.writeMode ? "readwrite" : "read",
         });
         if (this.permissionStatus !== "granted") {
-            return r.putErr(fsErr(FsErr.PermissionDenied, "User denied permission"));
+            const err = fsErr(FsErr.PermissionDenied, "User denied permission");
+            return { err };
         }
-        return r.putOk(this);
+        return { val: this };
     }
+
+    public async listDir(path: string): Promise<FsResult<string[]>> {
+        const normalized = fsNormalize(path);
+        if (normalized.err) {
+            return normalized;
+        }
+        path = normalized.val;
+        
+        const handle = await this.resolveDir(path);
+        if (handle.err) {
+            return handle;
+        }
+
+        const entries = await tryAsync(async () => {
+            const entries: string[] = [];
+            // @ts-expect-error FileSystemDirectoryHandle.values() not in ts lib
+            for await (const entry of handle.values()) {
+                const { kind, name } = entry;
+                if (kind === "directory") {
+                    entries.push(name + "/");
+                } else {
+                    entries.push(name);
+                }
+            }
+            return entries;
+        });
+        if ("err" in entries) {
+            const err = fsFail("Error reading entries from directory `" + path + "`: " + errstr(entries.err));
+            return { err };
+        }
+        return entries;
+    }
+
+    public async read(path: string): Promise<FsResult<File>> {
+        const normalized = fsNormalize(path);
+        if (normalized.err) {
+            return normalized;
+        }
+        path = normalized.val;
+
+        const handle = await this.resolveFile(path);
+        if (handle.err) {
+            return handle;
+        }
+
+        const file = await tryAsync(() => handle.val.getFile());
+        if ("err" in file) {
+            const err = fsFail("Failed to read file `" + path + "`: " + errstr(file.err));
+            return { err };
+        }
+        return file;
+    }
+
+    public async write(path: string, content: Uint8Array): Promise<FsVoid> {
+        if (!this.writeMode) {
+            const err = fsErr(FsErr.PermissionDenied, "Write mode not requested");
+            return { err };
+        }
+        const normalized = fsNormalize(path);
+        if (normalized.err) {
+            return normalized;
+        }
+        path = normalized.val;
+
+        const handle = await this.resolveFile(path);
+        if (handle.err) {
+            return handle;
+        }
+
+        const result = await tryAsync(async () => {
+            const file = await handle.val.createWritable();
+            await file.write(content);
+            await file.close();
+            return {}; 
+        });
+        if ("err" in result) {
+            const err = fsFail("Failed to write file `" + path + "`: " + errstr(result.err));
+            return { err };
+        }
+        return {};
+    }
+
+    public getFile(path: string): FsFile {
+        return this.mgr.get(this, path);
+    }
+
+    public getOpenedPaths(): string[] {
+        return this.mgr.getOpenedPaths();
+    }
+    public closeFile(path: string): void {
+        this.mgr.close(path);
+    }
+
+    /// Resolve the FileSystemDirectoryHandle for a directory. 
+    /// The path must be normalized
+    private async resolveDir(path: string): Promise<FsResult<FileSystemDirectoryHandle>> {
+        if (fsIsRoot(path)) {
+            return { val: this.rootHandle };
+        }
+        let handle: FileSystemDirectoryHandle = this.rootHandle;
+        const parts: string[] = [];
+        for (const part of fsComponents(path)) {
+            parts.push(part);
+            const next = await tryAsync(() => handle.getDirectoryHandle(part));
+            if ("err" in next) {
+                const dir = parts.join("/");
+                const err = fsFail("Failed to resolve directory `" + dir + "`: " + errstr(next.err));
+                return { err };
+            }
+            handle = next.val;
+        }
+
+        return { val: handle };
+    }
+
+    /// Resolve the FileSystemFileHandle for a file.
+    /// The path must be normalized
+    private async resolveFile(path: string): Promise<FsResult<FileSystemFileHandle>> {
+        const parent = fsGetBase(path);
+        if (parent.err) {
+            return parent;
+        }
+
+        const name = fsGetName(path);
+        if (name.err) {
+            return name;
+        }
+
+        const handle = await this.resolveDir(parent.val);
+        if (handle.err) {
+            return handle;
+        }
+
+        const file = await tryAsync(() => handle.val.getFileHandle(name.val));
+        if ("err" in file) {
+            const err = fsFail("Failed to resolve file `" + path + "`: " + errstr(file.err));
+            return { err };
+        }
+        return file;
+    }
+
 }
 
 

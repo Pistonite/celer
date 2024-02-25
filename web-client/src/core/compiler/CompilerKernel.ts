@@ -1,6 +1,8 @@
-import { EntryPointsSorted, ExpoDoc, ExportRequest } from "low/celerc";
-import { FileAccess } from "low/fs";
-import { Result } from "low/utils";
+import type { Result } from "pure/result";
+
+import type { EntryPointsSorted, ExpoDoc, ExportRequest } from "low/celerc";
+
+import type { CompilerFileAccess } from "./CompilerFileAccess";
 
 /// Interface used to access the compiler
 ///
@@ -9,7 +11,7 @@ import { Result } from "low/utils";
 /// without importing the compiler module.
 export interface CompilerKernel {
     /// Initialize the compiler and bind it to a FileAccess implementation
-    init(fileAccess: FileAccess): Promise<void>;
+    init(fileAccess: CompilerFileAccess): Promise<void>;
 
     /// Unbind the compiler.
     ///

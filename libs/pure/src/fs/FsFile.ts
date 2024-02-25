@@ -1,5 +1,4 @@
-import { ResultHandle } from "../result";
-import { FsResult } from "./error";
+import { FsResult, FsVoid } from "./error";
 
 /// Interface for operating on a file in the loaded file system
 export interface FsFile {
@@ -10,17 +9,17 @@ export interface FsFile {
     isDirty(): boolean;
 
     /// Get the last modified time. May load it from file system if needed
-    getLastModified(r: ResultHandle): Promise<FsResult<number>>;
+    getLastModified(): Promise<FsResult<number>>;
 
     /// Get the text content of the file
     ///
     /// If the file is not loaded, it will load it.
     ///
     /// If the file is not a text file, it will return InvalidEncoding
-    getText(r: ResultHandle): Promise<FsResult<string>>;
+    getText(): Promise<FsResult<string>>;
 
     /// Get the content of the file
-    getBytes(r: ResultHandle): Promise<FsResult<Uint8Array>>
+    getBytes(): Promise<FsResult<Uint8Array>>
 
     /// Set the content in memory. Does not save to disk.
     /// Does nothing if file is closed
@@ -33,7 +32,7 @@ export interface FsFile {
     /// Load the file's content if it's not newer than fs
     ///
     /// Returns Ok if the file is newer than fs
-    loadIfNotDirty(r: ResultHandle): Promise<FsResult<void>>;
+    loadIfNotDirty(): Promise<FsVoid>;
 
     /// Load the file's content from FS.
     ///
@@ -41,16 +40,15 @@ export interface FsFile {
     /// at a later time than the last in memory modification.
     ///
     /// If it fails, the file's content in memory will not be changed
-    load(r: ResultHandle): Promise<FsResult<void>>;
+    load(): Promise<FsVoid>;
 
     /// Save the file's content to FS if it is dirty.
     ///
     /// If not dirty, returns Ok
-    writeIfNewer(r: ResultHandle): Promise<FsResult<void>>;
+    writeIfNewer(): Promise<FsVoid>;
 
     /// Close the file. In memory content will be lost.
     /// Further operations on the file will fail
     close(): void;
-
 }
 

@@ -1,5 +1,7 @@
 import reduxWatch from "redux-watch";
 
+import { FsFileSystem } from "pure/fs";
+
 import {
     AppState,
     AppStore,
@@ -19,12 +21,11 @@ import {
     isRecompileNeeded,
     loadDocumentFromCurrentUrl,
 } from "core/doc";
+import type { CompilerKernel } from "core/compiler";
+import type { EditorKernel, EditorKernelAccess } from "core/editor";
 import { ExpoDoc, ExportRequest } from "low/celerc";
 import { console, Logger, isInDarkMode, sleep, AlertMgr } from "low/utils";
-import type { FileSys, FsResult, FsStableResult } from "low/fs";
 
-import type { CompilerKernel } from "./compiler";
-import type { EditorKernel, KernelAccess } from "./editor";
 import { KeyMgr } from "./KeyMgr";
 import { WindowMgr } from "./WindowMgr";
 import { AlertMgrImpl } from "./AlertMgr";
@@ -40,7 +41,7 @@ type InitUiFunction = (
 /// The kernel owns all global resources like the redux store.
 /// It is also responsible for mounting react to the DOM and
 /// handles the routing.
-export class Kernel implements KernelAccess {
+export class Kernel implements EditorKernelAccess {
     /// The logger
     private log: Logger;
     /// The store
@@ -121,9 +122,9 @@ export class Kernel implements KernelAccess {
         const path = window.location.pathname;
         if (path === "/edit") {
             document.title = "Celer Editor";
-            const { initCompiler } = await import("./compiler");
-            const compiler = initCompiler(this.store);
-            this.compiler = compiler;
+            // const { initCompiler } = await import("core/compiler");
+            // const compiler = initCompiler(this.store);
+            // this.compiler = compiler;
 
             this.store.dispatch(viewActions.setStageMode("edit"));
         } else {
@@ -178,7 +179,7 @@ export class Kernel implements KernelAccess {
             throw new Error("compiler is not available in view mode");
         }
         if (!this.compiler) {
-            const { initCompiler } = await import("./compiler");
+            const { initCompiler } = await import("core/compiler");
             const compiler = initCompiler(this.store);
             this.compiler = compiler;
         }
@@ -322,14 +323,8 @@ export class Kernel implements KernelAccess {
     }
 
     // put this in editor kernel
-    private updateRootPathInStore(fileSys: FileSys | undefined) {
-        if (fileSys) {
-            this.store.dispatch(
-                viewActions.updateFileSys(fileSys.getRootName()),
-            );
-        } else {
-            this.store.dispatch(viewActions.updateFileSys(undefined));
-        }
+    private updateRootPathInStore(fs: FsFileSystem | undefined) {
+        this.store.dispatch(viewActions.updateFileSys(fs?.root ?? undefined));
     }
 
     public async export(request: ExportRequest): Promise<ExpoDoc> {

@@ -1,3 +1,8 @@
+import { FsErr, FsError } from "pure/fs";
+import { Result, tryAsync } from "pure/result";
+import { errstr } from "pure/utils";
+
+import { getRawPluginOptions } from "core/doc";
 import {
     AppStore,
     documentActions,
@@ -16,32 +21,26 @@ import {
     get_entry_points,
     set_plugin_options,
 } from "low/celerc";
-import { getRawPluginOptions } from "core/doc";
 import {
-    wrapAsync,
     setWorker,
     registerWorkerHandler,
-    allocOk,
-    Result,
     sleep,
-    allocErr,
     ReentrantLock,
-    errorToString,
 } from "low/utils";
-import { FileAccess, FsResultCodes } from "low/fs";
 
 import { CompilerKernel } from "./CompilerKernel";
 import { CompilerLog } from "./utils";
+import { CompilerFileAccess } from "./CompilerFileAccess";
 
 async function checkFileExists(
-    fileAccess: FileAccess,
+    fileAccess: CompilerFileAccess,
     path: string,
 ): Promise<boolean> {
-    const result = await fileAccess.getFileContent(path, true);
-    if (result.isOk()) {
+    const content = await fileAccess.getFileContent(path, true);
+    if (content.val) {
         return true;
     }
-    if (result.inner() === FsResultCodes.NotModified) {
+    if (content.err.code === FsErr.NotModified) {
         return true;
     }
     return false;
@@ -53,7 +52,7 @@ async function checkFileExists(
 /// It uses FileAccess interface to send files to the worker.
 export class CompilerKernelImpl implements CompilerKernel {
     private store: AppStore;
-    private fileAccess: FileAccess | undefined = undefined;
+    private fileAccess: CompilerFileAccess | undefined = undefined;
 
     private needCompile: boolean;
     /// Flag used to prevent multiple compilation to run at the same time
@@ -89,7 +88,7 @@ export class CompilerKernelImpl implements CompilerKernel {
         this.compiling = false;
     }
 
-    public async init(fileAccess: FileAccess) {
+    public async init(fileAccess: CompilerFileAccess) {
         this.store.dispatch(viewActions.setCompilerReady(false));
         CompilerLog.info("initializing compiler worker...");
         this.fileAccess = fileAccess;
@@ -103,29 +102,31 @@ export class CompilerKernelImpl implements CompilerKernel {
                         "file",
                         1,
                         path,
-                        "file access not available",
+                        {
+                            code: FsErr.Fail,
+                            message: "file access not available"
+                        } satisfies FsError
                     ]);
                     return;
                 }
-                const result = await this.fileAccess.getFileContent(
+                const bytes = await this.fileAccess.getFileContent(
                     path,
                     checkChanged,
                 );
-                if (result.isOk()) {
-                    worker.postMessage([
-                        "file",
-                        0,
-                        path,
-                        [true, result.inner()],
-                    ]);
-                } else {
-                    const err = result.inner();
-                    if (err === FsResultCodes.NotModified) {
+                if (bytes.err) {
+                    if (bytes.err.code === FsErr.NotModified) {
                         worker.postMessage(["file", 0, path, [false]]);
                     } else {
-                        worker.postMessage(["file", 1, path, err]);
+                        worker.postMessage(["file", 1, path, bytes.err]);
                     }
+                    return;
                 }
+                worker.postMessage([
+                    "file",
+                    0,
+                    path,
+                    [true, bytes.val],
+                ]);
             },
         );
 
@@ -136,12 +137,12 @@ export class CompilerKernelImpl implements CompilerKernel {
     public async getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>> {
         if (!(await this.ensureReady())) {
             CompilerLog.error("worker not ready after max waiting");
-            return allocOk([]);
+            return { val: [] };
         }
         if (!this.fileAccess) {
-            return allocOk([]);
+            return { val: [] };
         }
-        return await wrapAsync(get_entry_points);
+        return await tryAsync(get_entry_points);
     }
 
     /// Trigger compilation of the document
@@ -165,12 +166,11 @@ export class CompilerKernelImpl implements CompilerKernel {
             return;
         }
 
-        const validatedEntryPathResult = await this.validateEntryPath();
-        if (validatedEntryPathResult.isErr()) {
+        const validatedEntryPath = await this.validateEntryPath();
+        if (validatedEntryPath.err) {
             CompilerLog.warn("entry path is invalid, skipping compile");
             return;
         }
-        const validatedEntryPath = validatedEntryPathResult.inner();
 
         this.store.dispatch(viewActions.setCompileInProgress(true));
 
@@ -196,18 +196,18 @@ export class CompilerKernelImpl implements CompilerKernel {
                 await this.updatePluginOptions();
 
                 CompilerLog.info("invoking compiler...");
-                const result = await wrapAsync(() => {
+                const result = await tryAsync(() => {
                     return compile_document(
-                        validatedEntryPath,
+                        validatedEntryPath.val,
                         compilerUseCachedPrepPhase,
                     );
                 });
                 // yielding just in case other things need to update
                 await sleep(0);
-                if (result.isErr()) {
-                    CompilerLog.error(result.inner());
+                if ("err" in result) {
+                    CompilerLog.error(result.err);
                 } else {
-                    const doc = result.inner();
+                    const doc = result.val;
                     if (this.fileAccess && doc !== undefined) {
                         this.store.dispatch(documentActions.setDocument(doc));
                     }
@@ -232,13 +232,12 @@ export class CompilerKernelImpl implements CompilerKernel {
             };
         }
 
-        const validatedEntryPathResult = await this.validateEntryPath();
-        if (validatedEntryPathResult.isErr()) {
+        const validatedEntryPath = await this.validateEntryPath();
+        if ("err" in validatedEntryPath) {
             return {
                 error: "Compiler entry path is invalid. Please check your settings.",
             };
         }
-        const validatedEntryPath = validatedEntryPathResult.inner();
 
         return await this.compilerLock.lockedScope(undefined, async () => {
             const { compilerUseCachedPrepPhase } = settingsSelector(
@@ -247,19 +246,19 @@ export class CompilerKernelImpl implements CompilerKernel {
 
             await this.updatePluginOptions();
 
-            const result = await wrapAsync(() => {
+            const result = await tryAsync(() => {
                 return export_document(
-                    validatedEntryPath,
+                    validatedEntryPath.val,
                     compilerUseCachedPrepPhase,
                     request,
                 );
             });
 
-            if (result.isErr()) {
-                CompilerLog.error(result.inner());
-                return { error: errorToString(result.inner()) };
+            if ("err" in result) {
+                CompilerLog.error(result.err);
+                return { error: errstr(result.err) };
             }
-            return result.inner();
+            return result.val;
         });
     }
 
@@ -289,7 +288,7 @@ export class CompilerKernelImpl implements CompilerKernel {
         Result<string | undefined, undefined>
     > {
         if (!this.fileAccess) {
-            return allocErr(undefined);
+            return { err: undefined };
         }
         // check if entry path is a valid file
         const { compilerEntryPath } = settingsSelector(this.store.getState());
@@ -312,13 +311,13 @@ export class CompilerKernelImpl implements CompilerKernel {
                 this.store.dispatch(
                     settingsActions.setCompilerEntryPath(newEntryPath),
                 );
-                return allocErr(undefined);
+                return { err: undefined };
             }
         }
 
         // if entryPath is empty string, change it to undefined
         const validatedEntryPath = compilerEntryPath || undefined;
-        return allocOk(validatedEntryPath);
+        return { val: validatedEntryPath };
     }
 
     /// Try to correct an invalid entry path
@@ -327,11 +326,11 @@ export class CompilerKernelImpl implements CompilerKernel {
     /// The function will try to find a valid entry path from the current project.
     /// However, if the same entry path is found in the current project, that will be returned
     private async correctEntryPath(entryPath: string): Promise<string> {
-        const entryPointsResult = await this.getEntryPoints();
-        if (entryPointsResult.isErr()) {
+        const entryPoints = await this.getEntryPoints();
+        if ("err" in entryPoints) {
             return "";
         }
-        const newEntryPoints = entryPointsResult.inner();
+        const newEntryPoints = entryPoints.val;
         if (newEntryPoints.length === 0) {
             return "";
         }
@@ -379,11 +378,9 @@ export class CompilerKernelImpl implements CompilerKernel {
         if (pluginOptions !== this.lastPluginOptions) {
             this.lastPluginOptions = pluginOptions;
             CompilerLog.info("updating plugin options...");
-            const result = await wrapAsync(() => {
-                return set_plugin_options(pluginOptions);
-            });
-            if (result.isErr()) {
-                CompilerLog.error(result.inner());
+            const result = await tryAsync(() => set_plugin_options(pluginOptions));
+            if ("err" in result) {
+                CompilerLog.error(result.err);
                 CompilerLog.warn(
                     "failed to set plugin options. The output may be wrong.",
                 );

@@ -1,4 +1,4 @@
-import { Result, StableResult } from "../result";
+import { Result, Void } from "pure/result";
 
 /// Result type for file system operations
 export const FsErr = {
@@ -26,6 +26,8 @@ export const FsErr = {
     InvalidPath: 11,
     /// Trying to operate on a file that has been closed
     Closed: 12,
+    /// The operation does not apply to a directory
+    IsDirectory: 5,
 } as const;
 
 export type FsErr = (typeof FsErr)[keyof typeof FsErr];
@@ -43,4 +45,4 @@ export function fsFail(message: string): FsError {
 }
 
 export type FsResult<T> = Result<T, FsError>;
-export type FsStableResult<T> = StableResult<T, FsError>;
+export type FsVoid = Void<FsError>;

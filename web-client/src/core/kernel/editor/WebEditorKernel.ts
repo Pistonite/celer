@@ -211,7 +211,7 @@ class WebEditorKernel implements EditorKernel {
         const { unsavedFiles } = viewSelector(this.store.getState());
 
         // pull changes from monaco editor first to make sure current file is marked dirty if needed
-        await this.fileMgr.syncEditorToCurrentFile();
+        this.fileMgr.syncEditorToCurrentFile();
         if (isLong) {
             const { autoSaveEnabled } = settingsSelector(this.store.getState());
 

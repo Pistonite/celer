@@ -1,16 +1,17 @@
-import { ResultHandle } from "../../result";
-import { errstr } from "../../utils";
+import { errstr } from "pure/utils";
+import { tryAsync } from "pure/result";
+
 import { FsFile } from "../FsFile";
-import { FsFileSystemInternal } from "../FsFileSystem";
-import { FsErr, FsError, FsResult, fsErr, fsFail } from "../error";
+import { FsFileSystemInternal } from "./FsFileSystemInternal";
+import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "../error";
 
 /// Allocate a new file object
 export function fsFile(fs: FsFileSystemInternal, path: string): FsFile {
     return new FsFileImpl(fs, path);
 }
 
-function errclosed(): FsError {
-    return fsErr(FsErr.Closed, "File is closed");
+function errclosed() {
+    return { err: fsErr(FsErr.Closed, "File is closed")} as const;
 }
 
 class FsFileImpl implements FsFile {
@@ -48,56 +49,59 @@ class FsFileImpl implements FsFile {
 
     public close(): void {
         this.closed = true;
+        this.fs.closeFile(this.path);
     }
 
     public isDirty(): boolean {
         return this.isBufferDirty || this.isContentNewer;
     }
 
-    public async getLastModified(r: ResultHandle): Promise<FsResult<number>> {
+    public async getLastModified(): Promise<FsResult<number>> {
         if (this.closed) {
-            return r.putErr(errclosed());
+            return errclosed();
         }
         if (this.lastModified === undefined) {
-            r.put(await this.loadIfNotDirty(r));
-            if (r.isErr()) {
-                return r.ret();
+            const r = await this.loadIfNotDirty();
+            if (r.err) {
+                return r;
             }
         }
-        return r.putOk(this.lastModified ?? 0);
+        return { val: this.lastModified ?? 0 };
     }
 
-    public async getText(r: ResultHandle): Promise<FsResult<string>> {
+    public async getText(): Promise<FsResult<string>> {
         if (this.closed) {
-            return r.putErr(errclosed());
+            return errclosed();
         }
         if (this.buffer === undefined) {
-            r.put(await this.load(r));
-            if (r.isErr()) {
-                return r.ret();
+            const r = await this.load();
+            if (r.err) {
+                return r;
             }
         }
         if (!this.isText) {
-            return r.putErr(fsErr(FsErr.InvalidEncoding, "File is not valid UTF-8"));
+            const err = fsFail("File is not valid UTF-8");
+            return { err };
         }
-        return r.putOk(this.content ?? "");
+        return { val: this.content ?? "" };
     }
 
-    public async getBytes(r: ResultHandle): Promise<FsResult<Uint8Array>> {
+    public async getBytes(): Promise<FsResult<Uint8Array>> {
         if (this.closed) {
-            return r.putErr(errclosed());
+            return errclosed();
         }
         this.updateBuffer();
         if (this.buffer === undefined) {
-            r.put(await this.load(r));
-            if (r.isErr()) {
-                return r.ret();
+            const r = await this.load();
+            if (r.err) {
+                return r;
             }
         }
         if (this.buffer === undefined) {
-            return r.putErr(fsFail("Read was successful, but content was undefined"));
+            const err = fsFail("Read was successful, but content was undefined");
+            return { err };
         }
-        return r.putOk(this.buffer);
+        return { val: this.buffer };
     }
 
     public setText(content: string): void {
@@ -123,74 +127,71 @@ class FsFileImpl implements FsFile {
         this.lastModified = new Date().getTime();
     }
 
-    public async loadIfNotDirty(r: ResultHandle): Promise<FsResult<void>> {
+    public async loadIfNotDirty(): Promise<FsVoid> {
         if (this.closed) {
-            return r.putErr(errclosed());
+            return errclosed();
         }
         if (this.isDirty()) {
-            return r.voidOk();
+            return {};
         }
-        return await this.load(r);
+        return await this.load();
     }
 
-    public async load(r: ResultHandle): Promise<FsResult<void>> {
+    public async load(): Promise<FsVoid> {
         if (this.closed) {
-            return r.putErr(errclosed());
+            return errclosed();
         }
-        r.put(await this.fs.read(r, this.path));
-        if (r.isErr()) {
-            return r.ret();
+        const { val: file, err } = await this.fs.read(this.path);
+        if (err) {
+            return { err };
         }
 
-        const file = r.value;
         // check if the file has been modified since last loaded
         if (this.lastModified !== undefined) {
             if (file.lastModified <= this.lastModified) {
-                return r.voidOk();
+                return {}
             }
         }
         this.lastModified = file.lastModified;
         // load the buffer
-        r = r.erase();
-        r.put(await r.tryCatchAsync(r, async () => {
-            this.buffer = new Uint8Array(await file.arrayBuffer());
-        }));
-        if (r.isErr()) {
-            const error = fsFail(errstr(r.error));
-            return r.putErr(error);
+        const buffer = await tryAsync(async () => new Uint8Array(await file.arrayBuffer()));
+        if ("err" in buffer) {
+            const err = fsFail(errstr(buffer.err));
+            return { err };
         }
+        this.buffer = buffer.val;
         this.isBufferDirty = false;
         // Try decoding the buffer as text
         this.decodeBuffer();
         this.isContentNewer = false;
-        return r.ret();
+        return {};
     }
 
-    public async writeIfNewer(r: ResultHandle): Promise<FsResult<void>> {
+    public async writeIfNewer(): Promise<FsVoid> {
         if (this.closed) {
-            return r.putErr(errclosed());
+            return errclosed();
         }
         if (!this.isDirty()) {
-            return r.voidOk();
+            return {}
         }
-        return await this.write(r);
+        return await this.write();
     }
 
     /// Write the content without checking if it's dirty. Overwrites the file currently on FS
     ///
     /// This is private - outside code should only use writeIfDirty
-    private async write(r: ResultHandle): Promise<FsResult<void>> {
+    private async write(): Promise<FsVoid> {
         this.updateBuffer();
         const buffer = this.buffer;
         if (this.content === undefined || buffer === undefined) {
             // file was never read or modified
-            return r.voidOk();
+            return {};
         }
-        r.put(await this.fs.write(r, this.path, buffer));
-        if (r.isOk()) {
-            this.isBufferDirty = false;
+        const result = await this.fs.write(this.path, buffer);
+        if (result.err) {
+            return result;
         }
-        return r;
+        return {};
     }
 
     private decodeBuffer() {

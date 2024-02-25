@@ -1,10 +1,9 @@
 //! core/editor
-//! Editor related state
+//! Web Editor module
 
-import { DOMId } from "low/utils";
+import { EditorLog } from "./utils";
 
-export * from "./state";
-export * as editorViewReducers from "./viewReducers";
-export * as editorSettingsReducers from "./settingsReducers";
+EditorLog.info("loading editor module");
 
-export const EditorContainerDOM = new DOMId("editor-container");
+export * from "./EditorKernelAccess";
+export * from "./EditorKernel";

@@ -46,7 +46,7 @@ async function __initWorker(HANDLERS) {
         if (msgId === "file") {
             // ["file", 0, path, [true, data]]
             // ["file", 0, path, [false]]
-            // ["file", 1, path, error]
+            // ["file", 1, path, FsError]
             if (!pendingFiles[args]) {
                 return;
             }

@@ -1,35 +1,40 @@
 # pure/result
 
-TypeScript based result return type, inspired by Rust, but not completely the same.
+**I once had a fancy error object with TypeScript magic that tries
+to reduce allocation while maintaining Result-safety. It turns out
+that was slower than allocating plain objects for every return, because
+of how V8 optimizes things.**
 
-This project is used internally in my own projects. If you want to depend on it,
-simply copy the files over to your project.
+Don't even use `isErr()` helper functions to abstract. They are slower than
+directly property access in my testing.
+
+Copy `index.ts` to somewhere in your project to use this library
 
 ## Function that can fail
-Instead of having functions throw, make it return instead.
+Instead of having functions `throw`, make it `return` instead.
 ```typescript
 // Instead of 
 function doSomethingCanFail() {
     if (Math.random() < 0.5) {
-        return;
+        return 42;
     }
     throw "oops";
 }
-// Do this (what ResultHandle and Result are will be explained below)
-import type { ResultHandle, Result } from "pure/result";
+// Do this
+import type { Result } from "pure/result";
 
-function doSomethingCanFail(r: ResultHandle): Result<void, string> {
+function doSomethingCanFail(): Result<number, string> {
     if (Math.random() < 0.5) {
-        return r.voidOk();
+        return { val: 42 };
     }
-    return r.putErr("oops");
+    return { err: "oops" };
 }
 ```
 This is similar to Rust:
 ```rust
-fn do_something_can_fail() -> Result<(), String> {
+fn do_something_can_fail() -> Result<u32, String> {
     if ... {
-        return Ok(());
+        return Ok(42);
     }
 
     Err("oops".to_string())
@@ -37,227 +42,91 @@ fn do_something_can_fail() -> Result<(), String> {
 ```
 
 ## Calling function that can fail
-A function that returns `Result` should take in `ResultHandle` as one of the parameters,
-and use it to interact with the result system.
-
-The `ResultHandle` is actually the same object as the `Result`. The functions you call
-are only for TypeScript magic. You can think of `ResultHandle` as uninitialized `Result`.
-
-This example below shows this interaction:
+The recommended pattern is
 ```typescript
-function getParam(r: ResultHandle, name: string): Result<number, Error> {
+const x = doTheCall(); // x is Result<T, E>;
+if (x.err) {
+    // x.err is E, handle it
+    return ...
+}
+// x.val is T
+// ...
+```
+If your `E` type covers falsy values that are valid, use `"err" in x` instead of `x.err`.
+A well-known case is `Result<T, unknown>`. `if(r.err)` cannot narrow the else case to `Ok`,
+but `if("err" in r)` can.
+
+A full example:
+```typescript
+function getParam(name: string): Result<number, Error> {
     if (name === "a") {
-        // `putOk` mutates r to contain an Ok value
-        return r.putOk(13); // the return expression has type Result<number, Error>
+        return { val: 13 };
     }
     if (name === "b") {
-        return r.putOk(42);
+        return { val: 42 };
     }
-    // `putErr` mutates r to contain an Err value
-    return r.putErr(new Error("bad name"));
+    return { err: new Error("bad name") };
 }
 
 function multiplyFormat(
-    r: ResultHandle, 
     name1: string, 
     name2: string, 
     prefix: string
 ): Result<string, Error> {
-    // breaking this down to individual steps so I can explain the TypeScript magic 
-    r.put(
-        // when calling this, r has type ResultHandle
-        getParam(r, name1) // The return type is Result<number, Error>
-    ); // calling `put` will do nothing, but use TypeScript magic to make the type of r Result<number,Error> now
-    // (if you call `put` with a parameter that is not `this`, it will give a warning and try to copy the result over)
-
-    // now that r is `Result<number, Error>`, you can use isOk and isErr to check the result
-    if (r.isErr()) {
-        // here the type of r is Err<T>
-        console.error(r.error); // `error` property is only accessible after the check
-
-        // ret() gives r back, but casted to the right type (can be casted to any Ok type)
-        // without ret(), r is Result<number, Error>, which is not assignable to Result<string, Error>
-        return r.ret(); 
+    const v1 = getParam(name1);
+    if (v1.err) {
+        console.error(v1.err);
+        return v1;
+    }
+    const v2 = getParam(name1);
+    if (v2.err) {
+        console.error(v2.err);
+        return v2;
     }
 
-    // here, r is not Err<T>
-    // so r is ResultHandle & UncheckedResult<T, E> & Ok<T>
-    // which means we can get the value
-    const v1 = r.value;
-
-    // now we want to reuse r to handle the next call
-    // by calling r.erase(), it returns r back with ResultHandle type
-    // since that's is compatible with the function parameter,
-    // we can assign it and erase the previous handled information TypeScript knows
-    r.put(getParam(r = r.erase(), name2));
-    if (r.isErr()) {
-        return r.ret();
-    }
-    const v2 = r.value;
-
-    const formatted = `${prefix}${v1 * v2}`;
-    return r.putOk(formatted);
+    const formatted = `${prefix}${v1.val * v2.val}`;
+    return { val: formatted };
 }
 ```
 
-You might be thinking, why all the TypeScript magic?? Why not just do this:
+## Interop with throwing functions
+This library also has `tryCatch` to interop with throwing functions,
+and `tryAsync` for async functions.
+
 ```typescript
-type Result<T, E> = { ok: true, value: T } | { ok: false, error: E };
-```
-I have 2 reasons:
-1. Unlike Rust, you cannot redeclare a variable to shadow the previous declaration. With a naive implementation, you end up with:
-    ```typescript
-    function foo() {
-        const result1 = doSomething();
-        if (!result1.ok) {
-            return result1;
-        }
-        const v1 = result1.value;
-        const result2 = doSomethingElse();
-        if (!result2.ok) {
-            return result2;
-        }
-        const v2 = result2.value;
+import { tryCatch, tryAsync } from "pure/result";
+
+// synchronous
+const result1: Result<MyData, unknown> = tryCatch(() => JSON.parse<MyData>(...));
+// or you can specify the error type:
+const result2 = tryCatch<MyData, SyntaxError>(() => JSON.parse(...));
+
+// asynchronous
+async function doSomethingCanFail() {
+    if (Math.random() < 0.5) {
+        return 42;
     }
-    ```
-    Note the temporary `result1` and `result2`, which doesn't look pretty.
-
-2. You need to constantly create and destructure objects. This could be a performance issue, but I never
-   benchmarked anything, so it could just be my imagination. (In fact, my approach could perform worse)
-
-## Holding on to result
-One issue left is that since we are using the same `r` handle, we could run into concurrency issues.
-Say the example above becomes async:
-```typescript
-async function getParam(r: ResultHandle, name: string): Promise<Result<number, Error>> {
-    ...
-}
-
-async function multiplyFormat(
-    r: ResultHandle,
-    name1: string,
-    name2: string,
-    prefix: string
-): Promise<Result<string, Error>> {
-    r.put(await getParam(r, name1));
-    if (r.isErr()) {
-        return r.ret();
-    }
-    const v1 = r.value;
-
-    r.put(await getParam(r = r.erase(), name2));
-    if (r.isErr()) {
-        return r.ret();
-    }
-    const v2 = r.value;
-
-    const formatted = `${prefix}${v1 * v2}`;
-    return r.putOk(formatted);
-}
-```
-The problem comes if we want to call both `getParam` first, then await together:
-```typescript
-async function multiplyFormatAsync(
-    r: ResultHandle,
-    name1: string,
-    name2: string,
-    prefix: string
-): Promise<Result<string, Error>> {
-    await Promise.all([getParam(r, name1), getParam(r = r.erase(), name2)]);
-    // since getParam will store the result in r directly, we lost one value
-}
-```
-To overcome this, `fork()` is provided. It creates an empty ResultHandle.
-Despite the name, it will not contain any value from the original handle.
-```typescript
-async function multiplyFormatAsync(
-    r1: ResultHandle,
-    name1: string,
-    name2: string,
-    prefix: string
-): Promise<Result<string, Error>> {
-    const r2 = r1.fork();
-    await Promise.all([
-        r1.put(getParam(r1, name1)),
-        r2.put(getParam(r2, name2))
-    ]);
-    if (r1.isErr()) {
-        return r1.ret();
-    }
-    if (r2.isErr()) {
-        return r2.ret();
-    }
-    const formatted = `${prefix}${r1.value * v2.value}`;
-    // you must use r1, not r2 here, since that's the parameter passed in
-    return r1.putOk(formatted);
-}
-```
-
-## Outermost call site
-The last question remains: how to get `ResultHandle` in the first place to pass
-to a function? This library provides 4 utility functions to initiate the call.
-```typescript
-import { tryCatch, tryCatchAsync, tryInvoke, tryInvokeAsync } from "pure/result";
-
-// 1. Use tryInvoke to get a handle for invoking functions that return result
-const result = tryInvoke(r => multiplyFormat(r, "a", "b", "answer: "));
-// the type of result is StableResult<T, E>
-// you can call isOk and isErr on it, 
-// but cannot call putOk or putErr like you would with a ResultHandle
-if (result.isOk()) {
-    console.log(result.value) // 42 * 13 = 546
-}
-
-// 2. Use tryInvoke to do the same, but async
-// tryInvokeAsync takes in a (r: ResultHandle) => Promise<Result<T, E>>
-const result = await tryInvokeAsync((r) => multiplyFormatAsync(r, "a", "b", "answer: "));
-
-// 3. Use tryCatch to wrap a function that throws with try-catch
-const result = tryCatch(() => JSON.parse<MyData>(...));
-// result has type StableResult<MyData, unknown>
-
-// 4. Use tryCatchAsync to wrap an async function that can throw
-async function doStuff() {
     throw "oops";
 }
-const result = await tryCatchAsync(doStuff);
+const result = await tryAsync<number, string>(() => doStuff);
 ```
 
-## Innermost call site
-What if you need to call a throwing function inside a result-handling function?
-Use `r.tryCatch` and `r.tryCatchAsync`
+## Returning void
+Use `Void<E>` as the return type if the function returns `void` on success
 ```typescript
-import { ResultHandle, Result } from "pure/result";
-
-function doSomethingThatCouldThrow(): FooType {
-    ...
+const x = doSomethingThatVoidsOnSuccess();
+if (x.err) {
+    return x;
 }
-
-function foo(r: ResultHandle): Result<void, Error> {
-    // r.erase() is only needed if there are previous usage of r
-    // in this function
-    r.put(r.tryCatch(r = r.erase(), doSomethingThatCouldThrow));
-    // type of r is Result<FooType, unknown>
-}
-
-async function doSomethingThatCouldThrowAsync(): Promise<FooType> {
-    ...
-}
-
-async function foo(r: ResultHandle): Promise<Result<void, Error>> {
-    // r.erase() is only needed if there are previous usage of r
-    // in this function
-    r.put(await r.tryCatchAsync(r = r.erase(), doSomethingThatCouldThrowAsync));
-    // type of r is Result<FooType, unknown>
-}
+// type of x is Record<string, never>, i.e. empty object
 ```
 
 ## Why is there no `match`/`map`/`mapErr`, etc?
 
 If you are thinking this is a great idea:
 ```typescript
-const result = tryInvoke(foo);
-result.match(
+const result = foo(bar);
+match(result,
     (okValue) => {
         // handle ok case
     },
@@ -269,14 +138,16 @@ result.match(
 The vanilla `if` doesn't allocate the closures, and has less code, and you can
 control the flow properly inside the blocks with `return`/`break`/`continue`
 ```typescript
-const result = tryInvoke(foo);
-if (result.isOk()) {
-    // handle ok case
-} else {
+const result = foo(bar);
+if (result.err) {
     // handle err case
+} else {
+    // handle ok case
 }
 ```
 
 As for the other utility functions from Rust's Result type, they really only benefit
 because you can early return with `?` AND those abstractions are zero-cost in Rust.
-Neither is true in JavaScript. Please just handle it in the most straightforward way.
+Neither is true in JavaScript. 
+
+You can also easily write them yourself if you really want to.
