@@ -124,10 +124,6 @@ export class Kernel implements EditorKernelAccess {
         const path = window.location.pathname;
         if (path === "/edit") {
             document.title = "Celer Editor";
-            // const { initCompiler } = await import("core/compiler");
-            // const compiler = initCompiler(this.store);
-            // this.compiler = compiler;
-
             this.store.dispatch(viewActions.setStageMode("edit"));
         } else {
             setTimeout(() => {
@@ -187,8 +183,6 @@ export class Kernel implements EditorKernelAccess {
         }
         return this.compiler;
     }
-
-    // put this in low/fs
 
     /// Open a project file system
     ///

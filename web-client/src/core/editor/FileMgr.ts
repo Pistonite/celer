@@ -28,15 +28,6 @@ export class FileMgr implements CompilerFileAccess {
 
     private supportsSave: boolean;
 
-    // /// Some operations need to block other operations,
-    // /// like saving and loading at the same time is probably bad
-    // ///
-    // /// Anything that changes files or currentFile or the monaco editor
-    // /// should lock the fs
-    // private fsLock: ReentrantLock;
-    // /// Opened files
-    // private files: Record<string, FsFile> = {};
-
     private currentFile: FsFile | undefined;
     private monacoDom: HTMLDivElement;
     private monacoEditor: IStandaloneCodeEditor;
@@ -62,27 +53,11 @@ export class FileMgr implements CompilerFileAccess {
         this.monacoEditor = monacoEditor;
         this.fsYield = createYielder(64);
         this.modifyTracker = new ModifyTimeTracker();
-        // this.fsLock = new ReentrantLock("file mgr");
     }
 
-    // public setFileSys(fs: FsFileSystem): Promise<void> {
-    //     return this.fs.scopedWrite(async (thisFs, setFs) => {
-    //         if (thisFs === fs) {
-    //             return;
-    //         }
-    //         thisFs = setFs(fs);
-    //         this.updateEditor(undefined, undefined, undefined);
-    //         this.dispatcher.dispatch(viewActions.setUnsavedFiles([]));
-    //     });
-    //     await this.fsLock.lockedScope(undefined, async (token) => {
-    //     });
-    // }
-
     public delete() {
-        // this.fsLock.lockedScope(undefined, async (token) => {
         this.closeEditor();
         this.monacoEditor.dispose();
-        // });
     }
 
     public async resizeEditor() {
@@ -156,7 +131,6 @@ export class FileMgr implements CompilerFileAccess {
         this.dispatcher.dispatch(viewActions.endFileSysLoad(success));
         this.dispatcher.dispatch(viewActions.incFileSysSerial());
         console.info("sync completed");
-        // return success ? allocOk() : allocErr(FsResultCodes.Fail);
     }
 
     private async loadFromFsWithFs(fs: FsFileSystem): Promise<boolean> {
@@ -170,16 +144,6 @@ export class FileMgr implements CompilerFileAccess {
             await this.fsYield();
         }
         return success;
-        // const fsFile = this.files[id];
-        // const result = await this.loadChangesFromFsForFsFile(
-        //     id,
-        //     fsFile,
-        //     token,
-        // );
-        // if (result.isErr()) {
-        //     success = false;
-        // }
-        // await _yield();
     }
 
     private async loadFromFsForPath(
@@ -187,10 +151,8 @@ export class FileMgr implements CompilerFileAccess {
         path: string,
     ): Promise<boolean> {
         const fsFile = fs.getFile(path);
-        // return await this.fsLock.lockedScope(lockToken, async (token) => {
         const isCurrentFile = this.currentFile === fsFile;
 
-        // let content: string | undefined = undefined;
         let loadError: FsError | undefined = undefined;
 
         // load the file
@@ -226,40 +188,6 @@ export class FileMgr implements CompilerFileAccess {
         }
 
         return loadError === undefined;
-        //
-        // let result = await fsFile.loadIfNotDirty();
-        //
-        // if (result.isOk()) {
-        //     if (isCurrentFile) {
-        //         const contentResult = await fsFile.getText();
-        //         if (contentResult.isOk()) {
-        //             content = contentResult.inner();
-        //         } else {
-        //             result = contentResult;
-        //         }
-        //     }
-        // }
-        // if (result.isErr()) {
-        //     EditorLog.error(`sync failed with code ${result}`);
-        //     if (!fsFile.isNewerThanFs()) {
-        //         EditorLog.info(`closing ${idPath}`);
-        //         if (isCurrentFile) {
-        //             await this.updateEditor(
-        //                 undefined,
-        //                 undefined,
-        //                 undefined,
-        //                 token,
-        //             );
-        //         }
-        //         delete this.files[idPath];
-        //     }
-        // } else {
-        //     if (isCurrentFile) {
-        //         await this.updateEditor(fsFile, idPath, content, token);
-        //     }
-        // }
-        // return result;
-        // });
     }
 
     public hasUnsavedChanges(): Promise<boolean> {
@@ -275,18 +203,6 @@ export class FileMgr implements CompilerFileAccess {
             }
             return false;
         });
-        // return await this.fsLock.lockedScope(lockToken, async (token) => {
-        //     await this.syncEditorToCurrentFile(token);
-        //     const yielder = createYielder(64);
-        //     for (const id in this.files) {
-        //         const fsFile = this.files[id];
-        //         if (fsFile.isNewerThanFs()) {
-        //             return true;
-        //         }
-        //         await yielder();
-        //     }
-        //     return false;
-        // });
     }
 
     public hasUnsavedChangesSync(): boolean {
@@ -319,22 +235,6 @@ export class FileMgr implements CompilerFileAccess {
 
         const success = await this.fs.scopedWrite((fs) => {
             return this.saveToFsWithFs(fs);
-            //
-            // let success = true;
-            // const _yield = createYielder(64);
-            // for (const id in this.files) {
-            //     const fsFile = this.files[id];
-            //     const result = await this.saveChangesToFsForFsFile(
-            //         id,
-            //         fsFile,
-            //         token,
-            //     );
-            //     if (result.isErr()) {
-            //         success = false;
-            //     }
-            //     await _yield();
-            // }
-            // return success;
         });
 
         window.clearTimeout(handle);
@@ -367,54 +267,8 @@ export class FileMgr implements CompilerFileAccess {
             return false;
         }
         return true;
-        //
-        // const result = await fsFile.writeIfNewer();
-        // if (result.isErr()) {
-        // }
-        // return result;
-        // });
     }
 
-    // private async updateEditorLegacy(
-    //     file: FsFile | undefined,
-    //     path: string | undefined,
-    //     content: string | undefined,
-    //     lockToken?: number,
-    // ) {
-    //     await this.fsLock.lockedScope(lockToken, async (token) => {
-    //         // in case we are switching files, sync the current file first
-    //         if (this.currentFile !== file) {
-    //             await this.syncEditorToCurrentFile(token);
-    //             this.currentFile = file;
-    //         }
-    //         const success = content !== undefined;
-    //         this.dispatcher.dispatch(
-    //             viewActions.updateOpenedFile({
-    //                 openedFile: path,
-    //                 currentFileSupported: success,
-    //             }),
-    //         );
-    //
-    //         if (success && path !== undefined) {
-    //             // this check is necessary because
-    //             // some browsers rerenders the editor even if the content is the same (Firefox)
-    //             // which causes annoying flickering
-    //             if (this.monacoEditor.getValue() !== content) {
-    //                 this.monacoEditor.setValue(content);
-    //             }
-    //
-    //             // TODO #20: language feature support
-    //             this.switchLanguage(detectLanguageByFileName(path));
-    //
-    //             await this.attachEditor();
-    //             this.isEditorOpen = true;
-    //         } else {
-    //             this.monacoDom.remove();
-    //             this.isEditorOpen = false;
-    //         }
-    //     });
-    // }
-    //
     private closeEditor() {
         if (this.currentFile) {
             this.syncEditorToCurrentFile();
@@ -471,14 +325,6 @@ export class FileMgr implements CompilerFileAccess {
             monaco.editor.setModelLanguage(model, languageId);
         }
     }
-
-    // public async syncEditorToCurrentFileLegacy(lockToken?: number) {
-    //     await this.fsLock.lockedScope(lockToken, async () => {
-    //         if (this.currentFile && this.isEditorOpen) {
-    //             this.currentFile.setContent(this.monacoEditor.getValue());
-    //         }
-    //     });
-    // }
 
     /// Sync the text from editor to the in memory file storage
     public syncEditorToCurrentFile(): void {

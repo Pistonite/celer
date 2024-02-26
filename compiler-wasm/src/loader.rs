@@ -110,6 +110,8 @@ pub enum LoadFileOutput {
 
 /// Load a file from using JS binding
 async fn load_file_internal(path: &str, check_changed: bool) -> ResResult<LoadFileOutput> {
+    // this is essentially
+    // try { Ok(await load_file(path, check_changed)) } catch (e) { Err(e) }
     let result = async {
         LOAD_FILE
             .with_borrow(|f| {
