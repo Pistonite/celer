@@ -5,7 +5,7 @@
 
 use std::cell::RefCell;
 
-use js_sys::{Array, Function, Uint8Array, Reflect};
+use js_sys::{Array, Function, Reflect, Uint8Array};
 use log::info;
 use wasm_bindgen::prelude::*;
 
@@ -111,16 +111,19 @@ pub enum LoadFileOutput {
 /// Load a file from using JS binding
 async fn load_file_internal(path: &str, check_changed: bool) -> ResResult<LoadFileOutput> {
     let result = async {
-        LOAD_FILE.with_borrow(|f| {
+        LOAD_FILE
+            .with_borrow(|f| {
                 f.call2(
                     &JsValue::UNDEFINED,
                     &JsValue::from(path),
                     &JsValue::from(check_changed),
                 )
             })?
-            .into_future().await?
+            .into_future()
+            .await?
             .dyn_into::<Array>()
-    }.await;
+    }
+    .await;
 
     let result = result.and_then(|result| {
         let modified = result.get(0).as_bool().unwrap_or_default();
@@ -136,7 +139,7 @@ async fn load_file_internal(path: &str, check_changed: bool) -> ResResult<LoadFi
         Err(e) => {
             if let Ok(value) = Reflect::get(&e, &JsValue::from("message")) {
                 if let Some(s) = value.as_string() {
-                    return Err(ResError::FailToLoadFile( path.to_string(), s));
+                    return Err(ResError::FailToLoadFile(path.to_string(), s));
                 }
             }
             logger::raw_error(&e);
