@@ -1,7 +1,8 @@
 import YAML from "js-yaml";
 
+import { Result, tryCatch } from "pure/result";
+
 import { ExportMetadata, ExportRequest } from "low/celerc";
-import { Result, allocErr, allocOk } from "low/utils";
 
 import { DocSettingsState } from "./state";
 
@@ -44,17 +45,15 @@ export function createExportRequest(
     metadata: ExportMetadata,
     config: string,
 ): Result<ExportRequest, unknown> {
-    try {
+    return tryCatch(() => {
         const configPayload = YAML.load(config);
         const request: ExportRequest = {
             pluginId: metadata.pluginId,
             exportId: metadata.exportId || "",
             payload: configPayload,
         };
-        return allocOk(request);
-    } catch (e) {
-        return allocErr(e);
-    }
+        return request;
+    });
 }
 
 /// Get the plugin configs when the "Export Split" option is enabled

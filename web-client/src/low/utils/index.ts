@@ -22,4 +22,3 @@ export const shallowArrayEqual = <T>(a: T[], b: T[]): boolean => {
     }
     return true;
 };
-

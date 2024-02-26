@@ -15,11 +15,10 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import { Debouncer, sleep } from "low/utils";
+import { Debouncer, sleep, consoleDoc as console } from "low/utils";
 import { GameCoord } from "low/celerc";
 
 import {
-    DocLog,
     findLineByIndex,
     findNoteByIndex,
     findSectionByIndex,
@@ -44,7 +43,7 @@ declare global {
     }
 }
 
-DocLog.info("loading doc module");
+console.info("loading doc module");
 
 /// Create the doc controller singleton
 export const initDocController = (store: AppStore): DocController => {
@@ -52,7 +51,7 @@ export const initDocController = (store: AppStore): DocController => {
         window.__theDocController.delete();
     }
 
-    DocLog.info("creating doc controller");
+    console.info("creating doc controller");
 
     const controller = new DocController(store);
     window.__theDocController = controller;
@@ -98,7 +97,7 @@ export class DocController {
     }
 
     public delete() {
-        DocLog.info("deleting doc controller");
+        console.info("deleting doc controller");
         this.cleanup();
     }
 
@@ -175,11 +174,11 @@ export class DocController {
             newTag.href = newHref;
             head.appendChild(newTag);
             if (oldTags.length) {
-                DocLog.info(`re-prioritized theme stylesheet for ${theme}.`);
+                console.info(`re-prioritized theme stylesheet for ${theme}.`);
                 // flickers without setTimeout
                 setTimeout(() => oldTags.forEach((x) => x.remove()), 0);
             } else {
-                DocLog.info(`created theme stylesheet for ${theme}.`);
+                console.info(`created theme stylesheet for ${theme}.`);
             }
         } else {
             const oldTag = oldTags[0] as HTMLLinkElement;
@@ -187,7 +186,7 @@ export class DocController {
                 oldTag.href !== `${window.location.origin}${newHref}` &&
                 oldTag.href !== newHref
             ) {
-                DocLog.info(`switching theme to ${theme}...`);
+                console.info(`switching theme to ${theme}...`);
                 oldTag.href = newHref;
             }
         }
@@ -204,7 +203,7 @@ export class DocController {
     ///
     /// Triggered after layout or document change
     private async onFullUpdate() {
-        DocLog.info("fully updating document view...");
+        console.info("fully updating document view...");
         const eventId = ++this.currentUpdateEventId;
         updateBannerWidths();
         await sleep(0);
@@ -241,7 +240,7 @@ export class DocController {
     ///
     /// Returns if current line was updated
     private async onScrollUpdateInternal(_eventId: number): Promise<boolean> {
-        DocLog.info("updating document view after scroll...");
+        console.info("updating document view after scroll...");
         const view = viewSelector(this.store.getState());
         const scrollView = getScrollView();
         if (!scrollView) {
@@ -274,14 +273,14 @@ export class DocController {
             // current line is not visible
             visibleLines = findVisibleLines();
             if (visibleLines.length === 0) {
-                DocLog.warn("cannot find any visible lines");
+                console.warn("cannot find any visible lines");
                 return false;
             }
             // make center line current
             const centerLine =
                 visibleLines[Math.floor(visibleLines.length / 2)];
             const [section, line] = getLineLocationFromElement(centerLine);
-            DocLog.info(
+            console.info(
                 `current line not visible, updating to ${section}-${line}...`,
             );
             this.store.dispatch(viewActions.setDocLocation({ section, line }));
@@ -326,7 +325,7 @@ export class DocController {
     /// Returns if the scroll was updated
     private async onLocationUpdateInternal(eventId: number): Promise<boolean> {
         const newView = viewSelector(this.store.getState());
-        DocLog.info(
+        console.info(
             `updating document view to ${newView.currentSection}-${newView.currentLine}...`,
         );
 
@@ -346,17 +345,17 @@ export class DocController {
                 newCurrentLine = findSectionByIndex(newView.currentSection);
                 if (!newCurrentLine) {
                     if (retryCount < maxRetryCount) {
-                        DocLog.warn(
+                        console.warn(
                             `cannot find current section: section=${newView.currentSection}. Will retry in 1s.`,
                         );
                     } else if (retryCount === maxRetryCount) {
-                        DocLog.warn(
+                        console.warn(
                             `cannot find current line after too many retries. Further warnings will be suppressed.`,
                         );
                     }
                     await sleep(1000);
                     if (this.isEventObsolete(eventId)) {
-                        DocLog.info("canceling previous update");
+                        console.info("canceling previous update");
                         return false;
                     }
                     retryCount++;

@@ -26,10 +26,10 @@ import {
     registerWorkerHandler,
     sleep,
     ReentrantLock,
+    consoleCompiler as console,
 } from "low/utils";
 
 import { CompilerKernel } from "./CompilerKernel";
-import { CompilerLog } from "./utils";
 import { CompilerFileAccess } from "./CompilerFileAccess";
 
 async function checkFileExists(
@@ -75,13 +75,13 @@ export class CompilerKernelImpl implements CompilerKernel {
     }
 
     public delete() {
-        CompilerLog.info("deleting compiler");
+        console.info("deleting compiler");
         this.uninit();
         this.cleanup();
     }
 
     public uninit() {
-        CompilerLog.info("uninitializing compiler...");
+        console.info("uninitializing compiler...");
         this.fileAccess = undefined;
         this.store.dispatch(viewActions.setCompilerReady(false));
         this.store.dispatch(viewActions.setCompileInProgress(false));
@@ -90,7 +90,7 @@ export class CompilerKernelImpl implements CompilerKernel {
 
     public async init(fileAccess: CompilerFileAccess) {
         this.store.dispatch(viewActions.setCompilerReady(false));
-        CompilerLog.info("initializing compiler worker...");
+        console.info("initializing compiler worker...");
         this.fileAccess = fileAccess;
         this.lastPluginOptions = undefined;
         const worker = new Worker("/celerc/worker.js");
@@ -104,8 +104,8 @@ export class CompilerKernelImpl implements CompilerKernel {
                         path,
                         {
                             code: FsErr.Fail,
-                            message: "file access not available"
-                        } satisfies FsError
+                            message: "file access not available",
+                        } satisfies FsError,
                     ]);
                     return;
                 }
@@ -121,22 +121,17 @@ export class CompilerKernelImpl implements CompilerKernel {
                     }
                     return;
                 }
-                worker.postMessage([
-                    "file",
-                    0,
-                    path,
-                    [true, bytes.val],
-                ]);
+                worker.postMessage(["file", 0, path, [true, bytes.val]]);
             },
         );
 
-        await setWorker(worker, CompilerLog);
+        await setWorker(worker, console);
         this.store.dispatch(viewActions.setCompilerReady(true));
     }
 
     public async getEntryPoints(): Promise<Result<EntryPointsSorted, unknown>> {
         if (!(await this.ensureReady())) {
-            CompilerLog.error("worker not ready after max waiting");
+            console.error("worker not ready after max waiting");
             return { val: [] };
         }
         if (!this.fileAccess) {
@@ -155,12 +150,12 @@ export class CompilerKernelImpl implements CompilerKernel {
         // setting the needCompile flag to ensure this request is handled eventually
         this.needCompile = true;
         if (!this.fileAccess) {
-            CompilerLog.warn("file access not available, skipping compile");
+            console.warn("file access not available, skipping compile");
             return;
         }
 
         if (!(await this.ensureReady())) {
-            CompilerLog.warn(
+            console.warn(
                 "worker not ready after max waiting, skipping compile",
             );
             return;
@@ -168,7 +163,7 @@ export class CompilerKernelImpl implements CompilerKernel {
 
         const validatedEntryPath = await this.validateEntryPath();
         if (validatedEntryPath.err) {
-            CompilerLog.warn("entry path is invalid, skipping compile");
+            console.warn("entry path is invalid, skipping compile");
             return;
         }
 
@@ -181,7 +176,7 @@ export class CompilerKernelImpl implements CompilerKernel {
             // check if another compilation is running
             // this is safe because there's no await between checking and setting (no other code can run)
             if (this.compiling) {
-                CompilerLog.warn("compilation already in progress, skipping");
+                console.warn("compilation already in progress, skipping");
                 return;
             }
             this.compiling = true;
@@ -195,7 +190,7 @@ export class CompilerKernelImpl implements CompilerKernel {
 
                 await this.updatePluginOptions();
 
-                CompilerLog.info("invoking compiler...");
+                console.info("invoking compiler...");
                 const result = await tryAsync(() => {
                     return compile_document(
                         validatedEntryPath.val,
@@ -205,7 +200,7 @@ export class CompilerKernelImpl implements CompilerKernel {
                 // yielding just in case other things need to update
                 await sleep(0);
                 if ("err" in result) {
-                    CompilerLog.error(result.err);
+                    console.error(result.err);
                 } else {
                     const doc = result.val;
                     if (this.fileAccess && doc !== undefined) {
@@ -215,7 +210,7 @@ export class CompilerKernelImpl implements CompilerKernel {
             }
             this.store.dispatch(viewActions.setCompileInProgress(false));
             this.compiling = false;
-            CompilerLog.info("finished compiling");
+            console.info("finished compiling");
         });
     }
 
@@ -255,7 +250,7 @@ export class CompilerKernelImpl implements CompilerKernel {
             });
 
             if ("err" in result) {
-                CompilerLog.error(result.err);
+                console.error(result.err);
                 return { error: errstr(result.err) };
             }
             return result.val;
@@ -273,7 +268,7 @@ export class CompilerKernelImpl implements CompilerKernel {
             if (viewSelector(this.store.getState()).compilerReady) {
                 return true;
             }
-            CompilerLog.info("worker not ready, waiting...");
+            console.info("worker not ready, waiting...");
             await sleep(INTERVAL);
             acc += INTERVAL;
         }
@@ -297,9 +292,7 @@ export class CompilerKernelImpl implements CompilerKernel {
                 ? compilerEntryPath.substring(1)
                 : compilerEntryPath;
             if (!(await checkFileExists(this.fileAccess, filePath))) {
-                CompilerLog.warn(
-                    "entry path is invalid, attempting correction...",
-                );
+                console.warn("entry path is invalid, attempting correction...");
             }
 
             const newEntryPath = await this.correctEntryPath(compilerEntryPath);
@@ -307,7 +300,7 @@ export class CompilerKernelImpl implements CompilerKernel {
                 // update asynchronously to avoid infinite blocking loop
                 // updating the entry path will trigger another compile
                 await sleep(0);
-                CompilerLog.info(`set entry path to ${newEntryPath}`);
+                console.info(`set entry path to ${newEntryPath}`);
                 this.store.dispatch(
                     settingsActions.setCompilerEntryPath(newEntryPath),
                 );
@@ -377,15 +370,17 @@ export class CompilerKernelImpl implements CompilerKernel {
         const pluginOptions = getRawPluginOptions(this.store.getState());
         if (pluginOptions !== this.lastPluginOptions) {
             this.lastPluginOptions = pluginOptions;
-            CompilerLog.info("updating plugin options...");
-            const result = await tryAsync(() => set_plugin_options(pluginOptions));
+            console.info("updating plugin options...");
+            const result = await tryAsync(() =>
+                set_plugin_options(pluginOptions),
+            );
             if ("err" in result) {
-                CompilerLog.error(result.err);
-                CompilerLog.warn(
+                console.error(result.err);
+                console.warn(
                     "failed to set plugin options. The output may be wrong.",
                 );
             } else {
-                CompilerLog.info("plugin options updated");
+                console.info("plugin options updated");
             }
         }
     }

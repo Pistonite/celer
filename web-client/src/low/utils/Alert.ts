@@ -59,13 +59,13 @@ export interface AlertMgr {
     /// clicked ok and false if the user clicked cancel.
     ///
     /// If there are extra options, it may resolve to the id of the extra action
-    show<TExtra extends AlertExtraAction[]=[]>(
-        options: AlertOptions<TExtra>
+    show<TExtra extends AlertExtraAction[] = []>(
+        options: AlertOptions<TExtra>,
     ): Promise<boolean | AlertIds<TExtra>>;
 
     /// Like `show`, but with a custom react component for the body
-    showRich<TExtra extends AlertExtraAction[]=[]>(
-        options: RichAlertOptions<TExtra>
+    showRich<TExtra extends AlertExtraAction[] = []>(
+        options: RichAlertOptions<TExtra>,
     ): Promise<boolean | AlertIds<TExtra>>;
 
     /// Show a blocking alert and run f
@@ -76,7 +76,7 @@ export interface AlertMgr {
     /// If f throws, the alert will be cleared, and Err(e) will be returned.
     showBlocking<T>(
         options: BlockingAlertOptions,
-        fn: () => Promise<T>
+        fn: () => Promise<T>,
     ): Promise<Result<T, unknown>>;
 
     /// Modify the current alert's actions

@@ -3,7 +3,12 @@
 import { FsFileSystem, FsResult, fsJoin, fsRoot } from "pure/fs";
 
 import { CompilerFileAccess } from "core/compiler";
-import { IdleMgr, Yielder, createYielder, consoleEditor as console } from "low/utils";
+import {
+    IdleMgr,
+    Yielder,
+    createYielder,
+    consoleEditor as console,
+} from "low/utils";
 
 import { EditorKernel } from "./EditorKernel";
 import { EditorKernelAccess } from "./EditorKernelAccess";
@@ -11,12 +16,15 @@ import { ModifyTimeTracker } from "./ModifyTimeTracker";
 
 console.info("loading external editor kernel");
 
-export const initExternalEditor = (kernel: EditorKernelAccess, fs: FsFileSystem): EditorKernel => {
+export const initExternalEditor = (
+    kernel: EditorKernelAccess,
+    fs: FsFileSystem,
+): EditorKernel => {
     console.info("creating external editor");
     return new ExternalEditorKernel(kernel, fs);
 };
 
-class ExternalEditorKernel implements EditorKernel, CompilerFileAccess{
+class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
     private deleted = false;
     private idleMgr: IdleMgr;
     private fs: FsFileSystem;
@@ -111,7 +119,8 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess{
     ): Promise<FsResult<Uint8Array>> {
         const fsFile = this.fs.getFile(path);
         if (checkChanged) {
-            const notModified = await this.modifyTracker.checkModifiedSinceLastAccess(fsFile);
+            const notModified =
+                await this.modifyTracker.checkModifiedSinceLastAccess(fsFile);
             if (notModified.err) {
                 return notModified;
             }
@@ -121,14 +130,16 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess{
     }
 
     // === Stub implementations ===
-    public async listDir(): Promise<string[]> { return []; }
-    public async openFile(): Promise<void> { }
+    public async listDir(): Promise<string[]> {
+        return [];
+    }
+    public async openFile(): Promise<void> {}
     public async hasUnsavedChanges(): Promise<boolean> {
         return false;
     }
     public hasUnsavedChangesSync(): boolean {
         return false;
     }
-    public async loadFromFs(): Promise<void> { }
-    public async saveToFs(): Promise<void> { }
+    public async loadFromFs(): Promise<void> {}
+    public async saveToFs(): Promise<void> {}
 }

@@ -54,7 +54,7 @@ export const EditorDropZone: React.FC = () => {
                     return;
                 }
 
-                // create the retry handle to show error messages, 
+                // create the retry handle to show error messages,
                 // and ask user if they want to retry
                 const retryHandler = createRetryOpenHandler(alertMgr);
                 const fs = await fsOpenReadWriteFrom(item, retryHandler);

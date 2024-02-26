@@ -1,7 +1,5 @@
 import { Logger } from "pure/log";
 
-import { consoleCompiler as console } from "low/utils";
-
 let worker: Worker;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const specialHandlers: { [key: string]: (data: any) => any } = {};
@@ -42,7 +40,7 @@ export function setWorker(w: Worker, logger: Logger) {
             // Event handler
             const handler = workerHandlers[handleId];
             if (!handler) {
-                console.warn(
+                logger.warn(
                     `no worker handler for handleId=${handleId}. This could possibly be due to a previous panic from the worker.`,
                 );
                 return;
@@ -58,7 +56,7 @@ export function setWorker(w: Worker, logger: Logger) {
         }
     };
     worker.onerror = (e) => {
-        console.error(e);
+        logger.error(e);
         // we don't know where the error comes from, so we reject all handlers
         const handlers = workerHandlers;
         workerHandlers = {};

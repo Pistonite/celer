@@ -5,20 +5,25 @@ import { TreeIcon } from "./TreeIcon";
 import { useEditorStyles } from "./styles";
 
 export type TreeItemProps = {
-    // Displayed file name
+    /// Displayed file name
     file: string;
-    // Callback when the file is clicked
+    /// Callback when the file is clicked
     onClickFile: () => void;
-    // Level of the file in the tree. 0 is the root.
+    /// Level of the file in the tree. 0 is the root.
     level: number;
-
+    /// If this entry is a directory
     isDirectory: boolean;
+    /// Should the entry be displayed as selected
     isSelected: boolean;
+    /// Should the entry be displayed as expanded
     isExpanded?: boolean;
     isLoading: boolean;
-    isDirty?: boolean;
+    isDirty: boolean;
 };
 
+/// A single directory or file entry in the file tree
+///
+/// Does not display content of directory
 export const TreeItem: React.FC<TreeItemProps> = ({
     file,
     isDirectory,

@@ -1,4 +1,4 @@
-import { EditorMode } from "core/editor";
+import { EditorMode } from "core/store";
 import { StageMode } from "core/stage";
 
 import { HeaderControlList, ToolbarControl } from "./util";

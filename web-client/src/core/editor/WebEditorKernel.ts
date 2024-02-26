@@ -18,7 +18,12 @@ import {
     SettingsState,
 } from "core/store";
 import { CompilerFileAccess } from "core/compiler";
-import { isInDarkMode, IdleMgr, DOMId, consoleEditor as console } from "low/utils";
+import {
+    isInDarkMode,
+    IdleMgr,
+    DOMId,
+    consoleEditor as console,
+} from "low/utils";
 
 import { FileMgr } from "./FileMgr";
 

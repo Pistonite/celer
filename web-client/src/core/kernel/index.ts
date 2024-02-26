@@ -6,4 +6,3 @@
 export * from "./Kernel";
 export * from "./AlertMgr";
 export * from "./context";
-export type { EditorKernel } from "./editor";

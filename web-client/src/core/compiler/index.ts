@@ -1,7 +1,7 @@
-import { CompilerLog } from "./utils";
+import { consoleCompiler as console } from "low/utils";
 
-CompilerLog.info("loading compiler module");
+console.info("loading compiler module");
 
-export * from "./CompilerFileAccess";
-export * from "./CompilerKernel";
+export type * from "./CompilerFileAccess";
+export type * from "./CompilerKernel";
 export * from "./initCompiler";

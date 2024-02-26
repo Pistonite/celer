@@ -80,8 +80,8 @@ export class FileMgr implements CompilerFileAccess {
 
     public delete() {
         // this.fsLock.lockedScope(undefined, async (token) => {
-            this.closeEditor();
-            this.monacoEditor.dispose();
+        this.closeEditor();
+        this.monacoEditor.dispose();
         // });
     }
 
@@ -99,7 +99,10 @@ export class FileMgr implements CompilerFileAccess {
         });
     }
 
-    private async listDirWithFs(fs: FsFileSystem, path: string): Promise<string[]> {
+    private async listDirWithFs(
+        fs: FsFileSystem,
+        path: string,
+    ): Promise<string[]> {
         const { val: entries, err } = await fs.listDir(path);
         if (err) {
             const { code, message } = err;
@@ -109,14 +112,17 @@ export class FileMgr implements CompilerFileAccess {
         return entries;
     }
 
-    public openFile(path: string,): Promise<void> {
+    public openFile(path: string): Promise<void> {
         console.info(`opening ${path}`);
         return this.fs.scopedWrite(async (fs) => {
             return this.openFileWithFs(fs, path);
         });
     }
 
-    private async openFileWithFs(fs: FsFileSystem, path: string): Promise<void> {
+    private async openFileWithFs(
+        fs: FsFileSystem,
+        path: string,
+    ): Promise<void> {
         const fsFile = fs.getFile(path);
         const { val, err } = await fsFile.getText();
         if (err) {
@@ -136,31 +142,19 @@ export class FileMgr implements CompilerFileAccess {
         // ensure editor changes is synced first,
         // so the current file is marked dirty if needed
         this.syncEditorToCurrentFile();
-        const success = await this.fs.scopedWrite((fs) => {
+        let success = await this.fs.scopedWrite((fs) => {
             return this.loadFromFsWithFs(fs);
         });
-        // const success = await this.fsLock.lockedScope(
-        //     lockToken,
-        //     async (token) => {
-        //         let success = true;
-        //         const _yield = createYielder(64);
-        //         for (const id in this.files) {
-        //             const fsFile = this.files[id];
-        //             const result = await this.loadChangesFromFsForFsFile(
-        //                 id,
-        //                 fsFile,
-        //                 token,
-        //             );
-        //             if (result.isErr()) {
-        //                 success = false;
-        //             }
-        //             await _yield();
-        //         }
-        //         return success;
-        //     },
-        // );
+        if (!success) {
+            // failure could be due to project structure change. try again
+            console.warn("sync failed, retrying...");
+            success = await this.fs.scopedWrite((fs) => {
+                return this.loadFromFsWithFs(fs);
+            });
+        }
         window.clearTimeout(handle);
         this.dispatcher.dispatch(viewActions.endFileSysLoad(success));
+        this.dispatcher.dispatch(viewActions.incFileSysSerial());
         console.info("sync completed");
         // return success ? allocOk() : allocErr(FsResultCodes.Fail);
     }
@@ -176,19 +170,22 @@ export class FileMgr implements CompilerFileAccess {
             await this.fsYield();
         }
         return success;
-                    // const fsFile = this.files[id];
-                    // const result = await this.loadChangesFromFsForFsFile(
-                    //     id,
-                    //     fsFile,
-                    //     token,
-                    // );
-                    // if (result.isErr()) {
-                    //     success = false;
-                    // }
-                    // await _yield();
+        // const fsFile = this.files[id];
+        // const result = await this.loadChangesFromFsForFsFile(
+        //     id,
+        //     fsFile,
+        //     token,
+        // );
+        // if (result.isErr()) {
+        //     success = false;
+        // }
+        // await _yield();
     }
 
-    private async loadFromFsForPath(fs: FsFileSystem, path: string): Promise<boolean> {
+    private async loadFromFsForPath(
+        fs: FsFileSystem,
+        path: string,
+    ): Promise<boolean> {
         const fsFile = fs.getFile(path);
         // return await this.fsLock.lockedScope(lockToken, async (token) => {
         const isCurrentFile = this.currentFile === fsFile;
@@ -229,39 +226,39 @@ export class FileMgr implements CompilerFileAccess {
         }
 
         return loadError === undefined;
-            //
-            // let result = await fsFile.loadIfNotDirty();
-            //
-            // if (result.isOk()) {
-            //     if (isCurrentFile) {
-            //         const contentResult = await fsFile.getText();
-            //         if (contentResult.isOk()) {
-            //             content = contentResult.inner();
-            //         } else {
-            //             result = contentResult;
-            //         }
-            //     }
-            // }
-            // if (result.isErr()) {
-            //     EditorLog.error(`sync failed with code ${result}`);
-            //     if (!fsFile.isNewerThanFs()) {
-            //         EditorLog.info(`closing ${idPath}`);
-            //         if (isCurrentFile) {
-            //             await this.updateEditor(
-            //                 undefined,
-            //                 undefined,
-            //                 undefined,
-            //                 token,
-            //             );
-            //         }
-            //         delete this.files[idPath];
-            //     }
-            // } else {
-            //     if (isCurrentFile) {
-            //         await this.updateEditor(fsFile, idPath, content, token);
-            //     }
-            // }
-            // return result;
+        //
+        // let result = await fsFile.loadIfNotDirty();
+        //
+        // if (result.isOk()) {
+        //     if (isCurrentFile) {
+        //         const contentResult = await fsFile.getText();
+        //         if (contentResult.isOk()) {
+        //             content = contentResult.inner();
+        //         } else {
+        //             result = contentResult;
+        //         }
+        //     }
+        // }
+        // if (result.isErr()) {
+        //     EditorLog.error(`sync failed with code ${result}`);
+        //     if (!fsFile.isNewerThanFs()) {
+        //         EditorLog.info(`closing ${idPath}`);
+        //         if (isCurrentFile) {
+        //             await this.updateEditor(
+        //                 undefined,
+        //                 undefined,
+        //                 undefined,
+        //                 token,
+        //             );
+        //         }
+        //         delete this.files[idPath];
+        //     }
+        // } else {
+        //     if (isCurrentFile) {
+        //         await this.updateEditor(fsFile, idPath, content, token);
+        //     }
+        // }
+        // return result;
         // });
     }
 
@@ -322,22 +319,22 @@ export class FileMgr implements CompilerFileAccess {
 
         const success = await this.fs.scopedWrite((fs) => {
             return this.saveToFsWithFs(fs);
-                //            
-                // let success = true;
-                // const _yield = createYielder(64);
-                // for (const id in this.files) {
-                //     const fsFile = this.files[id];
-                //     const result = await this.saveChangesToFsForFsFile(
-                //         id,
-                //         fsFile,
-                //         token,
-                //     );
-                //     if (result.isErr()) {
-                //         success = false;
-                //     }
-                //     await _yield();
-                // }
-                // return success;
+            //
+            // let success = true;
+            // const _yield = createYielder(64);
+            // for (const id in this.files) {
+            //     const fsFile = this.files[id];
+            //     const result = await this.saveChangesToFsForFsFile(
+            //         id,
+            //         fsFile,
+            //         token,
+            //     );
+            //     if (result.isErr()) {
+            //         success = false;
+            //     }
+            //     await _yield();
+            // }
+            // return success;
         });
 
         window.clearTimeout(handle);
@@ -358,7 +355,10 @@ export class FileMgr implements CompilerFileAccess {
         return success;
     }
 
-    private async saveToFsForPath(fs: FsFileSystem, path: string): Promise<boolean> {
+    private async saveToFsForPath(
+        fs: FsFileSystem,
+        path: string,
+    ): Promise<boolean> {
         // return await this.fsLock.lockedScope(lockToken, async () => {
         const { err } = await fs.getFile(path).writeIfNewer();
         if (err) {
@@ -367,11 +367,11 @@ export class FileMgr implements CompilerFileAccess {
             return false;
         }
         return true;
-            //
-            // const result = await fsFile.writeIfNewer();
-            // if (result.isErr()) {
-            // }
-            // return result;
+        //
+        // const result = await fsFile.writeIfNewer();
+        // if (result.isErr()) {
+        // }
+        // return result;
         // });
     }
 
@@ -539,10 +539,15 @@ export class FileMgr implements CompilerFileAccess {
         });
     }
 
-    private async getFileContentWithFs(fs: FsFileSystem, path: string, checkChanged: boolean): Promise<FsResult<Uint8Array>> {
+    private async getFileContentWithFs(
+        fs: FsFileSystem,
+        path: string,
+        checkChanged: boolean,
+    ): Promise<FsResult<Uint8Array>> {
         const fsFile = fs.getFile(path);
         if (checkChanged) {
-            const notModified = await this.modifyTracker.checkModifiedSinceLastAccess(fsFile);
+            const notModified =
+                await this.modifyTracker.checkModifiedSinceLastAccess(fsFile);
             if (notModified.err) {
                 return notModified;
             }

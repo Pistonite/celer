@@ -29,7 +29,7 @@ export const AppAlert: React.FC = () => {
     } = useSelector(viewSelector);
     const alertMgr = useKernel().getAlertMgr();
     const responseRef = useRef<boolean | string>(false);
-    const RichAlertComponent = alertMgr.getRichComponent();
+    const { RichAlertComponent } = alertMgr;
     if (!alertText && !RichAlertComponent) {
         return null;
     }

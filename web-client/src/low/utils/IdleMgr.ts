@@ -1,3 +1,5 @@
+import { consoleEditor as console } from "./logging";
+
 /// Callback to execute an idle event
 export type IdleFunction = (isLong: boolean, duration: number) => Promise<void>;
 
@@ -126,7 +128,7 @@ export class IdleMgr {
                 await this.callback(
                     this.idleDuration >= this.longIdleTime,
                     this.idleDuration,
-                )
+                );
             } catch (e) {
                 console.error(e);
             } finally {

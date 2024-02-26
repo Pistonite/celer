@@ -10,7 +10,7 @@ export function createRetryOpenHandler(alertMgr: AlertMgr) {
             const retry = await alertMgr.show({
                 title: "Permission Denied",
                 message:
-                "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
+                    "You must given file system access permission to the app to use this feature. Please try again and grant the permission when prompted.",
                 okButton: "Grant Permission",
                 cancelButton: "Cancel",
             });
@@ -37,7 +37,7 @@ export function createRetryOpenHandler(alertMgr: AlertMgr) {
             await alertMgr.show({
                 title: "Error",
                 message:
-                "You opened a file. Make sure you are opening the project folder and not individual files.",
+                    "You opened a file. Make sure you are opening the project folder and not individual files.",
                 okButton: "Close",
             });
             return { val: false };

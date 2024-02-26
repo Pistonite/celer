@@ -24,7 +24,12 @@ import {
 import type { CompilerKernel } from "core/compiler";
 import type { EditorKernel, EditorKernelAccess } from "core/editor";
 import { ExpoDoc, ExportRequest } from "low/celerc";
-import { consoleKernel as console, isInDarkMode, sleep, AlertMgr } from "low/utils";
+import {
+    consoleKernel as console,
+    isInDarkMode,
+    sleep,
+    AlertMgr,
+} from "low/utils";
 
 import { KeyMgr } from "./KeyMgr";
 import { WindowMgr } from "./WindowMgr";

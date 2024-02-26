@@ -10,10 +10,10 @@ import {
     settingsSelector,
     viewSelector,
 } from "core/store";
+import { consoleDoc as console } from "low/utils";
 
 import { DocRootProps, DocRoot } from "./components";
 import { initDocController } from "./DocController";
-import { DocLog } from "./utils";
 
 export const Doc: React.FC = () => {
     const { stageMode, isEditingLayout, compileInProgress } =
@@ -68,7 +68,7 @@ export const Doc: React.FC = () => {
                 onScroll={() => controller.onScroll()}
                 onRender={() => {
                     // doing this so we can check for excessive re-renders
-                    DocLog.info(`rendering document (serial=${serial})`);
+                    console.info(`rendering document (serial=${serial})`);
                 }}
             />
         </ErrorBoundary>

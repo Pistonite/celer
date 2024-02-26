@@ -82,6 +82,9 @@ export function fsNormalize(p: string): FsResult<string> {
 
 /// Join two paths
 export function fsJoin(p1: string, p2: string): string {
+    if (fsIsRoot(p1)) {
+        return p2;
+    }
     return p1 + "/" + p2;
 }
 

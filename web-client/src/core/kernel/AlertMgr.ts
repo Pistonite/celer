@@ -3,7 +3,16 @@
 import { Result, tryAsync } from "pure/result";
 
 import { AppDispatcher, viewActions } from "core/store";
-import { AlertExtraAction, AlertIds, AlertMgr, AlertOptions, BlockingAlertOptions, ModifyAlertActionPayload, RichAlertOptions, console } from "low/utils";
+import {
+    AlertExtraAction,
+    AlertIds,
+    AlertMgr,
+    AlertOptions,
+    BlockingAlertOptions,
+    ModifyAlertActionPayload,
+    RichAlertOptions,
+    console,
+} from "low/utils";
 
 type AlertCallback = (ok: boolean | string) => void;
 
@@ -136,5 +145,4 @@ export class AlertMgrImpl implements AlertMgr {
             cb();
         }, ALERT_TIMEOUT);
     }
-
 }

@@ -1,9 +1,7 @@
 //! MapContainerMgr
 import L from "leaflet";
 
-import { DOMId } from "low/utils";
-
-import { MapLog } from "./utils";
+import { DOMId, consoleMap as console } from "low/utils";
 
 /// Container div id
 export const MapContainer = new DOMId("map-root");
@@ -35,11 +33,11 @@ export class MapContainerMgr {
         }
         if (attempt) {
             if (attempt === 10) {
-                MapLog.warn(
+                console.warn(
                     "failed to attach to root container after max retries. Futher failures will be ignored",
                 );
             } else if (attempt < 10) {
-                MapLog.warn(
+                console.warn(
                     "failed to attach to root container. Will retry in 1s",
                 );
             }
@@ -74,7 +72,7 @@ export class MapContainerMgr {
             prevContainer.remove();
         }
 
-        MapLog.info("attaching map to container");
+        console.info("attaching map to container");
 
         // Remove from the old place
         map.getContainer().remove();

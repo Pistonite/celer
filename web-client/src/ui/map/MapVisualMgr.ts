@@ -9,9 +9,9 @@ import {
     viewActions,
 } from "core/store";
 import { ExecDoc, GameCoord, MapIcon } from "low/celerc";
+import { consoleMap as console } from "low/utils";
 import { LayerMode, SectionMode, VisualSize } from "core/map";
 
-import { MapLog } from "./utils";
 import { MapLayerMgr } from "./MapLayerMgr";
 import { IconMarker } from "./IconMarker";
 
@@ -46,7 +46,7 @@ export class MapVisualMgr {
         view: ViewState,
         settings: SettingsState,
     ) {
-        MapLog.info("initializing map visuals");
+        console.info("initializing map visuals");
         this.initIcons(doc, view, settings);
         this.initMarkers(doc, view, settings);
         this.initLines(doc, view, settings);
@@ -87,7 +87,7 @@ export class MapVisualMgr {
                     .map((icon) => {
                         const iconSrc = registeredIcons[icon.id];
                         if (!iconSrc) {
-                            MapLog.warn(`Icon ${icon.id} is not registered`);
+                            console.warn(`Icon ${icon.id} is not registered`);
                             return undefined;
                         }
                         const size = getIconSizeWithSettings(icon, settings);
@@ -127,7 +127,7 @@ export class MapVisualMgr {
                             },
                         );
                         iconMarker.on("click", () => {
-                            MapLog.info(
+                            console.info(
                                 `clicked icon, section ${icon.sectionIndex}, line ${icon.lineIndex}, layer ${layer}`,
                             );
                             this.setDocLocation(
@@ -199,7 +199,7 @@ export class MapVisualMgr {
                             pane: "markerPane",
                         });
                         markerLayer.on("click", () => {
-                            MapLog.info(
+                            console.info(
                                 `clicked marker, section ${marker.sectionIndex}, line ${marker.lineIndex}, layer ${layer}`,
                             );
                             this.setDocLocation(
@@ -426,7 +426,7 @@ class MapVisualGroup {
             (i === undefined || i < 0 || i >= this.sectionLayers.length)
         ) {
             // Index is invalid, we will keep the map empty
-            MapLog.warn("Invalid section index: " + i);
+            console.warn("Invalid section index: " + i);
             return;
         }
         if (mode === SectionMode.None) {

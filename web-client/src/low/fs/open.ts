@@ -57,7 +57,7 @@
 //     });
 // }
 //
-// function 
+// function
 //
 // export const createFsFromDataTransferItem = async (
 //     item: DataTransferItem,

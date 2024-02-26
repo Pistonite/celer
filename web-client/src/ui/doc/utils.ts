@@ -1,14 +1,12 @@
 //! Utilities
 
-import { DOMId, Logger } from "low/utils";
+import { DOMId } from "low/utils";
 import {
     DocLineContainerClass,
     DocSectionContainerClass,
     DocScroll,
     DocNoteContainerClass,
 } from "./components";
-
-export const DocLog = new Logger("doc");
 
 /// Scroll view type
 export type ScrollView = {
