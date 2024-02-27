@@ -3,19 +3,18 @@
 import { tryAsync } from "pure/result";
 import { errstr } from "pure/utils";
 
-import { FsFileSystem, FsFileSystemUninit } from "../FsFileSystem";
-import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "../error";
-import { FsCapabilities } from "../support";
-import { FsFile } from "../FsFile";
-import { fsComponents, fsGetBase, fsGetName, fsIsRoot, fsNormalize } from "../path";
-import { FsFileMgr } from "./FsFileMgr";
-import { FsFileSystemInternal } from "./FsFileSystemInternal";
+import { FsFileSystem, FsFileSystemUninit, FsCapabilities } from "./FsFileSystem.ts";
+import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "./FsError.ts";
+import { FsFile } from "./FsFile.ts";
+import { fsComponents, fsGetBase, fsGetName, fsIsRoot, fsNormalize } from "./FsPath.ts";
+import { FsFileMgr } from "./FsFileMgr.ts";
+import { FsFileSystemInternal } from "./FsFileSystemInternal.ts";
 
 type PermissionStatus = "granted" | "denied" | "prompt";
 
 /// FsFileSystem implementation that uses FileSystem Access API
 /// This is only supported in Chrome/Edge
-export class FsImplFsa implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
+export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
     public root: string;
     public capabilities: FsCapabilities;
     /// If app requested write access
@@ -67,8 +66,8 @@ export class FsImplFsa implements FsFileSystemUninit, FsFileSystem, FsFileSystem
 
         const entries = await tryAsync(async () => {
             const entries: string[] = [];
-            // @ts-expect-error FileSystemDirectoryHandle.values() not in ts lib
-            for await (const entry of handle.values()) {
+            // @ts-expect-error ts lib does not have values()
+            for await (const entry of handle.val.values()) {
                 const { kind, name } = entry;
                 if (kind === "directory") {
                     entries.push(name + "/");
@@ -194,5 +193,3 @@ export class FsImplFsa implements FsFileSystemUninit, FsFileSystem, FsFileSystem
     }
 
 }
-
-

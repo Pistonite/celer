@@ -12,12 +12,12 @@ function pushLog(msg: string) {
         LogQueue.shift();
     }
     LogQueue.push(`[${new Date().toISOString()}]${msg}`);
-};
+}
 
 /// Get the current log
 export function getLogLines() {
     return LogQueue.toArray();
-};
+}
 
 /// A general-purpose client side logger
 export class Logger {

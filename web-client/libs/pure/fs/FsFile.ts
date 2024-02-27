@@ -1,4 +1,4 @@
-import { FsResult, FsVoid } from "./error";
+import { FsResult, FsVoid } from "./FsError.ts";
 
 /// Interface for operating on a file in the loaded file system
 export interface FsFile {

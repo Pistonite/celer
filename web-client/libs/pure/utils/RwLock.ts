@@ -55,7 +55,7 @@ export class RwLock<TRead, TWrite extends TRead=TRead> {
     /// Acquire a write (exclusive) lock and call fn with the value. Release the lock when fn returns or throws.
     ///
     /// fn takes a setter function as second parameter, which you can use to update the value like `x = set(newX)`
-    public async scopedWrite<R>(fn: (t: TWrite, setter: Setter<TWrite>) => Promise<R>): Promise<R> {
+    public async scopedWrite<R>(fn: (t: TWrite, setter: (t: TWrite) => TWrite) => Promise<R>): Promise<R> {
         if (this.isWriting || this.readers > 0) {
             await new Promise<void>((resolve) => {
                 // need to check again to make sure it's not already done
@@ -85,5 +85,3 @@ export class RwLock<TRead, TWrite extends TRead=TRead> {
         }
     }
 }
-
-export type Setter<T> = (t: T) => T;

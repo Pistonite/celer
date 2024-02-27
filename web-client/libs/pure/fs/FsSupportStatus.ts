@@ -10,14 +10,6 @@ export type FsSupportStatus = {
     implementation: "File" | "FileSystemAccess" | "FileEntry";
 }
 
-/// Capabilities of the file system implementation
-export type FsCapabilities = {
-    /// Can the browser directly write to the file system
-    write: boolean;
-    /// Can the browser detect structure updates (file/directory creation/deletion)
-    live: boolean;
-}
-
 /// Get which implementation will be used for the current environment
 export function fsGetSupportStatus(): FsSupportStatus {
     if (isFileSystemAccessSupported()) {
@@ -68,7 +60,7 @@ function isFileSystemAccessSupported() {
     }
 
     return true;
-};
+}
 
 function isFileEntrySupported(): boolean {
     if (!window) {
@@ -95,4 +87,4 @@ function isFileEntrySupported(): boolean {
     }
 
     return true;
-};
+}

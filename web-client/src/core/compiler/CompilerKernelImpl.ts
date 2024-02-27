@@ -62,12 +62,14 @@ export class CompilerKernelImpl implements CompilerKernel {
     private lastPluginOptions: PluginOptionsRaw | undefined;
 
     private cleanup: () => void;
+    private waiters: Array<(x: unknown) => void>;
 
     constructor(store: AppStore) {
         this.store = store;
         this.needCompile = false;
         this.compiling = false;
         this.compilerLock = new ReentrantLock("compiler");
+        this.waiters = [];
 
         this.cleanup = () => {
             // no cleanup needed for now
@@ -176,8 +178,13 @@ export class CompilerKernelImpl implements CompilerKernel {
             // check if another compilation is running
             // this is safe because there's no await between checking and setting (no other code can run)
             if (this.compiling) {
-                console.warn("compilation already in progress, skipping");
-                return;
+                return await new Promise((resolve) => {
+                    if (!this.compiling) {
+                        resolve(undefined);
+                    }
+                    console.warn("compilation already in progress, skipping");
+                    this.waiters.push(resolve);
+                });
             }
             this.compiling = true;
             while (this.needCompile) {
@@ -212,6 +219,9 @@ export class CompilerKernelImpl implements CompilerKernel {
             this.compiling = false;
             console.info("finished compiling");
         });
+        const waiters = this.waiters;
+        this.waiters = [];
+        waiters.forEach((resolve) => resolve(undefined));
     }
 
     public async export(request: ExportRequest): Promise<ExpoDoc> {

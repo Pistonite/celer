@@ -214,7 +214,7 @@ export class Kernel implements EditorKernelAccess {
             const yes = await this.getAlertMgr().show({
                 title: "Heads up!",
                 message:
-                    "Your browser has limited support for file system access when opening a project from a dialog. Certain operations may not work! Please see the learn more link below for more information.",
+                    "Your browser has limited support for file system access when opening a project from a dialog. Celer will not be able to detect new, renamed or deleted files! Please see the learn more link below for more information.",
                 okButton: "Continue anyway",
                 cancelButton: "Cancel",
                 learnMoreLink: "/docs/route/editor/external#open-a-project",
@@ -254,7 +254,7 @@ export class Kernel implements EditorKernelAccess {
     public async reloadDocument() {
         if (viewSelector(this.store.getState()).stageMode === "edit") {
             const compiler = await this.getCompiler();
-            compiler.compile();
+            await compiler.compile();
             return;
         }
         await this.reloadDocumentFromServer();

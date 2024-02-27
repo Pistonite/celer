@@ -1,6 +1,6 @@
-import { FsFile } from "../FsFile";
-import { FsFileSystemInternal } from "./FsFileSystemInternal";
-import { fsFile } from "./file";
+import { FsFile } from "./FsFile.ts";
+import { FsFileSystemInternal } from "./FsFileSystemInternal.ts";
+import { fsFile } from "./FsFileImpl.ts";
 
 /// Internal class to track opened files
 export class FsFileMgr {

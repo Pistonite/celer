@@ -1,6 +1,6 @@
 //! Logic for external editor workflow
 
-import { FsFileSystem, FsResult, fsJoin, fsRoot } from "pure/fs";
+import { FsErr, FsFileSystem, FsResult, fsJoin, fsRoot } from "pure/fs";
 
 import { CompilerFileAccess } from "core/compiler";
 import {
@@ -12,7 +12,7 @@ import {
 
 import { EditorKernel } from "./EditorKernel";
 import { EditorKernelAccess } from "./EditorKernelAccess";
-import { ModifyTimeTracker } from "./ModifyTimeTracker";
+import { ChangeTracker, StaticTimeTracker, newHashBasedTracker, newModifyTimeBasedTracker } from "./ChangeTracker";
 
 console.info("loading external editor kernel");
 
@@ -28,11 +28,13 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
     private deleted = false;
     private idleMgr: IdleMgr;
     private fs: FsFileSystem;
-    private lastCompiledTime = 0;
 
     private kernel: EditorKernelAccess;
     private fsYield: Yielder;
-    private modifyTracker: ModifyTimeTracker;
+    /// Tracker used to track if file changed since last compile
+    private staticTimeTracker: StaticTimeTracker; // used when fs is live
+    private staticHashTracker: ChangeTracker; // used when fs is not live
+    private tracker: ChangeTracker;
 
     constructor(kernel: EditorKernelAccess, fs: FsFileSystem) {
         this.kernel = kernel;
@@ -46,7 +48,16 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
             this.recompileIfChanged.bind(this),
         );
         this.fsYield = createYielder(64);
-        this.modifyTracker = new ModifyTimeTracker();
+        const { live } = this.fs.capabilities;
+        if (live) {
+            console.info("using modify time based change tracker");
+            this.tracker = newModifyTimeBasedTracker();
+        } else {
+            console.info("using hash based change tracker");
+            this.tracker = newHashBasedTracker();
+        }
+        this.staticTimeTracker = new StaticTimeTracker();
+        this.staticHashTracker = newHashBasedTracker();
         this.idleMgr.start();
     }
 
@@ -67,45 +78,68 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
     private async recompileIfChanged() {
         // locking is not needed because idle will be paused
         // when an idle cycle is running
-        const changed = await this.checkDirectoryChanged(fsRoot());
+        const changed = await this.checkDirectoryChanged(fsRoot(), this.fs.capabilities.live);
+
         if (changed) {
-            this.lastCompiledTime = Date.now();
+            this.staticTimeTracker.setLastTime(Date.now());
             this.notifyActivity();
-            this.kernel.reloadDocument();
+            await this.kernel.reloadDocument();
         }
     }
 
-    private async checkDirectoryChanged(path: string): Promise<boolean> {
+    private async checkDirectoryChanged(path: string, live: boolean): Promise<boolean> {
         const entries = await this.fs.listDir(path);
         if (entries.err) {
             // error reading entry, something probably happened?
             return true;
         }
+
+        // in non-live mode, we want to always iterate all files
+        // to make sure we track all changes at once
+        let changed = false;
         for (const entry of entries.val) {
             const subPath = fsJoin(path, entry);
             if (entry.endsWith("/")) {
-                const subDirChanged = await this.checkDirectoryChanged(subPath);
-                if (subDirChanged) {
-                    return true;
+                const dirChanged = await this.checkDirectoryChanged(subPath, live);
+                if (dirChanged) {
+                    changed = true;
+                    if (live) {
+                        return true;
+                    }
                 }
             } else {
-                const fileChanged = await this.checkFileChanged(subPath);
+                const fileChanged = await this.checkFileChanged(subPath, live);
                 if (fileChanged) {
-                    return true;
+                    changed = true;
+                    if (live) {
+                        return true;
+                    }
                 }
             }
             await this.fsYield();
         }
-        return false;
+        return changed;
     }
 
-    private async checkFileChanged(path: string): Promise<boolean> {
+    private async checkFileChanged(path: string, live: boolean): Promise<boolean> {
+        // close the file so we always get the latest modified time
+        // note that in web editor flow, we don't need to do this
+        // because the file system content always needs to be
+        // manually synced to the web editor, which updates the modified time
+        this.fs.getFile(path).close();
         const fsFile = this.fs.getFile(path);
-        const lastModified = await fsFile.getLastModified();
-        if (lastModified.err) {
-            return true;
+        let result;
+        if (live) {
+            result = await this.staticTimeTracker.checkModifiedSinceLastAccess(fsFile);
+        } else {
+            result = await this.staticHashTracker.checkModifiedSinceLastAccess(fsFile);
         }
-        return lastModified.val > this.lastCompiledTime;
+        if (result.err) {
+            if (result.err.code === FsErr.NotModified) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // === CompilerFileAccess ===
@@ -120,13 +154,20 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
         const fsFile = this.fs.getFile(path);
         if (checkChanged) {
             const notModified =
-                await this.modifyTracker.checkModifiedSinceLastAccess(fsFile);
+                await this.tracker.checkModifiedSinceLastAccess(fsFile);
             if (notModified.err) {
                 return notModified;
             }
         }
 
-        return await fsFile.getBytes();
+        const bytes = await fsFile.getBytes();
+        const { live } = this.fs.capabilities;
+        if (!live) {
+            // close the file so we always get the latest content from disk
+            // directly
+            fsFile.close();
+        }
+        return bytes;
     }
 
     // === Stub implementations ===

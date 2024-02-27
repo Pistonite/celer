@@ -7,7 +7,7 @@
 //! - Empty string denotes root
 //! - Paths cannot lead outside of root
 
-import { FsErr, FsResult, fsErr } from "./error";
+import { FsErr, FsResult, fsErr } from "./FsError.ts";
 
 /// Get the root path. Current implementation is empty string.
 export function fsRoot(): string {

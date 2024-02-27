@@ -1,17 +1,15 @@
 import { Ok, tryAsync } from "pure/result";
 import { errstr } from "pure/utils";
 
-import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "../error";
-import { FsFileSystem, FsFileSystemUninit } from "../FsFileSystem";
-import { FsCapabilities } from "../support";
-import { FsFile } from "../FsFile";
-import { fsIsRoot, fsNormalize } from "../path";
-
-import { FsFileMgr } from "./FsFileMgr";
-import { FsFileSystemInternal } from "./FsFileSystemInternal";
+import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "./FsError.ts";
+import { FsFileSystem, FsFileSystemUninit, FsCapabilities } from "./FsFileSystem.ts";
+import { FsFile } from "./FsFile.ts";
+import { fsIsRoot, fsNormalize } from "./FsPath.ts";
+import { FsFileMgr } from "./FsFileMgr.ts";
+import { FsFileSystemInternal } from "./FsFileSystemInternal.ts";
 
 /// FsFileSystem implementation that uses FileEntry API
-export class FsImplFe implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
+export class FsImplEntryAPI implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
     public root: string;
     public capabilities: FsCapabilities;
 

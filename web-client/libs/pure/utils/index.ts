@@ -1,4 +1,4 @@
-export * from "./lock";
+export { RwLock } from "./RwLock.ts";
 
 /// Try converting an error to a string
 export function errstr(e: unknown): string {

@@ -174,7 +174,7 @@ async fn view_internal(
             repo_desc.push('/');
             repo_desc.push_str(path);
         }
-        if !reference.is_empty() {
+        if !reference.is_empty() && reference != "main" {
             repo_desc.push_str(" (");
             repo_desc.push_str(reference);
             repo_desc.push(')');

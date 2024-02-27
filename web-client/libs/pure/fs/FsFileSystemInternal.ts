@@ -1,4 +1,4 @@
-import { FsResult, FsVoid } from "../error";
+import { FsResult, FsVoid } from "./FsError.ts";
 
 /// Internal APIs for FsFileSystem
 export interface FsFileSystemInternal {

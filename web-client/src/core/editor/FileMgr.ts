@@ -13,7 +13,7 @@ import {
 } from "low/utils";
 
 import { EditorContainerDOM } from "./dom";
-import { ModifyTimeTracker } from "./ModifyTimeTracker";
+import { ChangeTracker, newModifyTimeBasedTracker } from "./ChangeTracker";
 
 type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
 
@@ -38,7 +38,7 @@ export class FileMgr implements CompilerFileAccess {
     private fsYield: Yielder;
     private dispatcher: AppDispatcher;
 
-    private modifyTracker: ModifyTimeTracker;
+    private tracker: ChangeTracker;
 
     constructor(
         fs: FsFileSystem,
@@ -52,7 +52,7 @@ export class FileMgr implements CompilerFileAccess {
         this.monacoDom = monacoDom;
         this.monacoEditor = monacoEditor;
         this.fsYield = createYielder(64);
-        this.modifyTracker = new ModifyTimeTracker();
+        this.tracker = newModifyTimeBasedTracker();
     }
 
     public delete() {
@@ -393,7 +393,7 @@ export class FileMgr implements CompilerFileAccess {
         const fsFile = fs.getFile(path);
         if (checkChanged) {
             const notModified =
-                await this.modifyTracker.checkModifiedSinceLastAccess(fsFile);
+                await this.tracker.checkModifiedSinceLastAccess(fsFile);
             if (notModified.err) {
                 return notModified;
             }

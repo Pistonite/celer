@@ -1,17 +1,15 @@
-import { FsFile } from "../FsFile";
-import { FsFileSystem, FsFileSystemUninit } from "../FsFileSystem";
-import { FsErr, FsResult, FsVoid, fsErr } from "../error";
-import { fsNormalize } from "../path";
-import { FsCapabilities } from "../support";
-
-import { FsFileMgr } from "./FsFileMgr";
-import { FsFileSystemInternal } from "./FsFileSystemInternal";
+import { FsFile } from "./FsFile.ts";
+import { FsFileSystem, FsFileSystemUninit, FsCapabilities } from "./FsFileSystem.ts";
+import { FsErr, FsResult, FsVoid, fsErr } from "./FsError.ts";
+import { fsIsRoot, fsNormalize } from "./FsPath.ts";
+import { FsFileMgr } from "./FsFileMgr.ts";
+import { FsFileSystemInternal } from "./FsFileSystemInternal.ts";
 
 /// FileSystem implementation that uses a list of Files
 /// This is supported in all browsers, but it is stale.
 /// It's used for Firefox when the File Entries API is not available
 /// i.e. opened from <input type="file">
-export class FsImplF implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
+export class FsImplFileAPI implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
     public root: string;
     public capabilities: FsCapabilities;
 
@@ -61,7 +59,7 @@ export class FsImplF implements FsFileSystemUninit, FsFileSystem, FsFileSystemIn
         }
 
         const set = new Set<string>();
-        const prefix = path + "/";
+        const prefix = fsIsRoot(path) ? "" : path + "/";
 
         Object.keys(this.files).forEach((path) => {
             if (!path.startsWith(prefix)) {
@@ -79,7 +77,10 @@ export class FsImplF implements FsFileSystemUninit, FsFileSystem, FsFileSystemIn
             }
         });
 
-        return { val: Array.from(set) };
+        const paths = Array.from(set);
+        this.directories[path] = paths;
+
+        return { val: paths };
     }
 
     public async read(path: string): Promise<FsResult<File>> {

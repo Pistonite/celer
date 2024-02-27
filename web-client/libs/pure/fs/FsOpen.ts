@@ -1,10 +1,12 @@
 import { tryCatch, tryAsync } from "pure/result";
 import { errstr } from "pure/utils";
 
-import { FsFileSystem, FsFileSystemUninit } from "./FsFileSystem";
-import { FsErr, FsError, FsResult, fsErr, fsFail } from "./error";
-import { FsImplFsa, FsImplFe, FsImplF } from "./impl";
-import { fsGetSupportStatus } from "./support";
+import { FsFileSystem, FsFileSystemUninit } from "./FsFileSystem.ts";
+import { FsErr, FsError, FsResult, fsErr, fsFail } from "./FsError.ts";
+import { fsGetSupportStatus } from "./FsSupportStatus.ts";
+import { FsImplFileAPI } from "./FsImplFileAPI.ts";
+import { FsImplEntryAPI } from "./FsImplEntryAPI.ts";
+import { FsImplHandleAPI } from "./FsImplHandleAPI.ts";
 
 /// Handle for handling top level open errors, and decide if the operation should be retried
 export type FsOpenRetryHandler = (error: FsError, attempt: number) => Promise<FsResult<boolean>>;
@@ -155,7 +157,7 @@ async function createFromDataTransferItem(
             if (shouldRetry.err) {
                 // retry handler failed
                 return shouldRetry;
-            };
+            }
             if (!shouldRetry.val) {
                 // don't retry
                 return { err: error };
@@ -223,21 +225,21 @@ function createFromFileSystemHandle(handle: FileSystemHandle, write: boolean): F
         return { err };
     }
 
-    const fs = new FsImplFsa(
+    const fs = new FsImplHandleAPI(
         handle.name,
         handle as FileSystemDirectoryHandle,
         write
     );
 
     return { val: fs };
-};
+}
 
 function createFromFileSystemEntry(entry: FileSystemEntry): FsResult<FsFileSystemUninit> {
     if (entry.isFile || !entry.isDirectory) {
         const err = fsErr(FsErr.IsFile, "Expected directory");
         return { err };
     }
-    const fs = new FsImplFe(
+    const fs = new FsImplEntryAPI(
         entry.name,
         entry as FileSystemDirectoryEntry,
     );
@@ -249,5 +251,5 @@ function createFromFileList(files: FileList): FsResult<FsFileSystemUninit> {
         const err = fsFail("Expected at least one file");
         return { err };
     }
-    return { val: new FsImplF(files) };
-};
+    return { val: new FsImplFileAPI(files) };
+}

@@ -1,6 +1,5 @@
-import { FsFile } from "./FsFile";
-import { FsResult } from "./error";
-import { FsCapabilities } from "./support";
+import { FsFile } from "./FsFile.ts";
+import { FsResult } from "./FsError.ts";
 
 /// File system before it is initialized
 ///
@@ -49,4 +48,14 @@ export interface FsFileSystem {
     /// Get all paths that `getFile` has been called with but not `close`d
     getOpenedPaths: () => string[];
 
+}
+
+/// Capabilities of the file system implementation
+export type FsCapabilities = {
+    /// Can the browser directly write to the file system
+    write: boolean;
+    /// Can the browser detect live updates:
+    /// - Change of modified time
+    /// - Change of directory structure (new, renamed, deleted files)
+    live: boolean;
 }

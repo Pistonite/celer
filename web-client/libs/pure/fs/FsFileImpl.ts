@@ -1,9 +1,9 @@
 import { errstr } from "pure/utils";
 import { tryAsync } from "pure/result";
 
-import { FsFile } from "../FsFile";
-import { FsFileSystemInternal } from "./FsFileSystemInternal";
-import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "../error";
+import { FsFile } from "./FsFile.ts";
+import { FsFileSystemInternal } from "./FsFileSystemInternal.ts";
+import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "./FsError.ts";
 
 /// Allocate a new file object
 export function fsFile(fs: FsFileSystemInternal, path: string): FsFile {
@@ -191,6 +191,7 @@ class FsFileImpl implements FsFile {
         if (result.err) {
             return result;
         }
+        this.isBufferDirty = false;
         return {};
     }
 

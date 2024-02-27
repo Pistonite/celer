@@ -5,14 +5,14 @@
 /// is still budget left
 export const createYielder = (budget: number) => {
     let currentBudget = budget;
-    return () => {
+    return (cost: number = 1) => {
         if (currentBudget <= 0) {
             currentBudget = budget;
             return new Promise<boolean>((resolve) => {
                 setTimeout(() => resolve(true), 0);
             });
         }
-        currentBudget--;
+        currentBudget-=cost;
         return Promise.resolve(false);
     };
 };

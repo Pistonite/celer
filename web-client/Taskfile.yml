@@ -9,6 +9,11 @@ tasks:
     cmds:
     - npm ci
 
+  ci:libs:
+    dir:
+    cmds:
+
+
   dev:
     desc: Start web client in watch mode
     cmds:
@@ -17,6 +22,7 @@ tasks:
   build:
     desc: Build web client assets
     cmds:
+    - npx tsc
     - npx vite build
     - node tools/post-build.cjs
     - rm dist/index.html
@@ -26,7 +32,6 @@ tasks:
     aliases: [lint]
     cmds:
     - node tools/lint/run-custom-lints.cjs
-    - npx tsc
     - task: eslint
       vars:
         ESLINT_ARGS: ""

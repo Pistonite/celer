@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 
 import { fsComponents, fsJoin, fsRoot } from "pure/fs";
@@ -46,24 +46,12 @@ export const EditorTree: React.FC = () => {
         return set;
     }, [unsavedFiles]);
 
-    // serial to manually update the component
-    const [stateSerial, setStateSerial] = useState(0);
-    const expandedPaths = useRef<Set<string> | undefined>();
+    const [expandedPaths, setExpandedPaths] = useState<string[]>([]);
     const setIsExpanded = useCallback((path: string, isExpanded: boolean) => {
         if (isExpanded) {
-            if (!expandedPaths.current) {
-                expandedPaths.current = new Set();
-                expandedPaths.current.add(path);
-            } else {
-                if (!expandedPaths.current.has(path)) {
-                    expandedPaths.current.add(path);
-                    setStateSerial((x) => x + 1);
-                }
-            }
-            return;
-        }
-        if (expandedPaths.current) {
-            expandedPaths.current.delete(path);
+            setExpandedPaths((x) => [...x, path]);
+        } else {
+            setExpandedPaths((x) => x.filter((p) => p !== path));
         }
     }, []);
 
@@ -74,7 +62,6 @@ export const EditorTree: React.FC = () => {
     return (
         <div className={styles.editorTreeContainer}>
             <TreeDirNode
-                serial={stateSerial}
                 name={rootPath || ""}
                 path={fsRoot()}
                 level={0}
@@ -88,7 +75,7 @@ export const EditorTree: React.FC = () => {
                     await editor.openFile(path);
                 }}
                 setIsExpanded={setIsExpanded}
-                expandedPaths={expandedPaths.current || new Set()}
+                expandedPaths={expandedPaths}
                 dirtyPaths={dirtyPaths}
                 openedFile={openedFile}
             />
@@ -97,8 +84,6 @@ export const EditorTree: React.FC = () => {
 };
 
 type TreeDirNodeProps = {
-    /// Serial to signal when to update
-    serial: number;
     /// Name of the entry, should end with /
     name: string;
     /// Full path of the directory entry, should end with /
@@ -115,7 +100,7 @@ type TreeDirNodeProps = {
     /// Directory paths that are expanded
     ///
     /// All should end with /
-    expandedPaths: Set<string>;
+    expandedPaths: string[];
 
     /// File and directory paths that have unsaved changes
     ///
@@ -125,8 +110,7 @@ type TreeDirNodeProps = {
     openedFile: string | undefined;
 };
 
-const TreeDirNodeInternal: React.FC<TreeDirNodeProps> = ({
-    serial,
+const TreeDirNode: React.FC<TreeDirNodeProps> = ({
     name,
     path,
     listDir,
@@ -139,7 +123,7 @@ const TreeDirNodeInternal: React.FC<TreeDirNodeProps> = ({
 }) => {
     const [entries, setEntries] = useState<string[] | undefined>(undefined);
 
-    const isExpanded = expandedPaths.has(path);
+    const isExpanded = expandedPaths.includes(path);
 
     useEffect(() => {
         if (!isExpanded) {
@@ -178,10 +162,9 @@ const TreeDirNodeInternal: React.FC<TreeDirNodeProps> = ({
                         const name = entry.slice(0, -1);
                         return (
                             <TreeDirNode
-                                serial={serial}
                                 key={i}
                                 name={name}
-                                path={fsJoin(path, entry)}
+                                path={fsJoin(path, name)}
                                 level={level + 1}
                                 listDir={listDir}
                                 onClickFile={onClickFile}
@@ -212,7 +195,7 @@ const TreeDirNodeInternal: React.FC<TreeDirNodeProps> = ({
         </>
     );
 };
-const TreeDirNode = memo(TreeDirNodeInternal);
+// const TreeDirNode = memo(TreeDirNodeInternal);
 
 /// Compare function for sorting entries in the file tree
 function compareEntry(a: string, b: string): number {
