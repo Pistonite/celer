@@ -3,7 +3,7 @@
 import L from "leaflet";
 import { LRUCache } from "lru-cache";
 
-import { MapLog } from "./utils";
+import { consoleMap as console } from "low/utils";
 
 // hacks into implementation details of leaflet
 interface LLayer {
@@ -90,7 +90,7 @@ export class IconMarker extends L.CircleMarker {
     private redrawInternal(retryCount: number) {
         if (!this.icon.loaded) {
             if (retryCount > 50) {
-                MapLog.warn(
+                console.warn(
                     `resource is taking too long to load: ${this.icon.img.src}`,
                 );
                 // give up on retrying
@@ -112,14 +112,14 @@ export class IconMarker extends L.CircleMarker {
         }
         const p = layer._point;
         if (!p) {
-            MapLog.warn("invalid icon marker point");
+            console.warn("invalid icon marker point");
             return;
         }
 
         // check if renderer is valid
         const ctx = layer._renderer?._ctx;
         if (!ctx) {
-            MapLog.warn("invalid icon markder renderer");
+            console.warn("invalid icon markder renderer");
             return;
         }
 

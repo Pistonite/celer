@@ -15,9 +15,8 @@ import { FolderArrowUp20Regular } from "@fluentui/react-icons";
 
 import { CommonStyles, useCommonStyles } from "ui/shared";
 import { useKernel } from "core/kernel";
-import { settingsSelector, viewActions, viewSelector } from "core/store";
+import { settingsSelector, viewSelector } from "core/store";
 
-import { useActions } from "low/store";
 import { ToolbarControl } from "./util";
 
 export const SyncProject: ToolbarControl = {
@@ -51,7 +50,6 @@ const useSyncProjectControl = () => {
     const { rootPath, loadInProgress, lastLoadError } =
         useSelector(viewSelector);
     const { editorMode } = useSelector(settingsSelector);
-    const { incFileSysSerial } = useActions(viewActions);
 
     const styles = useCommonStyles();
 
@@ -67,21 +65,8 @@ const useSyncProjectControl = () => {
         }
 
         editor.notifyActivity();
-        const result = await editor.loadChangesFromFs();
-        if (result.isErr()) {
-            // failure could be due to project structure change. try again
-            const result2 = await editor.loadChangesFromFs();
-            if (result2.isErr()) {
-                await kernel.getAlertMgr().show({
-                    title: "Error",
-                    message:
-                        "Fail to load changes from file system. Please try again.",
-                    okButton: "Close",
-                });
-            }
-        }
-        incFileSysSerial();
-    }, [kernel, incFileSysSerial]);
+        await editor.loadFromFs();
+    }, [kernel]);
 
     return { tooltip, enabled, icon, handler };
 };

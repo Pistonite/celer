@@ -66,7 +66,7 @@ export default defineConfig({
             output: {
                 chunkFileNames: (info) => {
                     for (let i = 0; i < info.moduleIds.length; i++) {
-                        if (info.moduleIds[i].includes("DocRoot")) {
+                        if (info.moduleIds[i].includes("DocController")) {
                             return "assets/doc-[hash].js";
                         }
                         if (info.moduleIds[i].includes("MapRoot")) {

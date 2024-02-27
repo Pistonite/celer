@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { Body2, mergeClasses } from "@fluentui/react-components";
 
-import { createFsFromDataTransferItem } from "low/fs";
+import { fsOpenReadWriteFrom } from "pure/fs";
+
 import { useKernel } from "core/kernel";
+import { createRetryOpenHandler } from "core/editor";
+
 import { useEditorStyles } from "./styles";
 
 /// Shown when no project is loaded, for user to drag and drop a folder in
@@ -38,10 +41,11 @@ export const EditorDropZone: React.FC = () => {
                 e.preventDefault();
                 setIsDragging(false);
                 setIsOpening(true);
+                const alertMgr = kernel.getAlertMgr();
                 const item = e.dataTransfer?.items[0];
 
                 if (!item) {
-                    await kernel.getAlertMgr().show({
+                    await alertMgr.show({
                         title: "Error",
                         message:
                             "Cannot open the project. Make sure you are dropping the correct folder and try again.",
@@ -49,8 +53,17 @@ export const EditorDropZone: React.FC = () => {
                     });
                     return;
                 }
-                const fileSysResult = await createFsFromDataTransferItem(item);
-                await kernel.handleOpenFileSysResult(fileSysResult);
+
+                // create the retry handle to show error messages,
+                // and ask user if they want to retry
+                const retryHandler = createRetryOpenHandler(alertMgr);
+                const fs = await fsOpenReadWriteFrom(item, retryHandler);
+                if (fs.err) {
+                    // ignore the error, because it has been alerted to the user
+                    return;
+                }
+
+                await kernel.openProjectFileSystem(fs.val);
                 setIsOpening(false);
             }}
         >

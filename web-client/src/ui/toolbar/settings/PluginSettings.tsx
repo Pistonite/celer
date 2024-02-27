@@ -180,7 +180,6 @@ const editUserPluginConfig = async (
 ): Promise<void> => {
     let config = userPluginConfig;
     let [_, error] = parseUserConfigOptions(config, document);
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         const response = await kernel.getAlertMgr().showRich({
             title: "User Plugins",

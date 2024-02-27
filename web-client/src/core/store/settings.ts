@@ -18,12 +18,13 @@ import {
     initialMapSettingsState,
     mapSettingsReducers,
 } from "core/map";
+import { configureSlice } from "low/store";
+
 import {
     EditorSettingsState,
     editorSettingsReducers,
     initialEditorSettingsState,
-} from "core/editor";
-import { configureSlice } from "low/store";
+} from "./editor";
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";

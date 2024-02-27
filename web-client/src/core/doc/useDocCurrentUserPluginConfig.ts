@@ -2,9 +2,10 @@ import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import YAML from "js-yaml";
 
+import { errstr } from "pure/utils";
+
 import { documentSelector, settingsSelector } from "core/store";
 import { ExecDoc, Value } from "low/celerc";
-import { errorToString } from "low/utils";
 
 type UserPluginOptionsResult = [Value[], undefined] | [undefined, string];
 
@@ -62,6 +63,6 @@ export const parseUserConfigOptions = (
         }
         return [options, undefined];
     } catch (e) {
-        return [undefined, errorToString(e)];
+        return [undefined, errstr(e)];
     }
 };

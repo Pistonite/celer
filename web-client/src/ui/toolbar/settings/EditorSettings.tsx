@@ -5,8 +5,12 @@ import { Dropdown, Field, Switch, Option } from "@fluentui/react-components";
 import { useSelector } from "react-redux";
 
 import { useKernel } from "core/kernel";
-import { EditorMode } from "core/editor";
-import { settingsActions, settingsSelector, viewSelector } from "core/store";
+import {
+    settingsActions,
+    settingsSelector,
+    viewSelector,
+    EditorMode,
+} from "core/store";
 import { EntryPointsSorted } from "low/celerc";
 import { useActions } from "low/store";
 
@@ -53,11 +57,11 @@ export const EditorSettings: React.FC = () => {
             }
             const compiler = await kernel.getCompiler();
             const result = await compiler.getEntryPoints();
-            if (!result.isOk()) {
+            if ("err" in result) {
                 setEntryPoints([]);
                 return;
             }
-            setEntryPoints(result.inner());
+            setEntryPoints(result.val);
         })();
     }, [kernel, rootPath]);
 

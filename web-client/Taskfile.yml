@@ -9,6 +9,11 @@ tasks:
     cmds:
     - npm ci
 
+  ci:libs:
+    dir:
+    cmds:
+
+
   dev:
     desc: Start web client in watch mode
     cmds:

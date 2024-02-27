@@ -1,3 +1,5 @@
+import { consoleEditor as console } from "./logging";
+
 /// Callback to execute an idle event
 export type IdleFunction = (isLong: boolean, duration: number) => Promise<void>;
 
@@ -35,6 +37,9 @@ export class IdleMgr {
     /// Like a semaphore. Will only fire events if this is 0
     private pauseCount: number;
 
+    /// If an idle cycle is executing
+    private isExecuting: boolean;
+
     constructor(
         longIdleTime: number,
         initialInterval: number,
@@ -53,6 +58,7 @@ export class IdleMgr {
         this.currentInterval = this.initialInterval;
         this.eventsFiredInCurrentInterval = 0;
         this.idleDuration = 0;
+        this.isExecuting = false;
     }
 
     /// Start the idle manager. Events will only fire after calling this
@@ -94,7 +100,13 @@ export class IdleMgr {
 
     private restartIdleTimer() {
         this.cancelPendingIdle();
-        this.handle = window.setTimeout(() => {
+        if (this.isExecuting) {
+            // when execute finish, it will
+            // restart the idle timer.
+            return;
+        }
+        this.handle = window.setTimeout(async () => {
+            this.isExecuting = true;
             this.handle = undefined;
             if (this.pauseCount > 0) {
                 return;
@@ -112,14 +124,17 @@ export class IdleMgr {
             }
             // update duration
             this.idleDuration += this.currentInterval;
-            this.callback(
-                this.idleDuration >= this.longIdleTime,
-                this.idleDuration,
-            )
-                .catch(console.error)
-                .finally(() => {
-                    this.restartIdleTimer();
-                });
+            try {
+                await this.callback(
+                    this.idleDuration >= this.longIdleTime,
+                    this.idleDuration,
+                );
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.isExecuting = false;
+                this.restartIdleTimer();
+            }
         }, this.currentInterval);
     }
 

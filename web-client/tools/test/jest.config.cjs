@@ -9,6 +9,7 @@ module.exports = {
         "^ui/(.*)": "<rootDir>/src/ui/$1",
         "^core/(.*)": "<rootDir>/src/core/$1",
         "^low/(.*)": "<rootDir>/src/low/$1",
+        "^pure/(.*)": "<rootDir>/libs/pure/$1",
         "^@test$": "<rootDir>/tools/test",
     },
     transform: {

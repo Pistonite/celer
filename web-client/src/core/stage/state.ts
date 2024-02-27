@@ -1,5 +1,7 @@
 //! Stage state slice
 
+import { AlertExtraAction } from "low/utils";
+
 /// State type for stage view
 export type StageViewState = {
     stageMode: StageMode;
@@ -11,15 +13,6 @@ export type StageViewState = {
     alertExtraActions: AlertExtraAction[];
     settingsTab: SettingsTab;
     isResizingWindow: boolean;
-};
-export type AlertExtraAction = {
-    id: string;
-    text: string;
-};
-export type ModifyAlertActionPayload = {
-    okButton?: string;
-    cancelButton?: string;
-    extraActions?: AlertExtraAction[];
 };
 
 export type StageMode = "view" | "edit";

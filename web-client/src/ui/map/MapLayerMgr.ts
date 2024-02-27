@@ -4,8 +4,9 @@ import "leaflet-rastercoords";
 
 import { AppDispatcher, viewActions } from "core/store";
 import { MapLayer, MapTilesetTransform, GameCoord } from "low/celerc";
+import { consoleMap as console } from "low/utils";
 
-import { MapLog, getAttributionHtml } from "./utils";
+import { getAttributionHtml } from "./utils";
 
 /// Tile layer wrapper
 type MapTileLayer = {
@@ -42,7 +43,7 @@ export class MapLayerMgr {
         mapLayers: MapLayer[],
         initialCoord: GameCoord,
     ) {
-        MapLog.info("initializing map layers");
+        console.info("initializing map layers");
         this.getActiveLayer()?.layer.remove();
         // create new tileset layers
         this.layers = mapLayers.map((layer) => {

@@ -1,7 +1,6 @@
 import { DocTag, DocTagColor } from "low/celerc";
-import { injectDOMStyle } from "low/utils";
+import { injectDOMStyle, consoleDoc as console } from "low/utils";
 
-import { DocLog } from "./utils";
 import { RichTextVariables, getTagClassName } from "./components";
 
 /// Update the styles/classes for rich tags
@@ -77,7 +76,7 @@ export function updateDocTagsStyle(tags: Readonly<Record<string, DocTag>>) {
     }
     injectDOMStyle("rich-text-us", underlineStrikethroughCss);
 
-    DocLog.info("rich text css updated.");
+    console.info("rich text css updated.");
 }
 
 function addColor(

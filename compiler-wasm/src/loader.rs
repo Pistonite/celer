@@ -5,7 +5,7 @@
 
 use std::cell::RefCell;
 
-use js_sys::{Array, Function, Uint8Array};
+use js_sys::{Array, Function, Reflect, Uint8Array};
 use log::info;
 use wasm_bindgen::prelude::*;
 
@@ -139,6 +139,11 @@ async fn load_file_internal(path: &str, check_changed: bool) -> ResResult<LoadFi
     match result {
         Ok(output) => Ok(output),
         Err(e) => {
+            if let Ok(value) = Reflect::get(&e, &JsValue::from("message")) {
+                if let Some(s) = value.as_string() {
+                    return Err(ResError::FailToLoadFile(path.to_string(), s));
+                }
+            }
             logger::raw_error(&e);
             Err(ResError::FailToLoadFile(
                 path.to_string(),

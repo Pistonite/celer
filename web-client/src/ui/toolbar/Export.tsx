@@ -32,23 +32,25 @@ import {
 } from "@fluentui/react-icons";
 import { ungzip } from "pako";
 
-import {
-    AppStore,
-    documentSelector,
-    settingsActions,
-    settingsSelector,
-} from "core/store";
-import { ExecDoc, ExpoDoc, ExportIcon, ExportMetadata } from "low/celerc";
+import { errstr } from "pure/utils";
+import { fsSave } from "pure/fs";
 
-import { Kernel, useKernel } from "core/kernel";
-import { console, errorToString, saveAs } from "low/utils";
+import { ErrorBar, PrismEditor } from "ui/shared";
 import {
     createExportRequest,
     getExportConfig,
     getExportLabel,
     isConfigNeeded,
 } from "core/doc";
-import { ErrorBar, PrismEditor } from "ui/shared";
+import {
+    AppStore,
+    documentSelector,
+    settingsActions,
+    settingsSelector,
+} from "core/store";
+import { Kernel, useKernel } from "core/kernel";
+import { ExecDoc, ExpoDoc, ExportIcon, ExportMetadata } from "low/celerc";
+import { console } from "low/utils";
 import { useActions } from "low/store";
 
 import { ControlComponentProps, ToolbarControl } from "./util";
@@ -199,7 +201,6 @@ const runExportWizard = async (
         exportMetadata[selection],
         settingsSelector(state),
     );
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         // show extra config dialog if needed
         if (enableConfig) {
@@ -365,28 +366,27 @@ async function runExportAndShowDialog(
             },
         },
         async (): Promise<string> => {
-            const requestResult = createExportRequest(metadata, config);
-            if (requestResult.isErr()) {
-                return errorToString(requestResult.inner());
+            const request = createExportRequest(metadata, config);
+            if ("err" in request) {
+                return errstr(request.err);
             }
-            const request = requestResult.inner();
-            const expoDoc = await kernel.export(request);
+            const expoDoc = await kernel.export(request.val);
             if (cancelled) {
                 return "";
             }
             return downloadExport(expoDoc);
         },
     );
-    if (result.isErr()) {
-        const error = result.inner();
+    if ("err" in result) {
+        const error = result.err;
         if (error === false) {
             // cancel
             cancelled = true;
             return "";
         }
-        return errorToString(error);
+        return errstr(error);
     }
-    return result.inner();
+    return result.val;
 }
 
 function downloadExport(expoDoc: ExpoDoc): string {
@@ -411,7 +411,7 @@ function downloadExport(expoDoc: ExpoDoc): string {
             }
         }
         console.info(`saving file: ${fileName}`);
-        saveAs(data, fileName);
+        fsSave(data, fileName);
         return "";
     }
 

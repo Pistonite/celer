@@ -21,10 +21,19 @@ function checkFile(file, content) {
     if (errors.length === 0) {
         return [];
     }
+    let temp = "";
     for (const line of lines) {
-        if (isImportConsoleFromLowUtils(include, line)) {
+        if (line.startsWith("//")) {
+            continue;
+        }
+        if ((line.startsWith("import") || temp) && !line.endsWith(";")) {
+            temp += line;
+            continue;
+        }
+        if (isImportConsoleFromLowUtils(include, temp + line)) {
             return [];
         }
+        temp = "";
     }
     errors.push(
         `Please import { console } from "${include}"; or remove the console statement.`,
@@ -33,6 +42,9 @@ function checkFile(file, content) {
 }
 
 function containsConsole(line) {
+    if (line.startsWith("//")) {
+        return false;
+    }
     const lineReplaced = line.replace("window.console", "consoleignore");
     for (const rule of rules) {
         if (lineReplaced.includes(rule)) {
@@ -52,7 +64,7 @@ function isImportConsoleFromLowUtils(include, line) {
 
 function getLowUtilsImportLocationFrom(file) {
     if (!file.replace(/^src\/low\/utils\//, "").includes("/")) {
-        return "./Logger";
+        return "./logging";
     }
     return file.replace(/^src\/low\//, "").includes("/")
         ? "low/utils"

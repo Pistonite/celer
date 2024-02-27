@@ -16,14 +16,14 @@ import {
     viewSelector,
 } from "core/store";
 import { ExecDoc, GameCoord, MapLayer } from "low/celerc";
-import { Debouncer } from "low/utils";
+import { Debouncer, consoleMap as console } from "low/utils";
 
-import { MapLog, roughlyEquals } from "./utils";
+import { roughlyEquals } from "./utils";
 import { MapContainerMgr } from "./MapContainerMgr";
 import { MapLayerMgr } from "./MapLayerMgr";
 import { MapVisualMgr } from "./MapVisualMgr";
 
-MapLog.info("loading map module");
+console.info("loading map module");
 
 /// Storing map state as window global because HMR will cause the map to be recreated
 declare global {
@@ -37,7 +37,7 @@ export const initMap = (store: AppStore): MapState => {
     if (window.__theMapState) {
         window.__theMapState.delete();
     }
-    MapLog.info("creating map");
+    console.info("creating map");
 
     const map = new MapState(store);
     window.__theMapState = map;
@@ -163,7 +163,7 @@ export class MapState {
 
     /// Delete the map state
     public delete() {
-        MapLog.info("deleting map");
+        console.info("deleting map");
         this.map.getContainer().remove();
         this.map.remove();
         this.cleanup();
@@ -263,7 +263,7 @@ export class MapState {
         const currentMapView = view.currentMapView;
         if (Array.isArray(currentMapView)) {
             if (currentMapView.length === 0) {
-                MapLog.warn("invalid map view");
+                console.warn("invalid map view");
             } else if (currentMapView.length === 1) {
                 setTimeout(() => {
                     const [center, layer] = this.layerMgr.unproject(

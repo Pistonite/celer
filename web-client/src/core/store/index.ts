@@ -11,6 +11,8 @@
 //! - The (combined) reducer for setting up the redux state
 //! - The actions for updating the state
 //! - The selector for picking out the state from the redux state
+
+export * from "./editor";
 export * from "./document";
 export * from "./init";
 export * from "./settings";

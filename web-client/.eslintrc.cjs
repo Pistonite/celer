@@ -19,7 +19,7 @@ module.exports = {
                 extensions: [".js", ".jsx", ".ts", ".tsx"],
             },
         },
-        "import/external-module-folders": ["node_modules", "src"],
+        "import/external-module-folders": ["node_modules", "src", "libs"],
     },
     ignorePatterns: ["*.d.ts"],
     rules: {
@@ -32,6 +32,7 @@ module.exports = {
                 argsIgnorePattern: "_",
             },
         ],
+        "no-constant-condition": ["error", { checkLoops: false }],
         "no-multiple-empty-lines": [
             "warn",
             {

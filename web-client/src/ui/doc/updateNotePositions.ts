@@ -4,9 +4,9 @@
 //! is anchored to the line, while the above and below note blocks are attempted to be
 //! anchored to their corresponding lines, and pushed up/down if needed.
 
-import { createYielder } from "low/utils";
+import { consoleDoc as console, createYielder } from "low/utils";
+
 import {
-    DocLog,
     getLineLocationFromElement,
     getScrollContainerOffsetY,
     findLineByIndex,
@@ -27,7 +27,7 @@ export const updateNotePositions = async (
     // Callback to check if the update should be cancelled
     shouldCancel: () => boolean,
 ): Promise<void> => {
-    DocLog.info("updating note positions...");
+    console.info("updating note positions...");
     const intervals = findAvailableIntervals();
     const noteContainer = DocNoteContainer.get();
     if (!noteContainer || noteContainer.children.length === 0) {
@@ -142,7 +142,7 @@ export const updateNotePositions = async (
     // Run updates above and below concurrently
     await Promise.all(promises);
 
-    DocLog.info("finished updating note positions");
+    console.info("finished updating note positions");
 };
 
 /// Layout notes always anchored to the line element they are for
@@ -150,7 +150,7 @@ export const updateNotePositionsAnchored = async (
     // Callback to check if the update should be cancelled
     shouldCancel: () => boolean,
 ): Promise<void> => {
-    DocLog.info("updating note positions (anchored)...");
+    console.info("updating note positions (anchored)...");
     const noteContainer = DocNoteContainer.get();
     if (!noteContainer || noteContainer.children.length === 0) {
         // no notes to layout
@@ -188,7 +188,7 @@ const getPreferredTop = (
     const [sectionIndex, lineIndex] = getLineLocationFromElement(noteBlock);
     const lineElement = findLineByIndex(sectionIndex, lineIndex);
     if (!lineElement) {
-        DocLog.warn(
+        console.warn(
             `cannot find line when updating note position: ${sectionIndex}-${lineIndex}`,
         );
         return undefined;

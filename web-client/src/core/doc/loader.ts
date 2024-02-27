@@ -2,7 +2,8 @@
 
 import type { ExpoContext } from "low/celerc";
 import { fetchAsJson, getApiUrl } from "low/fetch";
-import { console, wrapAsync } from "low/utils";
+import { consoleDoc as console } from "low/utils";
+import { tryAsync } from "pure/result";
 
 export type LoadDocumentResult =
     | {
@@ -90,16 +91,18 @@ export async function loadDocument(
     if (path) {
         url += `/${path}`;
     }
-    const result = await wrapAsync(async () =>
+    const result = await tryAsync(() =>
         fetchAsJson<LoadDocumentResult>(getApiUrl(url)),
     );
-    if (result.isErr()) {
+    if ("err" in result) {
+        const err = result.err;
+        console.error(err);
         return createLoadError(
             "There was an error loading the document from the server.",
             undefined,
         );
     }
-    const response = result.inner();
+    const response = result.val;
     const elapsed = Math.round(performance.now() - startTime);
     console.info(`received resposne in ${elapsed}ms`);
     if (response.type === "success") {
@@ -110,7 +113,7 @@ export async function loadDocument(
         }
     }
 
-    return result.inner();
+    return response;
 }
 
 function injectLoadTime(doc: ExpoContext, ms: number) {
