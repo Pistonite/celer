@@ -24,6 +24,7 @@
     border-bottom: 3px solid #446666;
 }
 /* Preface always have light background */
+.docpreface-block .docline-text-rich,
 .docpreface-block .docline-text-rich * {
 /*TXTPP#include shared/rich-text-light.css
  *TXTPP# */
@@ -71,6 +72,7 @@
     background-color: #001a00;
 }
 /* Always use dark color*/
+.docline-body .docline-text-rich,
 .docline-body .docline-text-rich * {
 /*TXTPP#include shared/rich-text-dark.css
  *TXTPP# */
@@ -95,6 +97,7 @@
     background-color: #a2c4c4;
 }
 /* Use light colors for notes */
+.docnote-container .docline-text-rich,
 .docnote-container .docline-text-rich * {
 /*TXTPP#include shared/rich-text-light.css
  *TXTPP# */
