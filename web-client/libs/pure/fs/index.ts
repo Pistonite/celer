@@ -3,10 +3,10 @@ export {
     fsOpenRead,
     fsOpenReadWrite,
     fsOpenReadFrom,
-    fsOpenReadWriteFrom
+    fsOpenReadWriteFrom,
 } from "./FsOpen.ts";
 export { fsGetSupportStatus } from "./FsSupportStatus.ts";
-export { 
+export {
     fsRoot,
     fsIsRoot,
     fsGetBase,
@@ -19,6 +19,10 @@ export { FsErr, fsErr, fsFail } from "./FsError.ts";
 
 export type { FsOpenRetryHandler } from "./FsOpen.ts";
 export type { FsSupportStatus } from "./FsSupportStatus.ts";
-export type { FsFileSystem, FsFileSystemUninit, FsCapabilities } from "./FsFileSystem.ts";
+export type {
+    FsFileSystem,
+    FsFileSystemUninit,
+    FsCapabilities,
+} from "./FsFileSystem.ts";
 export type { FsFile } from "./FsFile.ts";
 export type { FsError, FsResult, FsVoid } from "./FsError.ts";

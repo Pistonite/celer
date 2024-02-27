@@ -1,7 +1,7 @@
 //! Path utilities
 //!
 //! The library has the following path standard:
-//! - All paths are relative (without leading /) to the root 
+//! - All paths are relative (without leading /) to the root
 //!   of the file system (i.e. the uploaded directory)
 //! - Paths are always separated by /
 //! - Empty string denotes root

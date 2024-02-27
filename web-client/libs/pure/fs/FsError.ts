@@ -34,7 +34,7 @@ export type FsErr = (typeof FsErr)[keyof typeof FsErr];
 export type FsError = {
     readonly code: FsErr;
     readonly message: string;
-}
+};
 
 export function fsErr(code: FsErr, message: string): FsError {
     return { code, message };

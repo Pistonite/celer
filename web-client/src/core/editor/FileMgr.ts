@@ -392,8 +392,9 @@ export class FileMgr implements CompilerFileAccess {
     ): Promise<FsResult<Uint8Array>> {
         const fsFile = fs.getFile(path);
         if (checkChanged) {
-            const notModified =
-                await this.tracker.checkModifiedSinceLastAccess(fsFile);
+            const notModified = await this.tracker.checkModifiedSinceLastAccess(
+                fsFile,
+            );
             if (notModified.err) {
                 return notModified;
             }

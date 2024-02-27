@@ -38,9 +38,7 @@ const https = createHttpsConfig();
 export default defineConfig({
     plugins: [
         react(),
-        tsconfigPaths(
-            // projects: ["./tsconfig.json", "../libs/tsconfig.json"],
-        ),
+        tsconfigPaths(),
         removeRustStyleDocComments(),
         wasm(),
         topLevelAwait(),

@@ -11,7 +11,6 @@ export interface FsFileSystemUninit {
 
 /// Initialized file system
 export interface FsFileSystem {
-
     /// Get the root path of the file system for display
     ///
     /// The returned string has no significance in the file system itself.
@@ -47,7 +46,6 @@ export interface FsFileSystem {
 
     /// Get all paths that `getFile` has been called with but not `close`d
     getOpenedPaths: () => string[];
-
 }
 
 /// Capabilities of the file system implementation
@@ -58,4 +56,4 @@ export type FsCapabilities = {
     /// - Change of modified time
     /// - Change of directory structure (new, renamed, deleted files)
     live: boolean;
-}
+};

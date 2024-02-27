@@ -201,7 +201,6 @@ const runExportWizard = async (
         exportMetadata[selection],
         settingsSelector(state),
     );
-    // eslint-disable-next-line no-constant-condition
     while (true) {
         // show extra config dialog if needed
         if (enableConfig) {

@@ -12,7 +12,12 @@ import {
 
 import { EditorKernel } from "./EditorKernel";
 import { EditorKernelAccess } from "./EditorKernelAccess";
-import { ChangeTracker, StaticTimeTracker, newHashBasedTracker, newModifyTimeBasedTracker } from "./ChangeTracker";
+import {
+    ChangeTracker,
+    StaticTimeTracker,
+    newHashBasedTracker,
+    newModifyTimeBasedTracker,
+} from "./ChangeTracker";
 
 console.info("loading external editor kernel");
 
@@ -78,7 +83,10 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
     private async recompileIfChanged() {
         // locking is not needed because idle will be paused
         // when an idle cycle is running
-        const changed = await this.checkDirectoryChanged(fsRoot(), this.fs.capabilities.live);
+        const changed = await this.checkDirectoryChanged(
+            fsRoot(),
+            this.fs.capabilities.live,
+        );
 
         if (changed) {
             this.staticTimeTracker.setLastTime(Date.now());
@@ -87,7 +95,10 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
         }
     }
 
-    private async checkDirectoryChanged(path: string, live: boolean): Promise<boolean> {
+    private async checkDirectoryChanged(
+        path: string,
+        live: boolean,
+    ): Promise<boolean> {
         const entries = await this.fs.listDir(path);
         if (entries.err) {
             // error reading entry, something probably happened?
@@ -100,7 +111,10 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
         for (const entry of entries.val) {
             const subPath = fsJoin(path, entry);
             if (entry.endsWith("/")) {
-                const dirChanged = await this.checkDirectoryChanged(subPath, live);
+                const dirChanged = await this.checkDirectoryChanged(
+                    subPath,
+                    live,
+                );
                 if (dirChanged) {
                     changed = true;
                     if (live) {
@@ -121,7 +135,10 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
         return changed;
     }
 
-    private async checkFileChanged(path: string, live: boolean): Promise<boolean> {
+    private async checkFileChanged(
+        path: string,
+        live: boolean,
+    ): Promise<boolean> {
         // close the file so we always get the latest modified time
         // note that in web editor flow, we don't need to do this
         // because the file system content always needs to be
@@ -130,9 +147,13 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
         const fsFile = this.fs.getFile(path);
         let result;
         if (live) {
-            result = await this.staticTimeTracker.checkModifiedSinceLastAccess(fsFile);
+            result = await this.staticTimeTracker.checkModifiedSinceLastAccess(
+                fsFile,
+            );
         } else {
-            result = await this.staticHashTracker.checkModifiedSinceLastAccess(fsFile);
+            result = await this.staticHashTracker.checkModifiedSinceLastAccess(
+                fsFile,
+            );
         }
         if (result.err) {
             if (result.err.code === FsErr.NotModified) {
@@ -153,8 +174,9 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
     ): Promise<FsResult<Uint8Array>> {
         const fsFile = this.fs.getFile(path);
         if (checkChanged) {
-            const notModified =
-                await this.tracker.checkModifiedSinceLastAccess(fsFile);
+            const notModified = await this.tracker.checkModifiedSinceLastAccess(
+                fsFile,
+            );
             if (notModified.err) {
                 return notModified;
             }

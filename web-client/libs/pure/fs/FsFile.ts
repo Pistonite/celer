@@ -19,7 +19,7 @@ export interface FsFile {
     getText(): Promise<FsResult<string>>;
 
     /// Get the content of the file
-    getBytes(): Promise<FsResult<Uint8Array>>
+    getBytes(): Promise<FsResult<Uint8Array>>;
 
     /// Set the content in memory. Does not save to disk.
     /// Does nothing if file is closed
@@ -51,4 +51,3 @@ export interface FsFile {
     /// Further operations on the file will fail
     close(): void;
 }
-

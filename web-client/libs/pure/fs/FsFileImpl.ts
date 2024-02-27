@@ -11,7 +11,7 @@ export function fsFile(fs: FsFileSystemInternal, path: string): FsFile {
 }
 
 function errclosed() {
-    return { err: fsErr(FsErr.Closed, "File is closed")} as const;
+    return { err: fsErr(FsErr.Closed, "File is closed") } as const;
 }
 
 class FsFileImpl implements FsFile {
@@ -98,7 +98,9 @@ class FsFileImpl implements FsFile {
             }
         }
         if (this.buffer === undefined) {
-            const err = fsFail("Read was successful, but content was undefined");
+            const err = fsFail(
+                "Read was successful, but content was undefined",
+            );
             return { err };
         }
         return { val: this.buffer };
@@ -149,12 +151,14 @@ class FsFileImpl implements FsFile {
         // check if the file has been modified since last loaded
         if (this.lastModified !== undefined) {
             if (file.lastModified <= this.lastModified) {
-                return {}
+                return {};
             }
         }
         this.lastModified = file.lastModified;
         // load the buffer
-        const buffer = await tryAsync(async () => new Uint8Array(await file.arrayBuffer()));
+        const buffer = await tryAsync(
+            async () => new Uint8Array(await file.arrayBuffer()),
+        );
         if ("err" in buffer) {
             const err = fsFail(errstr(buffer.err));
             return { err };
@@ -172,7 +176,7 @@ class FsFileImpl implements FsFile {
             return errclosed();
         }
         if (!this.isDirty()) {
-            return {}
+            return {};
         }
         return await this.write();
     }
@@ -197,7 +201,9 @@ class FsFileImpl implements FsFile {
 
     private decodeBuffer() {
         try {
-            this.content = new TextDecoder("utf-8", { fatal: true }).decode(this.buffer);
+            this.content = new TextDecoder("utf-8", { fatal: true }).decode(
+                this.buffer,
+            );
             this.isText = true;
         } catch (_) {
             this.content = undefined;

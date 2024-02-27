@@ -12,7 +12,7 @@ export const createYielder = (budget: number) => {
                 setTimeout(() => resolve(true), 0);
             });
         }
-        currentBudget-=cost;
+        currentBudget -= cost;
         return Promise.resolve(false);
     };
 };

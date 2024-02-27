@@ -1,5 +1,9 @@
 import { FsFile } from "./FsFile.ts";
-import { FsFileSystem, FsFileSystemUninit, FsCapabilities } from "./FsFileSystem.ts";
+import {
+    FsFileSystem,
+    FsFileSystemUninit,
+    FsCapabilities,
+} from "./FsFileSystem.ts";
 import { FsErr, FsResult, FsVoid, fsErr } from "./FsError.ts";
 import { fsIsRoot, fsNormalize } from "./FsPath.ts";
 import { FsFileMgr } from "./FsFileMgr.ts";
@@ -9,7 +13,9 @@ import { FsFileSystemInternal } from "./FsFileSystemInternal.ts";
 /// This is supported in all browsers, but it is stale.
 /// It's used for Firefox when the File Entries API is not available
 /// i.e. opened from <input type="file">
-export class FsImplFileAPI implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
+export class FsImplFileAPI
+    implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal
+{
     public root: string;
     public capabilities: FsCapabilities;
 
@@ -22,7 +28,7 @@ export class FsImplFileAPI implements FsFileSystemUninit, FsFileSystem, FsFileSy
         this.root = files[0].webkitRelativePath.split("/", 1)[0];
         this.capabilities = {
             write: false,
-            live: false
+            live: false,
         };
         this.files = {};
         this.directories = {};
@@ -99,7 +105,10 @@ export class FsImplFileAPI implements FsFileSystemUninit, FsFileSystem, FsFileSy
     }
 
     public write(): Promise<FsVoid> {
-        const err = fsErr(FsErr.NotSupported, "Write not supported in File API");
+        const err = fsErr(
+            FsErr.NotSupported,
+            "Write not supported in File API",
+        );
         return Promise.resolve({ err });
     }
 

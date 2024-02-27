@@ -1,4 +1,3 @@
-
 /// What is supported by the current environment
 export type FsSupportStatus = {
     /// Returned by window.isSecureContext
@@ -8,7 +7,7 @@ export type FsSupportStatus = {
     ///
     /// See README.md for more information
     implementation: "File" | "FileSystemAccess" | "FileEntry";
-}
+};
 
 /// Get which implementation will be used for the current environment
 export function fsGetSupportStatus(): FsSupportStatus {

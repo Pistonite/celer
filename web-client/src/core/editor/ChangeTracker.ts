@@ -8,7 +8,7 @@ export interface ChangeTracker {
     /// since the last time this method was called with the same path
     ///
     /// Returns the NotModified error code if the file was not modified
-    checkModifiedSinceLastAccess(file: FsFile): Promise<FsVoid>
+    checkModifiedSinceLastAccess(file: FsFile): Promise<FsVoid>;
 }
 
 export function newModifyTimeBasedTracker(): ChangeTracker {
@@ -90,7 +90,9 @@ class HashTracker implements ChangeTracker {
         }
         await this.hashYield(bytes.val.length);
         const hashLast = this.hashWhenLastAccessed[file.path];
-        const hashCurrent = new Uint32Array(await crypto.subtle.digest("SHA-256", bytes.val));
+        const hashCurrent = new Uint32Array(
+            await crypto.subtle.digest("SHA-256", bytes.val),
+        );
         this.hashWhenLastAccessed[file.path] = hashCurrent;
         if (!hashLast) {
             return {};
@@ -104,7 +106,6 @@ class HashTracker implements ChangeTracker {
         }
         return notModified();
     }
-
 }
 
 /// A stub tracker that doesn't know

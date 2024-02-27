@@ -9,12 +9,17 @@ import { FsImplEntryAPI } from "./FsImplEntryAPI.ts";
 import { FsImplHandleAPI } from "./FsImplHandleAPI.ts";
 
 /// Handle for handling top level open errors, and decide if the operation should be retried
-export type FsOpenRetryHandler = (error: FsError, attempt: number) => Promise<FsResult<boolean>>;
+export type FsOpenRetryHandler = (
+    error: FsError,
+    attempt: number,
+) => Promise<FsResult<boolean>>;
 
 const MAX_RETRY = 10;
 
 /// Open a file system for read-only access with a directory picker dialog
-export async function fsOpenRead(retryHandler?: FsOpenRetryHandler): Promise<FsResult<FsFileSystem>> {
+export async function fsOpenRead(
+    retryHandler?: FsOpenRetryHandler,
+): Promise<FsResult<FsFileSystem>> {
     const fs = await createWithPicker(false, retryHandler);
     if (fs.err) {
         return fs;
@@ -23,7 +28,9 @@ export async function fsOpenRead(retryHandler?: FsOpenRetryHandler): Promise<FsR
 }
 
 /// Open a file system for read-write access with a directory picker dialog
-export async function fsOpenReadWrite(retryHandler?: FsOpenRetryHandler): Promise<FsResult<FsFileSystem>> {
+export async function fsOpenReadWrite(
+    retryHandler?: FsOpenRetryHandler,
+): Promise<FsResult<FsFileSystem>> {
     const fs = await createWithPicker(true, retryHandler);
     if (fs.err) {
         return fs;
@@ -33,7 +40,8 @@ export async function fsOpenReadWrite(retryHandler?: FsOpenRetryHandler): Promis
 
 /// Open a file system for read-only access from a DataTransferItem from a drag and drop event
 export async function fsOpenReadFrom(
-    item: DataTransferItem, retryHandler?: FsOpenRetryHandler
+    item: DataTransferItem,
+    retryHandler?: FsOpenRetryHandler,
 ): Promise<FsResult<FsFileSystem>> {
     const fs = await createFromDataTransferItem(item, false, retryHandler);
     if (fs.err) {
@@ -44,7 +52,8 @@ export async function fsOpenReadFrom(
 
 /// Open a file system for read-write access from a DataTransferItem from a drag and drop event
 export async function fsOpenReadWriteFrom(
-    item: DataTransferItem, retryHandler?: FsOpenRetryHandler
+    item: DataTransferItem,
+    retryHandler?: FsOpenRetryHandler,
 ): Promise<FsResult<FsFileSystem>> {
     const fs = await createFromDataTransferItem(item, true, retryHandler);
     if (fs.err) {
@@ -54,7 +63,8 @@ export async function fsOpenReadWriteFrom(
 }
 
 async function createWithPicker(
-    write: boolean, retryHandler: FsOpenRetryHandler | undefined
+    write: boolean,
+    retryHandler: FsOpenRetryHandler | undefined,
 ): Promise<FsResult<FsFileSystemUninit>> {
     for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
         const { implementation } = fsGetSupportStatus();
@@ -65,8 +75,9 @@ async function createWithPicker(
             }
             if (retryHandler) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const isAbort = handle.err && (handle.err as any).name === "AbortError";
-                const error = isAbort 
+                const isAbort =
+                    handle.err && (handle.err as any).name === "AbortError";
+                const error = isAbort
                     ? fsErr(FsErr.UserAbort, "User cancelled the operation")
                     : fsFail(errstr(handle.err));
                 const shouldRetry = await retryHandler(error, attempt);
@@ -92,19 +103,23 @@ async function createWithPicker(
         inputElement.type = "file";
         inputElement.webkitdirectory = true;
 
-        const fsUninit = await new Promise<FsResult<FsFileSystemUninit>>(resolve => {
-            inputElement.addEventListener("change", (event) => {
-                const files = (event.target as HTMLInputElement).files;
-                if (!files) {
-                    const err = fsFail("Failed to get files from input element");
-                    return resolve({ err });
-                }
-                resolve(createFromFileList(files));
-            });
-            inputElement.click();
-        });
+        const fsUninit = await new Promise<FsResult<FsFileSystemUninit>>(
+            (resolve) => {
+                inputElement.addEventListener("change", (event) => {
+                    const files = (event.target as HTMLInputElement).files;
+                    if (!files) {
+                        const err = fsFail(
+                            "Failed to get files from input element",
+                        );
+                        return resolve({ err });
+                    }
+                    resolve(createFromFileList(files));
+                });
+                inputElement.click();
+            },
+        );
         inputElement.remove();
-        
+
         if (fsUninit.val) {
             return fsUninit;
         }
@@ -126,29 +141,44 @@ async function createWithPicker(
 }
 
 async function createFromDataTransferItem(
-    item: DataTransferItem, 
-    write: boolean, 
-    retryHandler: FsOpenRetryHandler | undefined
+    item: DataTransferItem,
+    write: boolean,
+    retryHandler: FsOpenRetryHandler | undefined,
 ): Promise<FsResult<FsFileSystemUninit>> {
-    for (let attempt = 1;attempt <= MAX_RETRY; attempt++) {
+    for (let attempt = 1; attempt <= MAX_RETRY; attempt++) {
         let error: FsError | undefined = undefined;
         const { implementation } = fsGetSupportStatus();
         // Prefer File System Access API since it supports writing
-        if ("getAsFileSystemHandle" in item && implementation === "FileSystemAccess") {
+        if (
+            "getAsFileSystemHandle" in item &&
+            implementation === "FileSystemAccess"
+        ) {
             const handle = await tryAsync(() => getAsFileSystemHandle(item));
             if (handle.val) {
                 return createFromFileSystemHandle(handle.val, write);
             }
-            error = fsFail("Failed to get handle from DataTransferItem: "+ errstr(handle.err));
-        } else if ("webkitGetAsEntry" in item && implementation === "FileEntry") {
+            error = fsFail(
+                "Failed to get handle from DataTransferItem: " +
+                    errstr(handle.err),
+            );
+        } else if (
+            "webkitGetAsEntry" in item &&
+            implementation === "FileEntry"
+        ) {
             const entry = tryCatch(() => webkitGetAsEntry(item));
             if (entry.val) {
                 return createFromFileSystemEntry(entry.val);
             }
-            error = fsFail("Failed to get entry from DataTransferItem: "+ errstr(entry.err));
+            error = fsFail(
+                "Failed to get entry from DataTransferItem: " +
+                    errstr(entry.err),
+            );
         }
         if (!error) {
-            const err = fsErr(FsErr.NotSupported, "No supported API found on the DataTransferItem");
+            const err = fsErr(
+                FsErr.NotSupported,
+                "No supported API found on the DataTransferItem",
+            );
             return { err };
         }
         // handle error
@@ -169,11 +199,11 @@ async function createFromDataTransferItem(
 }
 
 async function init(
-    fs: FsFileSystemUninit, 
-    retryHandler: FsOpenRetryHandler | undefined
+    fs: FsFileSystemUninit,
+    retryHandler: FsOpenRetryHandler | undefined,
 ): Promise<FsResult<FsFileSystem>> {
     let attempt = -1;
-    while(true) {
+    while (true) {
         attempt++;
         const inited = await fs.init();
         if (!inited.err) {
@@ -201,7 +231,9 @@ function showDirectoryPicker(write: boolean): Promise<FileSystemHandle> {
 }
 
 /// Wrapper for DataTransferItem.getAsFileSystemHandle
-async function getAsFileSystemHandle(item: DataTransferItem): Promise<FileSystemHandle> {
+async function getAsFileSystemHandle(
+    item: DataTransferItem,
+): Promise<FileSystemHandle> {
     // @ts-expect-error getAsFileSystemHandle is not in the TS lib
     const handle = await item.getAsFileSystemHandle();
     if (!handle) {
@@ -219,7 +251,10 @@ function webkitGetAsEntry(item: DataTransferItem): FileSystemEntry {
     return entry;
 }
 
-function createFromFileSystemHandle(handle: FileSystemHandle, write: boolean): FsResult<FsFileSystemUninit> {
+function createFromFileSystemHandle(
+    handle: FileSystemHandle,
+    write: boolean,
+): FsResult<FsFileSystemUninit> {
     if (handle.kind !== "directory") {
         const err = fsErr(FsErr.IsFile, "Expected directory");
         return { err };
@@ -228,13 +263,15 @@ function createFromFileSystemHandle(handle: FileSystemHandle, write: boolean): F
     const fs = new FsImplHandleAPI(
         handle.name,
         handle as FileSystemDirectoryHandle,
-        write
+        write,
     );
 
     return { val: fs };
 }
 
-function createFromFileSystemEntry(entry: FileSystemEntry): FsResult<FsFileSystemUninit> {
+function createFromFileSystemEntry(
+    entry: FileSystemEntry,
+): FsResult<FsFileSystemUninit> {
     if (entry.isFile || !entry.isDirectory) {
         const err = fsErr(FsErr.IsFile, "Expected directory");
         return { err };

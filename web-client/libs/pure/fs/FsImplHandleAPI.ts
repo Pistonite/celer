@@ -1,12 +1,22 @@
-//! FsFileSystem implementation for FileSystemAccess API 
+//! FsFileSystem implementation for FileSystemAccess API
 
 import { tryAsync } from "pure/result";
 import { errstr } from "pure/utils";
 
-import { FsFileSystem, FsFileSystemUninit, FsCapabilities } from "./FsFileSystem.ts";
+import {
+    FsFileSystem,
+    FsFileSystemUninit,
+    FsCapabilities,
+} from "./FsFileSystem.ts";
 import { FsErr, FsResult, FsVoid, fsErr, fsFail } from "./FsError.ts";
 import { FsFile } from "./FsFile.ts";
-import { fsComponents, fsGetBase, fsGetName, fsIsRoot, fsNormalize } from "./FsPath.ts";
+import {
+    fsComponents,
+    fsGetBase,
+    fsGetName,
+    fsIsRoot,
+    fsNormalize,
+} from "./FsPath.ts";
 import { FsFileMgr } from "./FsFileMgr.ts";
 import { FsFileSystemInternal } from "./FsFileSystemInternal.ts";
 
@@ -14,7 +24,9 @@ type PermissionStatus = "granted" | "denied" | "prompt";
 
 /// FsFileSystem implementation that uses FileSystem Access API
 /// This is only supported in Chrome/Edge
-export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal {
+export class FsImplHandleAPI
+    implements FsFileSystemUninit, FsFileSystem, FsFileSystemInternal
+{
     public root: string;
     public capabilities: FsCapabilities;
     /// If app requested write access
@@ -58,7 +70,7 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
             return normalized;
         }
         path = normalized.val;
-        
+
         const handle = await this.resolveDir(path);
         if (handle.err) {
             return handle;
@@ -78,7 +90,12 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
             return entries;
         });
         if ("err" in entries) {
-            const err = fsFail("Error reading entries from directory `" + path + "`: " + errstr(entries.err));
+            const err = fsFail(
+                "Error reading entries from directory `" +
+                    path +
+                    "`: " +
+                    errstr(entries.err),
+            );
             return { err };
         }
         return entries;
@@ -98,7 +115,9 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
 
         const file = await tryAsync(() => handle.val.getFile());
         if ("err" in file) {
-            const err = fsFail("Failed to read file `" + path + "`: " + errstr(file.err));
+            const err = fsFail(
+                "Failed to read file `" + path + "`: " + errstr(file.err),
+            );
             return { err };
         }
         return file;
@@ -106,7 +125,10 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
 
     public async write(path: string, content: Uint8Array): Promise<FsVoid> {
         if (!this.writeMode) {
-            const err = fsErr(FsErr.PermissionDenied, "Write mode not requested");
+            const err = fsErr(
+                FsErr.PermissionDenied,
+                "Write mode not requested",
+            );
             return { err };
         }
         const normalized = fsNormalize(path);
@@ -124,10 +146,12 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
             const file = await handle.val.createWritable();
             await file.write(content);
             await file.close();
-            return {}; 
+            return {};
         });
         if ("err" in result) {
-            const err = fsFail("Failed to write file `" + path + "`: " + errstr(result.err));
+            const err = fsFail(
+                "Failed to write file `" + path + "`: " + errstr(result.err),
+            );
             return { err };
         }
         return {};
@@ -144,9 +168,11 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
         this.mgr.close(path);
     }
 
-    /// Resolve the FileSystemDirectoryHandle for a directory. 
+    /// Resolve the FileSystemDirectoryHandle for a directory.
     /// The path must be normalized
-    private async resolveDir(path: string): Promise<FsResult<FileSystemDirectoryHandle>> {
+    private async resolveDir(
+        path: string,
+    ): Promise<FsResult<FileSystemDirectoryHandle>> {
         if (fsIsRoot(path)) {
             return { val: this.rootHandle };
         }
@@ -157,7 +183,12 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
             const next = await tryAsync(() => handle.getDirectoryHandle(part));
             if ("err" in next) {
                 const dir = parts.join("/");
-                const err = fsFail("Failed to resolve directory `" + dir + "`: " + errstr(next.err));
+                const err = fsFail(
+                    "Failed to resolve directory `" +
+                        dir +
+                        "`: " +
+                        errstr(next.err),
+                );
                 return { err };
             }
             handle = next.val;
@@ -168,7 +199,9 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
 
     /// Resolve the FileSystemFileHandle for a file.
     /// The path must be normalized
-    private async resolveFile(path: string): Promise<FsResult<FileSystemFileHandle>> {
+    private async resolveFile(
+        path: string,
+    ): Promise<FsResult<FileSystemFileHandle>> {
         const parent = fsGetBase(path);
         if (parent.err) {
             return parent;
@@ -186,10 +219,11 @@ export class FsImplHandleAPI implements FsFileSystemUninit, FsFileSystem, FsFile
 
         const file = await tryAsync(() => handle.val.getFileHandle(name.val));
         if ("err" in file) {
-            const err = fsFail("Failed to resolve file `" + path + "`: " + errstr(file.err));
+            const err = fsFail(
+                "Failed to resolve file `" + path + "`: " + errstr(file.err),
+            );
             return { err };
         }
         return file;
     }
-
 }
