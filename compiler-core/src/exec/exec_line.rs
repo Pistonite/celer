@@ -61,6 +61,7 @@ impl CompLine {
                     exclude,
                     color,
                     icon,
+                    ..
                 } => {
                     // update builder properties
                     if let Some(color) = color {
@@ -166,6 +167,7 @@ mod test {
                 exclude: false,
                 color: Some("blue".to_string()),
                 icon: None,
+                marker: None,
             },
             CompMovement::To {
                 to: GameCoord(3.4, 7.0, 6.0),
@@ -173,6 +175,7 @@ mod test {
                 exclude: false,
                 color: Some("red".to_string()),
                 icon: Some("test icon 1".to_string()),
+                marker: None,
             },
             CompMovement::Pop,
             CompMovement::Push,
@@ -182,6 +185,7 @@ mod test {
                 exclude: false,
                 color: Some("blue".to_string()),
                 icon: None,
+                marker: None,
             },
             CompMovement::To {
                 to: GameCoord(3.5, 7.4, 6.2),
@@ -189,6 +193,7 @@ mod test {
                 exclude: true,
                 color: Some("red".to_string()),
                 icon: Some("test icon 2".to_string()),
+                marker: None,
             },
             CompMovement::Pop,
             CompMovement::to(GameCoord(1.2, 55.0, 37.8)),
@@ -198,6 +203,7 @@ mod test {
                 exclude: false,
                 color: None,
                 icon: None,
+                marker: None,
             },
             CompMovement::to(GameCoord(1.2, 55.0, 37.8)),
         ]

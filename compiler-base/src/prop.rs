@@ -34,6 +34,7 @@ pub const LINK: &str = "link";
 pub const MAP: &str = "map";
 pub const MAPPING_2D: &str = "2d";
 pub const MAPPING_3D: &str = "3d";
+pub const MARKER: &str = "marker";
 pub const MARKERS: &str = "markers";
 pub const MAX_NATIVE_ZOOM: &str = "max-native-zoom";
 pub const MOVEMENTS: &str = "movements";
