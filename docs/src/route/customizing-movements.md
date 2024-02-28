@@ -1,5 +1,8 @@
-# Movements and Map Features
-This section will cover properties that let you add visuals to the map.
+# Movements and Markers
+This section will cover properties that let you add movement points and markers to the map, including:
+- `coord` and `movements`
+- `color`
+- `markers`
 
 ## Single Coordinate
 Use the `coord` property to specify the coordinates on the map this line corresponds to.
@@ -33,6 +36,18 @@ until you change it again. The color will also reflect in the document as a thin
     color: red
 ```
 
+
+## Markers
+The `markers` property let you put circles on the map without the line going through them.
+```yaml
+- Markers example:
+    markers:
+    - at: [0, 0]
+    - at: [1, 2, 3]
+      color: red
+```
+When `color` is not specified, it defaults to the same color as the line
+
 ## Additional Properties
 Each point in the `movements` array can be a mapping with additional properties.
 If using this form, the coordinate should be specified with the `to` property.
@@ -44,13 +59,17 @@ All properties except for `to` are optional.
 |`exclude`|`boolean`|If `true`, this point is not considered part of the line when fitting the map to document. (Has no effect on the map line itself)|
 |`color`|`string`|Similar to the `color` property for the line, change the line color from this point on until next line|
 |`icon`|`string`|ID of an icon to show at the movement point. The icon will inherit the priority of the line.|
+|`marker`|`string`|If specified, there will be a marker at the movement point. The string is the color of the marker, or use `""` to default to the current color of the line|
 
 Examples:
 ```yaml
+color: orange
 movements:
-  - to: [10, 20]
+  - to: [10, 20] # same as - [10, 20]
 
-  - to: [20, 30]
+  # warp to [20, 30], temporarily change the line color to blue
+  # and exclude this point from being used to calculate map view
+  - to: [20, 30] 
     warp: true
     exclude: true
     color: blue
@@ -61,9 +80,21 @@ movements:
   - to: [15, 25]
     color: green
 
+  # move to [30, 40], and put an icon there
   - to: [30, 40]
     warp: true
     icon: chest
+  
+  # move to [70, 80], and put a red marker there
+  - to: [70, 80]
+    marker: "red"
+
+  # move to [0, 0], and put a marker there
+  # with the same color as the original line (orange)
+  - to: [0, 0]
+    marker: ""
+  # note that the marker is orange even though the line is green
+  # because the green is only temporary for the movement
 ```
 
 ## Movement Stack
@@ -106,9 +137,9 @@ Examples:
      # will continue from 60,60
 ```
 
-Functionality-wise, the movement stack is the same as the `warp: true`. However,
-it can let you return to a previous state without explicitly warping to the location,
-which may save effort when changing the route.
+Functionality-wise, the movement stack is the same as using `warp` and `color`
+to manually change the location and color. However,
+it may save effort when changing the route since you have 1 fewer place to update.
 
 ## Presets
 You can embed movements from a preset by using the same syntax as you would
@@ -126,14 +157,3 @@ into the `movements` of the line.
 When using presets in movements, properties other than `movements` of the
 preset are ignored.
 :::
-
-
-## Markers
-The `markers` property let you put circles on the map without the line going through them.
-```yaml
-- Markers example:
-    markers:
-    - at: [0, 0]
-    - at: [1, 2, 3]
-      color: red
-```

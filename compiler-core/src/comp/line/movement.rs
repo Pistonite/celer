@@ -28,6 +28,9 @@ pub enum CompMovement {
 
         /// Optional icon at the movement point
         icon: Option<String>,
+
+        /// Optional color for the marker, if the movement should add a marker at its coordinates
+        marker: Option<String>,
     },
     Push,
     Pop,
@@ -42,6 +45,7 @@ impl CompMovement {
             exclude: false,
             color: None,
             icon: None,
+            marker: None,
         }
     }
 }
@@ -51,7 +55,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
     ///
     /// The following are valid:
     /// - one coords value (array of 2 or 3)
-    /// - object with `to` property, and optionally `warp`, `exclude`, `color`
+    /// - object with `to` property, and optionally `warp`, `exclude`, `color`, `marker`
     /// - string `push`
     /// - string `pop`
     pub fn compile_movement(&mut self, prop_name: &str, prop: SafeRouteBlob<'_>) {
@@ -101,6 +105,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
         let mut exclude = false;
         let mut color = None;
         let mut icon = None;
+        let mut marker = None;
 
         let mut should_fail = false;
 
@@ -136,27 +141,38 @@ impl<'c, 'p> LineContext<'c, 'p> {
                 prop::COLOR => {
                     if value.is_null() {
                         color = None;
+                    } else if value.is_array() || value.is_object() {
+                        should_fail = true;
+                        self.errors.push(CompError::InvalidLinePropertyType(format!(
+                            "{prop_name}.{}",
+                            prop::COLOR
+                        )));
                     } else {
-                        match value.as_str() {
-                            Some(s) => color = Some(s.to_owned()),
-                            None => {
-                                should_fail = true;
-                                self.errors.push(CompError::InvalidLinePropertyType(format!(
-                                    "{prop_name}.{}",
-                                    prop::COLOR
-                                )));
-                            }
-                        }
+                        color = Some(value.coerce_into_string())
                     }
                 }
                 prop::ICON => {
-                    if value.is_array() || value.is_object() {
+                    if value.is_null() {
+                        icon = None;
+                    } else if value.is_array() || value.is_object() {
                         self.errors.push(CompError::InvalidLinePropertyType(format!(
                             "{prop_name}.{}",
                             prop::ICON
                         )));
                     } else {
                         icon = Some(value.coerce_into_string())
+                    }
+                }
+                prop::MARKER => {
+                    if value.is_null() {
+                        marker = None;
+                    } else if value.is_array() || value.is_object() {
+                        self.errors.push(CompError::InvalidLinePropertyType(format!(
+                            "{prop_name}.{}",
+                            prop::MARKER
+                        )));
+                    } else {
+                        marker = Some(value.coerce_into_string())
                     }
                 }
                 _ => {
@@ -178,6 +194,7 @@ impl<'c, 'p> LineContext<'c, 'p> {
                         exclude,
                         color,
                         icon,
+                        marker,
                     };
                     self.line.movements.push(m);
                 }
@@ -278,6 +295,7 @@ mod test {
                 exclude: false,
                 color: None,
                 icon: None,
+                marker: None,
             }]
         );
         assert_eq!(ctx.errors, vec![]);
@@ -302,29 +320,7 @@ mod test {
                 exclude: true,
                 color: None,
                 icon: None,
-            }]
-        );
-        assert_eq!(ctx.errors, vec![]);
-        ctx.line.movements.clear();
-        ctx.errors.clear();
-
-        ctx.test_compile_movement(
-            "",
-            json!({
-                "to": [1, 2, 4],
-                "warp": "false",
-                "exclude": true,
-                "color": "red",
-            }),
-        );
-        assert_eq!(
-            ctx.line.movements,
-            vec![CompMovement::To {
-                to: GameCoord(1.0, 2.0, 4.0),
-                warp: false,
-                exclude: true,
-                color: Some("red".to_string()),
-                icon: None,
+                marker: None,
             }]
         );
         assert_eq!(ctx.errors, vec![]);
@@ -346,54 +342,10 @@ mod test {
                 exclude: false,
                 color: None,
                 icon: None,
+                marker: None,
             }]
         );
         assert_eq!(ctx.errors, vec![]);
-        ctx.line.movements.clear();
-        ctx.errors.clear();
-
-        ctx.test_compile_movement(
-            "",
-            json!({
-                "to": [1, 2, 4],
-                "icon": "something",
-            }),
-        );
-        assert_eq!(
-            ctx.line.movements,
-            vec![CompMovement::To {
-                to: GameCoord(1.0, 2.0, 4.0),
-                warp: false,
-                exclude: false,
-                color: None,
-                icon: Some("something".to_string()),
-            }]
-        );
-        assert_eq!(ctx.errors, vec![]);
-        ctx.line.movements.clear();
-        ctx.errors.clear();
-
-        ctx.test_compile_movement(
-            "te",
-            json!({
-                "to": [1, 2, 4],
-                "icon": []
-            }),
-        );
-        assert_eq!(
-            ctx.line.movements,
-            vec![CompMovement::To {
-                to: GameCoord(1.0, 2.0, 4.0),
-                warp: false,
-                exclude: false,
-                color: None,
-                icon: None,
-            }]
-        );
-        assert_eq!(
-            ctx.errors,
-            vec![CompError::InvalidLinePropertyType("te.icon".to_string())]
-        );
         ctx.line.movements.clear();
         ctx.errors.clear();
 
@@ -426,6 +378,35 @@ mod test {
         );
         ctx.line.movements.clear();
         ctx.errors.clear();
+    }
+
+    #[test]
+    fn test_color() {
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
+        let mut ctx = LineContext::with_compiler(&compiler);
+        ctx.test_compile_movement(
+            "",
+            json!({
+                "to": [1, 2, 4],
+                "warp": "false",
+                "exclude": true,
+                "color": "red",
+            }),
+        );
+        assert_eq!(
+            ctx.line.movements,
+            vec![CompMovement::To {
+                to: GameCoord(1.0, 2.0, 4.0),
+                warp: false,
+                exclude: true,
+                color: Some("red".to_string()),
+                icon: None,
+                marker: None,
+            }]
+        );
+        assert_eq!(ctx.errors, vec![]);
+        ctx.line.movements.clear();
+        ctx.errors.clear();
 
         ctx.test_compile_movement(
             "test",
@@ -439,6 +420,100 @@ mod test {
             ctx.errors,
             vec![CompError::InvalidLinePropertyType("test.color".to_string())]
         );
+    }
+
+    #[test]
+    fn test_icon() {
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
+        let mut ctx = LineContext::with_compiler(&compiler);
+        ctx.test_compile_movement(
+            "",
+            json!({
+                "to": [1, 2, 4],
+                "icon": "something",
+            }),
+        );
+        assert_eq!(
+            ctx.line.movements,
+            vec![CompMovement::To {
+                to: GameCoord(1.0, 2.0, 4.0),
+                warp: false,
+                exclude: false,
+                color: None,
+                icon: Some("something".to_string()),
+                marker: None,
+            }]
+        );
+        assert_eq!(ctx.errors, vec![]);
+        ctx.line.movements.clear();
+        ctx.errors.clear();
+
+        ctx.test_compile_movement(
+            "te",
+            json!({
+                "to": [1, 2, 4],
+                "icon": []
+            }),
+        );
+        assert_eq!(
+            ctx.line.movements,
+            vec![CompMovement::to(GameCoord(1.0, 2.0, 4.0))]
+        );
+        assert_eq!(
+            ctx.errors,
+            vec![CompError::InvalidLinePropertyType("te.icon".to_string())]
+        );
+        ctx.line.movements.clear();
+        ctx.errors.clear();
+    }
+
+    #[test]
+    fn test_marker() {
+        let compiler = test_utils::create_test_compiler_with_coord_transform();
+        let mut ctx = LineContext::with_compiler(&compiler);
+        ctx.test_compile_movement(
+            "",
+            json!({
+                "to": [1, 2, 4],
+                "marker": "red",
+            }),
+        );
+        assert_eq!(
+            ctx.line.movements,
+            vec![CompMovement::To {
+                to: GameCoord(1.0, 2.0, 4.0),
+                warp: false,
+                exclude: false,
+                color: None,
+                icon: None,
+                marker: Some("red".to_string()),
+            }]
+        );
+        assert_eq!(ctx.errors, vec![]);
+        ctx.line.movements.clear();
+        ctx.errors.clear();
+
+        ctx.test_compile_movement(
+            "te",
+            json!({
+                "to": [1, 2, 4],
+                "marker": 123
+            }),
+        );
+        assert_eq!(
+            ctx.line.movements,
+            vec![CompMovement::To {
+                to: GameCoord(1.0, 2.0, 4.0),
+                warp: false,
+                exclude: false,
+                color: None,
+                icon: None,
+                marker: Some("123".to_string()),
+            }]
+        );
+        assert_eq!(ctx.errors, vec![]);
+        ctx.line.movements.clear();
+        ctx.errors.clear();
     }
 
     #[test]

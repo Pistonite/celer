@@ -61,8 +61,28 @@ impl<'p> Compiler<'p> {
         match value.checked() {
             Ok(value) => {
                 ctx.parse_line(value);
+
+                // post process
                 for error in ctx.errors {
                     ctx.line.diagnostics.push(error.into_diagnostic());
+                }
+                for movement in &ctx.line.movements {
+                    if let CompMovement::To {
+                        to,
+                        marker: Some(color),
+                        ..
+                    } = movement
+                    {
+                        let color = if color.is_empty() {
+                            None
+                        } else {
+                            Some(color.clone())
+                        };
+                        ctx.line.markers.push(CompMarker {
+                            at: to.clone(),
+                            color,
+                        });
+                    }
                 }
             }
             Err(e) => {
@@ -1091,6 +1111,57 @@ mod test {
                         color: Some("marker 1".to_string()),
                     },
                     CompMarker::at(GameCoord(1.0, 2.0, 3.0)),
+                ],
+                ..Default::default()
+            },
+        );
+
+        test_comp_ok(
+            &mut compiler,
+            json!({
+                "test markers in movements": {
+                    "markers": [
+                        { "at": [1, 2, 4], "color": "marker 1" },
+                    ],
+                    "movements": [
+                        { "to": [1, 2, 3], "marker": "red" },
+                        { "to": [1, 2, 3], "marker": "" },
+                    ]
+                }
+            }),
+            CompLine {
+                text: DocRichText::text("test markers in movements"),
+                markers: vec![
+                    CompMarker {
+                        at: GameCoord(1.0, 2.0, 4.0),
+                        color: Some("marker 1".to_string()),
+                    },
+                    CompMarker {
+                        at: GameCoord(1.0, 2.0, 3.0),
+                        color: Some("red".to_string()),
+                    },
+                    CompMarker {
+                        at: GameCoord(1.0, 2.0, 3.0),
+                        color: None,
+                    },
+                ],
+                movements: vec![
+                    CompMovement::To {
+                        to: GameCoord(1.0, 2.0, 3.0),
+                        warp: false,
+                        color: None,
+                        icon: None,
+                        exclude: false,
+                        marker: Some("red".to_string()),
+                    },
+                    CompMovement::To {
+                        to: GameCoord(1.0, 2.0, 3.0),
+                        warp: false,
+                        color: None,
+                        icon: None,
+                        exclude: false,
+                        marker: Some("".to_string()),
+                    },
                 ],
                 ..Default::default()
             },

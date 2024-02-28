@@ -32,7 +32,10 @@ export const writingRoutesSidebar = {
                     text: "Counter and Splits",
                     link: "/route/counter-and-splits",
                 },
-                { text: "Movements", link: "/route/customizing-movements" },
+                {
+                    text: "Movements and Markers",
+                    link: "/route/customizing-movements",
+                },
                 { text: "Using Presets", link: "/route/using-presets" },
                 { text: "Publish the Route", link: "/route/publish" },
                 {
