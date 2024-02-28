@@ -1,0 +1,4 @@
+[submodule "pure"]
+	path = web-client/libs/pure
+	url = https://github.com/Pistonite/pure
+	branch = main
