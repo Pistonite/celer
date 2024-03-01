@@ -1,9 +1,12 @@
 //! Utilities for loading/requesting document from server
 
-import type { ExpoContext } from "low/celerc";
+import { Buffer } from "buffer/";
+
+import { tryAsync } from "pure/result";
+
+import type { ExpoContext, PluginOptionsRaw } from "low/celerc";
 import { fetchAsJson, getApiUrl } from "low/fetch";
 import { consoleDoc as console } from "low/utils";
-import { tryAsync } from "pure/result";
 
 export type LoadDocumentResult =
     | {
@@ -21,7 +24,7 @@ const HELP_URL = "/docs/route/publish#viewing-the-route-on-celer";
 /// Load the document based on the current URL (window.location.pathname)
 ///
 /// The path should be /view/{owner}/{repo}/{path}:{reference}
-export async function loadDocumentFromCurrentUrl(): Promise<LoadDocumentResult> {
+export async function loadDocumentFromCurrentUrl(pluginOptions: PluginOptionsRaw | undefined): Promise<LoadDocumentResult> {
     const pathname = window.location.pathname;
     if (!pathname.startsWith("/view")) {
         return createLoadError(
@@ -65,7 +68,7 @@ export async function loadDocumentFromCurrentUrl(): Promise<LoadDocumentResult> 
         }
     }
     const path = rest.join("/");
-    return await loadDocument(owner, realRepo, reference, path);
+    return await loadDocument(owner, realRepo, reference, path, pluginOptions);
 }
 
 function createLoadError(
@@ -84,6 +87,7 @@ export async function loadDocument(
     repo: string,
     reference: string,
     path: string | undefined,
+    pluginOptions: PluginOptionsRaw | undefined,
 ): Promise<LoadDocumentResult> {
     console.info(`loading document: ${owner}/${repo}/${reference} ${path}`);
     const startTime = performance.now();
@@ -91,8 +95,21 @@ export async function loadDocument(
     if (path) {
         url += `/${path}`;
     }
+    const headers: Record<string, string> = {};
+    if (pluginOptions) {
+        try {
+            const optionsJson = JSON.stringify(pluginOptions);
+            const optionsBytes = new TextEncoder().encode(optionsJson);
+            const optionsBase64 = Buffer.from(optionsBytes).toString("base64");
+            headers["Celer-Plugin-Options"] = optionsBase64;
+        } catch (e) {
+            console.error(e);
+            console.error("failed to encode plugin options");
+            return createLoadError("Failed to encode plugin options", undefined);
+        }
+    }
     const result = await tryAsync(() =>
-        fetchAsJson<LoadDocumentResult>(getApiUrl(url)),
+        fetchAsJson<LoadDocumentResult>(getApiUrl(url), { headers }),
     );
     if ("err" in result) {
         const err = result.err;
@@ -124,4 +141,26 @@ function injectLoadTime(doc: ExpoContext, ms: number) {
         console.info("failed to inject load time");
         console.error(e);
     }
+}
+
+export const preloadedDocumentTitle = getPreloadedDocumentTitle();
+
+/// Get the server provided document title, for configuring the load request
+function getPreloadedDocumentTitle(): string | undefined {
+    const meta = document.querySelector("meta[name='preload-title']");
+    if (!meta) {
+        if (window.location.hash) {
+            const title = decodeURIComponent(window.location.hash.substring(1));
+            console.info(`using preloaded title from URL hash: ${title}`);
+            return title || undefined;
+        } else {
+            console.warn("cannot find preloaded document title. This is a bug if you are in production env");
+            console.info("for dev environment, append the URL encoded title after # in the URL")
+            return undefined;
+        }
+    }
+
+    const title = meta.getAttribute("content") || undefined;
+    console.info(`using preloaded title from server: ${title}`);
+    return title;
 }

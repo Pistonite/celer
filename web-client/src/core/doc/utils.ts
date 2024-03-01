@@ -156,11 +156,11 @@ const RecompileNeededDebouncer = new Debouncer(
         ) {
             const newDocument = documentSelector(newState);
             if (newSettings.enableUserPlugins) {
-                const [result] = parseUserConfigOptions(
+                const { val } = parseUserConfigOptions(
                     newSettings.userPluginConfig,
-                    newDocument.document,
+                    newDocument.document?.project.title,
                 );
-                if (result) {
+                if (val) {
                     return true;
                 }
                 return false; // error in config
@@ -169,11 +169,11 @@ const RecompileNeededDebouncer = new Debouncer(
             // if old has config, recompile
             const oldDocument = documentSelector(oldState);
             if (oldSettings.enableUserPlugins) {
-                const [result] = parseUserConfigOptions(
+                const { val } = parseUserConfigOptions(
                     oldSettings.userPluginConfig,
-                    oldDocument.document,
+                    oldDocument.document?.project.title,
                 );
-                if (result && result.length > 0) {
+                if (val && val.length > 0) {
                     return true;
                 }
             }
@@ -204,12 +204,13 @@ let lastPluginOptionResult: PluginOptionsRaw | undefined = undefined;
 export const getRawPluginOptions = (
     state: AppState,
 ): PluginOptionsRaw | undefined => {
+    const settings = settingsSelector(state);
     const {
         disabledPlugins,
         enabledAppPlugins,
         enableUserPlugins,
         userPluginConfig,
-    } = settingsSelector(state);
+    } = settings
     const { document, serial } = documentSelector(state);
 
     const currentInputs = [
@@ -226,24 +227,33 @@ export const getRawPluginOptions = (
         return lastPluginOptionResult;
     }
     lastPluginOptionInputs = currentInputs;
+    lastPluginOptionResult = getRawPluginOptionsForTitle(settings, document?.project.title);
+    return lastPluginOptionResult;
+};
 
-    const remove = document
-        ? disabledPlugins[document.project.title] || []
+/// Get the raw plugin options for the specified title
+export function getRawPluginOptionsForTitle(state: SettingsState, title: string | undefined): PluginOptionsRaw | undefined {
+    const {
+        disabledPlugins,
+        enabledAppPlugins,
+        enableUserPlugins,
+        userPluginConfig,
+    } = state;
+    const remove = title
+        ? disabledPlugins[title] || []
         : [];
     const add = [];
     if (enabledAppPlugins["export-split"]) {
         getSplitExportPluginConfigs().forEach((config) => add.push(config));
     }
     if (enableUserPlugins) {
-        const [result] = parseUserConfigOptions(userPluginConfig, document);
-        if (result) {
-            add.push(...result);
+        const { val } = parseUserConfigOptions(userPluginConfig, title);
+        if (val) {
+            add.push(...val);
         }
     }
     if (remove.length === 0 && add.length === 0) {
-        lastPluginOptionResult = undefined;
-    } else {
-        lastPluginOptionResult = { remove, add };
+        return undefined;
     }
-    return lastPluginOptionResult;
-};
+    return { remove, add };
+}

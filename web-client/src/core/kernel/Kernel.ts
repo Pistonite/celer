@@ -17,9 +17,11 @@ import {
 } from "core/store";
 import {
     getDefaultSplitTypes,
+    getRawPluginOptionsForTitle,
     getSplitExportPluginConfigs,
     isRecompileNeeded,
     loadDocumentFromCurrentUrl,
+    preloadedDocumentTitle,
 } from "core/doc";
 import type { CompilerKernel } from "core/compiler";
 import type { EditorKernel, EditorKernelAccess } from "core/editor";
@@ -126,6 +128,9 @@ export class Kernel implements EditorKernelAccess {
             document.title = "Celer Editor";
             this.store.dispatch(viewActions.setStageMode("edit"));
         } else {
+            if (preloadedDocumentTitle) {
+                document.title = preloadedDocumentTitle;
+            }
             setTimeout(() => {
                 this.reloadDocument();
             }, 0);
@@ -304,17 +309,16 @@ export class Kernel implements EditorKernelAccess {
     /// Reload the document from the server based on the current URL
     private async reloadDocumentFromServer() {
         this.store.dispatch(documentActions.setDocument(undefined));
+        this.store.dispatch(viewActions.setCompileInProgress(true));
         // let UI update
         await sleep(0);
-        // show progress spinner if reload takes longer than 200ms
-        const handle = setTimeout(() => {
-            this.store.dispatch(viewActions.setCompileInProgress(true));
-        }, 200);
 
         let retry = true;
         while (retry) {
             console.info("reloading document from server");
-            const result = await loadDocumentFromCurrentUrl();
+            const settings = settingsSelector(this.store.getState());
+            const pluginOptions = getRawPluginOptionsForTitle(settings, preloadedDocumentTitle);
+            const result = await loadDocumentFromCurrentUrl(pluginOptions);
             if (result.type === "failure") {
                 this.store.dispatch(documentActions.setDocument(undefined));
                 console.info("failed to load document from server");
@@ -359,7 +363,6 @@ export class Kernel implements EditorKernelAccess {
             this.store.dispatch(documentActions.setDocument(doc));
             break;
         }
-        clearTimeout(handle);
         this.store.dispatch(viewActions.setCompileInProgress(false));
     }
 }

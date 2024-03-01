@@ -179,14 +179,14 @@ const editUserPluginConfig = async (
     setUserPluginConfig: (x: string) => void,
 ): Promise<void> => {
     let config = userPluginConfig;
-    let [_, error] = parseUserConfigOptions(config, document);
+    let { err } = parseUserConfigOptions(config, document?.project.title);
     while (true) {
         const response = await kernel.getAlertMgr().showRich({
             title: "User Plugins",
             component: () => {
                 return (
                     <UserPluginConfigEditor
-                        initialError={error}
+                        initialError={err}
                         initialValue={config}
                         onChange={(x) => {
                             kernel.getAlertMgr().modifyActions({
@@ -199,7 +199,7 @@ const editUserPluginConfig = async (
             },
             okButton: "Save",
             cancelButton: "Cancel",
-            extraActions: error
+            extraActions: err
                 ? [
                       {
                           id: "force",
@@ -215,8 +215,8 @@ const editUserPluginConfig = async (
         if (response === "force") {
             break;
         }
-        [_, error] = parseUserConfigOptions(config, document);
-        if (!error) {
+        ({ err } = parseUserConfigOptions(config, document?.project.title));
+        if (!err) {
             break;
         }
         console.error("user plugin config has errors");
@@ -243,7 +243,7 @@ const UserPluginConfigEditor: React.FC<UserPluginConfigEditorProps> = ({
         <div>
             <Body1 block style={{ marginBottom: 4 }}>
                 Please edit your plugin configuration below.{" "}
-                <Link href="/docs/plugin/settine" target="_blank">
+                <Link href="/docs/plugin/settings" target="_blank">
                     Learn more
                 </Link>
             </Body1>

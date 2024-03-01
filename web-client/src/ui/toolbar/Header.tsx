@@ -30,6 +30,7 @@ import React, { PropsWithChildren, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import { documentSelector, settingsSelector, viewSelector } from "core/store";
+import { preloadedDocumentTitle } from "core/doc";
 import type { ExecDoc } from "low/celerc";
 
 import { getHeaderControls } from "./getHeaderControls";
@@ -120,7 +121,7 @@ function useTitle(
     }
     // viewer
     if (compileInProgress) {
-        return "Loading...";
+        return preloadedDocumentTitle || "Loading...";
     }
     // if in view mode, but is not loading (e.g. user cancelled the loading)
     // return the viewer title
