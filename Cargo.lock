@@ -324,6 +324,7 @@ dependencies = [
  "axum",
  "axum-macros",
  "axum-server",
+ "base64",
  "cached",
  "compiler-core",
  "envconfig",

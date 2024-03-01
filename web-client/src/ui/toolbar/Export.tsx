@@ -1,5 +1,6 @@
 //! Control for selecting export options
 
+import { Buffer } from "buffer/";
 import { forwardRef, useState } from "react";
 import { useSelector, useStore } from "react-redux";
 import {

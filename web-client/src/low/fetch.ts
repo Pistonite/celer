@@ -1,20 +1,29 @@
 import { console, sleep } from "./utils";
 
-export function fetchAsBytes(url: string): Promise<Uint8Array> {
-    return doFetch(url, async (response) => {
+export function fetchAsBytes(
+    url: string,
+    options?: RequestInit,
+): Promise<Uint8Array> {
+    return doFetch(url, options, async (response) => {
         const buffer = await response.arrayBuffer();
         return new Uint8Array(buffer);
     });
 }
 
-export function fetchAsString(url: string): Promise<string> {
-    return doFetch(url, (response) => {
+export function fetchAsString(
+    url: string,
+    options?: RequestInit,
+): Promise<string> {
+    return doFetch(url, options, (response) => {
         return response.text();
     });
 }
 
-export const fetchAsJson = <T>(url: string): Promise<T> => {
-    return doFetch(url, (response) => {
+export const fetchAsJson = <T>(
+    url: string,
+    options?: RequestInit,
+): Promise<T> => {
+    return doFetch(url, options, (response) => {
         return response.json();
     });
 };
@@ -26,13 +35,14 @@ export const getApiUrl = (path: string) => {
 
 const doFetch = async <T>(
     url: string,
+    options: RequestInit | undefined,
     handler: (response: Response) => Promise<T>,
 ): Promise<T> => {
     const RETRY_COUNT = 3;
     let error: unknown;
     for (let i = 0; i < RETRY_COUNT; i++) {
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, options);
             if (response.ok) {
                 return await handler(response);
             }

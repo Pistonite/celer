@@ -34,6 +34,12 @@ Compiles the document and returns an ExpoContext in JSON
 |`repo`|The GitHub repo name (`owner/repo` makes up the repo)|
 |`ref`| The branch, tag, or commit for the repo to pull the route from. |
 |`path`| (Optional) Either a path in the repo to the directory containing the `project.yaml`, or an alias defined in the `entry-points` of the root `project.yaml`. When omitted, it uses the `default` entry point if defined, or the root `project.yaml` itself.|
+
+### Headers
+|Name|Description|
+|-|-|
+|`Celer-Plugin-Options`|(Optional) Base64 encoded JSON PluginOptionsRaw object used to specify extra plugin options|
+
 ### Returns
 It should always return status `200 OK`.
 

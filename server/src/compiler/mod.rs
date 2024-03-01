@@ -10,6 +10,8 @@ mod loader;
 pub use loader::*;
 mod cache;
 pub use cache::*;
+mod plugin;
+pub use plugin::*;
 
 /// Create a context builder for a project
 pub fn new_context_builder(

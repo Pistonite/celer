@@ -194,6 +194,10 @@ async fn view_internal(
         }
         url
     };
+    let preload_title_tag = format!(
+        "<meta name=\"preload-title\" content=\"{}\">",
+        util::html_attr_escape(&metadata.title)
+    );
     let title_tag = format!(
         "<meta name=\"og:title\" content=\"{}\">",
         util::html_attr_escape(&title)
@@ -212,6 +216,7 @@ async fn view_internal(
 
     let html = format!(
         "{head}
+         {preload_title_tag}
          {title_tag}
          {description_tag}
          {url_tag}
