@@ -36,7 +36,7 @@ pub enum CompileResponse {
 
 async fn compile_owner_repo_ref(
     Path((owner, repo, reference)): Path<(String, String, String)>,
-    headers: HeaderMap
+    headers: HeaderMap,
 ) -> Json<CompileResponse> {
     let plugin_options = match get_plugin_options_from_headers(&headers) {
         Ok(v) => v,
@@ -48,7 +48,7 @@ async fn compile_owner_repo_ref(
 
 async fn compile_owner_repo_ref_path(
     Path((owner, repo, reference, path)): Path<(String, String, String, String)>,
-    headers: HeaderMap
+    headers: HeaderMap,
 ) -> Json<CompileResponse> {
     let plugin_options = match get_plugin_options_from_headers(&headers) {
         Ok(v) => v,
@@ -61,13 +61,13 @@ async fn compile_owner_repo_ref_path(
 fn get_plugin_options_from_headers(headers: &HeaderMap) -> Result<Option<String>, String> {
     let header_value = match headers.get("Celer-Plugin-Options") {
         None => return Ok(None),
-        Some(v) => v
+        Some(v) => v,
     };
     let header_value = match header_value.to_str() {
         Ok(s) => s,
         Err(e) => {
             error!("Invalid Celer-Plugin-Options header: {e}");
-            return Err("Invalid Celer-Plugin-Options header".to_string())
+            return Err("Invalid Celer-Plugin-Options header".to_string());
         }
     };
     if header_value.is_empty() {
@@ -78,7 +78,7 @@ fn get_plugin_options_from_headers(headers: &HeaderMap) -> Result<Option<String>
         Ok(v) => v,
         Err(e) => {
             error!("Failed to decode Celer-Plugin-Options header: {e}");
-            return Err("Invalid Celer-Plugin-Options header".to_string())
+            return Err("Invalid Celer-Plugin-Options header".to_string());
         }
     };
 
@@ -86,7 +86,7 @@ fn get_plugin_options_from_headers(headers: &HeaderMap) -> Result<Option<String>
         Ok(s) => s,
         Err(e) => {
             error!("Celer-Plugin-Options header is not valid UTF-8: {e}");
-            return Err("Invalid Celer-Plugin-Options header".to_string())
+            return Err("Invalid Celer-Plugin-Options header".to_string());
         }
     };
 
@@ -108,12 +108,10 @@ async fn compile_internal(
 
     let plugin_options = match plugin_options_json {
         None => None,
-        Some(s) => {
-            match compiler::parse_plugin_options(&s, &prep_ctx.project_res).await {
-                Ok(options) => Some(options),
-                Err(e) => return CompileResponse::Failure(e),
-            }
-        }
+        Some(s) => match compiler::parse_plugin_options(&s, &prep_ctx.project_res).await {
+            Ok(options) => Some(options),
+            Err(e) => return CompileResponse::Failure(e),
+        },
     };
 
     let expo_ctx = compiler::compile(&prep_ctx, Some(start_time), plugin_options).await;

@@ -210,7 +210,7 @@ export const getRawPluginOptions = (
         enabledAppPlugins,
         enableUserPlugins,
         userPluginConfig,
-    } = settings
+    } = settings;
     const { document, serial } = documentSelector(state);
 
     const currentInputs = [
@@ -227,21 +227,25 @@ export const getRawPluginOptions = (
         return lastPluginOptionResult;
     }
     lastPluginOptionInputs = currentInputs;
-    lastPluginOptionResult = getRawPluginOptionsForTitle(settings, document?.project.title);
+    lastPluginOptionResult = getRawPluginOptionsForTitle(
+        settings,
+        document?.project.title,
+    );
     return lastPluginOptionResult;
 };
 
 /// Get the raw plugin options for the specified title
-export function getRawPluginOptionsForTitle(state: SettingsState, title: string | undefined): PluginOptionsRaw | undefined {
+export function getRawPluginOptionsForTitle(
+    state: SettingsState,
+    title: string | undefined,
+): PluginOptionsRaw | undefined {
     const {
         disabledPlugins,
         enabledAppPlugins,
         enableUserPlugins,
         userPluginConfig,
     } = state;
-    const remove = title
-        ? disabledPlugins[title] || []
-        : [];
+    const remove = title ? disabledPlugins[title] || [] : [];
     const add = [];
     if (enabledAppPlugins["export-split"]) {
         getSplitExportPluginConfigs().forEach((config) => add.push(config));

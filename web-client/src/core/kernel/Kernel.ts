@@ -317,7 +317,10 @@ export class Kernel implements EditorKernelAccess {
         while (retry) {
             console.info("reloading document from server");
             const settings = settingsSelector(this.store.getState());
-            const pluginOptions = getRawPluginOptionsForTitle(settings, preloadedDocumentTitle);
+            const pluginOptions = getRawPluginOptionsForTitle(
+                settings,
+                preloadedDocumentTitle,
+            );
             const result = await loadDocumentFromCurrentUrl(pluginOptions);
             if (result.type === "failure") {
                 this.store.dispatch(documentActions.setDocument(undefined));

@@ -24,7 +24,9 @@ const HELP_URL = "/docs/route/publish#viewing-the-route-on-celer";
 /// Load the document based on the current URL (window.location.pathname)
 ///
 /// The path should be /view/{owner}/{repo}/{path}:{reference}
-export async function loadDocumentFromCurrentUrl(pluginOptions: PluginOptionsRaw | undefined): Promise<LoadDocumentResult> {
+export async function loadDocumentFromCurrentUrl(
+    pluginOptions: PluginOptionsRaw | undefined,
+): Promise<LoadDocumentResult> {
     const pathname = window.location.pathname;
     if (!pathname.startsWith("/view")) {
         return createLoadError(
@@ -105,7 +107,10 @@ export async function loadDocument(
         } catch (e) {
             console.error(e);
             console.error("failed to encode plugin options");
-            return createLoadError("Failed to encode plugin options", undefined);
+            return createLoadError(
+                "Failed to encode plugin options",
+                undefined,
+            );
         }
     }
     const result = await tryAsync(() =>
@@ -154,8 +159,12 @@ function getPreloadedDocumentTitle(): string | undefined {
             console.info(`using preloaded title from URL hash: ${title}`);
             return title || undefined;
         } else {
-            console.warn("cannot find preloaded document title. This is a bug if you are in production env");
-            console.info("for dev environment, append the URL encoded title after # in the URL")
+            console.warn(
+                "cannot find preloaded document title. This is a bug if you are in production env",
+            );
+            console.info(
+                "for dev environment, append the URL encoded title after # in the URL",
+            );
             return undefined;
         }
     }

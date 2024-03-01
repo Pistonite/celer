@@ -15,12 +15,15 @@ export const useDocCurrentUserPluginConfig = (): Result<Value[], string> => {
         useSelector(settingsSelector);
 
     /* eslint-disable react-hooks/exhaustive-deps*/
-    const result  = useMemo(() => {
+    const result = useMemo(() => {
         if (!enableUserPlugins) {
             return { val: [] };
         }
         // parse user plugin config
-        return parseUserConfigOptions(userPluginConfig, document?.project.title);
+        return parseUserConfigOptions(
+            userPluginConfig,
+            document?.project.title,
+        );
     }, [serial, userPluginConfig, enableUserPlugins]);
     /* eslint-enable react-hooks/exhaustive-deps*/
 
@@ -31,7 +34,7 @@ export const parseUserConfigOptions = (
     config: string,
     title: string | undefined,
 ): Result<Value[], string> => {
-    const configObjResult = tryCatch( () => YAML.load(config));
+    const configObjResult = tryCatch(() => YAML.load(config));
     if ("err" in configObjResult) {
         return { err: errstr(configObjResult.err) };
     }
@@ -55,9 +58,12 @@ export const parseUserConfigOptions = (
 
     if (title) {
         if (title in configObj) {
-            const docOptions: unknown = configObj[title as keyof typeof configObj];
+            const docOptions: unknown =
+                configObj[title as keyof typeof configObj];
             if (!Array.isArray(docOptions)) {
-                return { err: `Configuration for document "${title}" must be an array!` };
+                return {
+                    err: `Configuration for document "${title}" must be an array!`,
+                };
             }
             options.push(...docOptions);
         }

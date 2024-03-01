@@ -1,19 +1,28 @@
 import { console, sleep } from "./utils";
 
-export function fetchAsBytes(url: string, options?: RequestInit): Promise<Uint8Array> {
+export function fetchAsBytes(
+    url: string,
+    options?: RequestInit,
+): Promise<Uint8Array> {
     return doFetch(url, options, async (response) => {
         const buffer = await response.arrayBuffer();
         return new Uint8Array(buffer);
     });
 }
 
-export function fetchAsString(url: string, options?: RequestInit): Promise<string> {
+export function fetchAsString(
+    url: string,
+    options?: RequestInit,
+): Promise<string> {
     return doFetch(url, options, (response) => {
         return response.text();
     });
 }
 
-export const fetchAsJson = <T>(url: string, options?: RequestInit): Promise<T> => {
+export const fetchAsJson = <T>(
+    url: string,
+    options?: RequestInit,
+): Promise<T> => {
     return doFetch(url, options, (response) => {
         return response.json();
     });
