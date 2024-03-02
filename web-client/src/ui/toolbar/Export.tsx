@@ -205,7 +205,7 @@ const runExportWizard = async (
     while (true) {
         // show extra config dialog if needed
         if (enableConfig) {
-            const ok = await kernel.getAlertMgr().showRich({
+            const ok = await kernel.alertMgr.showRich({
                 title: "Export",
                 component: () => {
                     return (
@@ -349,7 +349,7 @@ async function runExportAndShowDialog(
     config: string,
 ): Promise<string> {
     let cancelled = false;
-    const result = await kernel.getAlertMgr().showBlocking(
+    const result = await kernel.alertMgr.showBlocking(
         {
             title: "Export",
             component: () => {
@@ -371,7 +371,7 @@ async function runExportAndShowDialog(
             if ("err" in request) {
                 return errstr(request.err);
             }
-            const expoDoc = await kernel.export(request.val);
+            const expoDoc = await kernel.exportDocument(request.val);
             if (cancelled) {
                 return "";
             }

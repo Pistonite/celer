@@ -8,8 +8,23 @@ import { EditorDropZone } from "./EditorDropZone";
 import { EditorPanel } from "./EditorPanel";
 
 export const EditorRoot: React.FC = () => {
-    const { rootPath } = useSelector(viewSelector);
+    const { rootPath, stageMode } = useSelector(viewSelector);
     const { editorMode } = useSelector(settingsSelector);
+
+    // TODO #207: split layout settings between view and edit mode
+    if (stageMode !== "edit") {
+        return (
+            <HintScreen>
+                <p>
+                    Web editor is not available because you are in view mode
+                </p>
+                <p>
+                    Switch to the default layout or a layout without the editor
+                    to hide this widget.
+                </p>
+            </HintScreen>
+        );
+    }
 
     if (rootPath === undefined) {
         return <EditorDropZone />;

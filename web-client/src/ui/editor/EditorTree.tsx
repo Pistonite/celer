@@ -24,7 +24,7 @@ export const EditorTree: React.FC = () => {
     /* eslint-disable react-hooks/exhaustive-deps*/
     const listDir = useCallback(
         (path: string) => {
-            return kernel.getEditor()?.listDir(path) || Promise.resolve([]);
+            return kernel.asEdit().getEditor()?.listDir(path) || Promise.resolve([]);
         },
         [serial],
     );
@@ -67,7 +67,7 @@ export const EditorTree: React.FC = () => {
                 level={0}
                 listDir={listDir}
                 onClickFile={async (path) => {
-                    const editor = kernel.getEditor();
+                    const editor = kernel.asEdit().getEditor();
                     if (!editor) {
                         return;
                     }

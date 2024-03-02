@@ -24,8 +24,6 @@ export const initAppRoot = (
     kernel: Kernel,
     /// The redux store
     store: AppStore,
-    /// Whether the ui should render in dark mode
-    isDarkMode: boolean,
 ) => {
     const rootDiv = ReactRootDiv.get();
     if (!rootDiv) {
@@ -38,7 +36,7 @@ export const initAppRoot = (
             <AppErrorBoundary>
                 <KernelContext.Provider value={kernel}>
                     <ReduxProvider store={store}>
-                        <FluentProviderWrapper isDarkMode={isDarkMode}>
+                        <FluentProviderWrapper>
                             <ErrorBoundary>
                                 <AppRoot />
                             </ErrorBoundary>

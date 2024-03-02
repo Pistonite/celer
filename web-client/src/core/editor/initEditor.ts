@@ -7,15 +7,15 @@ import { EditorKernel } from "./EditorKernel";
 
 declare global {
     interface Window {
-        __theEditorKernel: EditorKernel;
+        __theEditor: EditorKernel;
     }
 }
 
-export const initEditor = async (
+export async function initEditor(
     kernel: EditorKernelAccess,
     fs: FsFileSystem,
     store: AppStore,
-): Promise<EditorKernel> => {
+): Promise<EditorKernel> {
     deleteEditor();
     const { editorMode } = settingsSelector(store.getState());
     let editor;
@@ -27,12 +27,12 @@ export const initEditor = async (
         editor = initExternalEditor(kernel, fs);
     }
 
-    window.__theEditorKernel = editor;
+    window.__theEditor= editor;
     return editor;
-};
+}
 
-export const deleteEditor = (): void => {
-    if (window.__theEditorKernel) {
-        window.__theEditorKernel.delete();
+export function deleteEditor(): void {
+    if (window.__theEditor) {
+        window.__theEditor.delete();
     }
-};
+}

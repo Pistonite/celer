@@ -59,7 +59,7 @@ const useSyncProjectControl = () => {
     const tooltip = getTooltip(isOpened, loadInProgress, lastLoadError);
 
     const handler = useCallback(async () => {
-        const editor = kernel.getEditor();
+        const editor = kernel.asEdit().getEditor();
         if (!editor) {
             return;
         }

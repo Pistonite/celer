@@ -1,4 +1,4 @@
-//! Utilities for loading/requesting document from server
+//! Utilities for interaction in VIEW mode
 
 import { Buffer } from "buffer/";
 
@@ -148,10 +148,8 @@ function injectLoadTime(doc: ExpoContext, ms: number) {
     }
 }
 
-export const preloadedDocumentTitle = getPreloadedDocumentTitle();
-
 /// Get the server provided document title, for configuring the load request
-function getPreloadedDocumentTitle(): string | undefined {
+export function getPreloadedDocumentTitle(): string | undefined {
     const meta = document.querySelector("meta[name='preload-title']");
     if (!meta) {
         if (window.location.hash) {

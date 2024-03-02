@@ -77,7 +77,7 @@ const useSaveProjectControl = () => {
     );
 
     const handler = useCallback(async () => {
-        const editor = kernel.getEditor();
+        const editor = kernel.asEdit().getEditor();
         if (!editor) {
             return;
         }

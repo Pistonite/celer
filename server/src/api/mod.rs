@@ -6,7 +6,9 @@ use tracing::info;
 use crate::env;
 
 mod compile;
+mod export;
 mod view;
+mod header;
 
 pub fn init_api(router: Router, app_dir: &str) -> Result<Router, io::Error> {
     info!("initializing api routes");
@@ -20,7 +22,8 @@ pub fn init_api(router: Router, app_dir: &str) -> Result<Router, io::Error> {
 pub fn init_api_v1() -> Result<Router, io::Error> {
     let router = Router::new()
         .route("/version", routing::get(|| async { env::version() }))
-        .nest("/compile", compile::init_api());
+        .nest("/compile", compile::init_api())
+        .nest("/export", export::init_api());
 
     Ok(router)
 }

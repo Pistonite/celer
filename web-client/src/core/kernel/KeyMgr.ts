@@ -29,14 +29,14 @@ export class KeyMgr {
     /// for it to be released.
     private lastDetected: string[] = [];
 
+    private cleanupFn: (() => void) | undefined = undefined;
+
     constructor(store: AppStore) {
         this.store = store;
     }
 
     /// Add listeners to the window
-    ///
-    /// Returns a function to unlisten
-    public listen(): () => void {
+    public init() {
         const onKeyDown = (e: KeyboardEvent) => {
             this.onKeyDown(e.key);
         };
@@ -45,10 +45,17 @@ export class KeyMgr {
         };
         window.addEventListener("keydown", onKeyDown);
         window.addEventListener("keyup", onKeyUp);
-        return () => {
+        this.cleanupFn = () => {
             window.removeEventListener("keydown", onKeyDown);
             window.removeEventListener("keyup", onKeyUp);
         };
+    }
+
+    /// Remove all listeners
+    public delete() {
+        if (this.cleanupFn) {
+            this.cleanupFn();
+        }
     }
 
     /// Handle when a key is pressed

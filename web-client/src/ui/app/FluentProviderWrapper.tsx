@@ -5,16 +5,14 @@ import {
 } from "@fluentui/react-components";
 import { PropsWithChildren } from "react";
 
-export type FluentProviderWrapperProps = PropsWithChildren<{
-    isDarkMode: boolean;
-}>;
+import { isInDarkMode } from "low/utils";
 
-export const FluentProviderWrapper: React.FC<FluentProviderWrapperProps> = ({
-    isDarkMode,
+export const FluentProviderWrapper: React.FC<PropsWithChildren> = ({
     children,
 }) => {
+    const dark = isInDarkMode();
     return (
-        <FluentProvider theme={isDarkMode ? webDarkTheme : webLightTheme}>
+        <FluentProvider theme={dark ? webDarkTheme : webLightTheme}>
             {children}
         </FluentProvider>
     );
