@@ -106,7 +106,7 @@ export class AlertMgrImpl implements AlertMgr {
             setTimeout(async () => {
                 const result = await tryAsync(f);
                 if (!cancelled) {
-                    resolve(result);
+                    this.clearAlertAndThen(() => resolve(result));
                 }
             }, ALERT_TIMEOUT);
         });

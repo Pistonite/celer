@@ -81,22 +81,26 @@ impl PluginRuntime for ExportLiveSplitPlugin {
 
         let mut segments_xml = String::new();
         for section in &doc.route {
-            let length = section.lines.len();
-            for (i, line) in section.lines.iter().enumerate() {
+            let mut split_lines = vec![];
+            for line in &section.lines {
                 if should_split_on(line, &split_types) {
-                    let mut name = match &line.split_name {
-                        Some(name) => name.to_string(),
-                        None => line.text.to_string(),
-                    };
-                    if subsplit {
-                        if i == length - 1 {
-                            name = format!("{{{}}}{name}", section.name);
-                        } else {
-                            name = format!("-{name}");
-                        }
-                    }
-                    append_segment(&mut segments_xml, &name, line);
+                    split_lines.push(line);
                 }
+            }
+            let length = split_lines.len();
+            for (i, line) in split_lines.iter().enumerate() {
+                let mut name = match &line.split_name {
+                    Some(name) => name.to_string(),
+                    None => line.text.to_string(),
+                };
+                if subsplit {
+                    if i == length - 1 {
+                        name = format!("{{{}}}{name}", section.name);
+                    } else {
+                        name = format!("-{name}");
+                    }
+                }
+                append_segment(&mut segments_xml, &name, line);
             }
         }
 

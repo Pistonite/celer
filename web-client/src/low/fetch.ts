@@ -1,9 +1,11 @@
-import { console, sleep } from "./utils";
+import { Result } from "pure/result";
+
+import { sleep } from "./utils";
 
 export function fetchAsBytes(
     url: string,
     options?: RequestInit,
-): Promise<Uint8Array> {
+): Promise<Result<Uint8Array, unknown>> {
     return doFetch(url, options, async (response) => {
         const buffer = await response.arrayBuffer();
         return new Uint8Array(buffer);
@@ -13,7 +15,7 @@ export function fetchAsBytes(
 export function fetchAsString(
     url: string,
     options?: RequestInit,
-): Promise<string> {
+): Promise<Result<string, unknown>> {
     return doFetch(url, options, (response) => {
         return response.text();
     });
@@ -22,7 +24,7 @@ export function fetchAsString(
 export const fetchAsJson = <T>(
     url: string,
     options?: RequestInit,
-): Promise<T> => {
+): Promise<Result<T, unknown>> => {
     return doFetch(url, options, (response) => {
         return response.json();
     });
@@ -33,27 +35,27 @@ export const getApiUrl = (path: string) => {
     return API_PREFIX + path;
 };
 
-const doFetch = async <T>(
+async function doFetch<T>(
     url: string,
     options: RequestInit | undefined,
     handler: (response: Response) => Promise<T>,
-): Promise<T> => {
+): Promise<Result<T, unknown>> {
     const RETRY_COUNT = 3;
     let error: unknown;
     for (let i = 0; i < RETRY_COUNT; i++) {
         try {
             const response = await fetch(url, options);
             if (response.ok) {
-                return await handler(response);
+                const val = await handler(response);
+                return { val };
             }
         } catch (e) {
-            console.error(e);
             error = e;
             await sleep(50);
         }
     }
     if (error) {
-        throw error;
+        return { err: error };
     }
-    throw new Error("unknown error");
-};
+    return { err: new Error("unknown error") };
+}

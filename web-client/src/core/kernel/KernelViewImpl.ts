@@ -10,7 +10,7 @@ import { UiMgr, UiMgrInitFn } from "./UiMgr";
 import { createAndBindStore } from "./store";
 import { KeyMgr } from "./KeyMgr";
 import { AlertMgrImpl } from "./AlertMgr";
-import { getPreloadedDocumentTitle, loadDocumentFromCurrentUrl } from "./view";
+import { getPreloadedDocumentTitle, loadDocument, sendExportRequest } from "./server";
 
 export class KernelViewImpl implements Kernel {
     private store: AppStore;
@@ -66,7 +66,7 @@ export class KernelViewImpl implements Kernel {
                 settings,
                 this.preloadedDocumentTitle,
             );
-            const result = await loadDocumentFromCurrentUrl(pluginOptions);
+            const result = await loadDocument(pluginOptions);
             if (result.type === "failure") {
                 this.store.dispatch(documentActions.setDocument(undefined));
                 console.info("failed to load document from server");
@@ -74,7 +74,7 @@ export class KernelViewImpl implements Kernel {
                 retry = await this.alertMgr.show({
                     title: "Failed to load route",
                     message: result.data,
-                    learnMoreLink: result.help,
+                    learnMoreLink: "/docs/route/publish#viewing-the-route-on-celer",
                     okButton: "Retry",
                     cancelButton: "Cancel",
                 });
@@ -114,11 +114,13 @@ export class KernelViewImpl implements Kernel {
         this.store.dispatch(viewActions.setCompileInProgress(false));
     }
 
-    public async exportDocument(request: ExportRequest): Promise<ExpoDoc> {
+    public exportDocument(request: ExportRequest): Promise<ExpoDoc> {
         injectSplitTypesIntoRequest(request, this.store.getState());
-        // TODO #184: export from server
-        return {
-            error: "Export from server is not available yet. This is tracked by issue 184 on GitHub",
-        };
+        const settings = settingsSelector(this.store.getState());
+        const pluginOptions = getRawPluginOptionsForTitle(
+            settings,
+            this.preloadedDocumentTitle,
+        );
+        return sendExportRequest(pluginOptions, request);
     }
 }

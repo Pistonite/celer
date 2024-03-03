@@ -75,7 +75,7 @@ export function injectSplitTypesIntoRequest(request: ExportRequest, state: AppSt
         return
     }
     const payload = request.payload as Record<string, unknown>;
-    if (!payload["split-types"]) {
+    if (payload["split-types"]) {
         // already has data, don't override
         return;
     }
