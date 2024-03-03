@@ -2,9 +2,12 @@ import YAML from "js-yaml";
 
 import { Result, tryCatch } from "pure/result";
 
+import { AppState, documentSelector, settingsSelector } from "core/store";
 import { ExportMetadata, ExportRequest } from "low/celerc";
+import { consoleDoc as console } from "low/utils";
 
 import { DocSettingsState } from "./state";
+import { getDefaultSplitTypes } from "./utils";
 
 /// Get a unique identifier for the export metadata
 ///
@@ -59,4 +62,40 @@ export function createExportRequest(
 /// Get the plugin configs when the "Export Split" option is enabled
 export function getSplitExportPluginConfigs() {
     return [{ use: "export-livesplit" }];
+}
+
+export function injectSplitTypesIntoRequest(
+    request: ExportRequest,
+    state: AppState,
+) {
+    const splitExportConfigs = getSplitExportPluginConfigs();
+    if (!splitExportConfigs.find((c) => c.use === request.pluginId)) {
+        // not a split export plugin, don't inject splits
+        return;
+    }
+    if (!request.payload || typeof request.payload !== "object") {
+        // no payload to inject into
+        return;
+    }
+    const payload = request.payload as Record<string, unknown>;
+    if (payload["split-types"]) {
+        // already has data, don't override
+        return;
+    }
+    const { splitTypes } = settingsSelector(state);
+    let injected: string[];
+    if (splitTypes) {
+        injected = splitTypes;
+    } else {
+        const { document } = documentSelector(state);
+        if (document) {
+            injected = getDefaultSplitTypes(document);
+        } else {
+            injected = [];
+        }
+    }
+    payload["split-types"] = injected;
+    console.info(
+        `injected ${injected.length} split types into export request payload.`,
+    );
 }

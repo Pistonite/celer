@@ -10,6 +10,8 @@ mod loader;
 pub use loader::*;
 mod cache;
 pub use cache::*;
+mod export;
+pub use export::*;
 mod plugin;
 pub use plugin::*;
 

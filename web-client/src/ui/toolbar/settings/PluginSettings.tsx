@@ -181,7 +181,7 @@ const editUserPluginConfig = async (
     let config = userPluginConfig;
     let { err } = parseUserConfigOptions(config, document?.project.title);
     while (true) {
-        const response = await kernel.getAlertMgr().showRich({
+        const response = await kernel.alertMgr.showRich({
             title: "User Plugins",
             component: () => {
                 return (
@@ -189,7 +189,7 @@ const editUserPluginConfig = async (
                         initialError={err}
                         initialValue={config}
                         onChange={(x) => {
-                            kernel.getAlertMgr().modifyActions({
+                            kernel.alertMgr.modifyActions({
                                 extraActions: [],
                             });
                             config = x;

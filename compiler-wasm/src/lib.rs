@@ -65,7 +65,7 @@ pub async fn export_document(
     use_cache: bool,
     req: ExportRequest,
 ) -> Result<ExpoDoc, JsValue> {
-    compiler::export_document(entry_path, use_cache, req).await
+    Ok(compiler::export_document(entry_path, use_cache, req).await)
 }
 
 /// Set user plugin options

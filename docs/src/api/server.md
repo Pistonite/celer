@@ -57,3 +57,29 @@ Otherwise, it will return
     "data": "error message here"
 }
 ```
+
+## `GET /export/{owner}/{repo}/{ref}[/{path}]`
+Export the document
+### Parameters
+Same as the `/compile` endpoint.
+
+### Headers
+|Name|Description|
+|-|-|
+|`Celer-Export-Request`|(Required) Base64 encoded JSON ExportRequest object|
+|`Celer-Plugin-Options`|(Optional) Base64 encoded JSON PluginOptionsRaw object used to specify extra plugin options|
+
+### Returns
+It should always return status `200 OK`.
+
+Returns an ExpoDoc, which could be success or error
+```json
+{
+    "success": { ... }
+}
+```
+```json
+{
+    "error": "message here",
+}
+```

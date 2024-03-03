@@ -426,7 +426,6 @@ class MapVisualGroup {
             (i === undefined || i < 0 || i >= this.sectionLayers.length)
         ) {
             // Index is invalid, we will keep the map empty
-            console.warn("Invalid section index: " + i);
             return;
         }
         if (mode === SectionMode.None) {

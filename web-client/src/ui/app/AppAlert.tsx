@@ -27,7 +27,7 @@ export const AppAlert: React.FC = () => {
         alertCancelButton,
         alertExtraActions,
     } = useSelector(viewSelector);
-    const alertMgr = useKernel().getAlertMgr();
+    const alertMgr = useKernel().alertMgr;
     const responseRef = useRef<boolean | string>(false);
     const { RichAlertComponent } = alertMgr;
     if (!alertText && !RichAlertComponent) {

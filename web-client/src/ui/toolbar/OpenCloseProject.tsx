@@ -42,13 +42,13 @@ const useOpenCloseProjectControl = () => {
     const handler = useCallback(async () => {
         if (rootPath) {
             // close
-            const editor = kernel.getEditor();
+            const editor = kernel.asEdit().getEditor();
             if (!editor) {
                 return;
             }
 
             if (await editor.hasUnsavedChanges()) {
-                const yes = await kernel.getAlertMgr().show({
+                const yes = await kernel.alertMgr.show({
                     title: "Unsaved changes",
                     message:
                         "There are unsaved changes in the editor. Continue closing will discard all changes. Are you sure you want to continue?",
@@ -60,18 +60,18 @@ const useOpenCloseProjectControl = () => {
                 }
             }
 
-            await kernel.closeProjectFileSystem();
+            await kernel.asEdit().closeProjectFileSystem();
         } else {
             // open
             // only import editor when needed, since
             // header controls are initialized in view mode as well
             const { createRetryOpenHandler } = await import("core/editor");
-            const retryHandler = createRetryOpenHandler(kernel.getAlertMgr());
+            const retryHandler = createRetryOpenHandler(kernel.alertMgr);
             const fs = await fsOpenReadWrite(retryHandler);
             if (fs.err) {
                 return;
             }
-            await kernel.openProjectFileSystem(fs.val);
+            await kernel.asEdit().openProjectFileSystem(fs.val);
         }
     }, [kernel, rootPath]);
 

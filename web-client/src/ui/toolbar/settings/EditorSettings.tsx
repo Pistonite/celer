@@ -55,7 +55,7 @@ export const EditorSettings: React.FC = () => {
                 setEntryPoints([]);
                 return;
             }
-            const compiler = await kernel.getCompiler();
+            const compiler = await kernel.asEdit().ensureCompiler();
             const result = await compiler.getEntryPoints();
             if ("err" in result) {
                 setEntryPoints([]);

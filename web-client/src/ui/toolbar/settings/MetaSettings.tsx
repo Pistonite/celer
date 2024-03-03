@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { documentSelector, settingsActions, viewSelector } from "core/store";
 import { fetchAsString, getApiUrl } from "low/fetch";
+import { console } from "low/utils";
 
 import { useActions } from "low/store";
 import { SettingsSection } from "./SettingsSection";
@@ -25,16 +26,18 @@ export const MetaSettings: React.FC = () => {
     const [serverVersion, setServerVersion] = useState("Loading...");
     useEffect(() => {
         const fetchVersion = async () => {
-            try {
-                const version = await fetchAsString(getApiUrl("/version"));
-                if (version.split(" ", 3).length === 3) {
-                    setServerVersion("Cannot read version");
-                } else {
-                    setServerVersion(version);
-                }
-            } catch {
+            const version = await fetchAsString(getApiUrl("/version"));
+            if ("err" in version) {
+                console.error(version.err);
                 setServerVersion("Cannot read version");
+                return;
             }
+            const { val } = version;
+            if (val.split(" ", 3).length === 3) {
+                setServerVersion("Cannot read version");
+                return;
+            }
+            setServerVersion(val);
         };
         fetchVersion();
     }, [stageMode]);

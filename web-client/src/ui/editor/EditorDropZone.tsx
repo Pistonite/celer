@@ -41,7 +41,7 @@ export const EditorDropZone: React.FC = () => {
                 e.preventDefault();
                 setIsDragging(false);
                 setIsOpening(true);
-                const alertMgr = kernel.getAlertMgr();
+                const { alertMgr } = kernel;
                 const item = e.dataTransfer?.items[0];
 
                 if (!item) {
@@ -63,7 +63,7 @@ export const EditorDropZone: React.FC = () => {
                     return;
                 }
 
-                await kernel.openProjectFileSystem(fs.val);
+                await kernel.asEdit().openProjectFileSystem(fs.val);
                 setIsOpening(false);
             }}
         >
