@@ -9,9 +9,7 @@ declare global {
     }
 }
 
-export async function initKernel(
-    initUi: UiMgrInitFn
-): Promise<void> {
+export async function initKernel(initUi: UiMgrInitFn): Promise<void> {
     if (window.__theKernel) {
         console.warn("deleting old kernel...");
         window.__theKernel.delete();

@@ -56,11 +56,15 @@ async function loadDocumentForRef(
         }
         headers["Celer-Plugin-Options"] = optionsValue.val;
     }
-    const result = await fetchAsJson<LoadDocumentResult>(getApiUrl(url), { headers });
+    const result = await fetchAsJson<LoadDocumentResult>(getApiUrl(url), {
+        headers,
+    });
     if ("err" in result) {
         const err = result.err;
         console.error(err);
-        return createLoadError("There was an error loading the document from the server.");
+        return createLoadError(
+            "There was an error loading the document from the server.",
+        );
     }
     const response = result.val;
 

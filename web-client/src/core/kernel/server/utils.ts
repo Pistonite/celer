@@ -9,13 +9,13 @@ export type DocRef = {
     repo: string;
     ref: string;
     path: string;
-}
+};
 
 /// Parse document ref from a path like /view/{owner}/{repo}[/{path}]:{ref}
 /// Return undefined if parse fail
 export function parseDocRef(pathname: string): DocRef | undefined {
     if (!pathname.startsWith("/view")) {
-        return undefined
+        return undefined;
     }
     const parts = pathname.substring(6).split("/").filter(Boolean);
     // parts[0] is owner
@@ -30,7 +30,7 @@ export function parseDocRef(pathname: string): DocRef | undefined {
     if (!owner || !repoTemp) {
         return undefined;
     }
-    let ref= "main";
+    let ref = "main";
     let repo = repoTemp;
     if (rest.length > 0) {
         const [last, refTemp] = rest[rest.length - 1].split(":", 2);
@@ -83,4 +83,3 @@ export function getPreloadedDocumentTitle(): string | undefined {
     console.info(`using preloaded title from server: ${title}`);
     return title;
 }
-

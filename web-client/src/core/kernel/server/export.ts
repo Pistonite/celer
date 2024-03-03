@@ -12,7 +12,7 @@ function createExportError(error: string): ExpoDoc {
 
 export async function sendExportRequest(
     pluginOptions: PluginOptionsRaw | undefined,
-    request: ExportRequest
+    request: ExportRequest,
 ): Promise<ExpoDoc> {
     const docRef = parseDocRef(window.location.pathname);
     if (!docRef) {
@@ -24,7 +24,7 @@ export async function sendExportRequest(
 async function sendExportRequestForRef(
     docRef: DocRef,
     pluginOptions: PluginOptionsRaw | undefined,
-    request: ExportRequest
+    request: ExportRequest,
 ): Promise<ExpoDoc> {
     const { owner, repo, ref, path } = docRef;
     console.info(`export document: ${owner}/${repo}/${ref} ${path}`);
@@ -53,7 +53,9 @@ async function sendExportRequestForRef(
     if ("err" in result) {
         const err = result.err;
         console.error(err);
-        return createExportError("There was an error sending export request to the server.");
+        return createExportError(
+            "There was an error sending export request to the server.",
+        );
     }
     const doc = result.val;
 

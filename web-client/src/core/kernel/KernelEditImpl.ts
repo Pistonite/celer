@@ -2,7 +2,13 @@
 
 import { FsFileSystem } from "pure/fs";
 
-import { AppStore, documentActions, settingsActions, settingsSelector, viewActions } from "core/store";
+import {
+    AppStore,
+    documentActions,
+    settingsActions,
+    settingsSelector,
+    viewActions,
+} from "core/store";
 import { injectSplitTypesIntoRequest } from "core/doc";
 import { EditorKernel, EditorKernelAccess } from "core/editor";
 import { CompilerKernel } from "core/compiler";
@@ -156,5 +162,4 @@ export class KernelEditImpl implements Kernel, KernelEdit, EditorKernelAccess {
     private updateRootPathInStore(fs: FsFileSystem | undefined) {
         this.store.dispatch(viewActions.updateFileSys(fs?.root ?? undefined));
     }
-
 }

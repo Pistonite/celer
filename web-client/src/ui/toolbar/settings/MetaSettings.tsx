@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { documentSelector, settingsActions, viewSelector } from "core/store";
 import { fetchAsString, getApiUrl } from "low/fetch";
+import { console } from "low/utils";
 
 import { useActions } from "low/store";
 import { SettingsSection } from "./SettingsSection";

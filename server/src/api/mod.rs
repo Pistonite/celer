@@ -7,8 +7,8 @@ use crate::env;
 
 mod compile;
 mod export;
-mod view;
 mod header;
+mod view;
 
 pub fn init_api(router: Router, app_dir: &str) -> Result<Router, io::Error> {
     info!("initializing api routes");

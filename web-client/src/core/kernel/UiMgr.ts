@@ -3,10 +3,7 @@ import { consoleKernel as console } from "low/utils";
 
 import { Kernel } from "./Kernel";
 
-export type UiMgrInitFn = (
-    kernel: Kernel,
-    store: AppStore
-) => () => void;
+export type UiMgrInitFn = (kernel: Kernel, store: AppStore) => () => void;
 
 /// Manager for React and various global window events
 export class UiMgr {

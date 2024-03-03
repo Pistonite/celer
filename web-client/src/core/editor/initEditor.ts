@@ -27,7 +27,7 @@ export async function initEditor(
         editor = initExternalEditor(kernel, fs);
     }
 
-    window.__theEditor= editor;
+    window.__theEditor = editor;
     return editor;
 }
 

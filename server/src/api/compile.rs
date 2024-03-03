@@ -4,7 +4,6 @@ use axum::extract::Path;
 use axum::http::HeaderMap;
 use axum::routing;
 use axum::{Json, Router};
-use celerc::{ExpoDoc, ExportRequest};
 use instant::Instant;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

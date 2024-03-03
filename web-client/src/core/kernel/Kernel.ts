@@ -41,4 +41,3 @@ export interface KernelEdit {
     /// Close the opened project file system
     closeProjectFileSystem(): Promise<void>;
 }
-

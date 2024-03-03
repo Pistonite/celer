@@ -15,9 +15,7 @@ export const EditorRoot: React.FC = () => {
     if (stageMode !== "edit") {
         return (
             <HintScreen>
-                <p>
-                    Web editor is not available because you are in view mode
-                </p>
+                <p>Web editor is not available because you are in view mode</p>
                 <p>
                     Switch to the default layout or a layout without the editor
                     to hide this widget.

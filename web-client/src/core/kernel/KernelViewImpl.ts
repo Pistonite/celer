@@ -1,7 +1,15 @@
 /// Implementation of the Kernel in VIEW mode
 
-import { getRawPluginOptionsForTitle, injectSplitTypesIntoRequest } from "core/doc";
-import { AppStore, documentActions, settingsSelector, viewActions } from "core/store";
+import {
+    getRawPluginOptionsForTitle,
+    injectSplitTypesIntoRequest,
+} from "core/doc";
+import {
+    AppStore,
+    documentActions,
+    settingsSelector,
+    viewActions,
+} from "core/store";
 import { AlertMgr, consoleKernel as console, sleep } from "low/utils";
 import { ExpoDoc, ExportRequest } from "low/celerc";
 
@@ -10,7 +18,11 @@ import { UiMgr, UiMgrInitFn } from "./UiMgr";
 import { createAndBindStore } from "./store";
 import { KeyMgr } from "./KeyMgr";
 import { AlertMgrImpl } from "./AlertMgr";
-import { getPreloadedDocumentTitle, loadDocument, sendExportRequest } from "./server";
+import {
+    getPreloadedDocumentTitle,
+    loadDocument,
+    sendExportRequest,
+} from "./server";
 
 export class KernelViewImpl implements Kernel {
     private store: AppStore;
@@ -74,7 +86,8 @@ export class KernelViewImpl implements Kernel {
                 retry = await this.alertMgr.show({
                     title: "Failed to load route",
                     message: result.data,
-                    learnMoreLink: "/docs/route/publish#viewing-the-route-on-celer",
+                    learnMoreLink:
+                        "/docs/route/publish#viewing-the-route-on-celer",
                     okButton: "Retry",
                     cancelButton: "Cancel",
                 });

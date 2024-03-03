@@ -2,11 +2,11 @@ import YAML from "js-yaml";
 
 import { Result, tryCatch } from "pure/result";
 
+import { AppState, documentSelector, settingsSelector } from "core/store";
 import { ExportMetadata, ExportRequest } from "low/celerc";
 import { consoleDoc as console } from "low/utils";
 
 import { DocSettingsState } from "./state";
-import { AppState, documentSelector, settingsSelector } from "core/store";
 import { getDefaultSplitTypes } from "./utils";
 
 /// Get a unique identifier for the export metadata
@@ -64,7 +64,10 @@ export function getSplitExportPluginConfigs() {
     return [{ use: "export-livesplit" }];
 }
 
-export function injectSplitTypesIntoRequest(request: ExportRequest, state: AppState) {
+export function injectSplitTypesIntoRequest(
+    request: ExportRequest,
+    state: AppState,
+) {
     const splitExportConfigs = getSplitExportPluginConfigs();
     if (!splitExportConfigs.find((c) => c.use === request.pluginId)) {
         // not a split export plugin, don't inject splits
@@ -72,7 +75,7 @@ export function injectSplitTypesIntoRequest(request: ExportRequest, state: AppSt
     }
     if (!request.payload || typeof request.payload !== "object") {
         // no payload to inject into
-        return
+        return;
     }
     const payload = request.payload as Record<string, unknown>;
     if (payload["split-types"]) {

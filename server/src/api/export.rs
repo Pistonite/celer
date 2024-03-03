@@ -1,4 +1,3 @@
-
 use axum::extract::Path;
 use axum::http::HeaderMap;
 use axum::routing;
@@ -53,7 +52,8 @@ async fn export_owner_repo_ref_path(
         Ok(v) => v,
         Err(e) => return Json(ExpoDoc::Error(e)),
     };
-    let response = export_internal(&owner, &repo, Some(&path), &reference, &plugin_options, req).await;
+    let response =
+        export_internal(&owner, &repo, Some(&path), &reference, &plugin_options, req).await;
     Json(response)
 }
 async fn export_internal(
@@ -62,7 +62,7 @@ async fn export_internal(
     path: Option<&str>,
     reference: &str,
     plugin_options_json: &str,
-    req: ExportRequest
+    req: ExportRequest,
 ) -> ExpoDoc {
     let start_time = Instant::now();
     let prep_ctx = match compiler::get_context(owner, repo, path, reference).await {

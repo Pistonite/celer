@@ -65,10 +65,7 @@ fn export_with_pack_error(error: PackError) -> ExpoDoc {
     ExpoDoc::Error(error.to_string())
 }
 
-async fn export_with_compiler(
-    compiler: Compiler<'_>,
-    req: ExportRequest,
-) -> ExpoDoc {
+async fn export_with_compiler(compiler: Compiler<'_>, req: ExportRequest) -> ExpoDoc {
     let mut comp_doc = compiler.compile().await;
     if let Some(expo_doc) = comp_doc.run_exporter(&req) {
         return expo_doc;

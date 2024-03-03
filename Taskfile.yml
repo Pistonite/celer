@@ -60,6 +60,12 @@ tasks:
     - task: client:check
     - task: themes:check
 
+  fix:ts:
+    cmds:
+    - task: docs:fix
+    - task: client:fix
+    - task: themes:fix
+
   check:rs:
     deps: [base:grammar]
     cmds:

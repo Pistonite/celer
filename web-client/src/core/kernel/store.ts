@@ -1,7 +1,14 @@
 import reduxWatch from "redux-watch";
 
 import { isRecompileNeeded } from "core/doc";
-import { AppState, AppStore, SettingsState, initStore, saveSettings, settingsSelector } from "core/store";
+import {
+    AppState,
+    AppStore,
+    SettingsState,
+    initStore,
+    saveSettings,
+    settingsSelector,
+} from "core/store";
 import { consoleKernel as console } from "low/utils";
 
 import { Kernel } from "./Kernel";
@@ -11,9 +18,7 @@ export const createAndBindStore = (kernel: Kernel): AppStore => {
     console.info("initializing store...");
     const store = initStore();
 
-    const watchSettings = reduxWatch(() =>
-        settingsSelector(store.getState()),
-    );
+    const watchSettings = reduxWatch(() => settingsSelector(store.getState()));
 
     store.subscribe(
         watchSettings((newVal: SettingsState, _oldVal: SettingsState) => {
@@ -34,4 +39,4 @@ export const createAndBindStore = (kernel: Kernel): AppStore => {
     );
 
     return store;
-}
+};

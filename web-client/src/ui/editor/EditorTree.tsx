@@ -24,7 +24,10 @@ export const EditorTree: React.FC = () => {
     /* eslint-disable react-hooks/exhaustive-deps*/
     const listDir = useCallback(
         (path: string) => {
-            return kernel.asEdit().getEditor()?.listDir(path) || Promise.resolve([]);
+            return (
+                kernel.asEdit().getEditor()?.listDir(path) ||
+                Promise.resolve([])
+            );
         },
         [serial],
     );
