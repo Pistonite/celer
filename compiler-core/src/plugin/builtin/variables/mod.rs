@@ -9,9 +9,11 @@ use crate::comp::CompDoc;
 use crate::json::Coerce;
 use crate::lang::{self, DocDiagnostic, DocRichTextBlock};
 use crate::pack::CompileContext;
-use crate::plugin::{operation, PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, PluginRuntime};
 use crate::prep::{DocTag, DocTagColor};
 use crate::prop;
+use crate::macros::async_trait;
+use crate::env::yield_budget;
 
 mod convert;
 mod transform;
@@ -274,8 +276,9 @@ impl VariablesPlugin {
     }
 }
 
+#[async_trait(auto)]
 impl PluginRuntime for VariablesPlugin {
-    fn on_before_compile(&mut self, ctx: &mut CompileContext) -> PluginResult<()> {
+    async fn on_before_compile<'p>(&mut self, ctx: &mut CompileContext<'p>) -> PluginResult<()> {
         // add the val tag if not defined already
         let tag = DocTag {
             color: Some(DocTagColor::LightDark {
@@ -292,32 +295,35 @@ impl PluginRuntime for VariablesPlugin {
         Ok(())
     }
 
-    fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
+    async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {
         comp_doc.known_props.insert(prop::VARS.to_string());
         comp_doc.known_props.insert(prop::VALS.to_string());
 
         for preface in comp_doc.preface.iter_mut() {
             for block in preface.iter_mut() {
+                yield_budget(256).await;
                 self.transform_text(&mut comp_doc.diagnostics, block, VAL);
             }
         }
-        operation::for_each_line!(line in comp_doc {
+        for line in comp_doc.lines_mut() {
+            let mut diagnostics = std::mem::take(&mut line.diagnostics);
             if let Some(vars) = line.properties.get(prop::VARS) {
-                self.update_vars(&mut line.diagnostics, vars);
+                self.update_vars(&mut diagnostics, vars);
             }
             if let Some(t) = line.counter_text.as_mut() {
                 let tag = t.text.to_string();
                 self.increment(&tag);
-                self.transform_text(&mut line.diagnostics, t, &tag);
+                self.transform_text(&mut diagnostics, t, &tag);
             }
-            operation::for_each_rich_text_except_counter!(block in line {
-                self.transform_text(&mut line.diagnostics, block, VAL);
-            });
+            for block in line.rich_texts_mut() {
+                self.transform_text(&mut diagnostics, block, VAL);
+            }
+            std::mem::swap(&mut line.diagnostics, &mut diagnostics);
             if self.expose {
                 line.properties.insert(prop::VALS.to_string(), self.get_vals());
             }
             self.clear_temporary();
-        });
+        }
 
         Ok(())
     }

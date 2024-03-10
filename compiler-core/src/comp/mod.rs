@@ -57,14 +57,14 @@ impl<'p> Compiler<'p> {
     /// Entry point for the comp phase
     pub async fn compile(mut self) -> CompDoc<'p> {
         for plugin in &mut self.plugin_runtimes {
-            if let Err(e) = plugin.on_before_compile(&mut self.ctx) {
+            if let Err(e) = plugin.on_before_compile(&mut self.ctx).await {
                 return CompDoc::from_diagnostic(CompError::PluginBeforeCompileError(e), self.ctx);
             }
         }
         let mut plugins = std::mem::take(&mut self.plugin_runtimes);
         let mut comp_doc = self.compile_document().await;
         for plugin in &mut plugins {
-            if let Err(e) = plugin.on_after_compile(&mut comp_doc) {
+            if let Err(e) = plugin.on_after_compile(&mut comp_doc).await {
                 let diag = CompError::PluginAfterCompileError(e).into_diagnostic();
                 comp_doc.diagnostics.push(diag);
             }

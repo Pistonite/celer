@@ -1,14 +1,15 @@
 //! Things to do on server boot
+use std::io::Write;
+use std::path::{Path, PathBuf};
 
-use celerc::env::{self, RefCounted};
-use celerc::macros::async_recursion;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use futures::future;
-use std::io::Write;
-use std::path::{Path, PathBuf};
 use tokio::{io, join};
 use tracing::{debug, info};
+
+use celerc::env::{self, RefCounted};
+use celerc::macros::async_recursion;
 
 /// Setup site origin in static html files
 pub async fn setup_site_origin(
@@ -39,6 +40,8 @@ async fn process_site_origin_for_path(
         let mut dir = tokio::fs::read_dir(path).await?;
         let mut futures = vec![];
         while let Some(entry) = dir.next_entry().await? {
+            let origin = origin.clone();
+            let domain = domain.clone();
             futures.push(process_site_origin_for_path(entry.path(), origin, domain));
         }
         for result in future::join_all(futures).await {

@@ -1,9 +1,8 @@
 //! Environment setup or things that depend on the execution environment (server vs WASM).
 
 use std::cell::RefCell;
+use std::fmt::Display;
 use std::ops::Deref;
-use std::sync::OnceLock;
-use std::borrow::Cow;
 
 use crate::res::Loader;
 use crate::macros::late_global;
@@ -61,6 +60,16 @@ where
     #[inline]
     fn deref(&self) -> &Self::Target {
         &self.inner
+    }
+}
+
+impl<T> Display for RefCounted<T>
+where
+    T: Display + ?Sized,
+{
+    #[inline]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
     }
 }
 

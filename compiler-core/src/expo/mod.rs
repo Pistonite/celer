@@ -113,10 +113,10 @@ macro_rules! export_error {
 }
 
 impl<'p> ExecContext<'p> {
-    pub fn prepare_exports(mut self) -> ExpoContext<'p> {
+    pub async fn prepare_exports(mut self) -> ExpoContext<'p> {
         let mut result = Vec::new();
         for plugin in &mut self.plugin_runtimes {
-            if let Ok(Some(meta)) = plugin.on_prepare_export() {
+            if let Ok(Some(meta)) = plugin.on_prepare_export().await {
                 result.extend(meta);
             }
         }
@@ -132,12 +132,12 @@ impl<'p> CompDoc<'p> {
     ///
     /// Returning `Some` means the export was successful. Returning `None` means the export is
     /// pending and needed to run in the exec phase
-    pub fn run_exporter(&mut self, req: &ExportRequest) -> Option<ExpoDoc> {
+    pub async fn run_exporter(&mut self, req: &ExportRequest) -> Option<ExpoDoc> {
         let mut plugins = std::mem::take(&mut self.plugin_runtimes);
 
         for plugin in &mut plugins {
             if req.plugin_id == plugin.get_id() {
-                let result = match plugin.on_export_comp_doc(&req.export_id, &req.payload, self) {
+                let result = match plugin.on_export_comp_doc(&req.export_id, &req.payload, self).await {
                     Ok(None) => None,
                     Ok(Some(expo_doc)) => Some(expo_doc),
                     Err(e) => Some(ExpoDoc::Error(e.to_string())),
@@ -157,13 +157,13 @@ impl<'p> CompDoc<'p> {
 
 impl<'p> ExecContext<'p> {
     /// Run the export request on this document after the exec phase
-    pub fn run_exporter(self, req: ExportRequest) -> ExpoDoc {
+    pub async fn run_exporter(self, req: ExportRequest) -> ExpoDoc {
         let mut plugins = self.plugin_runtimes;
 
         for plugin in &mut plugins {
             if req.plugin_id == plugin.get_id() {
                 let result =
-                    match plugin.on_export_exec_doc(&req.export_id, req.payload, &self.exec_doc) {
+                    match plugin.on_export_exec_doc(&req.export_id, req.payload, &self.exec_doc).await {
                         Ok(expo_doc) => expo_doc,
                         Err(e) => ExpoDoc::Error(e.to_string()),
                     };

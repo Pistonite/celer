@@ -36,7 +36,7 @@ impl PluginRuntime for SplitFormatPlugin {
         Cow::Owned(super::BuiltInPlugin::SplitFormat.id())
     }
 
-    async fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
+    async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {
         let mut tag_to_format = BTreeMap::new();
         for (tag_name, tag) in comp_doc.config.tags.iter() {
             if let Some(split_type) = &tag.split_type {
@@ -46,7 +46,7 @@ impl PluginRuntime for SplitFormatPlugin {
             }
         }
         for line in comp_doc.lines_mut() {
-            yield_budget(64);
+            yield_budget(64).await;
             let mut format = None;
             if let Some(counter) = &line.counter_text {
                 if let Some(tag) = &counter.tag {

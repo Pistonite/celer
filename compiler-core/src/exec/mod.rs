@@ -63,7 +63,7 @@ impl<'p> CompDoc<'p> {
         let plugin_metadata = std::mem::take(&mut self.plugin_meta);
         let mut exec_doc = self.execute_document().await;
         for plugin in &mut plugins {
-            if let Err(e) = plugin.on_after_execute(&mut exec_doc) {
+            if let Err(e) = plugin.on_after_execute(&mut exec_doc).await {
                 let diag = e.into_diagnostic();
                 exec_doc.diagnostics.push(diag);
             }

@@ -222,9 +222,15 @@ impl BotwAbilityUnstablePlugin {
             self.set_in_castle(x);
         }
 
+        // take diagnostics out due to borrow restrictions
+        let mut diagnostics = std::mem::take(&mut line.diagnostics);
+
         for block in line.rich_texts_mut() {
-            self.process_block(block, &gale_override, &fury_override, &mut line.diagnostics);
+            self.process_block(block, &gale_override, &fury_override, &mut diagnostics);
         }
+
+        // put diagnostics back
+        std::mem::swap(&mut line.diagnostics, &mut diagnostics);
     }
 
     fn process_block(
@@ -397,9 +403,9 @@ fn estimate_time(text: &DocRichText) -> u32 {
 
 #[async_trait(auto)]
 impl PluginRuntime for BotwAbilityUnstablePlugin {
-    async fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
+    async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {
         for line in comp_doc.lines_mut() {
-            yield_budget(64);
+            yield_budget(64).await;
             self.process_line(line);
         }
         Ok(())

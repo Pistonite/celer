@@ -18,7 +18,7 @@ pub struct LinkPlugin;
 
 #[async_trait(auto)]
 impl PluginRuntime for LinkPlugin {
-    async fn on_before_compile(&mut self, ctx: &mut CompileContext) -> PluginResult<()> {
+    async fn on_before_compile<'p>(&mut self, ctx: &mut CompileContext<'p>) -> PluginResult<()> {
         // add the link tag if not defined already
         let link_tag = DocTag {
             color: Some(DocTagColor::LightDark {
@@ -40,9 +40,9 @@ impl PluginRuntime for LinkPlugin {
         Ok(())
     }
 
-    async fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
+    async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {
         for tag in comp_doc.rich_texts_mut().with_preface().with_counter() {
-            yield_budget(256);
+            yield_budget(256).await;
             transform_link_tag(tag);
         }
 

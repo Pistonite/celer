@@ -1,7 +1,6 @@
 //! WASM environment implementation
 
-use std::{rc::Rc, sync::Mutex};
-use once_cell::unsync::OnceCell;
+use std::rc::Rc;
 
 /// Ref counted pointer. Wrapper for Rc
 #[derive(Debug)]

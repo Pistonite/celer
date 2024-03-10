@@ -30,7 +30,7 @@ pub async fn compile_document(
             error!("{message}");
             let diagnostic = DocDiagnostic::error(&message, "web-editor");
             let exec_ctx = ExecContext::from_diagnostic(diagnostic);
-            return OpaqueExpoContext::try_from(exec_ctx.prepare_exports());
+            return OpaqueExpoContext::try_from(exec_ctx.prepare_exports().await);
         }
     };
 
@@ -51,7 +51,7 @@ pub async fn compile_document(
         Err(e) => {
             let comp_doc = CompDoc::from_prep_error(e, start_time);
             let exec_context = comp_doc.execute().await;
-            return OpaqueExpoContext::try_from(exec_context.prepare_exports());
+            return OpaqueExpoContext::try_from(exec_context.prepare_exports().await);
         }
     };
     let guard = CachedContextGuard::new(prep_ctx);
@@ -88,13 +88,13 @@ async fn compile_with_pack_error(
 ) -> Result<OpaqueExpoContext, JsValue> {
     let comp_doc = CompDoc::from_diagnostic(error, context);
     let exec_ctx = comp_doc.execute().await;
-    OpaqueExpoContext::try_from(exec_ctx.prepare_exports())
+    OpaqueExpoContext::try_from(exec_ctx.prepare_exports().await)
 }
 
 async fn compile_with_compiler(compiler: Compiler<'_>) -> Result<OpaqueExpoContext, JsValue> {
     let comp_doc = compiler.compile().await;
     let exec_ctx = comp_doc.execute().await;
-    OpaqueExpoContext::try_from(exec_ctx.prepare_exports())
+    OpaqueExpoContext::try_from(exec_ctx.prepare_exports().await)
 }
 
 /// Create a context builder that corresponds to the root project.yaml

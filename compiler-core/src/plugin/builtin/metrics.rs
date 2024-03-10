@@ -53,7 +53,7 @@ impl MetricsPlugin {
 
 #[async_trait(auto)]
 impl PluginRuntime for MetricsPlugin {
-    async fn on_after_compile(&mut self, _: &mut CompDoc) -> PluginResult<()> {
+    async fn on_after_compile<'p>(&mut self, _: &mut CompDoc<'p>) -> PluginResult<()> {
         // measure time since plugin created = comp phase time
         if self.detailed {
             self.comp_time_ms = self.last_start_time.elapsed().as_millis() as u64;
@@ -61,7 +61,7 @@ impl PluginRuntime for MetricsPlugin {
         }
         Ok(())
     }
-    async fn on_after_execute(&mut self, doc: &mut ExecDoc) -> PluginResult<()> {
+    async fn on_after_execute<'p>(&mut self, doc: &mut ExecDoc<'p>) -> PluginResult<()> {
         // measure time since comp finished = exec time
         let exec_time_ms = self.last_start_time.elapsed().as_millis() as u64;
         let project = doc.project.to_mut();

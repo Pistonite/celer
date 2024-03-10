@@ -12,7 +12,6 @@ mod error;
 pub use error::*;
 mod builtin;
 mod js;
-mod operation;
 mod option;
 pub use option::*;
 mod parse;

@@ -16,6 +16,11 @@ const MAX_RESOURCE_SIZE: usize = 1024 * 1024 * 10; // 10 MB
 static LOADER: Lazy<RefCounted<ServerResourceLoader>> =
     Lazy::new(|| RefCounted::new(ServerResourceLoader::default()));
 
+pub fn setup_global_loader() {
+    info!("setting up global loader...");
+    celerc::env::global_loader::set(RefCounted::clone(&LOADER));
+}
+
 pub fn get_loader() -> RefCounted<ServerResourceLoader> {
     RefCounted::clone(&LOADER)
 }
