@@ -4,17 +4,21 @@
 
 use std::borrow::Cow;
 
+use crate::env::yield_budget;
 use crate::comp::CompDoc;
 use crate::lang::DocRichTextBlock;
 use crate::pack::CompileContext;
 use crate::prep::{DocTag, DocTagColor};
 use crate::prop;
+use crate::macros::async_trait;
 
-use crate::plugin::{operation, PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, PluginRuntime};
 
 pub struct LinkPlugin;
+
+#[async_trait(auto)]
 impl PluginRuntime for LinkPlugin {
-    fn on_before_compile(&mut self, ctx: &mut CompileContext) -> PluginResult<()> {
+    async fn on_before_compile(&mut self, ctx: &mut CompileContext) -> PluginResult<()> {
         // add the link tag if not defined already
         let link_tag = DocTag {
             color: Some(DocTagColor::LightDark {
@@ -35,20 +39,12 @@ impl PluginRuntime for LinkPlugin {
             .or_insert(link_tag);
         Ok(())
     }
-    fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
-        for preface in comp_doc.preface.iter_mut() {
-            for block in preface.iter_mut() {
-                transform_link_tag(block);
-            }
+
+    async fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
+        for tag in comp_doc.rich_texts_mut().with_preface().with_counter() {
+            yield_budget(256);
+            transform_link_tag(tag);
         }
-        operation::for_each_line!(line in comp_doc {
-            operation::for_each_rich_text_except_counter!(rich_text in line {
-                transform_link_tag(rich_text);
-            });
-            if let Some(t) = line.counter_text.as_mut() {
-                transform_link_tag(t);
-            }
-        });
 
         Ok(())
     }

@@ -18,9 +18,15 @@ config:
 The plugin provides extra configuration when exporting.
 
 ### Icons
-:::info
-Coming Soon. Currently it will give an error if `icons` is `true`
-:::
+Setting `icons: true` will export the splits with the icons.
+The icon from the document (i.e. `icon-doc`) is used, if the icon from the
+document is different from the one from the map.
+
+Currently, Webp icons are not supported by LiveSplit. The plugin will give
+and error if webp icons are used in splits if icons are enabled.
+You can set `webp-compat: skip` in the export configuration to skip those icons.
+If you want to use a webp icon, you could convert it to a PNG or GIF with image
+editing software or online tools.
 
 ### Subsplits
 Setting `subsplits: true` in the option will divide the splits into subsplits

@@ -30,6 +30,8 @@ mod comp_section;
 pub use comp_section::*;
 mod comp_line;
 pub use comp_line::*;
+mod iterator;
+pub use iterator::*;
 
 #[cfg(test)]
 mod test_utils;

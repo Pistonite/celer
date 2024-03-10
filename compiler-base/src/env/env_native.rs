@@ -1,6 +1,7 @@
 //! Native environment implementation
 
 use std::sync::Arc;
+use std::sync::OnceLock;
 
 /// Ref counted pointer, wrapper for Arc
 #[derive(Debug)]
@@ -45,6 +46,16 @@ impl From<&str> for RefCounted<str> {
 impl<T> From<Vec<T>> for RefCounted<[T]> {
     #[inline]
     fn from(v: Vec<T>) -> Self {
+        Self {
+            inner: Arc::from(v),
+        }
+    }
+}
+
+impl<T> From<Box<T>> for RefCounted<T> 
+    where T: ?Sized {
+    #[inline]
+    fn from(v: Box<T>) -> Self {
         Self {
             inner: Arc::from(v),
         }

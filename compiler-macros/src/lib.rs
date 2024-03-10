@@ -111,3 +111,20 @@ pub fn derive_opaque(attr: TokenStream, input: TokenStream) -> TokenStream {
     derive_opaque_impl::expand(attr, input)
 }
 mod derive_opaque_impl;
+
+/// A wrapper to put globals that are not `Send + Sync` in a `thread_local!` wrapper
+/// when feature = "wasm"
+///
+/// # Example
+/// ```ignore
+/// #[late_global(String)]
+/// mod my_global;
+///
+/// my_global::set("hello".to_string());
+/// my_global::get(); // returns Option<&String>
+/// ```
+#[proc_macro_attribute]
+pub fn late_global(attr: TokenStream, input: TokenStream) -> TokenStream {
+    late_global_impl::expand(attr, input)
+}
+mod late_global_impl;

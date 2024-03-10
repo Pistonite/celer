@@ -1,6 +1,7 @@
 //! WASM environment implementation
 
-use std::rc::Rc;
+use std::{rc::Rc, sync::Mutex};
+use once_cell::unsync::OnceCell;
 
 /// Ref counted pointer. Wrapper for Rc
 #[derive(Debug)]
@@ -44,6 +45,17 @@ impl<T> From<Vec<T>> for RefCounted<[T]> {
     #[inline]
     fn from(v: Vec<T>) -> Self {
         Self { inner: Rc::from(v) }
+    }
+}
+
+impl<T> From<Box<T>> for RefCounted<T>
+    where T: ?Sized
+{
+    #[inline]
+    fn from(v: Box<T>) -> Self {
+        Self {
+            inner: Rc::from(v),
+        }
     }
 }
 

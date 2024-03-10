@@ -9,16 +9,18 @@ use crate::comp::{CompDoc, CompLine};
 use crate::expo::{ExpoBlob, ExpoDoc, ExportIcon, ExportMetadata};
 use crate::json::Coerce;
 use crate::plugin::{PluginResult, PluginRuntime};
+use crate::macros::async_trait;
 use crate::{export_error, util};
 
 pub struct ExportLiveSplitPlugin;
 
+#[async_trait(auto)]
 impl PluginRuntime for ExportLiveSplitPlugin {
     fn get_id(&self) -> Cow<'static, str> {
         Cow::Owned(super::BuiltInPlugin::ExportLiveSplit.id())
     }
 
-    fn on_prepare_export(&mut self) -> PluginResult<Option<Vec<ExportMetadata>>> {
+    async fn on_prepare_export(&mut self) -> PluginResult<Option<Vec<ExportMetadata>>> {
         let metadata = ExportMetadata {
             plugin_id: self.get_id().into_owned(),
             name: "LiveSplit".to_string(),
@@ -32,11 +34,11 @@ impl PluginRuntime for ExportLiveSplitPlugin {
         Ok(Some(vec![metadata]))
     }
 
-    fn on_export_comp_doc(
+    async fn on_export_comp_doc<'p>(
         &mut self,
         _: &str,
         payload: &Value,
-        doc: &CompDoc,
+        doc: &CompDoc<'p>,
     ) -> PluginResult<Option<ExpoDoc>> {
         let payload = match payload.as_object() {
             Some(payload) => payload,

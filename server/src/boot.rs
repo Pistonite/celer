@@ -1,6 +1,6 @@
 //! Things to do on server boot
 
-use celerc::env;
+use celerc::env::{self, RefCounted};
 use celerc::macros::async_recursion;
 use flate2::write::GzEncoder;
 use flate2::Compression;
@@ -17,12 +17,11 @@ pub async fn setup_site_origin(
     origin: &str,
 ) -> io::Result<()> {
     debug!("setting up site origin to {origin}");
-    env::init_site_origin(origin.to_string())
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
-    let origin = env::get_site_origin();
-    let domain = env::get_site_domain();
+    env::site::set_origin(origin);
+    let origin = env::site::get_origin();
+    let domain = env::site::get_domain();
     let (r1, r2) = join!(
-        process_site_origin_for_path(docs_dir, origin, domain),
+        process_site_origin_for_path(docs_dir, origin.clone(), domain.clone()),
         process_site_origin_for_path(app_dir, origin, domain)
     );
     r1?;
@@ -33,8 +32,8 @@ pub async fn setup_site_origin(
 #[async_recursion]
 async fn process_site_origin_for_path(
     path: PathBuf,
-    origin: &'static str,
-    domain: &'static str,
+    origin: RefCounted<str>,
+    domain: RefCounted<str>,
 ) -> io::Result<()> {
     if path.is_dir() {
         let mut dir = tokio::fs::read_dir(path).await?;
@@ -45,12 +44,15 @@ async fn process_site_origin_for_path(
         for result in future::join_all(futures).await {
             result?;
         }
-    } else if path
+        return Ok(());
+    } 
+
+    if path
         .extension()
         .map(|ext| ext == "html" || ext == "js" || ext == "css")
         .unwrap_or(false)
     {
-        process_site_origin_in_file(path.as_ref(), origin, domain).await?;
+        process_site_origin_in_file(path.as_ref(), &origin, &domain).await?;
     }
     Ok(())
 }

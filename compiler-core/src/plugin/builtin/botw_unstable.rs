@@ -7,7 +7,9 @@ use serde_json::Value;
 use crate::comp::{CompDoc, CompLine, CompMovement};
 use crate::json::Coerce;
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
-use crate::plugin::{operation, PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, PluginRuntime};
+use crate::env::yield_budget;
+use crate::macros::async_trait;
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";
@@ -220,9 +222,9 @@ impl BotwAbilityUnstablePlugin {
             self.set_in_castle(x);
         }
 
-        operation::for_each_rich_text_except_counter!(block in line {
+        for block in line.rich_texts_mut() {
             self.process_block(block, &gale_override, &fury_override, &mut line.diagnostics);
-        });
+        }
     }
 
     fn process_block(
@@ -393,11 +395,13 @@ fn estimate_time(text: &DocRichText) -> u32 {
     movement_count * 14 + 6 // (approximately) same timing as old celer
 }
 
+#[async_trait(auto)]
 impl PluginRuntime for BotwAbilityUnstablePlugin {
-    fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
-        operation::for_each_line!(line in comp_doc {
+    async fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
+        for line in comp_doc.lines_mut() {
+            yield_budget(64);
             self.process_line(line);
-        });
+        }
         Ok(())
     }
 
