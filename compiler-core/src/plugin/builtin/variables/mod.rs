@@ -6,14 +6,14 @@ use std::collections::HashMap;
 use serde_json::{json, Map, Value};
 
 use crate::comp::CompDoc;
+use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::lang::{self, DocDiagnostic, DocRichTextBlock};
+use crate::macros::async_trait;
 use crate::pack::CompileContext;
 use crate::plugin::{PluginResult, PluginRuntime};
 use crate::prep::{DocTag, DocTagColor};
 use crate::prop;
-use crate::macros::async_trait;
-use crate::env::yield_budget;
 
 mod convert;
 mod transform;
@@ -320,7 +320,8 @@ impl PluginRuntime for VariablesPlugin {
             }
             std::mem::swap(&mut line.diagnostics, &mut diagnostics);
             if self.expose {
-                line.properties.insert(prop::VALS.to_string(), self.get_vals());
+                line.properties
+                    .insert(prop::VALS.to_string(), self.get_vals());
             }
             self.clear_temporary();
         }

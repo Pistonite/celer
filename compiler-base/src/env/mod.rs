@@ -4,8 +4,8 @@ use std::cell::RefCell;
 use std::fmt::Display;
 use std::ops::Deref;
 
-use crate::res::Loader;
 use crate::macros::late_global;
+use crate::res::Loader;
 
 #[cfg(feature = "wasm")]
 pub mod env_wasm;
@@ -41,7 +41,7 @@ pub mod site {
             None => match origin.strip_prefix("http://") {
                 Some(domain) => RefCounted::from(domain),
                 None => origin,
-            }
+            },
         }
     }
 }

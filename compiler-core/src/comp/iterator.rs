@@ -12,7 +12,9 @@ impl<'p> CompDoc<'p> {
 
     /// Iterate over each CompLine of the CompDoc
     pub fn lines_mut(&mut self) -> impl Iterator<Item = &mut CompLine> {
-        self.route.iter_mut().flat_map(|section| section.lines.iter_mut())
+        self.route
+            .iter_mut()
+            .flat_map(|section| section.lines.iter_mut())
     }
 
     /// Iterate over each DocRichText of the CompDoc.
@@ -72,10 +74,10 @@ pub struct LineRichTextIterMut<'c> {
 
 impl<'c, 'p> RichTextIter<'c, 'p> {
     pub fn new(doc: &'c CompDoc<'p>) -> Self {
-        Self { 
-            doc, 
+        Self {
+            doc,
             with_preface: false,
-            with_counter: false 
+            with_counter: false,
         }
     }
     pub fn with_preface(mut self) -> Self {
@@ -89,8 +91,8 @@ impl<'c, 'p> RichTextIter<'c, 'p> {
 }
 impl<'c, 'p> RichTextIterMut<'c, 'p> {
     pub fn new(doc: &'c mut CompDoc<'p>) -> Self {
-        Self { 
-            doc, 
+        Self {
+            doc,
             with_preface: false,
             with_counter: false,
         }
@@ -106,9 +108,9 @@ impl<'c, 'p> RichTextIterMut<'c, 'p> {
 }
 impl<'c> LineRichTextIter<'c> {
     pub fn new(line: &'c CompLine) -> Self {
-        Self { 
-            line, 
-            with_counter: false 
+        Self {
+            line,
+            with_counter: false,
         }
     }
     pub fn with_counter(mut self) -> Self {
@@ -118,9 +120,9 @@ impl<'c> LineRichTextIter<'c> {
 }
 impl<'c> LineRichTextIterMut<'c> {
     pub fn new(line: &'c mut CompLine) -> Self {
-        Self { 
-            line, 
-            with_counter: false 
+        Self {
+            line,
+            with_counter: false,
         }
     }
     pub fn with_counter(mut self) -> Self {
@@ -129,15 +131,15 @@ impl<'c> LineRichTextIterMut<'c> {
     }
 }
 
-impl<'c, 'p> IntoIterator for RichTextIter<'c, 'p> 
-{
+impl<'c, 'p> IntoIterator for RichTextIter<'c, 'p> {
     type Item = &'c DocRichTextBlock;
     type IntoIter = DynIter<'c, Self::Item>;
     fn into_iter(self) -> Self::IntoIter {
         let iter = self.doc.route.iter().flat_map(move |section| {
-            section.lines.iter().flat_map(move |line| {
-                rich_text_iter(line, self.with_counter)
-            })
+            section
+                .lines
+                .iter()
+                .flat_map(move |line| rich_text_iter(line, self.with_counter))
         });
         if self.with_preface {
             let preface_iter = self.doc.preface.iter().flat_map(|text| text.iter());
@@ -146,15 +148,15 @@ impl<'c, 'p> IntoIterator for RichTextIter<'c, 'p>
         DynIter::new(iter)
     }
 }
-impl<'c, 'p> IntoIterator for RichTextIterMut<'c, 'p> 
-{
+impl<'c, 'p> IntoIterator for RichTextIterMut<'c, 'p> {
     type Item = &'c mut DocRichTextBlock;
     type IntoIter = DynIter<'c, Self::Item>;
     fn into_iter(self) -> Self::IntoIter {
         let iter = self.doc.route.iter_mut().flat_map(move |section| {
-            section.lines.iter_mut().flat_map(move |line| {
-                rich_text_iter_mut(line, self.with_counter)
-            })
+            section
+                .lines
+                .iter_mut()
+                .flat_map(move |line| rich_text_iter_mut(line, self.with_counter))
         });
         if self.with_preface {
             let preface_iter = self.doc.preface.iter_mut().flat_map(|text| text.iter_mut());
@@ -163,8 +165,7 @@ impl<'c, 'p> IntoIterator for RichTextIterMut<'c, 'p>
         DynIter::new(iter)
     }
 }
-impl<'c> IntoIterator for LineRichTextIter<'c> 
-{
+impl<'c> IntoIterator for LineRichTextIter<'c> {
     type Item = &'c DocRichTextBlock;
     type IntoIter = DynIter<'c, Self::Item>;
     fn into_iter(self) -> Self::IntoIter {
@@ -172,8 +173,7 @@ impl<'c> IntoIterator for LineRichTextIter<'c>
         DynIter::new(iter)
     }
 }
-impl<'c> IntoIterator for LineRichTextIterMut<'c> 
-{
+impl<'c> IntoIterator for LineRichTextIterMut<'c> {
     type Item = &'c mut DocRichTextBlock;
     type IntoIter = DynIter<'c, Self::Item>;
     fn into_iter(self) -> Self::IntoIter {
@@ -182,14 +182,14 @@ impl<'c> IntoIterator for LineRichTextIterMut<'c>
     }
 }
 
-fn rich_text_iter<'c>(line: &'c CompLine, with_counter: bool) -> impl Iterator<Item = &'c DocRichTextBlock> {
-    let iter = line.text.iter()
+fn rich_text_iter(line: &CompLine, with_counter: bool) -> impl Iterator<Item = &DocRichTextBlock> {
+    let iter = line
+        .text
+        .iter()
         .chain(line.secondary_text.iter())
-        .chain(line.notes.iter().flat_map(|note| {
-            match note {
-                DocNote::Text { content } => DynIter::new(content.iter()),
-                _ => DynIter::new(std::iter::empty())
-            }
+        .chain(line.notes.iter().flat_map(|note| match note {
+            DocNote::Text { content } => DynIter::new(content.iter()),
+            _ => DynIter::new(std::iter::empty()),
         }))
         .chain({
             if !with_counter {
@@ -211,14 +211,17 @@ fn rich_text_iter<'c>(line: &'c CompLine, with_counter: bool) -> impl Iterator<I
     iter
 }
 
-fn rich_text_iter_mut<'c>(line: &'c mut CompLine, with_counter: bool) -> impl Iterator<Item = &'c mut DocRichTextBlock> {
-    let iter = line.text.iter_mut()
+fn rich_text_iter_mut(
+    line: &mut CompLine,
+    with_counter: bool,
+) -> impl Iterator<Item = &mut DocRichTextBlock> {
+    let iter = line
+        .text
+        .iter_mut()
         .chain(line.secondary_text.iter_mut())
-        .chain(line.notes.iter_mut().flat_map(|note| {
-            match note {
-                DocNote::Text { content } => DynIter::new(content.iter_mut()),
-                _ => DynIter::new(std::iter::empty())
-            }
+        .chain(line.notes.iter_mut().flat_map(|note| match note {
+            DocNote::Text { content } => DynIter::new(content.iter_mut()),
+            _ => DynIter::new(std::iter::empty()),
         }))
         .chain({
             if !with_counter {
@@ -240,11 +243,15 @@ fn rich_text_iter_mut<'c>(line: &'c mut CompLine, with_counter: bool) -> impl It
     iter
 }
 
-pub struct DynIter<'c, T>(Box<dyn Iterator<Item = T> + 'c + Send + Sync>) where T: 'c;
+pub struct DynIter<'c, T>(Box<dyn Iterator<Item = T> + 'c + Send + Sync>)
+where
+    T: 'c;
 
 impl<'c, T> DynIter<'c, T> {
     fn new<I>(iter: I) -> Self
-        where I: Iterator<Item = T> + 'c + Send + Sync {
+    where
+        I: Iterator<Item = T> + 'c + Send + Sync,
+    {
         Self(Box::new(iter))
     }
 }

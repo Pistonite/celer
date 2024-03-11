@@ -8,11 +8,11 @@ use std::collections::BTreeMap;
 use serde_json::Value;
 
 use crate::comp::{CompDoc, CompLine};
+use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::lang::{self, DocRichText};
-use crate::plugin::{PluginResult, PluginRuntime};
 use crate::macros::async_trait;
-use crate::env::yield_budget;
+use crate::plugin::{PluginResult, PluginRuntime};
 
 pub struct SplitFormatPlugin {
     formats: BTreeMap<String, DocRichText>,

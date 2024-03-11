@@ -4,13 +4,13 @@
 
 use std::borrow::Cow;
 
-use crate::env::yield_budget;
 use crate::comp::CompDoc;
+use crate::env::yield_budget;
 use crate::lang::DocRichTextBlock;
+use crate::macros::async_trait;
 use crate::pack::CompileContext;
 use crate::prep::{DocTag, DocTagColor};
 use crate::prop;
-use crate::macros::async_trait;
 
 use crate::plugin::{PluginResult, PluginRuntime};
 

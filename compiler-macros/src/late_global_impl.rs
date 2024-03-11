@@ -1,6 +1,5 @@
 //! Implementation for expanding `late_global`
 
-
 use proc_macro::TokenStream;
 use syn::ItemMod;
 
@@ -15,20 +14,25 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> TokenStream {
 
     let vis = &parsed_mod.vis;
     let name = &parsed_mod.ident;
-    let attrs = parsed_mod.attrs.into_iter().map(|attr| {
-        quote::quote! {
-            #attr
-        }
-    }).collect::<TokenStream2>();
+    let attrs = parsed_mod
+        .attrs
+        .into_iter()
+        .map(|attr| {
+            quote::quote! {
+                #attr
+            }
+        })
+        .collect::<TokenStream2>();
 
     let content = match parsed_mod.content {
-        Some((_, content)) => {
-            content.into_iter().map(|item| {
+        Some((_, content)) => content
+            .into_iter()
+            .map(|item| {
                 quote::quote! {
                     #item
                 }
-            }).collect::<TokenStream2>()
-        }
+            })
+            .collect::<TokenStream2>(),
         None => quote::quote!(),
     };
 
@@ -44,7 +48,7 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> TokenStream {
             static GLOBAL: std::sync::OnceLock<RefCounted<#typ>> = std::sync::OnceLock::new();
             #[cfg(not(feature = "wasm"))]
             /// Get the late global value
-            pub fn get() -> Option<RefCounted<#typ>> { 
+            pub fn get() -> Option<RefCounted<#typ>> {
                 GLOBAL.get().map(RefCounted::clone)
             }
             #[cfg(not(feature = "wasm"))]
@@ -57,12 +61,12 @@ pub fn expand(attr: TokenStream, input: TokenStream) -> TokenStream {
             }
             #[cfg(feature = "wasm")]
             /// Get the late global value (cloned)
-            pub fn get() -> Option<RefCounted<#typ>> { 
+            pub fn get() -> Option<RefCounted<#typ>> {
                 GLOBAL.with(|cell| cell.get().map(RefCounted::clone))
             }
             #[cfg(feature = "wasm")]
             /// Set the late global value
-            pub fn set(val: RefCounted<#typ>) -> Result<(), RefCounted<#typ>> { 
+            pub fn set(val: RefCounted<#typ>) -> Result<(), RefCounted<#typ>> {
                 GLOBAL.with(|cell| cell.set(val))
             }
             #content

@@ -6,8 +6,8 @@ use serde_json::Value;
 use crate::comp::CompDoc;
 use crate::exec::ExecDoc;
 use crate::json::Coerce;
-use crate::prop;
 use crate::macros::async_trait;
+use crate::prop;
 
 use crate::plugin::{PluginResult, PluginRuntime};
 

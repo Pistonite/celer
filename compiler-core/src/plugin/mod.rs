@@ -5,7 +5,7 @@ use serde_json::Value;
 use crate::comp::CompDoc;
 use crate::exec::ExecDoc;
 use crate::expo::{ExpoDoc, ExportMetadata};
-use crate::macros::{derive_wasm, async_trait};
+use crate::macros::{async_trait, derive_wasm};
 use crate::pack::CompileContext;
 
 mod error;

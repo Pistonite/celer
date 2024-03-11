@@ -51,8 +51,10 @@ impl<T> From<Vec<T>> for RefCounted<[T]> {
     }
 }
 
-impl<T> From<Box<T>> for RefCounted<T> 
-    where T: ?Sized {
+impl<T> From<Box<T>> for RefCounted<T>
+where
+    T: ?Sized,
+{
     #[inline]
     fn from(v: Box<T>) -> Self {
         Self {

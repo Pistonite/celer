@@ -137,7 +137,10 @@ impl<'p> CompDoc<'p> {
 
         for plugin in &mut plugins {
             if req.plugin_id == plugin.get_id() {
-                let result = match plugin.on_export_comp_doc(&req.export_id, &req.payload, self).await {
+                let result = match plugin
+                    .on_export_comp_doc(&req.export_id, &req.payload, self)
+                    .await
+                {
                     Ok(None) => None,
                     Ok(Some(expo_doc)) => Some(expo_doc),
                     Err(e) => Some(ExpoDoc::Error(e.to_string())),
@@ -162,11 +165,13 @@ impl<'p> ExecContext<'p> {
 
         for plugin in &mut plugins {
             if req.plugin_id == plugin.get_id() {
-                let result =
-                    match plugin.on_export_exec_doc(&req.export_id, req.payload, &self.exec_doc).await {
-                        Ok(expo_doc) => expo_doc,
-                        Err(e) => ExpoDoc::Error(e.to_string()),
-                    };
+                let result = match plugin
+                    .on_export_exec_doc(&req.export_id, req.payload, &self.exec_doc)
+                    .await
+                {
+                    Ok(expo_doc) => expo_doc,
+                    Err(e) => ExpoDoc::Error(e.to_string()),
+                };
                 return result;
             }
         }

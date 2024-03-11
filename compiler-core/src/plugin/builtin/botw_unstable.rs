@@ -5,11 +5,11 @@ use std::borrow::Cow;
 use serde_json::Value;
 
 use crate::comp::{CompDoc, CompLine, CompMovement};
+use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
-use crate::plugin::{PluginResult, PluginRuntime};
-use crate::env::yield_budget;
 use crate::macros::async_trait;
+use crate::plugin::{PluginResult, PluginRuntime};
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";

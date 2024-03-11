@@ -33,7 +33,6 @@ pub fn init(
     let loader: Box<dyn Loader> = Box::new(LoaderInWasm);
     let _ = celerc::env::global_loader::set(RefCounted::from(loader));
 
-
     info!("compiler initialized");
 }
 

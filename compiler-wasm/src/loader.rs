@@ -76,7 +76,6 @@ pub async fn load_url(url: &str) -> ResResult<Vec<u8>> {
         return Ok(data);
     }
 
-
     // this is essentially try { Ok(await load_url(url)) } catch (e) { Err(e) }
     let result = async {
         LOAD_URL

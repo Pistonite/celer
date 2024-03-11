@@ -48,7 +48,7 @@ async fn process_site_origin_for_path(
             result?;
         }
         return Ok(());
-    } 
+    }
 
     if path
         .extension()

@@ -20,7 +20,6 @@ pub enum DataUrlParseError {
     NoData,
     #[error("Error decoding base64 from data url: {0}")]
     InvalidBase64(#[from] base64::DecodeError),
-    
 }
 
 /// Decode data url to bytes. Supports base64 and URL encoding.

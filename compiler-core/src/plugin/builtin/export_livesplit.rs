@@ -7,12 +7,12 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::comp::{CompDoc, CompLine, CompSection};
+use crate::env::{self, yield_budget, RefCounted};
 use crate::expo::{ExpoBlob, ExpoDoc, ExportIcon, ExportMetadata};
-use crate::json::Coerce;
-use crate::plugin::{PluginResult, PluginRuntime};
-use crate::macros::async_trait;
 use crate::export_error;
-use crate::env::{self, RefCounted, yield_budget};
+use crate::json::Coerce;
+use crate::macros::async_trait;
+use crate::plugin::{PluginResult, PluginRuntime};
 use crate::res::ResPath;
 
 pub struct ExportLiveSplitPlugin;
@@ -86,7 +86,7 @@ impl PluginRuntime for ExportLiveSplitPlugin {
         // build lines to split
         let mut split_sections = Vec::with_capacity(doc.route.len());
         for section in &doc.route {
-            let mut split_lines= vec![];
+            let mut split_lines = vec![];
             for line in &section.lines {
                 yield_budget(64).await;
                 if should_split_on(line, &split_types) {
@@ -162,7 +162,7 @@ fn should_split_on(line: &CompLine, split_types: &BTreeSet<String>) -> bool {
 }
 
 async fn build_icon_cache(
-    doc: &CompDoc<'_>, 
+    doc: &CompDoc<'_>,
     split_sections: &[(&CompSection, Vec<&CompLine>)],
     webp_compat: WebpCompat,
 ) -> Result<BTreeMap<String, Vec<u8>>, String> {
@@ -179,7 +179,11 @@ async fn build_icon_cache(
                 continue;
             }
             if let Some(icon_url) = doc.config.icons.get(icon_id) {
-                icon_futures.push(load_icon(icon_id.to_string(), icon_url.to_string(), webp_compat))
+                icon_futures.push(load_icon(
+                    icon_id.to_string(),
+                    icon_url.to_string(),
+                    webp_compat,
+                ))
             }
         }
     }
@@ -189,18 +193,16 @@ async fn build_icon_cache(
         match result {
             Ok(Ok((id, bytes))) => {
                 cache.insert(id, bytes.to_vec());
-            },
-            Ok(Err(e)) | Err(e) => {
-                return Err(e)
-            },
+            }
+            Ok(Err(e)) | Err(e) => return Err(e),
         }
     }
     Ok(cache)
 }
 
 fn create_segment(
-    line: &CompLine, 
-    name: &str, 
+    line: &CompLine,
+    name: &str,
     include_icon: bool,
     icon_cache: &BTreeMap<String, Vec<u8>>,
 ) -> livesplit_core::Segment {
@@ -223,12 +225,20 @@ enum WebpCompat {
     /// Emit error. This is the default
     Error,
     /// Skip the icon
-    Skip
+    Skip,
 }
 
-async fn load_icon(icon_id: String, icon_url: String, webp_compat: WebpCompat) -> Result<(String, RefCounted<[u8]>), String> {
+async fn load_icon(
+    icon_id: String,
+    icon_url: String,
+    webp_compat: WebpCompat,
+) -> Result<(String, RefCounted<[u8]>), String> {
     let loader = match env::global_loader::get() {
-        None => return Err("No global loader available to load the icons for split export!".to_string()),
+        None => {
+            return Err(
+                "No global loader available to load the icons for split export!".to_string(),
+            )
+        }
         Some(loader) => loader,
     };
 
@@ -240,7 +250,7 @@ async fn load_icon(icon_id: String, icon_url: String, webp_compat: WebpCompat) -
 
     if data.starts_with(b"RIFF") {
         if let WebpCompat::Error = webp_compat {
-            return Err(format!("Failed to load icon `{icon_url}`: RIFF (webp) icons are not supported by LiveSplit. Set the option `webp-compat: skip` to skip invalid webp icons."))
+            return Err(format!("Failed to load icon `{icon_url}`: RIFF (webp) icons are not supported by LiveSplit. Set the option `webp-compat: skip` to skip invalid webp icons."));
         }
     }
 
