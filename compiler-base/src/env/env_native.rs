@@ -73,13 +73,15 @@ pub use tokio::join as join_futures;
 /// Spawn futures and collect the results in a vec in the same order
 pub async fn join_future_vec<TFuture>(v: Vec<TFuture>) -> Vec<Result<TFuture::Output, String>>
 where
-    TFuture: std::future::Future,
+    TFuture: std::future::Future + Send + 'static,
+    TFuture::Output: Send + 'static,
 {
-    let mut handles = Vec::with_capacity(v.len());
+    let len = v.len();
+    let mut handles = Vec::with_capacity(len);
     for future in v {
         handles.push(tokio::spawn(future));
     }
-    let mut results = Vec::with_capacity(v.len());
+    let mut results = Vec::with_capacity(len);
     for handle in handles {
         match handle.await {
             Ok(res) => results.push(Ok(res)),
