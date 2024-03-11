@@ -69,3 +69,22 @@ pub async fn yield_budget(limit: u32) {
 
 /// Wait for multiple futures to complete
 pub use tokio::join as join_futures;
+
+/// Spawn futures and collect the results in a vec in the same order
+pub async fn join_future_vec<TFuture>(v: Vec<TFuture>) -> Vec<Result<TFuture::Output, String>>
+where
+    TFuture: std::future::Future,
+{
+    let mut handles = Vec::with_capacity(v.len());
+    for future in v {
+        handles.push(tokio::spawn(future));
+    }
+    let mut results = Vec::with_capacity(v.len());
+    for handle in handles {
+        match handle.await {
+            Ok(res) => results.push(Ok(res)),
+            Err(e) => results.push(Err(e.to_string())),
+        }
+    }
+    results
+}

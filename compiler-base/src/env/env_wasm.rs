@@ -99,3 +99,17 @@ macro_rules! join_futures {
     };
 }
 pub use join_futures;
+
+/// Spawn futures and collect the results in a vec in the same order
+pub async fn join_future_vec<TFuture>(v: Vec<TFuture>) -> Vec<Result<TFuture::Output, String>>
+where
+    TFuture: std::future::Future,
+{
+    // on wasm, since there is only one thread
+    // we will just run the futures sequentially
+    let mut results = Vec::with_capacity(v.len());
+    for f in v {
+        results.push(Ok(f.await));
+    }
+    results
+}

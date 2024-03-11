@@ -21,7 +21,7 @@ pub enum ResPath<'u> {
     /// Local path, represented as a relative path from the "root"
     /// (i.e. without the leading "/")
     Local(PathBuf),
-    /// Remote path, represented as a URL prefix (with a trailing "/")
+    /// Remote path, represented as a URL prefix (empty, or ends with a trailing "/")
     /// and a relative path (without the leading "/")
     Remote(Cow<'u, str>, PathBuf),
 }
@@ -68,9 +68,11 @@ impl<'u> ResPath<'u> {
         P: Into<PathBuf>,
     {
         let url = url.into();
-        debug_assert!(url.ends_with('/'));
+        debug_assert!(url.is_empty() || url.ends_with('/'));
         let path = path.into();
-        debug_assert!(path.is_relative());
+        if !url.is_empty() {
+            debug_assert!(path.is_relative());
+        }
 
         Self::Remote(url, path)
     }

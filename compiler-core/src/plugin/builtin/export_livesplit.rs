@@ -1,8 +1,9 @@
 //! Exporter plugin for LiveSplit split files
 
 use std::borrow::Cow;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::comp::{CompDoc, CompLine};
@@ -11,6 +12,8 @@ use crate::json::Coerce;
 use crate::plugin::{PluginResult, PluginRuntime};
 use crate::macros::async_trait;
 use crate::{export_error, util};
+use crate::env::{self, RefCounted};
+use crate::res::{Loader, ResPath};
 
 pub struct ExportLiveSplitPlugin;
 
@@ -52,11 +55,10 @@ impl PluginRuntime for ExportLiveSplitPlugin {
             .get("subsplits")
             .map(|x| x.coerce_truthy())
             .unwrap_or(false);
-
-        // TODO #190: encode icon
-        if icon {
-            return export_error!("Icon export is not supported yet.");
-        }
+        let webp_compat = match payload.get("webp-compat") {
+            None => WebpCompat::Error,
+            Some(x) => serde_json::from_value(x.clone()).unwrap_or(WebpCompat::Error),
+        };
 
         // build relevant split types
         let mut split_types = BTreeSet::new();
@@ -81,7 +83,8 @@ impl PluginRuntime for ExportLiveSplitPlugin {
             return export_error!("No splits to export. Make sure you selected at least one split type in the settings.");
         }
 
-        let mut segments_xml = String::new();
+        let mut segments = vec![];
+
         for section in &doc.route {
             let mut split_lines = vec![];
             for line in &section.lines {
@@ -173,4 +176,60 @@ fn append_segment(output: &mut String, name: &str, _line: &CompLine) {
         <SegmentHistory />\
     </Segment>",
     );
+}
+
+async fn create_segment(
+    doc: &CompDoc<'_>, 
+    line: &CompLine, 
+    name: &str, 
+    include_icon: bool,
+    webp_compat: WebpCompat,
+    icon_cache: &mut BTreeMap<String, Vec<u8>>,
+) -> Result<livesplit_core::Segment, String> {
+    let mut segment = livesplit_core::Segment::new(name);
+    if include_icon {
+        if let Some(icon_id) = &line.doc_icon {
+            if let Some(icon_bytes) = icon_cache.get(icon_id) {
+                segment.set_icon(icon_bytes);
+            } else if let Some(icon_url) = doc.config.icons.get(icon_id) {
+                let icon_bytes = load_icon(icon_url, webp_compat).await?;
+                let icon_bytes: &[u8] = &*icon_bytes;
+                segment.set_icon(icon_bytes);
+                icon_cache.insert(icon_id.to_string(), icon_bytes.to_vec());
+            }
+        }
+    }
+
+    Ok(segment)
+}
+
+/// Compability mode for WebP
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+enum WebpCompat {
+    /// Emit error. This is the default
+    Error,
+    /// Skip the icon
+    Skip
+}
+
+async fn load_icon(icon_url: &str, webp_compat: WebpCompat) -> Result<RefCounted<[u8]>, String> {
+    let loader = match env::global_loader::get() {
+        None => return Err("No global loader available to load the icons for split export!".to_string()),
+        Some(loader) => loader,
+    };
+
+    let path = ResPath::new_remote_unchecked("", icon_url);
+    let data = match loader.load_raw(&path).await {
+        Ok(data) => data,
+        Err(e) => return Err(format!("Failed to load icon: {e}")),
+    };
+
+    if data.starts_with(b"RIFF") {
+        if let WebpCompat::Error = webp_compat {
+            return Err("RIFF (webp) icons are not supported by LiveSplit. Set the option `webp-compat: skip` to skip invalid webp icons.".to_string())
+        }
+    }
+
+    Ok(data)
 }
