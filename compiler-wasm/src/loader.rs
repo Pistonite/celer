@@ -5,6 +5,7 @@
 
 use std::cell::RefCell;
 
+use celerc::util;
 use js_sys::{Array, Function, Reflect, Uint8Array};
 use log::info;
 use wasm_bindgen::prelude::*;
@@ -62,6 +63,20 @@ impl Loader for LoaderInWasm {
 }
 
 pub async fn load_url(url: &str) -> ResResult<Vec<u8>> {
+    if url.starts_with("data:") {
+        let data = match util::bytes_from_data_url(url) {
+            Ok(data) => data.into_owned(),
+            Err(e) => {
+                return Err(ResError::FailToLoadUrl(
+                    url.to_string(),
+                    format!("Failed to parse data URL: {e}"),
+                ));
+            }
+        };
+        return Ok(data);
+    }
+
+
     // this is essentially try { Ok(await load_url(url)) } catch (e) { Err(e) }
     let result = async {
         LOAD_URL

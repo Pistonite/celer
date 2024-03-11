@@ -1,7 +1,6 @@
 //! Native environment implementation
 
 use std::sync::Arc;
-use std::sync::OnceLock;
 
 /// Ref counted pointer, wrapper for Arc
 #[derive(Debug)]

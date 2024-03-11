@@ -18,7 +18,10 @@ static LOADER: Lazy<RefCounted<ServerResourceLoader>> =
 
 pub fn setup_global_loader() {
     info!("setting up global loader...");
-    celerc::env::global_loader::set(RefCounted::clone(&LOADER));
+    let loader: Box<dyn Loader> = Box::new(ServerResourceLoader::default());
+    if celerc::env::global_loader::set(RefCounted::from(loader)).is_err() {
+        error!("failed to set global loader because it is already set!");
+    }
 }
 
 pub fn get_loader() -> RefCounted<ServerResourceLoader> {
@@ -43,12 +46,31 @@ impl ServerResourceLoader {
         let cache = Mutex::new(TimedSizedCache::with_size_and_lifespan(128, 301));
         Self { http_client, cache }
     }
-    /// Load a resource from Url or cache. On error, returns an additional should_retry flag.
+    /// Load a resource from Url or cache. 
+    ///
+    /// On error, returns an additional should_retry flag.
     async fn load_url(&self, url: &str) -> Result<RefCounted<[u8]>, (ResError, bool)> {
         let mut cache = self.cache.lock().await;
         if let Some(data) = cache.cache_get(url) {
             return Ok(RefCounted::clone(data));
         }
+
+        if url.starts_with("data:") {
+            let data = match celerc::util::bytes_from_data_url(url) {
+                Ok(data) => data.into_owned(),
+                Err(e) => {
+                    return Err((ResError::FailToLoadUrl(
+                        url.to_string(),
+                        format!("Failed to parse data URL: {e}"),
+                    ), false));
+                }
+            };
+            let data = RefCounted::from(data);
+            cache.cache_set(url.to_string(), RefCounted::clone(&data));
+            return Ok(data);
+        }
+
+
         let response = self
             .http_client
             .get(url)
