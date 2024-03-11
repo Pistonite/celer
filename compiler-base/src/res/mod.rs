@@ -1,11 +1,9 @@
 //! Resource resolving and loading
-use std::ops::Deref;
-
-use base64::Engine;
 use serde_json::Value;
 
 use crate::env::RefCounted;
 use crate::macros::async_trait;
+use crate::util;
 
 mod path;
 pub use path::*;
@@ -156,12 +154,10 @@ where
             Some(x) if x.is_image() => x.media_type(),
             _ => return Err(ResError::UnknownImageFormat(self.path.to_string())),
         };
-        // prepare the beginning of the data url
-        let mut data_url = format!("data:{media_type};base64,");
         // load the bytes
         let bytes = self.loader.load_raw(&self.path).await?;
-        // encode the bytes and append to the data url
-        base64::engine::general_purpose::STANDARD.encode_string(bytes.deref(), &mut data_url);
+        // encode the bytes as a data url
+        let data_url = util::to_data_url_base64(media_type, &bytes);
 
         Ok(data_url)
     }

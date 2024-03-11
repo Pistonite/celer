@@ -1,8 +1,11 @@
 //! Environment setup or things that depend on the execution environment (server vs WASM).
 
 use std::cell::RefCell;
+use std::fmt::Display;
 use std::ops::Deref;
-use std::sync::OnceLock;
+
+use crate::macros::late_global;
+use crate::res::Loader;
 
 #[cfg(feature = "wasm")]
 pub mod env_wasm;
@@ -14,29 +17,39 @@ pub mod env_native;
 #[cfg(not(feature = "wasm"))]
 pub use env_native::*;
 
-static SITE_ORIGIN: OnceLock<String> = OnceLock::new();
+/// Site origin global configuration
+#[late_global(str)]
+pub mod site {
+    #[inline]
+    pub fn set_origin(origin: &str) {
+        let _ = set(RefCounted::from(origin));
+    }
 
-/// Set the site origin globally if not already set
-pub fn init_site_origin(origin: String) -> Result<(), String> {
-    SITE_ORIGIN.set(origin)
-}
+    #[inline]
+    pub fn get_origin() -> RefCounted<str> {
+        match get() {
+            Some(origin) => origin,
+            None => RefCounted::from(""),
+        }
+    }
 
-/// Get the site origin, or default to empty string
-pub fn get_site_origin() -> &'static str {
-    match SITE_ORIGIN.get() {
-        Some(origin) => origin,
-        None => "",
+    /// Get the site domain (origin without url scheme)
+    pub fn get_domain() -> RefCounted<str> {
+        let origin = get_origin();
+        match origin.strip_prefix("https://") {
+            Some(domain) => RefCounted::from(domain),
+            None => match origin.strip_prefix("http://") {
+                Some(domain) => RefCounted::from(domain),
+                None => origin,
+            },
+        }
     }
 }
 
-/// Get the site domain (origin without url scheme)
-pub fn get_site_domain() -> &'static str {
-    let origin = get_site_origin();
-    match origin.strip_prefix("https://") {
-        Some(domain) => domain,
-        None => origin.strip_prefix("http://").unwrap_or(origin),
-    }
-}
+/// Global loader instance that can be used to load resources
+/// outside of the usual compilation cycle. For example, in plugins
+#[late_global(dyn Loader)]
+pub mod global_loader {}
 
 impl<T> Deref for RefCounted<T>
 where
@@ -47,6 +60,16 @@ where
     #[inline]
     fn deref(&self) -> &Self::Target {
         &self.inner
+    }
+}
+
+impl<T> Display for RefCounted<T>
+where
+    T: Display + ?Sized,
+{
+    #[inline]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
     }
 }
 

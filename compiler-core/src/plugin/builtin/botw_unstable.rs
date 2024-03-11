@@ -5,9 +5,11 @@ use std::borrow::Cow;
 use serde_json::Value;
 
 use crate::comp::{CompDoc, CompLine, CompMovement};
+use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
-use crate::plugin::{operation, PluginResult, PluginRuntime};
+use crate::macros::async_trait;
+use crate::plugin::{PluginResult, PluginRuntime};
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";
@@ -220,9 +222,15 @@ impl BotwAbilityUnstablePlugin {
             self.set_in_castle(x);
         }
 
-        operation::for_each_rich_text_except_counter!(block in line {
-            self.process_block(block, &gale_override, &fury_override, &mut line.diagnostics);
-        });
+        // take diagnostics out due to borrow restrictions
+        let mut diagnostics = std::mem::take(&mut line.diagnostics);
+
+        for block in line.rich_texts_mut() {
+            self.process_block(block, &gale_override, &fury_override, &mut diagnostics);
+        }
+
+        // put diagnostics back
+        std::mem::swap(&mut line.diagnostics, &mut diagnostics);
     }
 
     fn process_block(
@@ -393,11 +401,13 @@ fn estimate_time(text: &DocRichText) -> u32 {
     movement_count * 14 + 6 // (approximately) same timing as old celer
 }
 
+#[async_trait(auto)]
 impl PluginRuntime for BotwAbilityUnstablePlugin {
-    fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
-        operation::for_each_line!(line in comp_doc {
+    async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {
+        for line in comp_doc.lines_mut() {
+            yield_budget(64).await;
             self.process_line(line);
-        });
+        }
         Ok(())
     }
 

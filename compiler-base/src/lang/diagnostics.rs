@@ -86,7 +86,7 @@ where
     fn into_diagnostic(self) -> DocDiagnostic {
         let message = match self.help_path() {
             Some(path) => {
-                let site_origin = env::get_site_origin();
+                let site_origin: &str = &env::site::get_origin();
                 let mut msg = format!("{self} See {site_origin}");
                 if !path.starts_with('/') {
                     msg.push('/');

@@ -37,6 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &env.site_origin,
     )
     .await?;
+    compiler::setup_global_loader();
     if env.gzip {
         info!("compressing assets...");
         boot::gzip_static_assets(PathBuf::from(&env.docs_dir), PathBuf::from(&env.app_dir)).await?;

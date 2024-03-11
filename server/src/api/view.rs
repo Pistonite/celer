@@ -183,7 +183,7 @@ async fn view_internal(
     };
 
     let view_url = {
-        let mut url = format!("{}/view/{owner}/{repo}", env::get_site_origin());
+        let mut url = format!("{}/view/{owner}/{repo}", &env::site::get_origin());
         if !path.is_empty() {
             url.push('/');
             url.push_str(path);

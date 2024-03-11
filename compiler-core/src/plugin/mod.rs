@@ -5,14 +5,13 @@ use serde_json::Value;
 use crate::comp::CompDoc;
 use crate::exec::ExecDoc;
 use crate::expo::{ExpoDoc, ExportMetadata};
-use crate::macros::derive_wasm;
+use crate::macros::{async_trait, derive_wasm};
 use crate::pack::CompileContext;
 
 mod error;
 pub use error::*;
 mod builtin;
 mod js;
-mod operation;
 mod option;
 pub use option::*;
 mod parse;
@@ -38,7 +37,8 @@ pub struct PluginMetadata {
 ///
 /// A runtime of a plugin can store states that the plugin needs during the compilation.
 /// Each compilation will spawn a new runtime with [`PluginInstance::create_runtime`]
-pub trait PluginRuntime: Send + Sync {
+#[async_trait(auto)]
+pub trait PluginRuntime {
     /// Get the id of the plugin
     ///
     /// This is used to identify the plugin, and should be either the name of
@@ -53,22 +53,22 @@ pub trait PluginRuntime: Send + Sync {
     }
 
     /// Called before route is compiled, to make changes to the compiler
-    fn on_before_compile(&mut self, _ctx: &mut CompileContext) -> PluginResult<()> {
+    async fn on_before_compile<'p>(&mut self, _ctx: &mut CompileContext<'p>) -> PluginResult<()> {
         Ok(())
     }
 
     /// Called after the route is compiled, to transform the route
-    fn on_after_compile(&mut self, _doc: &mut CompDoc) -> PluginResult<()> {
+    async fn on_after_compile<'p>(&mut self, _doc: &mut CompDoc<'p>) -> PluginResult<()> {
         Ok(())
     }
 
     /// Called after the route is turned into ExecDoc
-    fn on_after_execute(&mut self, _doc: &mut ExecDoc) -> PluginResult<()> {
+    async fn on_after_execute<'p>(&mut self, _doc: &mut ExecDoc<'p>) -> PluginResult<()> {
         Ok(())
     }
 
     /// Called at the end of compilation to check what exports are available
-    fn on_prepare_export(&mut self) -> PluginResult<Option<Vec<ExportMetadata>>> {
+    async fn on_prepare_export(&mut self) -> PluginResult<Option<Vec<ExportMetadata>>> {
         Ok(None)
     }
 
@@ -77,11 +77,11 @@ pub trait PluginRuntime: Send + Sync {
     /// If the exporter needs to access the ExecDoc as well, it should return `None`.
     /// Otherwise, the returned export data will be used and the exporter will not be called
     /// with the ExecDoc
-    fn on_export_comp_doc(
+    async fn on_export_comp_doc<'p>(
         &mut self,
         _export_id: &str,
         _payload: &Value,
-        _doc: &CompDoc,
+        _doc: &CompDoc<'p>,
     ) -> PluginResult<Option<ExpoDoc>> {
         Ok(None)
     }
@@ -89,7 +89,7 @@ pub trait PluginRuntime: Send + Sync {
     /// Called only in export workflow, to let the exporter access the ExecDoc
     ///
     /// The exporter must return the export data or throw an error
-    fn on_export_exec_doc(
+    async fn on_export_exec_doc(
         &mut self,
         _export_id: &str,
         _payload: Value,

@@ -56,11 +56,11 @@ pub async fn compile(
 async fn compile_with_pack_error(context: CompileContext<'_>, error: PackError) -> ExpoContext {
     let comp_doc = CompDoc::from_diagnostic(error, context);
     let exec_ctx = comp_doc.execute().await;
-    exec_ctx.prepare_exports()
+    exec_ctx.prepare_exports().await
 }
 
 async fn compile_with_compiler(compiler: Compiler<'_>) -> ExpoContext {
     let comp_doc = compiler.compile().await;
     let exec_ctx = comp_doc.execute().await;
-    exec_ctx.prepare_exports()
+    exec_ctx.prepare_exports().await
 }

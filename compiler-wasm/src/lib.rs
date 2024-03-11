@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 
 use celerc::env::RefCounted;
 use celerc::prep::EntryPointsSorted;
-use celerc::res::{ResPath, Resource};
+use celerc::res::{Loader, ResPath, Resource};
 
 mod interop;
 use interop::OpaqueExpoContext;
@@ -29,7 +29,9 @@ pub fn init(
     let _ = logger::bind(info_fn, warn_fn, error_fn);
     info!("initializing compiler...");
     loader::bind(load_file, load_url);
-    let _ = celerc::env::init_site_origin(site_origin);
+    celerc::env::site::set_origin(&site_origin);
+    let loader: Box<dyn Loader> = Box::new(LoaderInWasm);
+    let _ = celerc::env::global_loader::set(RefCounted::from(loader));
 
     info!("compiler initialized");
 }

@@ -8,9 +8,11 @@ use std::collections::BTreeMap;
 use serde_json::Value;
 
 use crate::comp::{CompDoc, CompLine};
+use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::lang::{self, DocRichText};
-use crate::plugin::{operation, PluginResult, PluginRuntime};
+use crate::macros::async_trait;
+use crate::plugin::{PluginResult, PluginRuntime};
 
 pub struct SplitFormatPlugin {
     formats: BTreeMap<String, DocRichText>,
@@ -28,11 +30,13 @@ impl SplitFormatPlugin {
     }
 }
 
+#[async_trait(auto)]
 impl PluginRuntime for SplitFormatPlugin {
     fn get_id(&self) -> Cow<'static, str> {
         Cow::Owned(super::BuiltInPlugin::SplitFormat.id())
     }
-    fn on_after_compile(&mut self, comp_doc: &mut CompDoc) -> PluginResult<()> {
+
+    async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {
         let mut tag_to_format = BTreeMap::new();
         for (tag_name, tag) in comp_doc.config.tags.iter() {
             if let Some(split_type) = &tag.split_type {
@@ -41,7 +45,8 @@ impl PluginRuntime for SplitFormatPlugin {
                 }
             }
         }
-        operation::for_each_line!(line in comp_doc {
+        for line in comp_doc.lines_mut() {
+            yield_budget(64).await;
             let mut format = None;
             if let Some(counter) = &line.counter_text {
                 if let Some(tag) = &counter.tag {
@@ -57,7 +62,7 @@ impl PluginRuntime for SplitFormatPlugin {
                 transform_format(&mut format, line);
                 line.split_name = Some(format);
             }
-        });
+        }
 
         Ok(())
     }

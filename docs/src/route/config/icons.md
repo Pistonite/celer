@@ -26,4 +26,4 @@ from the extension, so make sure your icon file name or URL has one of the suppo
 |`image/png`|`.png`|Full Support|
 |`image/jpeg`|`.jpg`, `.jpeg`|Full Support|
 |`image/gif`|`.gif`|Animated in document. Not animated in map|
-|`image/webp`|`.webp`|Animated in document. Not animated in map. Converted to GIF in LiveSplit export|
+|`image/webp`|`.webp`|Animated in document. Not animated in map. Not supported in LiveSplit export|

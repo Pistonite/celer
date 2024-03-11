@@ -27,9 +27,9 @@ fn export_with_pack_error(error: PackError) -> ExpoDoc {
 
 async fn export_with_compiler(compiler: Compiler<'_>, req: ExportRequest) -> ExpoDoc {
     let mut comp_doc = compiler.compile().await;
-    if let Some(expo_doc) = comp_doc.run_exporter(&req) {
+    if let Some(expo_doc) = comp_doc.run_exporter(&req).await {
         return expo_doc;
     }
     let exec_ctx = comp_doc.execute().await;
-    exec_ctx.run_exporter(req)
+    exec_ctx.run_exporter(req).await
 }
