@@ -173,6 +173,11 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
         checkChanged: boolean,
     ): Promise<FsResult<Uint8Array>> {
         const fsFile = this.fs.getFile(path);
+        // make sure latest changes are loaded
+        const loadResult = await fsFile.loadIfNotDirty();
+        if (loadResult.err) {
+            return loadResult;
+        }
         if (checkChanged) {
             const notModified = await this.tracker.checkModifiedSinceLastAccess(
                 fsFile,
