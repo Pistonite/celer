@@ -140,7 +140,7 @@ Examples:
   - Change to orange:
       color: "#ff8800"
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1174490425344675871/image.png?ex=6567c872&is=65555372&hm=8d8f58a26b518217d28d2df46b1bee57af95a8bf19688afb7d0fd6b8315d4cb6&)
+![image of example](./img/color-example.png)
 
 ## Markers
 Use the `markers` property to add circular markers.

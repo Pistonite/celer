@@ -6,7 +6,7 @@ The document is divided into 2 columns: the main column and the notes column.
 The main column aims to provide short instructions for steps to execute, and the notes
 provide longer explanations and things to pay attention to.
 
-![Image for the main and notes columns](https://cdn.discordapp.com/attachments/951389021114871819/1168355564594679889/image.png?ex=655176e9&is=653f01e9&hm=23fa392f0d26ba0ff1a8ae7290b361e75bc2bcb759f8ac95a951a5380c347f6a&)
+![Image for the main and notes columns](./img/doc-view.png)
 
 ## Counter, Line Indicator and Color
 On the left of the main column is the "head" of the line. The head can have 3 functionalities:

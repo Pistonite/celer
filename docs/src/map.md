@@ -2,7 +2,10 @@
 Celer uses [Leaflet](https://leafletjs.com) for the map.
 The map displays icons and lines corresponding to the movements in the route.
 
-![image with icons and lines on the map](https://cdn.discordapp.com/attachments/951389021114871819/1168363382714408980/image.png?ex=65517e31&is=653f0931&hm=aa7ffea5fb9e06cb95cc03fbf3aca3a5c7351a6a65fb6708d522caef9d064ca3&)
+![image with icons and lines on the map](./img/map-view.png)
+:::info
+Image taken from [this route](scheme://celer.placeholder.domain/view/Pistonight/celer-doc-fuzzing/omegeb)
+:::
 
 ## Visuals
 The map has 3 types of visuals:

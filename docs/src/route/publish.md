@@ -75,7 +75,7 @@ Select the files you want to upload.
 3. Click "Commit to main"
 4. Now the changes panel should say "0 changed files"
 5. On the top, you should see something like this:
-   ![image of push origin](https://cdn.discordapp.com/attachments/951389021114871819/1209290318076444723/image.png?ex=65e6625f&is=65d3ed5f&hm=dab6cefc2abbd3f7796c8298cdb50bd6299dbf4c39ef30af5f8452e86cc43bba&)
+   ![image of push origin](./img/github-desktop-push-origin.png)
 6. Click that, and your commits are now uploaded. You can go to the repository on GitHub to confirm.
 
 ## Viewing the route on Celer

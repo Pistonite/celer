@@ -18,7 +18,7 @@ route:
   - Line with counter:
       counter: .my-counter(woooo)
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1180399432722821171/image.png?ex=657d47a3&is=656ad2a3&hm=9f05ea0f94c21925c9b5d461b5b890f983d3106d229bb46bdd9bef8ef5e322c7&)
+![image of example](./img/counter-example.png)
 :::tip
 Counters can also have real functionality - automatically increment and display the count of something.
 Check out the [Variable Plugin](../plugin/variables.md) for how to do that.
@@ -43,7 +43,7 @@ You can see what split types are available in the document in the settings:
 1. Click on <FluentIcon name="Settings20Regular" /> `Settings` in the Toolbar.
 2. Choose the <FluentIcon name="Document20Regular" /> `Document` category.
 3. Scroll to the `Splits` section.
-![image of split settings](https://cdn.discordapp.com/attachments/951389021114871819/1180401223254413352/image.png?ex=657d494e&is=656ad44e&hm=5d7fadf0a7d41a3141d310dc207f79e4ff41465064e5cfb7fd036e108561e0b9&)
+![image of split settings](./img/split-settings.png)
 
 Checking the `My Counters` checkbox will enable splitting on counters tagged with the `my-counter`
 tag.
