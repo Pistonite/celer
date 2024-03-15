@@ -62,6 +62,6 @@ Open `main.yaml` and add the following content
 Wait for a few seconds for the editor to pick up your changes, or press <FluentIcon name="Box20Regular"/> `Compile` on the Toolbar to compile manually.
 
 Now you should see the route document displayed. 
-![example of the route made](https://cdn.discordapp.com/attachments/951389021114871819/1168371134463488021/image.png?ex=65518569&is=653f1069&hm=a7b00b766a766de8b53394996299092f94cde0c3e95ee12e91b45d9aa421afb8&)
+![example of the route made](./img/hello-world.png)
 Congratulations! You made your first route in Celer!
 

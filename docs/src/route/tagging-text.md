@@ -29,7 +29,7 @@ route:
       comment: .red(hello) world
       notes: this .red(color) is cool
 ```
-![image of example](https://cdn.discordapp.com/attachments/951389021114871819/1180394934998683679/image.png?ex=657d4373&is=656ace73&hm=6ff820e7d348437325904f8133b6e1dba8f1d965731e99e63d63e4faac2eecab&)
+![image of example](./img/tag-color-example.png)
 
 ## White Spaces
 All white spaces in tags are significant.

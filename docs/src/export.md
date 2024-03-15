@@ -18,7 +18,7 @@ Clicking on the export format and Celer will execute the exporter. The exported 
 
 ## Extra Configuration
 Some exporters support extra configurations before running. You will see an extra dialog like below:
-![image of export dialog](https://cdn.discordapp.com/attachments/951389021114871819/1207547142978146315/image.png?ex=65e00aea&is=65cd95ea&hm=c4659d7b04eada6e30ba833cd1d64c884832dbf18677ae98718a26d10f90388a&)
+![image of export dialog](./img/export-dialog.png)
 
 The configuration is in [YAML](./route/yaml-basics.md) format. If the exporter provides documentation, clicking on the
 "learn more" link will take you there.
