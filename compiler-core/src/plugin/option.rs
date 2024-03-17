@@ -19,7 +19,7 @@ pub struct PluginOptions {
 #[derive_wasm]
 pub struct PluginOptionsRaw {
     /// List of plugin ids to remove
-    pub remove: Vec<String>,
+    pub remove: Vec<String>, // TODO #226: add ordinal
     /// List of plugins to add
     pub add: Vec<Value>,
 }

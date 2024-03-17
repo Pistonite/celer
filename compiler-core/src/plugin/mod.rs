@@ -9,6 +9,7 @@ use crate::macros::{async_trait, derive_wasm};
 use crate::pack::CompileContext;
 
 mod early;
+pub use early::*;
 mod error;
 pub use error::*;
 mod builtin;
@@ -103,39 +104,7 @@ pub trait PluginRuntime {
     }
 }
 
-/// Early plugin runtime are ran to initialize the plugin instance list
-#[async_trait(auto)]
-pub trait EarlyPluginRuntime {
-    /// Called when a plugin is attempted to be loaded
-    ///
-    /// Plugins that wish to define their own loading behavior should implement this method,
-    /// such as augment an existing plugin when a duplicate is found, or add deferred plugins for
-    /// tasks depending on other plugins
-    async fn on_load_plugin(&self, instance: PluginInstance, plugins: &mut EarlyPluginList) -> PluginResult<()> {
-        plugins.add_immediate(instance);
-        Ok(())
-    }
-}
 
-#[derive(Debug, Clone)]
-pub struct EarlyPluginList {
-    /// Plugins that are queued to be added immediately
-    immediate: Vec<PluginInstance>,
-    /// Plugins that are queued to be added after the immediate plugins are added
-    ///
-    /// In this list, plugins are added in the reverse order. These are also invisible to the user
-    /// and cannot be disabled individually
-    deferred: Vec<PluginInstance>,
-}
-
-impl EarlyPluginList {
-    pub fn add_immediate(&mut self, instance: PluginInstance) {
-        self.immediate.push(instance);
-    }
-}
-
-struct DefaultEarlyPluginRuntime;
-impl EarlyPluginRuntime for DefaultEarlyPluginRuntime {}
 
 /// An instance of a plugin read from the config file, with a source where the plugin can be loaded
 /// from and properties to pass into the plugin
@@ -150,12 +119,20 @@ pub struct PluginInstance {
 }
 
 impl PluginInstance {
+    pub fn create_early_runtime(&self) -> PluginResult<Box<dyn EarlyPluginRuntime>> {
+        match &self.plugin {
+            Plugin::BuiltIn(p) => p.create_early_runtime(),
+            Plugin::Script(p) => p.create_early_runtime(),
+        }
+    }
+
     pub fn create_runtime(&self, ctx: &CompileContext<'_>) -> PluginResult<Box<dyn PluginRuntime>> {
         match &self.plugin {
             Plugin::BuiltIn(p) => p.create_runtime(ctx, &self.props),
             Plugin::Script(p) => p.create_runtime(ctx, &self.props),
         }
     }
+
     pub fn get_id(&self) -> Cow<'_, str> {
         match &self.plugin {
             Plugin::BuiltIn(p) => Cow::Owned(p.id()),

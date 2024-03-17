@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use crate::pack::CompileContext;
 
-use super::{PluginResult, PluginRuntime};
+use super::{EarlyPluginRuntime, PluginResult, PluginRuntime};
 
 mod botw_unstable;
 mod export_livesplit;
@@ -29,12 +29,19 @@ pub enum BuiltInPlugin {
 }
 
 impl BuiltInPlugin {
+    pub fn create_early_runtime(&self) -> PluginResult<Box<dyn EarlyPluginRuntime>> {
+        Ok(Box::new(super::DefaultEarlyPluginRuntime))
+        // match self {
+        //    
+        // }
+    }
+
     pub fn create_runtime(
         &self,
         ctx: &CompileContext<'_>,
         props: &Value,
     ) -> PluginResult<Box<dyn PluginRuntime>> {
-        match &self {
+        match self {
             BuiltInPlugin::BotwAbilityUnstable => Ok(Box::new(
                 botw_unstable::BotwAbilityUnstablePlugin::from_props(props),
             )),

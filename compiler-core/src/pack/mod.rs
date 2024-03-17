@@ -25,7 +25,7 @@ use instant::Instant;
 
 use crate::env::yield_budget;
 use crate::json::RouteBlob;
-use crate::plugin::{PluginInstance, PluginMetadata, PluginOptions, PluginRuntime};
+use crate::plugin::{PluginList, PluginInstance, PluginMetadata, PluginOptions, PluginRuntime};
 use crate::prep::{self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting};
 use crate::res::Loader;
 
@@ -92,68 +92,49 @@ pub struct CompileContext<'p> {
 impl<'p> CompileContext<'p> {
     /// Configure the plugin list according to the options
     pub async fn configure_plugins(&mut self, options: Option<PluginOptions>) -> PackResult<()> {
-        let add_size = options.as_ref().map(|x| x.add.len()).unwrap_or_default();
-        let old_instances = {
-            let mut new_instances = Vec::with_capacity(self.plugins.len() + add_size);
-            std::mem::swap(&mut self.plugins, &mut new_instances);
-            new_instances
-        };
-
-        let mut seen = BTreeSet::new();
-        let mut duplicates = Vec::new();
-
         self.plugin_meta.clear();
+        // take the plugins out for processing
+        let old_instances = std::mem::take(&mut self.plugins);
+
+        let mut list = PluginList::default();
 
         // we don't know how many plugins the users specify
         // so using a set to check for remove
         // even it's less efficient for small sizes
-        let mut remove = BTreeSet::new();
-        let mut add = None;
-        if let Some(options) = options {
-            remove.extend(options.remove);
-            add = Some(options.add);
-        }
+        // TODO #226: this will be a BTreeMap with ordinal
+        let (remove, add) = match options {
+            None => (BTreeSet::new(), None),
+            Some(options) => (options.remove.into_iter().collect(), Some(options.add)),
+        };
+
+        // load plugins from route into the list
         for plugin in old_instances {
             yield_budget(4).await;
-
             let meta = plugin.get_metadata(false);
-
             if !remove.contains(&meta.id) {
-                if !plugin.allow_duplicate && seen.contains(&meta.id) {
-                    duplicates.push(meta.id.clone());
-                } else {
-                    seen.insert(meta.id.clone());
-                    // TODO #175: plugin dependencies
-                    self.plugins.push(plugin);
-                }
+                let early_rt = plugin.create_early_runtime()?;
+                early_rt.on_load_plugin(plugin, &mut list).await?;
             }
 
             self.plugin_meta.push(meta);
         }
 
+        // load plugins from options into the list
         if let Some(add) = add {
             for plugin in add {
                 yield_budget(4).await;
-
                 let meta = plugin.get_metadata(true);
 
                 // don't need to check remove for user-added plugins
-
-                if !plugin.allow_duplicate && seen.contains(&meta.id) {
-                    duplicates.push(meta.id.clone());
-                    continue;
-                }
-                seen.insert(meta.id.clone());
-                // TODO #175: plugin dependencies
-                self.plugins.push(plugin);
+                let early_rt = plugin.create_early_runtime()?;
+                early_rt.on_load_plugin(plugin, &mut list).await?;
 
                 self.plugin_meta.push(meta);
             }
         }
 
-        if !duplicates.is_empty() {
-            return Err(PackError::DuplicatePlugins(duplicates.join(", ")));
-        }
+        self.plugins.extend(list);
+        todo!() // figure out if plugin added by other plugins should be visible in plugin setting
 
         Ok(())
     }

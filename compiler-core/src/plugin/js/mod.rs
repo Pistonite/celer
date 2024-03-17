@@ -2,7 +2,7 @@ use serde_json::Value;
 
 use crate::pack::CompileContext;
 
-use super::{PluginError, PluginResult, PluginRuntime};
+use super::{EarlyPluginRuntime, PluginError, PluginResult, PluginRuntime};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ScriptPlugin {
@@ -13,6 +13,13 @@ pub struct ScriptPlugin {
 }
 
 impl ScriptPlugin {
+    pub fn create_early_runtime(&self) -> PluginResult<Box<dyn EarlyPluginRuntime>> {
+        // TODO #24 implement JS plugin engine
+        Err(PluginError::ScriptException(
+            "Script plugins are not implemented yet".to_string(),
+        ))
+    }
+
     pub fn create_runtime(
         &self,
         _ctx: &CompileContext<'_>,
