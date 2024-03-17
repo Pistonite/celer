@@ -142,11 +142,10 @@ impl<'p> CompileContext<'p> {
                 if !plugin.allow_duplicate && seen.contains(&meta.id) {
                     duplicates.push(meta.id.clone());
                     continue;
-                } else {
-                    seen.insert(meta.id.clone());
-                    // TODO #175: plugin dependencies
-                    self.plugins.push(plugin);
                 }
+                seen.insert(meta.id.clone());
+                // TODO #175: plugin dependencies
+                self.plugins.push(plugin);
 
                 self.plugin_meta.push(meta);
             }

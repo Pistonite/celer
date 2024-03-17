@@ -36,7 +36,7 @@ impl BaseError for PackError {
 
     fn help_path(&self) -> Option<Cow<'static, str>> {
         let path = match self {
-            PackError::PluginInitError(_) => "plugin/getting-started",
+            PackError::PluginInitError(e) => return e.help_path(),
             PackError::DuplicatePlugins(_) => "plugin/getting-started#allow-duplicates",
             PackError::BuildRouteError(_) => "route/route-structure",
             PackError::BuildRouteSectionError(_) => "route/route-structure#sections",
