@@ -110,8 +110,8 @@ impl<'p> CompileContext<'p> {
         // load plugins from route into the list
         for plugin in old_instances {
             yield_budget(4).await;
-            let meta = plugin.get_metadata(false);
-            if !remove.contains(&meta.id) {
+            let meta = PluginMetadata::new(&plugin);
+            if !remove.contains(&meta.display_id) {
                 let early_rt = plugin.create_early_runtime()?;
                 early_rt.on_load_plugin(plugin, &mut list).await?;
             }
@@ -123,7 +123,7 @@ impl<'p> CompileContext<'p> {
         if let Some(add) = add {
             for plugin in add {
                 yield_budget(4).await;
-                let meta = plugin.get_metadata(true);
+                let meta = PluginMetadata::new_from_user(&plugin);
 
                 // don't need to check remove for user-added plugins
                 let early_rt = plugin.create_early_runtime()?;

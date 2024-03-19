@@ -35,7 +35,7 @@ pub use exec_doc::*;
 pub struct ExecContext<'p> {
     /// The exec doc
     pub exec_doc: ExecDoc<'p>,
-    /// Plugin information collected at the end of compilation
+    /// Plugin information collected, including disabled plugins
     pub plugin_metadata: Vec<PluginMetadata>,
     /// The plugin runtimes at this point
     /// which can be used to run exporters

@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::macros::async_trait;
 
-use super::{PluginError, PluginInstance, PluginResult};
+use super::{PluginError, PluginInstance, PluginMetadata, PluginResult};
 
 /// Early plugin runtime are ran to initialize the plugin instance list
 #[async_trait(auto)]
@@ -34,6 +34,8 @@ pub struct PluginList {
     immediate: Vec<InstanceEntry>,
 
     immediate_first: BTreeMap<String, PluginInstance>,
+
+    meta: Vec<PluginMetadata>,
 
     /// Plugins that are queued to be added after the immediate plugins are added
     ///

@@ -10,16 +10,19 @@ use super::{PluginError, PluginInstance, PluginResult};
 #[derive(Debug, Clone, Default)]
 pub struct PluginOptions {
     /// List of plugin ids to remove
-    pub remove: Vec<String>,
+    remove_from: Vec<String>,
+
+    remove: Vec<u32>,
     /// List of plugins to add
-    pub add: Vec<PluginInstance>,
+    add: Vec<PluginInstance>,
 }
 
 #[derive(Debug, Clone, Default)]
 #[derive_wasm]
 pub struct PluginOptionsRaw {
     /// List of plugin ids to remove
-    pub remove: Vec<String>, // TODO #226: add ordinal
+    pub remove_from: Vec<String>, // TODO #226: add ordinal
+    pub remove: Vec<u32>,
     /// List of plugins to add
     pub add: Vec<Value>,
 }

@@ -27,12 +27,26 @@ pub use js::ScriptPlugin;
 #[derive(Debug, Clone, PartialEq)]
 #[derive_wasm]
 pub struct PluginMetadata {
-    /// Id used to identify the plugin
-    pub id: String,
-    /// Display name of the plugin
-    pub name: String,
+    /// Id displayed in the settings to identify the plugin
+    pub display_id: String,
     /// If the plugin is from a user plugin config
     pub is_from_user: bool,
+}
+
+impl PluginMetadata {
+    pub fn new(plugin: &PluginInstance) -> Self {
+        Self {
+            display_id: plugin.get_display_id().into_owned(),
+            is_from_user: false,
+        }
+    }
+
+    pub fn new_from_user(plugin: &PluginInstance) -> Self {
+        Self {
+            display_id: plugin.get_display_id().into_owned(),
+            is_from_user: true,
+        }
+    }
 }
 
 /// The plugin runtime trait
@@ -47,10 +61,11 @@ pub trait PluginRuntime {
     /// a built-in plugin or the path/url to an external plugin
     fn get_id(&self) -> Cow<'static, str>;
 
-    /// Get the display name of the plugin.
+    /// Get the name used as the diagnostics source for this plugin
     ///
-    /// This should be used with diagnostics, and will be displayed in the settings
-    fn get_display_name(&self) -> Cow<'static, str> {
+    /// This is what shows up as the source of the diagnostics,
+    /// for diagnostics that are caused by this plugin
+    fn get_diagnostics_source(&self) -> Cow<'static, str> {
         Cow::Owned(format!("plugin/{}", self.get_id()))
     }
 
@@ -98,7 +113,7 @@ pub trait PluginRuntime {
         _doc: &ExecDoc,
     ) -> PluginResult<ExpoDoc> {
         Err(PluginError::NotImplemented(
-            self.get_display_name().into_owned(),
+            self.get_diagnostics_source().into_owned(),
             "on_export_exec_doc".into(),
         ))
     }
@@ -140,18 +155,10 @@ impl PluginInstance {
         }
     }
 
-    pub fn get_display_name(&self) -> Cow<'_, str> {
+    pub fn get_display_id(&self) -> Cow<'_, str> {
         match &self.plugin {
-            Plugin::BuiltIn(p) => Cow::Owned(format!("plugin/{}", p.id())),
+            Plugin::BuiltIn(p) => Cow::Owned(p.id()),
             Plugin::Script(p) => Cow::Owned(p.get_display_name()),
-        }
-    }
-
-    pub fn get_metadata(&self, is_from_user: bool) -> PluginMetadata {
-        PluginMetadata {
-            id: self.get_id().into_owned(),
-            name: self.get_display_name().into_owned(),
-            is_from_user,
         }
     }
 }
