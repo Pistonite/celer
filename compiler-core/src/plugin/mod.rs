@@ -26,25 +26,30 @@ pub use js::ScriptPlugin;
 /// used to display plugin information after compilation
 #[derive(Debug, Clone, PartialEq)]
 #[derive_wasm]
-pub struct PluginMetadata {
+#[serde(rename = "PluginMetadata")]
+pub struct Metadata {
     /// Id displayed in the settings to identify the plugin
     pub display_id: String,
     /// If the plugin is from a user plugin config
     pub is_from_user: bool,
+    /// If the plugin is enabled. Plugins can be disabled by the user
+    pub is_enabled: bool,
 }
 
-impl PluginMetadata {
-    pub fn new(plugin: &PluginInstance) -> Self {
+impl Metadata {
+    pub fn new(plugin: &PluginInstance, is_enabled: bool) -> Self {
         Self {
             display_id: plugin.get_display_id().into_owned(),
             is_from_user: false,
+            is_enabled
         }
     }
 
-    pub fn new_from_user(plugin: &PluginInstance) -> Self {
+    pub fn new_from_user(plugin: &PluginInstance, is_enabled: bool) -> Self {
         Self {
             display_id: plugin.get_display_id().into_owned(),
             is_from_user: true,
+            is_enabled
         }
     }
 }

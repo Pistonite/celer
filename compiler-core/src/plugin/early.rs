@@ -17,7 +17,7 @@ pub trait EarlyPluginRuntime {
         if !instance.allow_duplicate {
             let id = instance.get_id();
             if plugins.contains_immediate(&id) {
-                return Err(PluginError::Duplicate(instance.get_display_name().into_owned()));
+                return Err(PluginError::Duplicate(instance.get_display_id().into_owned()));
             }
         }
         plugins.add_immediate(instance);
@@ -48,6 +48,9 @@ pub struct PluginList {
 enum InstanceEntry {
     First(String),
     NotFirst(PluginInstance),
+}
+
+struct PluginMetaTree {
 }
 
 impl PluginList {

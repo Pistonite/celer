@@ -154,7 +154,7 @@ impl VariablesPlugin {
         new_tag: &str,
     ) {
         if let Err(e) = self.transform_text_with_tag(text, new_tag) {
-            let error = DocDiagnostic::error(&e, self.get_display_name());
+            let error = DocDiagnostic::error(&e, self.get_diagnostics_source());
             diagnostics.push(error);
         }
     }
@@ -215,7 +215,7 @@ impl VariablesPlugin {
 
     pub fn update_vars(&mut self, diagnostics: &mut Vec<DocDiagnostic>, vars: &Value) {
         if let Err(e) = self.update_vars_internal(vars) {
-            let error = DocDiagnostic::error(&e, self.get_display_name());
+            let error = DocDiagnostic::error(&e, self.get_diagnostics_source());
             diagnostics.push(error);
         }
     }

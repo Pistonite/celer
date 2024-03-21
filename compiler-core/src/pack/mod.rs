@@ -102,9 +102,12 @@ impl<'p> CompileContext<'p> {
         // so using a set to check for remove
         // even it's less efficient for small sizes
         // TODO #226: this will be a BTreeMap with ordinal
+        // let (remove, add) = match options {
+        //     None => (BTreeSet::new(), None),
+        //     Some(options) => (options.remove.into_iter().collect(), Some(options.add)),
+        // };
         let (remove, add) = match options {
-            None => (BTreeSet::new(), None),
-            Some(options) => (options.remove.into_iter().collect(), Some(options.add)),
+            _ => (BTreeSet::<String>::new(), None::<Vec<PluginInstance>>),
         };
 
         // load plugins from route into the list
@@ -134,7 +137,7 @@ impl<'p> CompileContext<'p> {
         }
 
         self.plugins.extend(list);
-        todo!() // figure out if plugin added by other plugins should be visible in plugin setting
+        todo!(); // figure out if plugin added by other plugins should be visible in plugin setting
 
         Ok(())
     }

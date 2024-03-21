@@ -174,7 +174,7 @@ impl BotwAbilityUnstablePlugin {
                 None => {
                     let error = DocDiagnostic::error(
                         "`gale` must be a non-negative integer",
-                        self.get_display_name(),
+                        self.get_diagnostics_source(),
                     );
                     line.diagnostics.push(error);
                     None
@@ -188,7 +188,7 @@ impl BotwAbilityUnstablePlugin {
                 None => {
                     let error = DocDiagnostic::error(
                         "`fury` must be a non-negative integer",
-                        self.get_display_name(),
+                        self.get_diagnostics_source(),
                     );
                     line.diagnostics.push(error);
                     None
@@ -203,7 +203,7 @@ impl BotwAbilityUnstablePlugin {
                     None => {
                         let error = DocDiagnostic::error(
                             "`time-override` must be a non-negative integer",
-                            self.get_display_name(),
+                            self.get_diagnostics_source(),
                         );
                         line.diagnostics.push(error);
                         None
@@ -292,12 +292,12 @@ impl BotwAbilityUnstablePlugin {
         let error = if current == 0 {
             DocDiagnostic::warning(
                 &format!("{ability} may not be recharged yet. May need {time_need} more seconds to recharge. Note that this is an estimate and may not be accurate."),
-                self.get_display_name(),
+                self.get_diagnostics_source(),
             )
         } else {
             DocDiagnostic::warning(
                 &format!("not enough {ability}! Need to use {need}, but only {current} left."),
-                self.get_display_name(),
+                self.get_diagnostics_source(),
             )
         };
         diagnostics.push(error);
@@ -315,7 +315,7 @@ impl BotwAbilityUnstablePlugin {
                 _ => {
                     let error = DocDiagnostic::error(
                         "ability use count must be specified in the tag or as a property!",
-                        self.get_display_name(),
+                        self.get_diagnostics_source(),
                     );
                     diagnostics.push(error);
                     return None;
@@ -327,7 +327,7 @@ impl BotwAbilityUnstablePlugin {
                 Err(_) => {
                     let error = DocDiagnostic::error(
                         "ability use count must be a non-negative integer!",
-                        self.get_display_name(),
+                        self.get_diagnostics_source(),
                     );
                     diagnostics.push(error);
                     return None;
@@ -337,7 +337,7 @@ impl BotwAbilityUnstablePlugin {
         if count > MAX_USE {
             let error = DocDiagnostic::error(
                 "ability use count must be between 0 and 3!",
-                self.get_display_name(),
+                self.get_diagnostics_source(),
             );
             diagnostics.push(error);
             return None;
