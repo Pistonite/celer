@@ -17,7 +17,7 @@
 use crate::comp::CompDoc;
 use crate::lang::IntoDiagnostic;
 use crate::macros::derive_wasm;
-use crate::plugin::{PluginMetadata, PluginRuntime};
+use crate::plugin;
 
 mod error;
 pub use error::*;
@@ -36,11 +36,11 @@ pub struct ExecContext<'p> {
     /// The exec doc
     pub exec_doc: ExecDoc<'p>,
     /// Plugin information collected, including disabled plugins
-    pub plugin_metadata: Vec<PluginMetadata>,
+    pub plugin_metadata: Vec<plugin::Metadata>,
     /// The plugin runtimes at this point
     /// which can be used to run exporters
     #[serde(skip)]
-    pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
+    pub plugin_runtimes: Vec<plugin::BoxedRuntime>,
 }
 
 impl ExecContext<'static> {

@@ -4,21 +4,20 @@
 //! merged with the existing plugins in the route.
 
 
-use log::Metadata;
 use serde_json::Value;
 
 use crate::json::Cast;
 use crate::macros::derive_wasm;
 use crate::res::{Loader, Resource};
 
-use super::{PluginError, PluginInstance, PluginResult};
+use super::{Metadata, PluginError, Instance, PluginResult};
 
 /// Raw options value passed in from the client
 #[derive(Debug, Clone, Default)]
 #[derive_wasm]
 #[serde(rename = "PluginOptions")]
 pub struct OptionsRaw {
-    /// Expected plugin ids to apply the options to
+    /// Expected plugin display ids to apply the options to
     pub route_plugin_ids: Vec<String>,
 
     /// Indices of plugins to remove.
@@ -30,16 +29,12 @@ pub struct OptionsRaw {
     pub add: Vec<Value>,
 }
 
-impl PluginOptionsRaw {
-    pub async fn parse<L>(self, res: &Resource<'_, L>) -> PluginResult<PluginOptions>
+impl OptionsRaw {
+    pub async fn parse<L>(self, res: &Resource<'_, L>) -> PluginResult<Options>
     where
         L: Loader,
     {
-        let mut options = PluginOptions {
-            ids: self.remove_from,
-            remove: self.remove,
-            add: Vec::with_capacity(self.add.len()),
-        };
+        let mut add = Vec::with_capacity(self.add.len());
         for (i, v) in self.add.into_iter().enumerate() {
             let v = match v.try_into_object() {
                 Ok(v) => v,
@@ -50,29 +45,111 @@ impl PluginOptionsRaw {
                     ))
                 }
             };
-            let plugin = match super::parse_plugin_instance(v, res).await {
+            let plugin = match Instance::parse(v, res).await {
                 Ok(plugin) => plugin,
                 Err(e) => {
                     return Err(PluginError::InvalidAddPlugin(i, e.to_string()));
                 }
             };
-            options.add.push(plugin);
+            add.push(plugin);
         }
 
-        Ok(options)
+        Ok(Options {
+            route_plugin_ids: self.route_plugin_ids,
+            remove: self.remove,
+            add,
+        })
     }
 }
 
-/// Parsed options
+/// Parsed plugin options
 #[derive(Debug, Clone, Default)]
 pub struct Options {
     route_plugin_ids: Vec<String>,
     remove: Vec<u32>,
-    add: Vec<PluginInstance>,
+    add: Vec<Instance>,
 }
 
 impl Options {
-    pub fn apply(self, route_plugins: &[PluginInstance]) -> (Vec<PluginInstance>, Vec<Metadata>) {
+    pub fn new(route_plugin_ids: Vec<String>, remove: &[u32], add: Vec<Instance>) -> Self {
+        Self {
+            route_plugin_ids,
+            remove: remove.to_vec(),
+            add,
+        }
+    }
+
+    pub fn apply_none(route_plugins: &[Instance]) -> OptionsApply {
+        OptionsApply {
+            metadata: route_plugins.iter().map(Metadata::new).collect(),
+            user_plugins: vec![],
+        }
+    }
+
+    pub fn apply(self, route_plugins: &[Instance]) -> OptionsApply {
+        // if expected ids and actual ids are not equal, we don't remove any route plugins
+        // but we still remove user plugins
+        let can_remove_route_plugins = self.are_ids_equal(route_plugins);
+
+        // pre allocate upper bound
+        let mut metadata = Vec::with_capacity(route_plugins.len() + self.add.len()); 
+
+        // populate metadata
+        for p in route_plugins {
+            metadata.push(Metadata::new(p));
+        }
+        for p in &self.add {
+            metadata.push(Metadata::new_from_user(&p));
+        }
+
+        let offset = self.route_plugin_ids.len();
+        for i in self.remove.iter().copied() {
+            if (i as usize) < offset && !can_remove_route_plugins {
+                continue;
+            }
+            if let Some(m) = metadata.get_mut(i as usize) {
+                m.disable();
+            }
+        }
+
+        let mut user_plugins = Vec::with_capacity(self.add.len());
+        for (i, p) in self.add.into_iter().enumerate() {
+            if let Some(m) = metadata.get(i + offset) {
+                if !m.is_enabled {
+                    continue;
+                }
+            }
+            user_plugins.push(p);
+        }
+
+
+        OptionsApply {
+            metadata,
+            user_plugins,
+        }
         
     }
+
+    fn are_ids_equal(&self, route_plugins: &[Instance]) -> bool {
+        if self.route_plugin_ids.len() != route_plugins.len() {
+            return false;
+        }
+        for (actual, expected) in route_plugins.iter().map(|p| p.get_display_id()).zip(self.route_plugin_ids.iter()) {
+            let actual: &str = actual.as_ref();
+            if actual != expected {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
+/// Options that are checked and applied
+#[derive(Debug, Clone, Default)]
+pub struct OptionsApply {
+    /// Metadata of all plugins, including route and user plugins and disabled ones
+    pub metadata: Vec<Metadata>,
+    /// User plugins to add, excluding disabled ones
+    pub user_plugins: Vec<Instance>,
 }

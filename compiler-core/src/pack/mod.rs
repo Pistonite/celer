@@ -18,14 +18,13 @@
 //! The output is a [`Compiler`]
 
 use std::borrow::Cow;
-use std::collections::BTreeSet;
 use std::ops::{Deref, DerefMut};
 
 use instant::Instant;
 
 use crate::env::yield_budget;
 use crate::json::RouteBlob;
-use crate::plugin::{PluginList, PluginInstance, PluginMetadata, PluginOptions, PluginRuntime};
+use crate::plugin;
 use crate::prep::{self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting};
 use crate::res::Loader;
 
@@ -44,7 +43,7 @@ pub struct Compiler<'p> {
     /// Reference to the built route
     pub route: Cow<'p, RouteBlob>,
     /// Runtime of the plugins
-    pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
+    pub plugin_runtimes: Vec<plugin::BoxedRuntime>,
 }
 
 impl<'p> Deref for Compiler<'p> {
@@ -82,67 +81,55 @@ pub struct CompileContext<'p> {
     /// The metadata
     pub meta: Cow<'p, CompilerMetadata>,
     /// Plugin instances, does not include disabled plugins
-    pub plugins: Vec<PluginInstance>,
+    pub plugins: Vec<plugin::Instance>,
     /// Plugin metadata, including disabled plugins
-    pub plugin_meta: Vec<PluginMetadata>,
+    pub plugin_meta: Vec<plugin::Metadata>,
     /// Compiler settings
     pub setting: &'p Setting,
 }
 
 impl<'p> CompileContext<'p> {
     /// Configure the plugin list according to the options
-    pub async fn configure_plugins(&mut self, options: Option<PluginOptions>) -> PackResult<()> {
-        self.plugin_meta.clear();
-        // take the plugins out for processing
-        let old_instances = std::mem::take(&mut self.plugins);
-
-        let mut list = PluginList::default();
-
-        // we don't know how many plugins the users specify
-        // so using a set to check for remove
-        // even it's less efficient for small sizes
-        // TODO #226: this will be a BTreeMap with ordinal
-        // let (remove, add) = match options {
-        //     None => (BTreeSet::new(), None),
-        //     Some(options) => (options.remove.into_iter().collect(), Some(options.add)),
-        // };
-        let (remove, add) = match options {
-            _ => (BTreeSet::<String>::new(), None::<Vec<PluginInstance>>),
+    pub async fn configure_plugins(&mut self, options: Option<plugin::Options>) -> PackResult<()> {
+        // apply options
+        let plugin::OptionsApply { metadata, user_plugins } = match options {
+            None => plugin::Options::apply_none(&self.plugins),
+            Some(options) => options.apply(&self.plugins),
         };
 
+        // take the plugins out for processing
+        // new plugins will be put into self.plugins
+        let old_instances = std::mem::take(&mut self.plugins);
+
+        // temporary storage of plugins
+        // plugins will load actual instances into this list
+        let mut list = plugin::LoadList::default();
+
         // load plugins from route into the list
-        for plugin in old_instances {
+        // disabled plugins are removed
+        for (meta, plugin) in metadata.iter().zip(old_instances.into_iter()) {
             yield_budget(4).await;
-            let meta = PluginMetadata::new(&plugin);
-            if !remove.contains(&meta.display_id) {
+            if meta.is_enabled {
                 let early_rt = plugin.create_early_runtime()?;
                 early_rt.on_load_plugin(plugin, &mut list).await?;
             }
-
-            self.plugin_meta.push(meta);
+        }
+        // load user plugins
+        // disabled plugins are already removed
+        for plugin in user_plugins {
+            yield_budget(4).await;
+            let early_rt = plugin.create_early_runtime()?;
+            early_rt.on_load_plugin(plugin, &mut list).await?;
         }
 
-        // load plugins from options into the list
-        if let Some(add) = add {
-            for plugin in add {
-                yield_budget(4).await;
-                let meta = PluginMetadata::new_from_user(&plugin);
-
-                // don't need to check remove for user-added plugins
-                let early_rt = plugin.create_early_runtime()?;
-                early_rt.on_load_plugin(plugin, &mut list).await?;
-
-                self.plugin_meta.push(meta);
-            }
-        }
-
+        // transfer new plugin list and meta
         self.plugins.extend(list);
-        todo!(); // figure out if plugin added by other plugins should be visible in plugin setting
+        self.plugin_meta = metadata;
 
         Ok(())
     }
 
-    pub async fn create_plugin_runtimes(&self) -> PackResult<Vec<Box<dyn PluginRuntime>>> {
+    pub async fn create_plugin_runtimes(&self) -> PackResult<Vec<plugin::BoxedRuntime>> {
         let mut output = Vec::with_capacity(self.plugins.len());
         for plugin in &self.plugins {
             yield_budget(4).await;

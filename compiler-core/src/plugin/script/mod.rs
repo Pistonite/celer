@@ -2,18 +2,18 @@ use serde_json::Value;
 
 use crate::pack::CompileContext;
 
-use super::{EarlyPluginRuntime, PluginError, PluginResult, PluginRuntime};
+use super::{BoxedEarlyRuntime, PluginError, PluginResult, BoxedRuntime};
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ScriptPlugin {
+pub struct Script {
     /// The path or url of the plugin, used to identify duplicates
     pub id: String,
     /// The raw code of the plugin
     pub script: String,
 }
 
-impl ScriptPlugin {
-    pub fn create_early_runtime(&self) -> PluginResult<Box<dyn EarlyPluginRuntime>> {
+impl Script {
+    pub fn create_early_runtime(&self) -> PluginResult<BoxedEarlyRuntime> {
         // TODO #24 implement JS plugin engine
         Err(PluginError::ScriptException(
             "Script plugins are not implemented yet".to_string(),
@@ -24,7 +24,7 @@ impl ScriptPlugin {
         &self,
         _ctx: &CompileContext<'_>,
         _props: &Value,
-    ) -> PluginResult<Box<dyn PluginRuntime>> {
+    ) -> PluginResult<BoxedRuntime> {
         // TODO #24 implement JS plugin engine
         Err(PluginError::ScriptException(
             "Script plugins are not implemented yet".to_string(),

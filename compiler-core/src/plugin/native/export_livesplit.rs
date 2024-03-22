@@ -12,15 +12,15 @@ use crate::expo::{ExpoBlob, ExpoDoc, ExportIcon, ExportMetadata};
 use crate::export_error;
 use crate::json::Coerce;
 use crate::macros::async_trait;
-use crate::plugin::{PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, Runtime};
 use crate::res::ResPath;
 
-pub struct ExportLiveSplitPlugin;
+pub struct ExportLiveSplit;
 
 #[async_trait(auto)]
-impl PluginRuntime for ExportLiveSplitPlugin {
+impl Runtime for ExportLiveSplit {
     fn get_id(&self) -> Cow<'static, str> {
-        Cow::Owned(super::BuiltInPlugin::ExportLiveSplit.id())
+        Cow::Owned(super::Native::ExportLiveSplit.id())
     }
 
     async fn on_prepare_export(&mut self) -> PluginResult<Option<Vec<ExportMetadata>>> {

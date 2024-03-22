@@ -12,13 +12,13 @@ use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::lang::{self, DocRichText};
 use crate::macros::async_trait;
-use crate::plugin::{PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, Runtime};
 
-pub struct SplitFormatPlugin {
+pub struct SplitFormat {
     formats: BTreeMap<String, DocRichText>,
 }
 
-impl SplitFormatPlugin {
+impl SplitFormat {
     pub fn from_props(props: &Value) -> Self {
         let mut formats = BTreeMap::new();
         if let Some(props) = props.as_object() {
@@ -31,9 +31,9 @@ impl SplitFormatPlugin {
 }
 
 #[async_trait(auto)]
-impl PluginRuntime for SplitFormatPlugin {
+impl Runtime for SplitFormat {
     fn get_id(&self) -> Cow<'static, str> {
-        Cow::Owned(super::BuiltInPlugin::SplitFormat.id())
+        Cow::Owned(super::Native::SplitFormat.id())
     }
 
     async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {

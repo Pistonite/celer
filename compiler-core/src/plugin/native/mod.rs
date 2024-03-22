@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use crate::pack::CompileContext;
 
-use super::{EarlyPluginRuntime, PluginResult, PluginRuntime};
+use super::{BoxedEarlyRuntime, PluginResult, BoxedRuntime};
 
 mod botw_unstable;
 mod export_livesplit;
@@ -18,7 +18,7 @@ mod variables;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
-pub enum BuiltInPlugin {
+pub enum Native {
     BotwAbilityUnstable, // TODO #24: remove this
     #[serde(rename = "export-livesplit")]
     ExportLiveSplit,
@@ -28,33 +28,30 @@ pub enum BuiltInPlugin {
     Variables,
 }
 
-impl BuiltInPlugin {
-    pub fn create_early_runtime(&self) -> PluginResult<Box<dyn EarlyPluginRuntime>> {
-        Ok(Box::new(super::DefaultEarlyPluginRuntime))
-        // match self {
-        //    
-        // }
+impl Native {
+    pub fn create_early_runtime(&self) -> PluginResult<BoxedEarlyRuntime> {
+        Ok(Box::new(super::DefaultEarlyRuntime))
     }
 
     pub fn create_runtime(
         &self,
         ctx: &CompileContext<'_>,
         props: &Value,
-    ) -> PluginResult<Box<dyn PluginRuntime>> {
+    ) -> PluginResult<BoxedRuntime> {
         match self {
-            BuiltInPlugin::BotwAbilityUnstable => Ok(Box::new(
-                botw_unstable::BotwAbilityUnstablePlugin::from_props(props),
+            Self::BotwAbilityUnstable => Ok(Box::new(
+                botw_unstable::BotwAbilityUnstable::from_props(props),
             )),
-            BuiltInPlugin::ExportLiveSplit => Ok(Box::new(export_livesplit::ExportLiveSplitPlugin)),
-            BuiltInPlugin::Link => Ok(Box::new(link::LinkPlugin)),
-            BuiltInPlugin::Metrics => Ok(Box::new(metrics::MetricsPlugin::from_props(
+            Self::ExportLiveSplit => Ok(Box::new(export_livesplit::ExportLiveSplit)),
+            Self::Link => Ok(Box::new(link::Link)),
+            Self::Metrics => Ok(Box::new(metrics::Metrics::from_props(
                 props,
                 &ctx.start_time,
             ))),
-            BuiltInPlugin::SplitFormat => {
-                Ok(Box::new(split_format::SplitFormatPlugin::from_props(props)))
+            Self::SplitFormat => {
+                Ok(Box::new(split_format::SplitFormat::from_props(props)))
             }
-            BuiltInPlugin::Variables => Ok(Box::new(variables::VariablesPlugin::from_props(props))),
+            Self::Variables => Ok(Box::new(variables::Variables::from_props(props))),
         }
     }
 

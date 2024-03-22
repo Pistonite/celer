@@ -28,7 +28,7 @@ use crate::env::join_futures;
 use crate::json::{Cast, Coerce, RouteBlob};
 use crate::lang::Preset;
 use crate::macros::derive_wasm;
-use crate::plugin::PluginInstance;
+use crate::plugin;
 use crate::prop;
 use crate::res::{Loader, Resource, Use, ValidUse};
 use crate::util::StringMap;
@@ -55,7 +55,7 @@ where
     pub prep_doc: PrepDoc,
     pub start_time: Instant,
     pub setting: Setting,
-    pub plugins: Vec<PluginInstance>,
+    pub plugins: Vec<plugin::Instance>,
     // TODO #173: add a option to make ContextBuilder output a dependency list for PreparedContext
 }
 

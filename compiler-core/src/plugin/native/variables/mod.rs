@@ -11,7 +11,7 @@ use crate::json::Coerce;
 use crate::lang::{self, DocDiagnostic, DocRichTextBlock};
 use crate::macros::async_trait;
 use crate::pack::CompileContext;
-use crate::plugin::{PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, Runtime};
 use crate::prep::{DocTag, DocTagColor};
 use crate::prop;
 
@@ -57,7 +57,7 @@ macro_rules! map_for_var {
 
 impl<'a> Operator<'a> {
     /// Apply the operator to value `v`
-    pub fn apply(&self, v: f64, vars: &VariablesPlugin) -> f64 {
+    pub fn apply(&self, v: f64, vars: &Variables) -> f64 {
         match self {
             Self::Add(op) => v + op.eval(vars),
             Self::Sub(op) => v - op.eval(vars),
@@ -78,7 +78,7 @@ impl<'a> Operand<'a> {
         arg.parse::<f64>().ok().map(Operand::Num)
     }
 
-    pub fn eval(&self, vars: &VariablesPlugin) -> f64 {
+    pub fn eval(&self, vars: &Variables) -> f64 {
         match self {
             Operand::Num(num) => *num,
             Operand::Var(var) => vars.get(var.as_ref()),
@@ -97,12 +97,12 @@ impl<'a> From<&'a str> for Operand<'a> {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct VariablesPlugin {
+pub struct Variables {
     current: HashMap<String, f64>,
     temporary: HashMap<String, f64>,
     expose: bool,
 }
-impl VariablesPlugin {
+impl Variables {
     pub fn from_props(props: &Value) -> Self {
         let mut plugin = Self::default();
         if let Some(m) = props.as_object() {
@@ -277,7 +277,7 @@ impl VariablesPlugin {
 }
 
 #[async_trait(auto)]
-impl PluginRuntime for VariablesPlugin {
+impl Runtime for Variables {
     async fn on_before_compile<'p>(&mut self, ctx: &mut CompileContext<'p>) -> PluginResult<()> {
         // add the val tag if not defined already
         let tag = DocTag {
@@ -330,6 +330,6 @@ impl PluginRuntime for VariablesPlugin {
     }
 
     fn get_id(&self) -> Cow<'static, str> {
-        Cow::Owned(super::BuiltInPlugin::Variables.id())
+        Cow::Owned(super::Native::Variables.id())
     }
 }

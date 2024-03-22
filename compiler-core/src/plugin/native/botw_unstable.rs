@@ -9,7 +9,7 @@ use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
 use crate::macros::async_trait;
-use crate::plugin::{PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, Runtime};
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";
@@ -47,7 +47,7 @@ fn is_in_castle(line: &CompLine) -> Option<bool> {
     result
 }
 
-pub struct BotwAbilityUnstablePlugin {
+pub struct BotwAbilityUnstable {
     /// If recharge time should be estimated
     estimate_recharge: bool,
     /// Multiplier for the time estimate
@@ -68,9 +68,9 @@ pub struct BotwAbilityUnstablePlugin {
     fury_plus: bool,
 }
 
-impl BotwAbilityUnstablePlugin {
+impl BotwAbilityUnstable {
     pub fn from_props(props: &Value) -> Self {
-        let mut plugin = BotwAbilityUnstablePlugin {
+        let mut plugin = Self {
             estimate_recharge: false,
             multiplier: 1.0,
             in_castle: false,
@@ -402,7 +402,7 @@ fn estimate_time(text: &DocRichText) -> u32 {
 }
 
 #[async_trait(auto)]
-impl PluginRuntime for BotwAbilityUnstablePlugin {
+impl Runtime for BotwAbilityUnstable {
     async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {
         for line in comp_doc.lines_mut() {
             yield_budget(64).await;
@@ -412,6 +412,6 @@ impl PluginRuntime for BotwAbilityUnstablePlugin {
     }
 
     fn get_id(&self) -> Cow<'static, str> {
-        Cow::Owned(super::BuiltInPlugin::BotwAbilityUnstable.id())
+        Cow::Owned(super::Native::BotwAbilityUnstable.id())
     }
 }

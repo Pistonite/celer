@@ -6,7 +6,7 @@ use instant::Instant;
 
 use crate::lang::{DocDiagnostic, DocRichText, IntoDiagnostic};
 use crate::pack::CompileContext;
-use crate::plugin::PluginRuntime;
+use crate::plugin;
 use crate::prep::{CompilerMetadata, PrepError, RouteConfig, RouteMetadata};
 
 use super::CompSection;
@@ -25,7 +25,7 @@ pub struct CompDoc<'p> {
     /// Plugins
     ///
     /// CompDoc holds this to pass it to the next phase. It does not uses it directly.
-    pub plugin_runtimes: Vec<Box<dyn PluginRuntime>>,
+    pub plugin_runtimes: Vec<plugin::BoxedRuntime>,
 }
 
 impl<'p> Deref for CompDoc<'p> {
