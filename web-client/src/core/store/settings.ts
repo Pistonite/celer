@@ -5,6 +5,7 @@
 
 import {
     DocSettingsState,
+    DocSettingsStateSchema,
     docSettingsReducers,
     initialDocSettingsState,
 } from "core/doc";
@@ -15,6 +16,7 @@ import {
 } from "core/layout";
 import {
     MapSettingsState,
+    MapSettingsStateSchema,
     initialMapSettingsState,
     mapSettingsReducers,
 } from "core/map";
@@ -35,11 +37,20 @@ export type SettingsState = LayoutSettingsState &
     DocSettingsState &
     EditorSettingsState;
 
+const SettingsStateSchema = DocSettingsStateSchema.merge(MapSettingsStateSchema).passthrough();
+
 /// Try loading initial state from local storage on store init
 const loadState = (): SettingsState => {
     const state = localStorage.getItem(LOCAL_STORAGE_KEY);
     const loadedState = state ? JSON.parse(state) : {};
-    return Object.assign(getInitialState(), loadedState);
+    const initialState = getInitialState();
+    const assignedState = Object.assign(getInitialState(), loadedState);
+    const result = SettingsStateSchema.safeParse({...initialState, ...assignedState});
+    if (result.success) {
+        return result.data as SettingsState;
+    }
+    console.error("Failed to load settings from local storage", result.error);
+    return initialState;
 };
 
 export const saveSettings = (state: SettingsState) => {

@@ -57,3 +57,4 @@ wasm = [
 [lib]
 name = "celerb"
 path = "src/lib.rs"
+

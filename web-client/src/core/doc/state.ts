@@ -1,6 +1,14 @@
 //! Document view, setting, and route document state
+import { z } from "zod";
 
 import { ExecDoc, ExportMetadata, PluginMetadata } from "low/celerc";
+
+// Tsify doesn't generate schema for zod, so we need to define it here
+export const PluginMetadataSchema = z.object({
+    displayId: z.string(),
+    isFromUser: z.boolean(),
+    isEnabled: z.boolean(),
+});
 
 /// View state for the document
 export type DocViewState = {
@@ -10,64 +18,75 @@ export type DocViewState = {
     currentLine: number;
     /// If the user is currently editing a key binding
     editingKeyBinding: KeyBindingName | undefined;
+    /// If recompiles should be suppressed
+    /// Used when the setting is updated from the result of compilation
+    suppressRecompile: boolean;
 };
 
 export const initialDocViewState: DocViewState = {
     currentSection: 0,
     currentLine: 0,
     editingKeyBinding: undefined,
+    suppressRecompile: false,
 };
 
-/// State type for doc settings
-export type DocSettingsState = {
+export const AppPluginTypeSchema = z.enum(["export-split"]);
+export type AppPluginType = z.infer<typeof AppPluginTypeSchema>;
+
+export const DocSettingsStateInternalSchema = z.object({
     /// Theme name for the doc viewer
-    theme: string;
+    theme: z.string(),
     /// Set map view to fit doc when scrolled
-    syncMapToDoc: boolean;
+    syncMapToDoc: z.boolean(),
 
     /// Hide the document when resizing UI
-    hideDocWhenResizing: boolean;
+    hideDocWhenResizing: z.boolean(),
 
     /// Always anchor the notes to the line it is at
     /// instead of letting it shift around
-    forceAnchorNotes: boolean;
+    forceAnchorNotes: z.boolean(),
 
     /// Display names for types that should be considered splits
     ///
     /// Undefined means to use the document default
-    splitTypes: string[] | undefined;
+    splitTypes: z.string().array().optional(),
 
-    enabledAppPlugins: Partial<Record<AppPluginType, boolean>>;
+    enabledAppPlugins: z.record(AppPluginTypeSchema, z.boolean()),
 
-    /// Plugins to disable (remove) for each document, identified by document title
-    disabledPlugins: Record<string, string[]>;
+    /// Plugin metadata for displaying plugin list and the
+    /// enabled state for each document, identified by document title
+    pluginMetadatas: z.record(z.string(), z.array(PluginMetadataSchema)),
 
     /// If user plugins are enabled
-    enableUserPlugins: boolean;
+    enableUserPlugins: z.boolean(),
 
     /// Additional user plugin configuration YAML string
-    userPluginConfig: string;
+    userPluginConfig: z.string(),
 
     /// Saved export configurations
-    exportConfigs: Record<string, string>;
-} & KeyBindingSettings;
-
-export type AppPluginType = "export-split";
-
-export type KeyBindingSettings = {
-    prevLineKey: KeyBinding;
-    nextLineKey: KeyBinding;
-    prevSplitKey: KeyBinding;
-    nextSplitKey: KeyBinding;
-};
-
-export type KeyBindingName = keyof KeyBindingSettings;
+    exportConfigs: z.record(z.string(), z.string()),
+});
 
 /// Key binding type
 ///
 /// Each key binding is an array of key names.
 /// The keys need to be pressed in order to trigger the action.
-export type KeyBinding = string[];
+export const KeyBindingSchema = z.array(z.string());
+export type KeyBinding = z.infer<typeof KeyBindingSchema>;
+
+export const KeyBindingSettingsSchema = z.object({
+    prevLineKey: KeyBindingSchema,
+    nextLineKey: KeyBindingSchema,
+    prevSplitKey: KeyBindingSchema,
+    nextSplitKey: KeyBindingSchema,
+});
+
+export type KeyBindingSettings = z.infer<typeof KeyBindingSettingsSchema>;
+export type KeyBindingName = keyof KeyBindingSettings;
+
+/// State type for doc settings
+export const DocSettingsStateSchema = DocSettingsStateInternalSchema.merge(KeyBindingSettingsSchema);
+export type DocSettingsState = z.infer<typeof DocSettingsStateSchema>;
 
 /// Default doc settings
 export const initialDocSettingsState: DocSettingsState = {
@@ -83,7 +102,7 @@ export const initialDocSettingsState: DocSettingsState = {
     enabledAppPlugins: {
         "export-split": true,
     },
-    disabledPlugins: {},
+    pluginMetadatas: {},
     enableUserPlugins: false,
     userPluginConfig: '# See the "Learn more" link above for more information',
     exportConfigs: {},

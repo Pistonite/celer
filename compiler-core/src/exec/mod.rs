@@ -36,6 +36,7 @@ pub struct ExecContext<'p> {
     /// The exec doc
     pub exec_doc: ExecDoc<'p>,
     /// Plugin information collected, including disabled plugins
+    #[tsify(type = "PluginMetadata[]")]
     pub plugin_metadata: Vec<plugin::Metadata>,
     /// The plugin runtimes at this point
     /// which can be used to run exporters

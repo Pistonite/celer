@@ -1,7 +1,7 @@
 //! Reducers for the document settings
 
 import { withPayload } from "low/store";
-import { ExportMetadata } from "low/celerc";
+import type { ExportMetadata, PluginMetadata } from "low/celerc";
 
 import {
     AppPluginType,
@@ -61,23 +61,11 @@ export const setAppPluginEnabled = withPayload<
     state.enabledAppPlugins[type] = enabled;
 });
 
-export const setRoutePluginEnabled = withPayload<
+export const setPluginMetadata = withPayload<
     DocSettingsState,
-    { docTitle: string; plugin: string; enabled: boolean }
->((state, { docTitle, plugin, enabled }) => {
-    if (enabled) {
-        if (state.disabledPlugins[docTitle]) {
-            state.disabledPlugins[docTitle] = state.disabledPlugins[
-                docTitle
-            ].filter((x) => x !== plugin);
-        }
-        return;
-    }
-    if (state.disabledPlugins[docTitle]) {
-        state.disabledPlugins[docTitle].push(plugin);
-        return;
-    }
-    state.disabledPlugins[docTitle] = [plugin];
+    { title: string, metadata: PluginMetadata[] }
+>((state, { title, metadata }) => {
+    state.pluginMetadatas[title] = metadata;
 });
 
 export const setUserPluginEnabled = withPayload<DocSettingsState, boolean>(

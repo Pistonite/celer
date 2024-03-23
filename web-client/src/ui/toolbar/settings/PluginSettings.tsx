@@ -1,6 +1,6 @@
 //! Plugin tab of the settings dialog
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
     Body1,
@@ -13,6 +13,7 @@ import {
     MessageBarBody,
     Switch,
 } from "@fluentui/react-components";
+import { produce } from "immer";
 
 import { ErrorBar, PrismEditor } from "ui/shared";
 import {
@@ -23,7 +24,7 @@ import {
 import {
     AppPluginType,
     parseUserConfigOptions,
-    useDocDisabledPlugins,
+    useDocPluginMetadata,
 } from "core/doc";
 import { Kernel, useKernel } from "core/kernel";
 import { useActions } from "low/store";
@@ -33,18 +34,36 @@ import { console } from "low/utils";
 import { SettingsSection } from "./SettingsSection";
 
 export const PluginSettings: React.FC = () => {
-    const { pluginMetadata, document } = useSelector(documentSelector);
-    // cache the plugin metadata once the dialog shows up
-    // so the UI doesn't jump around when the plugin metadata changes
-    const [cachedPluginMetadata, setCachedPluginMetadata] =
-        useState(pluginMetadata);
+    const { document } = useSelector(documentSelector);
+    const pluginMetadata = useDocPluginMetadata();
+    const routePluginMetadata = useMemo(() => {
+        return pluginMetadata?.filter((x) => !x.isFromUser);
+    }, [pluginMetadata]);
+    const userPluginMetadata = useMemo(() => {
+        return pluginMetadata?.filter((x) => x.isFromUser);
+    }, [pluginMetadata]);
     const { enableUserPlugins, userPluginConfig } =
-        useSelector(settingsSelector);
-    const { setRoutePluginEnabled, setUserPluginEnabled, setUserPluginConfig } =
+    useSelector(settingsSelector);
+    // // cache the plugin metadata once the dialog shows up
+    // // so the UI doesn't jump around when the plugin metadata changes
+    // const [cachedPluginMetadata, setCachedPluginMetadata] =
+    //     useState(pluginMetadata);
+    const { setPluginMetadata, setUserPluginEnabled, setUserPluginConfig } =
         useActions(settingsActions);
-    const disabledPlugins = useDocDisabledPlugins();
+    // const disabledPlugins = useDocDisabledPlugins();
 
     const kernel = useKernel();
+                // <Field>
+                //     <Button
+                //         appearance="primary"
+                //         disabled={cachedPluginMetadata === pluginMetadata}
+                //         onClick={() => {
+                //             setCachedPluginMetadata(pluginMetadata);
+                //         }}
+                //     >
+                //         Refresh route plugins
+                //     </Button>
+                // </Field>
 
     return (
         <>
@@ -60,39 +79,26 @@ export const PluginSettings: React.FC = () => {
             </SettingsSection>
             <SettingsSection title="Route Plugins">
                 <Body1 block>
-                    {getRoutePluginMessage(cachedPluginMetadata)}
+                    {getRoutePluginMessage(routePluginMetadata)}
                 </Body1>
-                {cachedPluginMetadata?.map((plugin, i) => (
+                {routePluginMetadata?.map((plugin, i) => (
                     <PluginCheckbox
                         key={i}
-                        label={
-                            (plugin.isFromUser ? "(user) " : "") + plugin.name
-                        }
-                        checked={!disabledPlugins.includes(plugin.id)}
-                        disabled={plugin.isFromUser}
+                        label={plugin.displayId}
+                        checked={plugin.isEnabled}
                         onChange={(_, data) => {
                             if (!document) {
                                 return;
                             }
-                            setRoutePluginEnabled({
-                                docTitle: document.project.title,
-                                plugin: plugin.id,
-                                enabled: !!data.checked,
+                            setPluginMetadata({
+                                title: document.project.title,
+                                metadata: produce(pluginMetadata, (draft) => {
+                                    draft[i].isEnabled = !!data.checked;
+                                })
                             });
                         }}
                     />
                 ))}
-                <Field>
-                    <Button
-                        appearance="primary"
-                        disabled={cachedPluginMetadata === pluginMetadata}
-                        onClick={() => {
-                            setCachedPluginMetadata(pluginMetadata);
-                        }}
-                    >
-                        Refresh route plugins
-                    </Button>
-                </Field>
             </SettingsSection>
             <SettingsSection title="User Plugins">
                 <Field
@@ -130,6 +136,29 @@ export const PluginSettings: React.FC = () => {
                         Edit Config
                     </Button>
                 </Field>
+                {userPluginMetadata?.length > 0 && (
+                <Body1 block>
+                    The following plugins are loaded from your user config or app config for this route,
+                    you can enable or disable them below.
+                </Body1>)}
+                {userPluginMetadata?.map((plugin, i) => (
+                    <PluginCheckbox
+                        key={i}
+                        label={plugin.displayId}
+                        checked={plugin.isEnabled}
+                        onChange={(_, data) => {
+                            if (!document) {
+                                return;
+                            }
+                            setPluginMetadata({
+                                title: document.project.title,
+                                metadata: produce(pluginMetadata, (draft) => {
+                                    draft[i + routePluginMetadata.length].isEnabled = !!data.checked;
+                                })
+                            });
+                        }}
+                    />
+                ))}
             </SettingsSection>
         </>
     );

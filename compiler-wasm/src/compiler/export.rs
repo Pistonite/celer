@@ -1,11 +1,11 @@
 use instant::Instant;
 use log::{error, info};
 
+use celerc::{Compiler, ExpoDoc, ExportRequest, PreparedContext};
 use celerc::pack::PackError;
-use celerc::{Compiler, ExpoDoc, ExportRequest, PluginOptions, PreparedContext};
+use celerc::plugin;
 
 use crate::loader::LoaderInWasm;
-use crate::plugin;
 
 use super::CachedContextGuard;
 
@@ -15,7 +15,7 @@ pub async fn export_document(
     req: ExportRequest,
 ) -> ExpoDoc {
     info!("exporting document");
-    let plugin_options = match plugin::get_plugin_options() {
+    let plugin_options = match crate::plugin::get_plugin_options() {
         Ok(x) => x,
         Err(message) => {
             let message = format!("Failed to load user plugin options: {message}");
@@ -48,7 +48,7 @@ pub async fn export_document(
 async fn export_in_context(
     prep_ctx: &PreparedContext<LoaderInWasm>,
     start_time: Option<Instant>,
-    plugin_options: Option<PluginOptions>,
+    plugin_options: Option<plugin::Options>,
     req: ExportRequest,
 ) -> ExpoDoc {
     let mut comp_ctx = prep_ctx.new_compilation(start_time).await;

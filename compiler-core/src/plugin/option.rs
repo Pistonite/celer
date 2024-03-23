@@ -18,6 +18,7 @@ use super::{Metadata, PluginError, Instance, PluginResult};
 #[serde(rename = "PluginOptions")]
 pub struct OptionsRaw {
     /// Expected plugin display ids to apply the options to
+    #[serde(rename = "routePluginIds")]
     pub route_plugin_ids: Vec<String>,
 
     /// Indices of plugins to remove.

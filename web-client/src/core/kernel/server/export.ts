@@ -1,6 +1,6 @@
 //! Calls the /export endpoint
 
-import type { ExpoDoc, ExportRequest, PluginOptionsRaw } from "low/celerc";
+import type { ExpoDoc, ExportRequest, PluginOptions } from "low/celerc";
 import { fetchAsJson, getApiUrl } from "low/fetch";
 import { consoleKernel as console } from "low/utils";
 
@@ -11,7 +11,7 @@ function createExportError(error: string): ExpoDoc {
 }
 
 export async function sendExportRequest(
-    pluginOptions: PluginOptionsRaw | undefined,
+    pluginOptions: PluginOptions | undefined,
     request: ExportRequest,
 ): Promise<ExpoDoc> {
     const docRef = parseDocRef(window.location.pathname);
@@ -23,7 +23,7 @@ export async function sendExportRequest(
 
 async function sendExportRequestForRef(
     docRef: DocRef,
-    pluginOptions: PluginOptionsRaw | undefined,
+    pluginOptions: PluginOptions | undefined,
     request: ExportRequest,
 ): Promise<ExpoDoc> {
     const { owner, repo, ref, path } = docRef;

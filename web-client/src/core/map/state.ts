@@ -1,36 +1,7 @@
 //! Map state slice
+import { z } from "zod";
 
 import { GameCoord } from "low/celerc";
-
-/// State type for map settings
-export type MapSettingsState = {
-    // section and layer modes
-    lineSectionMode: SectionMode;
-    lineLayerMode: LayerMode;
-    fadeNonCurrentLayerLines: boolean;
-
-    iconSectionMode: SectionMode;
-    iconLayerMode: LayerMode;
-    fadeNonCurrentLayerIcons: boolean;
-
-    markerSectionMode: SectionMode;
-    markerLayerMode: LayerMode;
-    fadeNonCurrentLayerMarkers: boolean;
-
-    // icon sizes
-    primaryIconSize: VisualSize;
-    secondaryIconSize: VisualSize;
-    otherIconSize: VisualSize;
-    // line and arrow sizes
-    /// thickness
-    lineSize: VisualSize;
-    /// size of the arrow
-    arrowSize: VisualSize;
-    /// Frequency of the arrow. Larger means less frequent
-    arrowFrequency: VisualSize;
-
-    markerSize: VisualSize;
-};
 
 /// Enum for section-based map display
 export enum SectionMode {
@@ -43,6 +14,7 @@ export enum SectionMode {
     /// Hide everything
     None = "none",
 }
+export const SectionModeSchema = z.nativeEnum(SectionMode);
 
 /// Enum for how visuals on different layers are displayed
 export enum LayerMode {
@@ -53,6 +25,7 @@ export enum LayerMode {
     /// Show all layers
     All = "all",
 }
+export const LayerModeSchema = z.nativeEnum(LayerMode);
 
 /// Enum for visual size
 ///
@@ -65,6 +38,38 @@ export enum VisualSize {
     Regular,
     Large,
 }
+export const VisualSizeSchema = z.nativeEnum(VisualSize);
+
+/// State type for map settings
+export const MapSettingsStateSchema = z.object({
+    // section and layer modes
+    lineSectionMode: SectionModeSchema,
+    lineLayerMode: LayerModeSchema,
+    fadeNonCurrentLayerLines: z.boolean(),
+
+    iconSectionMode: SectionModeSchema,
+    iconLayerMode: LayerModeSchema,
+    fadeNonCurrentLayerIcons: z.boolean(),
+
+    markerSectionMode: SectionModeSchema,
+    markerLayerMode: LayerModeSchema,
+    fadeNonCurrentLayerMarkers: z.boolean(),
+
+    // icon sizes
+    primaryIconSize: VisualSizeSchema,
+    secondaryIconSize: VisualSizeSchema,
+    otherIconSize: VisualSizeSchema,
+    // line and arrow sizes
+    /// thickness
+    lineSize: VisualSizeSchema,
+    /// size of the arrow
+    arrowSize: VisualSizeSchema,
+    /// Frequency of the arrow. Larger means less frequent
+    arrowFrequency: VisualSizeSchema,
+
+    markerSize: VisualSizeSchema,
+});
+export type MapSettingsState = z.infer<typeof MapSettingsStateSchema>;
 
 /// initial map setting state
 export const initialMapSettingsState: MapSettingsState = {

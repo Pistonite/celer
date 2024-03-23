@@ -25,3 +25,10 @@ export const setEditingKeyBinding = withPayload<
 >((state, editingKeyBinding) => {
     state.editingKeyBinding = editingKeyBinding;
 });
+
+export const setSuppressRecompile = withPayload<
+    DocViewState,
+    boolean
+>((state, suppressRecompile) => {
+    state.suppressRecompile = suppressRecompile;
+});

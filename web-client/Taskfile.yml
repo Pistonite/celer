@@ -14,6 +14,11 @@ tasks:
     cmds:
     - npx vite --host
 
+  zod:
+    desc: Generate Zod Schemas for foreign types
+    cmds:
+    - npx ts-to-zod src/low/celerc/binding.g.ts src/low/celerc/binding.zod.g.ts
+
   build:
     desc: Build web client assets
     cmds:

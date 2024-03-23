@@ -3,10 +3,10 @@
 import {
     getRawPluginOptionsForTitle,
     injectSplitTypesIntoRequest,
+    setDocument,
 } from "core/doc";
 import {
     AppStore,
-    documentActions,
     settingsSelector,
     viewActions,
 } from "core/store";
@@ -65,7 +65,7 @@ export class KernelViewImpl implements Kernel {
 
     /// Reload the document from the server based on the current URL
     public async reloadDocument() {
-        this.store.dispatch(documentActions.setDocument(undefined));
+        setDocument(this.store, undefined);
         this.store.dispatch(viewActions.setCompileInProgress(true));
         // let UI update
         await sleep(0);
@@ -80,7 +80,7 @@ export class KernelViewImpl implements Kernel {
             );
             const result = await loadDocument(pluginOptions);
             if (result.type === "failure") {
-                this.store.dispatch(documentActions.setDocument(undefined));
+                setDocument(this.store, undefined);
                 console.info("failed to load document from server");
                 console.error(result.data);
                 retry = await this.alertMgr.show({
@@ -121,7 +121,7 @@ export class KernelViewImpl implements Kernel {
                 console.error(e);
                 document.title = "Celer Viewer";
             }
-            this.store.dispatch(documentActions.setDocument(doc));
+            setDocument(this.store, doc);
             break;
         }
         this.store.dispatch(viewActions.setCompileInProgress(false));

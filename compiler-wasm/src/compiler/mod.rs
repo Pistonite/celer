@@ -4,14 +4,14 @@ use instant::Instant;
 use log::{error, info};
 use wasm_bindgen::prelude::*;
 
-use celerc::pack::PackError;
 use celerc::{
-    CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PluginOptions, PreparedContext,
+    CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PreparedContext,
 };
+use celerc::pack::PackError;
+use celerc::plugin;
 
 use crate::interop::OpaqueExpoContext;
 use crate::loader::LoaderInWasm;
-use crate::plugin;
 
 mod cache;
 use cache::CachedContextGuard;
@@ -23,7 +23,7 @@ pub async fn compile_document(
     entry_path: Option<String>,
     use_cache: bool,
 ) -> Result<OpaqueExpoContext, JsValue> {
-    let plugin_options = match plugin::get_plugin_options() {
+    let plugin_options = match crate::plugin::get_plugin_options() {
         Ok(x) => x,
         Err(message) => {
             let message = format!("Failed to load user plugin options: {message}");
@@ -70,7 +70,7 @@ pub async fn new_context(entry_path: Option<String>) -> PrepResult<PreparedConte
 async fn compile_in_context(
     prep_ctx: &PreparedContext<LoaderInWasm>,
     start_time: Option<Instant>,
-    plugin_options: Option<PluginOptions>,
+    plugin_options: Option<plugin::Options>,
 ) -> Result<OpaqueExpoContext, JsValue> {
     let mut comp_ctx = prep_ctx.new_compilation(start_time).await;
     match comp_ctx.configure_plugins(plugin_options).await {
