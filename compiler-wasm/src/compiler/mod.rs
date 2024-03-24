@@ -4,11 +4,9 @@ use instant::Instant;
 use log::{error, info};
 use wasm_bindgen::prelude::*;
 
-use celerc::{
-    CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PreparedContext,
-};
 use celerc::pack::PackError;
 use celerc::plugin;
+use celerc::{CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PreparedContext};
 
 use crate::interop::OpaqueExpoContext;
 use crate::loader::LoaderInWasm;

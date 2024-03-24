@@ -63,7 +63,7 @@ export const setAppPluginEnabled = withPayload<
 
 export const setPluginMetadata = withPayload<
     DocSettingsState,
-    { title: string, metadata: PluginMetadata[] }
+    { title: string; metadata: PluginMetadata[] }
 >((state, { title, metadata }) => {
     state.pluginMetadatas[title] = metadata;
 });

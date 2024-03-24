@@ -16,7 +16,9 @@ export class SerialEvent {
         }
     }
 
-    public async run<T>(callback: SerialEventCallback<T>): Promise<Result<T, SerialEventCancelToken>> {
+    public async run<T>(
+        callback: SerialEventCallback<T>,
+    ): Promise<Result<T, SerialEventCancelToken>> {
         const currentSerial = ++this.serial;
         const shouldCancel = () => {
             if (currentSerial !== this.serial) {
@@ -29,6 +31,12 @@ export class SerialEvent {
     }
 }
 
-export type SerialEventCancelCallback = (current: number, latest: number) => void;
-export type SerialEventCallback<T=undefined> = (current: number, shouldCancel: () => Void<SerialEventCancelToken>) => Promise<Result<T, SerialEventCancelToken>>;
+export type SerialEventCancelCallback = (
+    current: number,
+    latest: number,
+) => void;
+export type SerialEventCallback<T = undefined> = (
+    current: number,
+    shouldCancel: () => Void<SerialEventCancelToken>,
+) => Promise<Result<T, SerialEventCancelToken>>;
 export type SerialEventCancelToken = "cancel";

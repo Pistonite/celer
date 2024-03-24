@@ -154,7 +154,7 @@ const RECOMPILE_ON_SETTINGS: (keyof SettingsState)[] = [
 //                 return true;
 //             }
 //         }
-//         console.warn(produce(oldSettings.pluginMetadatas, ()=>{}), 
+//         console.warn(produce(oldSettings.pluginMetadatas, ()=>{}),
 //             produce(newSettings.pluginMetadatas, ()=>{}));
 //         // user plugin config
 //         if (
@@ -211,7 +211,7 @@ export function isRecompileNeeded(
     // user plugin config
     if (
         oldSettings.enableUserPlugins !== newSettings.enableUserPlugins ||
-            oldSettings.userPluginConfig !== newSettings.userPluginConfig
+        oldSettings.userPluginConfig !== newSettings.userPluginConfig
     ) {
         const newDocument = documentSelector(newState);
         if (newSettings.enableUserPlugins) {
@@ -288,11 +288,13 @@ export function getRawPluginOptionsForTitle(
     } = state;
 
     const metadata = title ? pluginMetadatas[title] || [] : [];
-    const routePluginIds = metadata.map((m) => {
-        if (!m.isFromUser) {
-            return m.displayId;
-        }
-    }).filter(Boolean) as string[];
+    const routePluginIds = metadata
+        .map((m) => {
+            if (!m.isFromUser) {
+                return m.displayId;
+            }
+        })
+        .filter(Boolean) as string[];
 
     const add = [];
     if (enabledAppPlugins["export-split"]) {
@@ -304,15 +306,17 @@ export function getRawPluginOptionsForTitle(
             add.push(...val);
         }
     }
-    const remove = metadata.map((m, i) => {
-        if (m.isFromUser && !enableUserPlugins) {
-            return undefined;
-        }
-        if (m.isEnabled) {
-            return undefined;
-        }
-        return i;
-    }).filter((x) => x !== undefined) as number[];
+    const remove = metadata
+        .map((m, i) => {
+            if (m.isFromUser && !enableUserPlugins) {
+                return undefined;
+            }
+            if (m.isEnabled) {
+                return undefined;
+            }
+            return i;
+        })
+        .filter((x) => x !== undefined) as number[];
     if (remove.length === 0 && add.length === 0) {
         return undefined;
     }

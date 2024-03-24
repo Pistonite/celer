@@ -1,7 +1,7 @@
 //! Server-side plugin options parsing
 
-use celerc::res::Resource;
 use celerc::plugin;
+use celerc::res::Resource;
 
 use super::ServerResourceLoader;
 

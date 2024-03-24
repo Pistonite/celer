@@ -21,7 +21,7 @@ impl Metadata {
         Self {
             display_id: plugin.get_display_id().into_owned(),
             is_from_user: false,
-            is_enabled: true
+            is_enabled: true,
         }
     }
 
@@ -29,7 +29,7 @@ impl Metadata {
         Self {
             display_id: plugin.get_display_id().into_owned(),
             is_from_user: true,
-            is_enabled: true
+            is_enabled: true,
         }
     }
 

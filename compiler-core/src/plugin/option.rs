@@ -3,14 +3,13 @@
 //! These options are fed to the compiler in the pack phase, and
 //! merged with the existing plugins in the route.
 
-
 use serde_json::Value;
 
 use crate::json::Cast;
 use crate::macros::derive_wasm;
 use crate::res::{Loader, Resource};
 
-use super::{Metadata, PluginError, Instance, PluginResult};
+use super::{Instance, Metadata, PluginError, PluginResult};
 
 /// Raw options value passed in from the client
 #[derive(Debug, Clone, Default)]
@@ -93,14 +92,14 @@ impl Options {
         let can_remove_route_plugins = self.are_ids_equal(route_plugins);
 
         // pre allocate upper bound
-        let mut metadata = Vec::with_capacity(route_plugins.len() + self.add.len()); 
+        let mut metadata = Vec::with_capacity(route_plugins.len() + self.add.len());
 
         // populate metadata
         for p in route_plugins {
             metadata.push(Metadata::new(p));
         }
         for p in &self.add {
-            metadata.push(Metadata::new_from_user(&p));
+            metadata.push(Metadata::new_from_user(p));
         }
 
         let offset = self.route_plugin_ids.len();
@@ -123,19 +122,21 @@ impl Options {
             user_plugins.push(p);
         }
 
-
         OptionsApply {
             metadata,
             user_plugins,
         }
-        
     }
 
     fn are_ids_equal(&self, route_plugins: &[Instance]) -> bool {
         if self.route_plugin_ids.len() != route_plugins.len() {
             return false;
         }
-        for (actual, expected) in route_plugins.iter().map(|p| p.get_display_id()).zip(self.route_plugin_ids.iter()) {
+        for (actual, expected) in route_plugins
+            .iter()
+            .map(|p| p.get_display_id())
+            .zip(self.route_plugin_ids.iter())
+        {
             let actual: &str = actual.as_ref();
             if actual != expected {
                 return false;

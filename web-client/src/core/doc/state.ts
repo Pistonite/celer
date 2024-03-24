@@ -85,7 +85,9 @@ export type KeyBindingSettings = z.infer<typeof KeyBindingSettingsSchema>;
 export type KeyBindingName = keyof KeyBindingSettings;
 
 /// State type for doc settings
-export const DocSettingsStateSchema = DocSettingsStateInternalSchema.merge(KeyBindingSettingsSchema);
+export const DocSettingsStateSchema = DocSettingsStateInternalSchema.merge(
+    KeyBindingSettingsSchema,
+);
 export type DocSettingsState = z.infer<typeof DocSettingsStateSchema>;
 
 /// Default doc settings

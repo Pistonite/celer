@@ -2,7 +2,7 @@ use serde_json::Value;
 
 use crate::pack::CompileContext;
 
-use super::{BoxedEarlyRuntime, PluginError, PluginResult, BoxedRuntime};
+use super::{BoxedEarlyRuntime, BoxedRuntime, PluginError, PluginResult};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Script {

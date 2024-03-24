@@ -2,15 +2,15 @@ use std::borrow::Cow;
 
 use serde_json::{json, Map, Value};
 
-use crate::CompileContext;
 use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::prop;
 use crate::res::{Loader, ResError, Resource, Use};
+use crate::CompileContext;
 
-use super::{BoxedEarlyRuntime, PluginResult, BoxedRuntime};
 use super::native::Native;
 use super::script::Script;
+use super::{BoxedEarlyRuntime, BoxedRuntime, PluginResult};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PluginParseError {
@@ -75,46 +75,46 @@ impl Instance {
         }
     }
 
-/// Parse a plugin instance (one element in the `plugins` array)
-pub async fn parse<L>(
-    value: Map<String, Value>,
-    res: &Resource<'_, L>,
-) -> Result<Self, PluginParseError>
-where
-    L: Loader,
-{
-    let mut plugin = None;
-    let mut props = json!(null);
-    let mut allow_duplicate = false;
+    /// Parse a plugin instance (one element in the `plugins` array)
+    pub async fn parse<L>(
+        value: Map<String, Value>,
+        res: &Resource<'_, L>,
+    ) -> Result<Self, PluginParseError>
+    where
+        L: Loader,
+    {
+        let mut plugin = None;
+        let mut props = json!(null);
+        let mut allow_duplicate = false;
 
-    // parse properties
-    for (key, value) in value.into_iter() {
-        yield_budget(16).await;
-        match key.as_ref() {
-            prop::USE => {
-                plugin = Some(PluginUse::parse(res, value).await?);
-            }
-            prop::WITH => {
-                props = value;
-            }
-            prop::ALLOW_DUPLICATE => {
-                allow_duplicate = value.coerce_truthy();
-            }
-            _ => {
-                return Err(PluginParseError::UnusedProperty(key));
+        // parse properties
+        for (key, value) in value.into_iter() {
+            yield_budget(16).await;
+            match key.as_ref() {
+                prop::USE => {
+                    plugin = Some(PluginUse::parse(res, value).await?);
+                }
+                prop::WITH => {
+                    props = value;
+                }
+                prop::ALLOW_DUPLICATE => {
+                    allow_duplicate = value.coerce_truthy();
+                }
+                _ => {
+                    return Err(PluginParseError::UnusedProperty(key));
+                }
             }
         }
+
+        // check if `use` was specified
+        let plugin = plugin.ok_or(PluginParseError::MissingPlugin)?;
+
+        Ok(Self {
+            plugin,
+            allow_duplicate,
+            props,
+        })
     }
-
-    // check if `use` was specified
-    let plugin = plugin.ok_or(PluginParseError::MissingPlugin)?;
-
-    Ok(Self {
-        plugin,
-        allow_duplicate,
-        props,
-    })
-}
 }
 
 /// Definition of a plugin read from the `use` property in the config file
@@ -128,11 +128,8 @@ pub enum PluginUse {
 
 impl PluginUse {
     /// Parse from the `use` property
-    pub async fn parse<L>(
-        res: &Resource<'_, L>,
-        value: Value,
-    ) -> Result<Self, PluginParseError>
-where
+    pub async fn parse<L>(res: &Resource<'_, L>, value: Value) -> Result<Self, PluginParseError>
+    where
         L: Loader,
     {
         let use_path_string = value.coerce_to_string();

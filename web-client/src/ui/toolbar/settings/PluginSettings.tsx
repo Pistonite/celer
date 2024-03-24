@@ -44,7 +44,7 @@ export const PluginSettings: React.FC = () => {
         return pluginMetadata.filter((x) => x.isFromUser);
     }, [pluginMetadata]);
     const { enableUserPlugins, userPluginConfig } =
-    useSelector(settingsSelector);
+        useSelector(settingsSelector);
     const { setPluginMetadata, setUserPluginEnabled, setUserPluginConfig } =
         useActions(settingsActions);
 
@@ -79,7 +79,7 @@ export const PluginSettings: React.FC = () => {
                                 title: document.project.title,
                                 metadata: produce(pluginMetadata, (draft) => {
                                     draft[i].isEnabled = !!data.checked;
-                                })
+                                }),
                             });
                         }}
                     />
@@ -122,10 +122,12 @@ export const PluginSettings: React.FC = () => {
                     </Button>
                 </Field>
                 {userPluginMetadata?.length > 0 && (
-                <Body1 block>
-                    The following plugins are loaded from your user config or app config for this route,
-                    you can enable or disable them below.
-                </Body1>)}
+                    <Body1 block>
+                        The following plugins are loaded from your user config
+                        or app config for this route, you can enable or disable
+                        them below.
+                    </Body1>
+                )}
                 {userPluginMetadata?.map((plugin, i) => (
                     <PluginCheckbox
                         key={i}
@@ -138,8 +140,10 @@ export const PluginSettings: React.FC = () => {
                             setPluginMetadata({
                                 title: document.project.title,
                                 metadata: produce(pluginMetadata, (draft) => {
-                                    draft[i + routePluginMetadata.length].isEnabled = !!data.checked;
-                                })
+                                    draft[
+                                        i + routePluginMetadata.length
+                                    ].isEnabled = !!data.checked;
+                                }),
                             });
                         }}
                     />

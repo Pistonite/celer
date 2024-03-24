@@ -20,7 +20,9 @@ import {
     initialMapSettingsState,
     mapSettingsReducers,
 } from "core/map";
+
 import { configureSlice } from "low/store";
+import { consoleKernel as console } from "low/utils";
 
 import {
     EditorSettingsState,
@@ -37,7 +39,9 @@ export type SettingsState = LayoutSettingsState &
     DocSettingsState &
     EditorSettingsState;
 
-const SettingsStateSchema = DocSettingsStateSchema.merge(MapSettingsStateSchema).passthrough();
+const SettingsStateSchema = DocSettingsStateSchema.merge(
+    MapSettingsStateSchema,
+).passthrough();
 
 /// Try loading initial state from local storage on store init
 const loadState = (): SettingsState => {
@@ -45,11 +49,15 @@ const loadState = (): SettingsState => {
     const loadedState = state ? JSON.parse(state) : {};
     const initialState = getInitialState();
     const assignedState = Object.assign(getInitialState(), loadedState);
-    const result = SettingsStateSchema.safeParse({...initialState, ...assignedState});
+    const result = SettingsStateSchema.safeParse({
+        ...initialState,
+        ...assignedState,
+    });
     if (result.success) {
         return result.data as SettingsState;
     }
-    console.error("Failed to load settings from local storage", result.error);
+    console.error("Failed to load settings from local storage");
+    console.error(result.error);
     return initialState;
 };
 

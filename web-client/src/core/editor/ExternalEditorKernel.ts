@@ -147,13 +147,15 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
         const fsFile = this.fs.getFile(path);
         let result;
         if (live) {
-            result = await this.staticTimeTracker.checkModifiedSinceLastAccess(
-                fsFile,
-            );
+            result =
+                await this.staticTimeTracker.checkModifiedSinceLastAccess(
+                    fsFile,
+                );
         } else {
-            result = await this.staticHashTracker.checkModifiedSinceLastAccess(
-                fsFile,
-            );
+            result =
+                await this.staticHashTracker.checkModifiedSinceLastAccess(
+                    fsFile,
+                );
         }
         if (result.err) {
             if (result.err.code === FsErr.NotModified) {
@@ -179,9 +181,8 @@ class ExternalEditorKernel implements EditorKernel, CompilerFileAccess {
             return loadResult;
         }
         if (checkChanged) {
-            const notModified = await this.tracker.checkModifiedSinceLastAccess(
-                fsFile,
-            );
+            const notModified =
+                await this.tracker.checkModifiedSinceLastAccess(fsFile);
             if (notModified.err) {
                 return notModified;
             }

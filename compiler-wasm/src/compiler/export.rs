@@ -1,9 +1,9 @@
 use instant::Instant;
 use log::{error, info};
 
-use celerc::{Compiler, ExpoDoc, ExportRequest, PreparedContext};
 use celerc::pack::PackError;
 use celerc::plugin;
+use celerc::{Compiler, ExpoDoc, ExportRequest, PreparedContext};
 
 use crate::loader::LoaderInWasm;
 

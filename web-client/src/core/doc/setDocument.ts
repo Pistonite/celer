@@ -1,6 +1,12 @@
 import isEqual from "is-equal";
 
-import { AppStore, documentActions, settingsActions, settingsSelector, viewActions } from "core/store";
+import {
+    AppStore,
+    documentActions,
+    settingsActions,
+    settingsSelector,
+    viewActions,
+} from "core/store";
 
 import { ExpoContext } from "low/celerc";
 import { consoleDoc as console } from "low/utils";
@@ -21,7 +27,12 @@ export function setDocument(store: AppStore, doc: ExpoContext | undefined) {
     console.info("updating document plugin metadata");
 
     store.dispatch(viewActions.setSuppressRecompile(true));
-    store.dispatch(settingsActions.setPluginMetadata({ title, metadata: doc.pluginMetadata }));
+    store.dispatch(
+        settingsActions.setPluginMetadata({
+            title,
+            metadata: doc.pluginMetadata,
+        }),
+    );
     store.dispatch(documentActions.setDocument(doc));
     store.dispatch(viewActions.setSuppressRecompile(false));
 

@@ -1,3 +1,5 @@
+import isEqual from "is-equal";
+
 import { FsErr, FsError } from "pure/fs";
 import { Result, tryAsync } from "pure/result";
 import { errstr } from "pure/utils";
@@ -30,7 +32,6 @@ import {
 
 import { CompilerKernel } from "./CompilerKernel";
 import { CompilerFileAccess } from "./CompilerFileAccess";
-import isEqual from "is-equal";
 
 async function checkFileExists(
     fileAccess: CompilerFileAccess,
@@ -179,7 +180,9 @@ export class CompilerKernelImpl implements CompilerKernel {
             // this is safe because there's no await between checking and setting (no other code can run)
             if (this.compiling) {
                 return await new Promise((resolve) => {
-                    console.warn("compilation already in progress, adding to wait queue");
+                    console.warn(
+                        "compilation already in progress, adding to wait queue",
+                    );
                     this.waiters.push(resolve);
                 });
             }

@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use crate::macros::async_trait;
 
-use super::{PluginError, Instance, PluginResult};
+use super::{Instance, PluginError, PluginResult};
 
 /// Early plugin runtime are ran to initialize the plugin instance list
 #[async_trait(auto)]
@@ -17,7 +17,9 @@ pub trait EarlyRuntime {
         if !instance.allow_duplicate {
             let id = instance.get_id();
             if plugins.contains_immediate(&id) {
-                return Err(PluginError::Duplicate(instance.get_display_id().into_owned()));
+                return Err(PluginError::Duplicate(
+                    instance.get_display_id().into_owned(),
+                ));
             }
         }
         plugins.add_immediate(instance);
@@ -107,9 +109,7 @@ impl Iterator for PluginListIntoIter {
                 let instance = instance.unwrap();
                 Some(instance)
             }
-            Some(InstanceEntry::NotFirst(instance)) => {
-                Some(instance)
-            }
+            Some(InstanceEntry::NotFirst(instance)) => Some(instance),
             None => self.deferred_iter.next(),
         }
     }

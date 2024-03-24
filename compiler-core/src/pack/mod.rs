@@ -92,7 +92,10 @@ impl<'p> CompileContext<'p> {
     /// Configure the plugin list according to the options
     pub async fn configure_plugins(&mut self, options: Option<plugin::Options>) -> PackResult<()> {
         // apply options
-        let plugin::OptionsApply { metadata, user_plugins } = match options {
+        let plugin::OptionsApply {
+            metadata,
+            user_plugins,
+        } = match options {
             None => plugin::Options::apply_none(&self.plugins),
             Some(options) => options.apply(&self.plugins),
         };

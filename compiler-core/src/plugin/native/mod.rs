@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use crate::pack::CompileContext;
 
-use super::{BoxedEarlyRuntime, PluginResult, BoxedRuntime};
+use super::{BoxedEarlyRuntime, BoxedRuntime, PluginResult};
 
 mod botw_unstable;
 mod export_livesplit;
@@ -48,9 +48,7 @@ impl Native {
                 props,
                 &ctx.start_time,
             ))),
-            Self::SplitFormat => {
-                Ok(Box::new(split_format::SplitFormat::from_props(props)))
-            }
+            Self::SplitFormat => Ok(Box::new(split_format::SplitFormat::from_props(props))),
             Self::Variables => Ok(Box::new(variables::Variables::from_props(props))),
         }
     }

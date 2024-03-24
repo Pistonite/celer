@@ -2,11 +2,11 @@ use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
 
-use celerc::{ExpoDoc, ExportRequest};
 use celerc::env::RefCounted;
+use celerc::plugin::OptionsRaw as PluginOptionsRaw;
 use celerc::prep::EntryPointsSorted;
 use celerc::res::{Loader, ResPath, Resource};
-use celerc::plugin::OptionsRaw as PluginOptionsRaw;
+use celerc::{ExpoDoc, ExportRequest};
 
 mod interop;
 use interop::OpaqueExpoContext;

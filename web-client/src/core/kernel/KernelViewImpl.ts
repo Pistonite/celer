@@ -6,12 +6,14 @@ import {
     injectSplitTypesIntoRequest,
     setDocument,
 } from "core/doc";
+import { AppStore, settingsSelector, viewActions } from "core/store";
 import {
-    AppStore,
-    settingsSelector,
-    viewActions,
-} from "core/store";
-import { AlertMgr, SerialEvent, SerialEventCancelToken, consoleKernel as console, sleep } from "low/utils";
+    AlertMgr,
+    SerialEvent,
+    SerialEventCancelToken,
+    consoleKernel as console,
+    sleep,
+} from "low/utils";
 import { ExpoDoc, ExportRequest } from "low/celerc";
 
 import { Kernel } from "./Kernel";
@@ -41,7 +43,9 @@ export class KernelViewImpl implements Kernel {
         this.alertMgr = new AlertMgrImpl(this.store);
         this.preloadedDocumentTitle = getPreloadedDocumentTitle();
         this.loadEvent = new SerialEvent((current, latest) => {
-            console.warn(`cancelling previous load (current=${current}, latest=${latest})`);
+            console.warn(
+                `cancelling previous load (current=${current}, latest=${latest})`,
+            );
         });
     }
 
@@ -76,7 +80,10 @@ export class KernelViewImpl implements Kernel {
         await this.loadEvent.run(this.reloadDocumentInternal.bind(this));
     }
 
-    private async reloadDocumentInternal(serial: number, shouldCancel: () => Void<SerialEventCancelToken>) {
+    private async reloadDocumentInternal(
+        serial: number,
+        shouldCancel: () => Void<SerialEventCancelToken>,
+    ) {
         this.store.dispatch(viewActions.setCompileInProgress(true));
         // let UI update
         await sleep(0);
