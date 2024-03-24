@@ -75,7 +75,7 @@ where
 
 thread_local! {
     /// Current number of ticks ran without yielding in cooperative multitasking
-    static COOP_TICKS: RefCell<u32> = RefCell::new(0);
+    static COOP_TICKS: RefCell<u32> = const { RefCell::new(0) };
 }
 
 /// Increment the ticks and return if the tick limit has been reached. If the limit

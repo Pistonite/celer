@@ -12,12 +12,12 @@ use crate::pack::CompileContext;
 use crate::prep::{DocTag, DocTagColor};
 use crate::prop;
 
-use crate::plugin::{PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, Runtime};
 
-pub struct LinkPlugin;
+pub struct Link;
 
 #[async_trait(auto)]
-impl PluginRuntime for LinkPlugin {
+impl Runtime for Link {
     async fn on_before_compile<'p>(&mut self, ctx: &mut CompileContext<'p>) -> PluginResult<()> {
         // add the link tag if not defined already
         let link_tag = DocTag {
@@ -50,7 +50,7 @@ impl PluginRuntime for LinkPlugin {
     }
 
     fn get_id(&self) -> Cow<'static, str> {
-        Cow::Owned(super::BuiltInPlugin::Link.id())
+        Cow::Owned(super::Native::Link.id())
     }
 }
 

@@ -7,7 +7,7 @@ use celerc::PreparedContext;
 use crate::loader::{self, LoadFileOutput, LoaderInWasm};
 
 thread_local! {
-    static CACHED_COMPILER_CONTEXT: RefCell<Option<PreparedContext<LoaderInWasm>>> = RefCell::new(None);
+    static CACHED_COMPILER_CONTEXT: RefCell<Option<PreparedContext<LoaderInWasm>>> = const { RefCell::new(None) };
 }
 
 /// Guard for acquiring the cached context and takes care of releasing it

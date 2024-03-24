@@ -8,7 +8,7 @@ use crate::env::yield_budget;
 use crate::json::{Cast, Coerce};
 use crate::lang::Preset;
 use crate::macros::async_recursion;
-use crate::plugin::PluginInstance;
+use crate::plugin::Instance as PluginInstance;
 use crate::prop;
 use crate::res::{Loader, ResError, Resource, Use};
 

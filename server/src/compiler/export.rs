@@ -1,14 +1,15 @@
 use instant::Instant;
 
 use celerc::pack::PackError;
-use celerc::{Compiler, ExpoDoc, ExportRequest, PluginOptions, PreparedContext};
+use celerc::plugin;
+use celerc::{Compiler, ExpoDoc, ExportRequest, PreparedContext};
 
 use super::ServerResourceLoader;
 
 pub async fn export(
     prep_ctx: &PreparedContext<ServerResourceLoader>,
     start_time: Option<Instant>,
-    plugin_options: Option<PluginOptions>,
+    plugin_options: Option<plugin::Options>,
     req: ExportRequest,
 ) -> ExpoDoc {
     let mut comp_ctx = prep_ctx.new_compilation(start_time).await;

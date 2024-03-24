@@ -21,7 +21,7 @@ impl<'a> PreparedConfig<'a> {
             yield_budget(16).await;
 
             let v = super::check_map!(self, v, format!("{}[{}]", prop::PLUGINS, i))?;
-            match plugin::parse_plugin_instance(v, res).await {
+            match plugin::Instance::parse(v, res).await {
                 Ok(plugin) => self.plugins.push(plugin),
                 Err(PluginParseError::MissingPlugin) => {
                     return Err(PrepError::MissingConfigProperty(

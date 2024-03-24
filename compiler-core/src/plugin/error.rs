@@ -13,6 +13,9 @@ pub enum PluginError {
 
     #[error("The plugin `{0}` does not implement the required `{1}` method!")]
     NotImplemented(String, String),
+
+    #[error("The plugin `{0}` is duplicated. Please remove the duplicate(s) or refer to the documentation for advanced options.")]
+    Duplicate(String),
 }
 
 pub type PluginResult<T> = Result<T, PluginError>;
@@ -27,7 +30,11 @@ impl BaseError for PluginError {
     }
 
     fn help_path(&self) -> Option<Cow<'static, str>> {
-        // helps are surfaced through core phase errors
-        None
+        let path = match self {
+            Self::InvalidAddPlugin(_, _) => "plugin/settings",
+            Self::Duplicate(_) => "plugin/getting-started#allow-duplicates",
+            _ => return None,
+        };
+        Some(format!("/docs/{path}").into())
     }
 }

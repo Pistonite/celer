@@ -1,16 +1,19 @@
 /// Implementation of the Kernel in VIEW mode
+import { Void } from "pure/result";
 
 import {
     getRawPluginOptionsForTitle,
     injectSplitTypesIntoRequest,
+    setDocument,
 } from "core/doc";
+import { AppStore, settingsSelector, viewActions } from "core/store";
 import {
-    AppStore,
-    documentActions,
-    settingsSelector,
-    viewActions,
-} from "core/store";
-import { AlertMgr, consoleKernel as console, sleep } from "low/utils";
+    AlertMgr,
+    SerialEvent,
+    SerialEventCancelToken,
+    consoleKernel as console,
+    sleep,
+} from "low/utils";
 import { ExpoDoc, ExportRequest } from "low/celerc";
 
 import { Kernel } from "./Kernel";
@@ -31,6 +34,7 @@ export class KernelViewImpl implements Kernel {
     public readonly alertMgr: AlertMgr;
 
     private preloadedDocumentTitle: string | undefined;
+    private loadEvent: SerialEvent;
 
     constructor(initUiMgr: UiMgrInitFn) {
         this.store = createAndBindStore(this);
@@ -38,6 +42,11 @@ export class KernelViewImpl implements Kernel {
         this.keyMgr = new KeyMgr(this.store);
         this.alertMgr = new AlertMgrImpl(this.store);
         this.preloadedDocumentTitle = getPreloadedDocumentTitle();
+        this.loadEvent = new SerialEvent((current, latest) => {
+            console.warn(
+                `cancelling previous load (current=${current}, latest=${latest})`,
+            );
+        });
     }
 
     public asEdit(): never {
@@ -64,23 +73,43 @@ export class KernelViewImpl implements Kernel {
     }
 
     /// Reload the document from the server based on the current URL
+    ///
+    /// In view mode, a next load will cancel previous loads so the latest state
+    /// is guaranteed to be loaded.
     public async reloadDocument() {
-        this.store.dispatch(documentActions.setDocument(undefined));
+        await this.loadEvent.run(this.reloadDocumentInternal.bind(this));
+    }
+
+    private async reloadDocumentInternal(
+        serial: number,
+        shouldCancel: () => Void<SerialEventCancelToken>,
+    ) {
         this.store.dispatch(viewActions.setCompileInProgress(true));
         // let UI update
         await sleep(0);
 
         let retry = true;
         while (retry) {
-            console.info("reloading document from server");
+            let cancel = shouldCancel();
+            if (cancel.err) {
+                return cancel;
+            }
+
+            console.info(`reloading document from server (serial=${serial})`);
             const settings = settingsSelector(this.store.getState());
             const pluginOptions = getRawPluginOptionsForTitle(
                 settings,
                 this.preloadedDocumentTitle,
             );
             const result = await loadDocument(pluginOptions);
+
+            cancel = shouldCancel();
+            if (cancel.err) {
+                return cancel;
+            }
+
             if (result.type === "failure") {
-                this.store.dispatch(documentActions.setDocument(undefined));
+                setDocument(this.store, undefined);
                 console.info("failed to load document from server");
                 console.error(result.data);
                 retry = await this.alertMgr.show({
@@ -121,10 +150,12 @@ export class KernelViewImpl implements Kernel {
                 console.error(e);
                 document.title = "Celer Viewer";
             }
-            this.store.dispatch(documentActions.setDocument(doc));
+            setDocument(this.store, doc);
             break;
         }
         this.store.dispatch(viewActions.setCompileInProgress(false));
+
+        return { val: undefined };
     }
 
     public exportDocument(request: ExportRequest): Promise<ExpoDoc> {

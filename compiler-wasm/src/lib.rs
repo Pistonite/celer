@@ -1,11 +1,12 @@
-use celerc::{ExpoDoc, ExportRequest, PluginOptionsRaw};
 use js_sys::Function;
 use log::info;
 use wasm_bindgen::prelude::*;
 
 use celerc::env::RefCounted;
+use celerc::plugin::OptionsRaw as PluginOptionsRaw;
 use celerc::prep::EntryPointsSorted;
 use celerc::res::{Loader, ResPath, Resource};
+use celerc::{ExpoDoc, ExportRequest};
 
 mod interop;
 use interop::OpaqueExpoContext;
@@ -14,7 +15,6 @@ mod loader;
 use loader::LoaderInWasm;
 mod logger;
 mod plugin;
-use plugin::SetPluginOptionsResult;
 
 /// Initialize bindings with WASM
 #[wasm_bindgen]
@@ -73,7 +73,7 @@ pub async fn export_document(
 /// Set user plugin options
 #[wasm_bindgen]
 #[inline]
-pub async fn set_plugin_options(options: Option<PluginOptionsRaw>) -> SetPluginOptionsResult {
+pub async fn set_plugin_options(options: Option<PluginOptionsRaw>) {
     plugin::set_plugin_options(options).await
 }
 

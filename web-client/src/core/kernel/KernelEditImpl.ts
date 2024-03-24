@@ -4,12 +4,11 @@ import { FsFileSystem } from "pure/fs";
 
 import {
     AppStore,
-    documentActions,
     settingsActions,
     settingsSelector,
     viewActions,
 } from "core/store";
-import { injectSplitTypesIntoRequest } from "core/doc";
+import { injectSplitTypesIntoRequest, setDocument } from "core/doc";
 import { EditorKernel, EditorKernelAccess } from "core/editor";
 import { CompilerKernel } from "core/compiler";
 import { AlertMgr, consoleKernel as console } from "low/utils";
@@ -149,7 +148,7 @@ export class KernelEditImpl implements Kernel, KernelEdit, EditorKernelAccess {
 
     public async closeProjectFileSystem() {
         console.info("closing file system...");
-        this.store.dispatch(documentActions.setDocument(undefined));
+        setDocument(this.store, undefined);
         this.updateRootPathInStore(undefined);
         this.editor = undefined;
         const { deleteEditor } = await import("core/editor");

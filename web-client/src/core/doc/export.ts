@@ -3,7 +3,7 @@ import YAML from "js-yaml";
 import { Result, tryCatch } from "pure/result";
 
 import { AppState, documentSelector, settingsSelector } from "core/store";
-import { ExportMetadata, ExportRequest } from "low/celerc";
+import type { ExportMetadata, ExportRequest, Value } from "low/celerc";
 import { consoleDoc as console } from "low/utils";
 
 import { DocSettingsState } from "./state";
@@ -53,7 +53,7 @@ export function createExportRequest(
         const request: ExportRequest = {
             pluginId: metadata.pluginId,
             exportId: metadata.exportId || "",
-            payload: configPayload,
+            payload: configPayload as Value,
         };
         return request;
     });

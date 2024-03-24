@@ -9,10 +9,10 @@ use crate::json::Coerce;
 use crate::macros::async_trait;
 use crate::prop;
 
-use crate::plugin::{PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, Runtime};
 
 /// Metrics collected during compilation
-pub struct MetricsPlugin {
+pub struct Metrics {
     /// If detailed metrics of each phase should be given
     detailed: bool,
     /// Starting time of the current phase being measured
@@ -23,7 +23,7 @@ pub struct MetricsPlugin {
     comp_time_ms: u64,
 }
 
-impl MetricsPlugin {
+impl Metrics {
     pub fn from_props(props: &Value, start_time: &Instant) -> Self {
         let detailed = props
             .as_object()
@@ -52,7 +52,7 @@ impl MetricsPlugin {
 }
 
 #[async_trait(auto)]
-impl PluginRuntime for MetricsPlugin {
+impl Runtime for Metrics {
     async fn on_after_compile<'p>(&mut self, _: &mut CompDoc<'p>) -> PluginResult<()> {
         // measure time since plugin created = comp phase time
         if self.detailed {
@@ -91,6 +91,6 @@ impl PluginRuntime for MetricsPlugin {
     }
 
     fn get_id(&self) -> Cow<'static, str> {
-        Cow::Owned(super::BuiltInPlugin::Metrics.id())
+        Cow::Owned(super::Native::Metrics.id())
     }
 }

@@ -1,6 +1,6 @@
 //! Calls the /compile endpoint
 
-import type { ExpoContext, PluginOptionsRaw } from "low/celerc";
+import type { ExpoContext, PluginOptions } from "low/celerc";
 import { consoleKernel as console } from "low/utils";
 import { fetchAsJson, getApiUrl } from "low/fetch";
 
@@ -24,7 +24,7 @@ function createLoadError(data: string): LoadDocumentResult {
 ///
 /// The path should be /view/{owner}/{repo}/{path}:{reference}
 export async function loadDocument(
-    pluginOptions: PluginOptionsRaw | undefined,
+    pluginOptions: PluginOptions | undefined,
 ): Promise<LoadDocumentResult> {
     const docRef = parseDocRef(window.location.pathname);
     if (!docRef) {
@@ -37,7 +37,7 @@ export async function loadDocument(
 
 async function loadDocumentForRef(
     docRef: DocRef,
-    pluginOptions: PluginOptionsRaw | undefined,
+    pluginOptions: PluginOptions | undefined,
 ): Promise<LoadDocumentResult> {
     const { owner, repo, ref, path } = docRef;
     console.info(`loading document: ${owner}/${repo}/${ref} ${path}`);

@@ -5,14 +5,15 @@ import {
     SettingsState,
     settingsSelector,
     documentSelector,
+    viewSelector,
 } from "core/store";
 import {
     DocPoorText,
     DocRichTextBlock,
     ExecDoc,
-    PluginOptionsRaw,
+    PluginOptions,
 } from "low/celerc";
-import { Debouncer, shallowArrayEqual } from "low/utils";
+import { shallowArrayEqual } from "low/utils";
 import { parseUserConfigOptions } from "./useDocCurrentUserPluginConfig";
 import { getSplitExportPluginConfigs } from "./export";
 
@@ -135,78 +136,69 @@ export const getAllSplitTypes = (doc: ExecDoc): string[] => {
 const RECOMPILE_ON_SETTINGS: (keyof SettingsState)[] = [
     "compilerEntryPath",
     "enabledAppPlugins",
-    "disabledPlugins",
+    "pluginMetadatas",
 ];
-
-const RecompileNeededDebouncer = new Debouncer(
-    100,
-    (oldState: AppState, newState: AppState) => {
-        const oldSettings = settingsSelector(oldState);
-        const newSettings = settingsSelector(newState);
-        for (let i = 0; i < RECOMPILE_ON_SETTINGS.length; i++) {
-            const key = RECOMPILE_ON_SETTINGS[i];
-            if (oldSettings[key] !== newSettings[key]) {
-                return true;
-            }
-        }
-        // user plugin config
-        if (
-            oldSettings.enableUserPlugins !== newSettings.enableUserPlugins ||
-            oldSettings.userPluginConfig !== newSettings.userPluginConfig
-        ) {
-            const newDocument = documentSelector(newState);
-            if (newSettings.enableUserPlugins) {
-                const { val } = parseUserConfigOptions(
-                    newSettings.userPluginConfig,
-                    newDocument.document?.project.title,
-                );
-                if (val) {
-                    return true;
-                }
-                return false; // error in config
-            }
-            // user plugin config disabled
-            // if old has config, recompile
-            const oldDocument = documentSelector(oldState);
-            if (oldSettings.enableUserPlugins) {
-                const { val } = parseUserConfigOptions(
-                    oldSettings.userPluginConfig,
-                    oldDocument.document?.project.title,
-                );
-                if (val && val.length > 0) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    },
-    () => false,
-);
 
 /// If a recompile/reload is needed when state changes
 ///
 /// This is async to batch multiple updates
-export const isRecompileNeeded = (
+export function isRecompileNeeded(
     oldState: AppState,
     newState: AppState,
-): Promise<boolean> => {
-    return RecompileNeededDebouncer.dispatch(
-        oldState,
-        newState,
-    ) as Promise<boolean>;
-};
+): boolean {
+    const { suppressRecompile } = viewSelector(newState);
+    if (suppressRecompile) {
+        return false;
+    }
+    const oldSettings = settingsSelector(oldState);
+    const newSettings = settingsSelector(newState);
+    for (let i = 0; i < RECOMPILE_ON_SETTINGS.length; i++) {
+        const key = RECOMPILE_ON_SETTINGS[i];
+        if (oldSettings[key] !== newSettings[key]) {
+            return true;
+        }
+    }
+
+    // user plugin config
+    if (
+        oldSettings.enableUserPlugins !== newSettings.enableUserPlugins ||
+        oldSettings.userPluginConfig !== newSettings.userPluginConfig
+    ) {
+        const newDocument = documentSelector(newState);
+        if (newSettings.enableUserPlugins) {
+            const { val } = parseUserConfigOptions(
+                newSettings.userPluginConfig,
+                newDocument.document?.project.title,
+            );
+            return !!val; // false means error in config
+        }
+        // user plugin config disabled
+        // if old has config, recompile
+        const oldDocument = documentSelector(oldState);
+        if (oldSettings.enableUserPlugins) {
+            const { val } = parseUserConfigOptions(
+                oldSettings.userPluginConfig,
+                oldDocument.document?.project.title,
+            );
+            if (val && val.length > 0) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 let lastPluginOptionInputs: unknown[] | undefined = undefined;
-let lastPluginOptionResult: PluginOptionsRaw | undefined = undefined;
+let lastPluginOptionResult: PluginOptions | undefined = undefined;
 
 /// Get the raw plugin options to pass to the compiler
 export const getRawPluginOptions = (
     state: AppState,
-): PluginOptionsRaw | undefined => {
+): PluginOptions | undefined => {
     const settings = settingsSelector(state);
     const {
-        disabledPlugins,
+        pluginMetadatas,
         enabledAppPlugins,
         enableUserPlugins,
         userPluginConfig,
@@ -214,7 +206,7 @@ export const getRawPluginOptions = (
     const { document, serial } = documentSelector(state);
 
     const currentInputs = [
-        disabledPlugins,
+        pluginMetadatas,
         enabledAppPlugins,
         enableUserPlugins,
         userPluginConfig,
@@ -238,14 +230,23 @@ export const getRawPluginOptions = (
 export function getRawPluginOptionsForTitle(
     state: SettingsState,
     title: string | undefined,
-): PluginOptionsRaw | undefined {
+): PluginOptions | undefined {
     const {
-        disabledPlugins,
+        pluginMetadatas,
         enabledAppPlugins,
         enableUserPlugins,
         userPluginConfig,
     } = state;
-    const remove = title ? disabledPlugins[title] || [] : [];
+
+    const metadata = title ? pluginMetadatas[title] || [] : [];
+    const routePluginIds = metadata
+        .map((m) => {
+            if (!m.isFromUser) {
+                return m.displayId;
+            }
+        })
+        .filter(Boolean) as string[];
+
     const add = [];
     if (enabledAppPlugins["export-split"]) {
         getSplitExportPluginConfigs().forEach((config) => add.push(config));
@@ -256,8 +257,19 @@ export function getRawPluginOptionsForTitle(
             add.push(...val);
         }
     }
+    const remove = metadata
+        .map((m, i) => {
+            if (m.isFromUser && !enableUserPlugins) {
+                return undefined;
+            }
+            if (m.isEnabled) {
+                return undefined;
+            }
+            return i;
+        })
+        .filter((x) => x !== undefined) as number[];
     if (remove.length === 0 && add.length === 0) {
         return undefined;
     }
-    return { remove, add };
+    return { routePluginIds, remove, add };
 }

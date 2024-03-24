@@ -11,3 +11,8 @@ members = [
 
 [profile.release]
 lto = true # Link-time optimization
+
+# newer fork for tsify
+# can't use until https://github.com/siefkenj/tsify/issues/16
+# [patch.crates-io]
+# tsify = { git = "https://github.com/siefkenj/tsify", ref = "8a5a550d2ab41612cef88a3a3de2a94639b0d3fc" }

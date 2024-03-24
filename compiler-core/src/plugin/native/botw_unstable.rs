@@ -9,7 +9,7 @@ use crate::env::yield_budget;
 use crate::json::Coerce;
 use crate::lang::{DocDiagnostic, DocRichText, DocRichTextBlock};
 use crate::macros::async_trait;
-use crate::plugin::{PluginResult, PluginRuntime};
+use crate::plugin::{PluginResult, Runtime};
 
 const FURY: &str = "fury";
 const GALE: &str = "gale";
@@ -47,7 +47,7 @@ fn is_in_castle(line: &CompLine) -> Option<bool> {
     result
 }
 
-pub struct BotwAbilityUnstablePlugin {
+pub struct BotwAbilityUnstable {
     /// If recharge time should be estimated
     estimate_recharge: bool,
     /// Multiplier for the time estimate
@@ -68,9 +68,9 @@ pub struct BotwAbilityUnstablePlugin {
     fury_plus: bool,
 }
 
-impl BotwAbilityUnstablePlugin {
+impl BotwAbilityUnstable {
     pub fn from_props(props: &Value) -> Self {
-        let mut plugin = BotwAbilityUnstablePlugin {
+        let mut plugin = Self {
             estimate_recharge: false,
             multiplier: 1.0,
             in_castle: false,
@@ -174,7 +174,7 @@ impl BotwAbilityUnstablePlugin {
                 None => {
                     let error = DocDiagnostic::error(
                         "`gale` must be a non-negative integer",
-                        self.get_display_name(),
+                        self.get_diagnostics_source(),
                     );
                     line.diagnostics.push(error);
                     None
@@ -188,7 +188,7 @@ impl BotwAbilityUnstablePlugin {
                 None => {
                     let error = DocDiagnostic::error(
                         "`fury` must be a non-negative integer",
-                        self.get_display_name(),
+                        self.get_diagnostics_source(),
                     );
                     line.diagnostics.push(error);
                     None
@@ -203,7 +203,7 @@ impl BotwAbilityUnstablePlugin {
                     None => {
                         let error = DocDiagnostic::error(
                             "`time-override` must be a non-negative integer",
-                            self.get_display_name(),
+                            self.get_diagnostics_source(),
                         );
                         line.diagnostics.push(error);
                         None
@@ -292,12 +292,12 @@ impl BotwAbilityUnstablePlugin {
         let error = if current == 0 {
             DocDiagnostic::warning(
                 &format!("{ability} may not be recharged yet. May need {time_need} more seconds to recharge. Note that this is an estimate and may not be accurate."),
-                self.get_display_name(),
+                self.get_diagnostics_source(),
             )
         } else {
             DocDiagnostic::warning(
                 &format!("not enough {ability}! Need to use {need}, but only {current} left."),
-                self.get_display_name(),
+                self.get_diagnostics_source(),
             )
         };
         diagnostics.push(error);
@@ -315,7 +315,7 @@ impl BotwAbilityUnstablePlugin {
                 _ => {
                     let error = DocDiagnostic::error(
                         "ability use count must be specified in the tag or as a property!",
-                        self.get_display_name(),
+                        self.get_diagnostics_source(),
                     );
                     diagnostics.push(error);
                     return None;
@@ -327,7 +327,7 @@ impl BotwAbilityUnstablePlugin {
                 Err(_) => {
                     let error = DocDiagnostic::error(
                         "ability use count must be a non-negative integer!",
-                        self.get_display_name(),
+                        self.get_diagnostics_source(),
                     );
                     diagnostics.push(error);
                     return None;
@@ -337,7 +337,7 @@ impl BotwAbilityUnstablePlugin {
         if count > MAX_USE {
             let error = DocDiagnostic::error(
                 "ability use count must be between 0 and 3!",
-                self.get_display_name(),
+                self.get_diagnostics_source(),
             );
             diagnostics.push(error);
             return None;
@@ -402,7 +402,7 @@ fn estimate_time(text: &DocRichText) -> u32 {
 }
 
 #[async_trait(auto)]
-impl PluginRuntime for BotwAbilityUnstablePlugin {
+impl Runtime for BotwAbilityUnstable {
     async fn on_after_compile<'p>(&mut self, comp_doc: &mut CompDoc<'p>) -> PluginResult<()> {
         for line in comp_doc.lines_mut() {
             yield_budget(64).await;
@@ -412,6 +412,6 @@ impl PluginRuntime for BotwAbilityUnstablePlugin {
     }
 
     fn get_id(&self) -> Cow<'static, str> {
-        Cow::Owned(super::BuiltInPlugin::BotwAbilityUnstable.id())
+        Cow::Owned(super::Native::BotwAbilityUnstable.id())
     }
 }

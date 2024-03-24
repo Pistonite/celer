@@ -8,10 +8,7 @@ use crate::plugin::PluginError;
 #[derive(Debug, thiserror::Error)]
 pub enum PackError {
     #[error("Failed to initialize plugins: {0}")]
-    PluginInitError(PluginError),
-
-    #[error("There are duplicated plugins ({0}). Please remove the duplicates or use `allow-duplicate: true`")]
-    DuplicatePlugins(String),
+    PluginInitError(#[from] PluginError),
 
     #[error("Failed to build route: {0}")]
     BuildRouteError(RouteBlobError),
@@ -36,8 +33,7 @@ impl BaseError for PackError {
 
     fn help_path(&self) -> Option<Cow<'static, str>> {
         let path = match self {
-            PackError::PluginInitError(_) => "plugin/getting-started",
-            PackError::DuplicatePlugins(_) => "plugin/getting-started#allow-duplicates",
+            PackError::PluginInitError(e) => return e.help_path(),
             PackError::BuildRouteError(_) => "route/route-structure",
             PackError::BuildRouteSectionError(_) => "route/route-structure#sections",
             PackError::BuildRouteLineError(_) => "route/route-structure#lines",

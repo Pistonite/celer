@@ -1,11 +1,12 @@
+import isEqual from "is-equal";
+
 import { FsErr, FsError } from "pure/fs";
 import { Result, tryAsync } from "pure/result";
 import { errstr } from "pure/utils";
 
-import { getRawPluginOptions } from "core/doc";
+import { getRawPluginOptions, setDocument } from "core/doc";
 import {
     AppStore,
-    documentActions,
     settingsActions,
     settingsSelector,
     viewActions,
@@ -15,7 +16,7 @@ import {
     EntryPointsSorted,
     ExpoDoc,
     ExportRequest,
-    PluginOptionsRaw,
+    PluginOptions,
     compile_document,
     export_document,
     get_entry_points,
@@ -59,7 +60,7 @@ export class CompilerKernelImpl implements CompilerKernel {
     private compiling: boolean;
     /// Lock to prevent compilation and other operations from running at the same time
     private compilerLock: ReentrantLock;
-    private lastPluginOptions: PluginOptionsRaw | undefined;
+    private lastPluginOptions: PluginOptions | undefined;
 
     private cleanup: () => void;
     private waiters: Array<(x: unknown) => void>;
@@ -179,10 +180,9 @@ export class CompilerKernelImpl implements CompilerKernel {
             // this is safe because there's no await between checking and setting (no other code can run)
             if (this.compiling) {
                 return await new Promise((resolve) => {
-                    if (!this.compiling) {
-                        resolve(undefined);
-                    }
-                    console.warn("compilation already in progress, skipping");
+                    console.warn(
+                        "compilation already in progress, adding to wait queue",
+                    );
                     this.waiters.push(resolve);
                 });
             }
@@ -211,7 +211,7 @@ export class CompilerKernelImpl implements CompilerKernel {
                 } else {
                     const doc = result.val;
                     if (this.fileAccess && doc !== undefined) {
-                        this.store.dispatch(documentActions.setDocument(doc));
+                        setDocument(this.store, doc);
                     }
                 }
             }
@@ -378,7 +378,7 @@ export class CompilerKernelImpl implements CompilerKernel {
 
     private async updatePluginOptions() {
         const pluginOptions = getRawPluginOptions(this.store.getState());
-        if (pluginOptions !== this.lastPluginOptions) {
+        if (!isEqual(pluginOptions, this.lastPluginOptions)) {
             this.lastPluginOptions = pluginOptions;
             console.info("updating plugin options...");
             const result = await tryAsync(() =>
