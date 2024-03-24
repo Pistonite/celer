@@ -16,7 +16,6 @@ import {
 import { shallowArrayEqual } from "low/utils";
 import { parseUserConfigOptions } from "./useDocCurrentUserPluginConfig";
 import { getSplitExportPluginConfigs } from "./export";
-// import { produce } from "immer";
 
 /// Get the previous or next <delta>-th split.
 export const getRelativeSplitLocation = (
@@ -139,54 +138,6 @@ const RECOMPILE_ON_SETTINGS: (keyof SettingsState)[] = [
     "enabledAppPlugins",
     "pluginMetadatas",
 ];
-
-// let lastOldState: any = undefined;
-//
-// const RecompileNeededDebouncer = new Debouncer(
-//     100,
-//     (oldState: AppState, newState: AppState) => {
-//         lastOldState = oldState;
-//         const oldSettings = settingsSelector(oldState);
-//         const newSettings = settingsSelector(newState);
-//         for (let i = 0; i < RECOMPILE_ON_SETTINGS.length; i++) {
-//             const key = RECOMPILE_ON_SETTINGS[i];
-//             if (oldSettings[key] !== newSettings[key]) {
-//                 return true;
-//             }
-//         }
-//         console.warn(produce(oldSettings.pluginMetadatas, ()=>{}),
-//             produce(newSettings.pluginMetadatas, ()=>{}));
-//         // user plugin config
-//         if (
-//             oldSettings.enableUserPlugins !== newSettings.enableUserPlugins ||
-//             oldSettings.userPluginConfig !== newSettings.userPluginConfig
-//         ) {
-//             const newDocument = documentSelector(newState);
-//             if (newSettings.enableUserPlugins) {
-//                 const { val } = parseUserConfigOptions(
-//                     newSettings.userPluginConfig,
-//                     newDocument.document?.project.title,
-//                 );
-//                 return !!val; // false means error in config
-//             }
-//             // user plugin config disabled
-//             // if old has config, recompile
-//             const oldDocument = documentSelector(oldState);
-//             if (oldSettings.enableUserPlugins) {
-//                 const { val } = parseUserConfigOptions(
-//                     oldSettings.userPluginConfig,
-//                     oldDocument.document?.project.title,
-//                 );
-//                 if (val && val.length > 0) {
-//                     return true;
-//                 }
-//             }
-//         }
-//
-//         return false;
-//     },
-//     () => false,
-// );
 
 /// If a recompile/reload is needed when state changes
 ///
