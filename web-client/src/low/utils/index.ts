@@ -2,14 +2,15 @@
 //!
 //! Low level utilities that all layers can use
 
-export * from "./Alert";
-export * from "./IdleMgr";
-export * from "./Debouncer";
-export * from "./html";
-export * from "./ReentrantLock";
-export * from "./WorkerHost";
-export * from "./Yielder";
-export * from "./logging";
+export * from "./Alert.ts";
+export * from "./IdleMgr.ts";
+export * from "./Debouncer.ts";
+export * from "./html.ts";
+export * from "./ReentrantLock.ts";
+export * from "./SerialEvent.ts";
+export * from "./WorkerHost.ts";
+export * from "./Yielder.ts";
+export * from "./logging.ts";
 
 export const shallowArrayEqual = <T>(a: T[], b: T[]): boolean => {
     if (a.length !== b.length) {

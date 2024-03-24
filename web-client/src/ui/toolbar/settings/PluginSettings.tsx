@@ -36,34 +36,19 @@ import { SettingsSection } from "./SettingsSection";
 export const PluginSettings: React.FC = () => {
     const { document } = useSelector(documentSelector);
     const pluginMetadata = useDocPluginMetadata();
+
     const routePluginMetadata = useMemo(() => {
-        return pluginMetadata?.filter((x) => !x.isFromUser);
+        return pluginMetadata.filter((x) => !x.isFromUser);
     }, [pluginMetadata]);
     const userPluginMetadata = useMemo(() => {
-        return pluginMetadata?.filter((x) => x.isFromUser);
+        return pluginMetadata.filter((x) => x.isFromUser);
     }, [pluginMetadata]);
     const { enableUserPlugins, userPluginConfig } =
     useSelector(settingsSelector);
-    // // cache the plugin metadata once the dialog shows up
-    // // so the UI doesn't jump around when the plugin metadata changes
-    // const [cachedPluginMetadata, setCachedPluginMetadata] =
-    //     useState(pluginMetadata);
     const { setPluginMetadata, setUserPluginEnabled, setUserPluginConfig } =
         useActions(settingsActions);
-    // const disabledPlugins = useDocDisabledPlugins();
 
     const kernel = useKernel();
-                // <Field>
-                //     <Button
-                //         appearance="primary"
-                //         disabled={cachedPluginMetadata === pluginMetadata}
-                //         onClick={() => {
-                //             setCachedPluginMetadata(pluginMetadata);
-                //         }}
-                //     >
-                //         Refresh route plugins
-                //     </Button>
-                // </Field>
 
     return (
         <>
@@ -79,7 +64,7 @@ export const PluginSettings: React.FC = () => {
             </SettingsSection>
             <SettingsSection title="Route Plugins">
                 <Body1 block>
-                    {getRoutePluginMessage(routePluginMetadata)}
+                    {getRoutePluginMessage(!!document, routePluginMetadata)}
                 </Body1>
                 {routePluginMetadata?.map((plugin, i) => (
                     <PluginCheckbox
@@ -165,9 +150,10 @@ export const PluginSettings: React.FC = () => {
 };
 
 const getRoutePluginMessage = (
+    documentLoaded: boolean,
     pluginMetadata: PluginMetadata[] | undefined,
 ) => {
-    if (pluginMetadata === undefined) {
+    if (!documentLoaded || pluginMetadata === undefined) {
         return "Once a route document is loaded, you can enable or disable plugins here.";
     }
     if (pluginMetadata.length === 0) {

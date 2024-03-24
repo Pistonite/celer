@@ -11,6 +11,6 @@ export * as docSettingsReducers from "./settingsReducers.ts";
 export * from "./setDocument.ts";
 export * from "./useDocCurrentUserPluginConfig.ts";
 export * from "./useDocDiagnostics.ts";
-export * from "./useDocDisabledPlugins.ts";
+export * from "./useDocPluginMetadata.ts";
 export * from "./useDocSections.ts";
 export * from "./useDocSplitTypes.ts";

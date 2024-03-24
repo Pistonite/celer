@@ -1,10 +1,11 @@
 use celerc::pack::PackError;
 use instant::Instant;
 
-use celerc::res::{self, ResPath, Resource};
 use celerc::{
-    CompDoc, CompileContext, Compiler, ContextBuilder, ExpoContext, PluginOptions, PreparedContext,
+    CompDoc, CompileContext, Compiler, ContextBuilder, ExpoContext, PreparedContext,
 };
+use celerc::res::{self, ResPath, Resource};
+use celerc::plugin::Options as PluginOptions;
 
 mod loader;
 pub use loader::*;

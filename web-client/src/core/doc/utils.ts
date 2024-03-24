@@ -304,7 +304,6 @@ export function getRawPluginOptionsForTitle(
             add.push(...val);
         }
     }
-    window.console.error(metadata);
     const remove = metadata.map((m, i) => {
         if (m.isFromUser && !enableUserPlugins) {
             return undefined;
