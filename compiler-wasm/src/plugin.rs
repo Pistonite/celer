@@ -5,7 +5,7 @@ use log::{error, info};
 use celerc::plugin;
 
 thread_local! {
-    static PLUGIN_OPTIONS: RefCell<Result<Option<plugin::Options>, String>> = RefCell::new(Ok(None));
+    static PLUGIN_OPTIONS: RefCell<Result<Option<plugin::Options>, String>> = const { RefCell::new(Ok(None)) };
 }
 
 pub async fn set_plugin_options(options: Option<plugin::OptionsRaw>) {
