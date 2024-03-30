@@ -26,7 +26,6 @@ pub enum Native {
     BotwAbilityUnstable, // TODO #24: remove this
     #[serde(rename = "export-livesplit")]
     ExportLiveSplit,
-    #[serde(rename = "export-mist")]
     ExportMist,
     Link,
     Metrics,

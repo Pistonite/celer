@@ -16,19 +16,4 @@ config:
 ```
 
 ## Extra Options
-The plugin provides extra configuration when exporting.
-
-### Split Types
-The recommended way to configure which split types are exported is through [Split Settings](../doc#splits)
-
-By having `split-types: null`, Celer will automatically add the split settings for you.
-You can also override it by putting an array of split types. For example:
-```yaml
-split-types:
-- Lightroots
-- Shrines
-- Tears
-```
-:::tip
-The split type names should match exactly with the checkbox labels in Split Settings. Case matters.
-:::
+This plugin provides the same split type configuration as [the LiveSplit plugin](/plugin/export-livesplit#split-types).
