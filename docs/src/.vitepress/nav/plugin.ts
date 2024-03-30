@@ -25,6 +25,7 @@ export const pluginsSideBar = {
             text: "Built-in Exporter Plugins",
             items: [
                 { text: "Export LiveSplit", link: "/plugin/export-livesplit" },
+                { text: "Export mist", link: "/plugin/export-mist" },
             ],
         },
         {
