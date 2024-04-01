@@ -15,6 +15,8 @@ use crate::macros::async_trait;
 use crate::plugin::{PluginResult, Runtime};
 use crate::res::ResPath;
 
+use super::should_split_on;
+
 pub struct ExportLiveSplit;
 
 #[async_trait(auto)]
@@ -146,19 +148,6 @@ impl Runtime for ExportLiveSplit {
             file_content: ExpoBlob::from_utf8(file_content),
         }))
     }
-}
-
-fn should_split_on(line: &CompLine, split_types: &BTreeSet<String>) -> bool {
-    let counter = match &line.counter_text {
-        Some(counter) => counter,
-        None => return false,
-    };
-    let tag = match &counter.tag {
-        Some(tag) => tag,
-        None => return false,
-    };
-
-    split_types.contains(tag)
 }
 
 async fn build_icon_cache(

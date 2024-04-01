@@ -284,6 +284,9 @@ name = "bitflags"
 version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4682ae6287fcf752ecaabbfcc7b6f9b72aa33933dc23a554d853aea8eea8635"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "bitvec"
@@ -509,6 +512,7 @@ dependencies = [
  "livesplit-core",
  "log",
  "map-macro",
+ "mist-core",
  "roman",
  "serde",
  "serde_json",
@@ -1355,6 +1359,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "mist-core"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a0808249a2eef73d748c076f04f245d8a80863d7e3ba23e2ff1a87d54116fa5"
+dependencies = [
+ "ron",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "nix"
 version = "0.23.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1690,6 +1705,18 @@ name = "roman"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2c543f0c827ae24df93159810fd4bce2d0abe3785bb4c4d68fae3c467d58d9b"
+
+[[package]]
+name = "ron"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
+dependencies = [
+ "base64",
+ "bitflags 2.4.0",
+ "serde",
+ "serde_derive",
+]
 
 [[package]]
 name = "rustc-demangle"
