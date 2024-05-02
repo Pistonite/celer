@@ -17,11 +17,11 @@ thiserror = "1.0.51"
 
 # wasm dependencies
 tsify = { version = "0.4.5", default-features = false, features = ["js"], optional = true }
-wasm-bindgen = { version = "0.2.89", optional = true }
-wasm-bindgen-futures = { version = "0.4.39", optional = true }
+wasm-bindgen = { version = "0.2.92", optional = true }
+wasm-bindgen-futures = { version = "0.4.41", optional = true }
 web-sys = { version = "0.3.66", features = ["WorkerGlobalScope"], optional = true }
 js-sys = { version = "0.3.66", optional = true }
-serde-wasm-bindgen = { version = "0.6.3", optional = true }
+serde-wasm-bindgen = { version = "0.6.5", optional = true }
 serde = { version = "1.0.196", features = ["derive"] }
 uni-path = "1.51.1"
 serde_json = "1.0.113"
