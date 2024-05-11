@@ -51,27 +51,27 @@ pub mod site {
 #[late_global(dyn Loader)]
 pub mod global_loader {}
 
-impl<T> Deref for RefCounted<T>
-where
-    T: ?Sized,
-{
-    type Target = T;
-
-    #[inline]
-    fn deref(&self) -> &Self::Target {
-        &self.inner
-    }
-}
-
-impl<T> Display for RefCounted<T>
-where
-    T: Display + ?Sized,
-{
-    #[inline]
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.inner.fmt(f)
-    }
-}
+// impl<T> Deref for RefCounted<T>
+// where
+//     T: ?Sized,
+// {
+//     type Target = T;
+//
+//     #[inline]
+//     fn deref(&self) -> &Self::Target {
+//         &self.inner
+//     }
+// }
+//
+// impl<T> Display for RefCounted<T>
+// where
+//     T: Display + ?Sized,
+// {
+//     #[inline]
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         self.inner.fmt(f)
+//     }
+// }
 
 thread_local! {
     /// Current number of ticks ran without yielding in cooperative multitasking

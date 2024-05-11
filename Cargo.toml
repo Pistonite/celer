@@ -5,7 +5,7 @@ members = [
     "compiler-core/",
     "compiler-macros/",
     "compiler-wasm/",
-    "compiler-wasm/build/", "docker",
+    "compiler-wasm/build/",
     "docker/",
     "server/",
 ]

@@ -88,14 +88,6 @@ tasks:
     deps:
     - docs:build
     - build:client
-    - build:server
-
-  build:server:
-    deps:
-    - base:grammar
-    dir: ./server
-    cmds:
-    - cross build --bin celery --release --target x86_64-unknown-linux-musl
 
   build:client:
     deps:

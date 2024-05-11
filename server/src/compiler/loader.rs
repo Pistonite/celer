@@ -1,8 +1,11 @@
 use std::io::Read;
+use std::ops::Deref;
+use std::sync::Arc;
 
 use axum::http::header;
 use cached::{Cached, TimedSizedCache};
 use flate2::read::GzDecoder;
+use once_cell::sync::Lazy;
 use reqwest::{Client, StatusCode};
 use tokio::sync::Mutex;
 use tracing::{error, info};
@@ -12,26 +15,30 @@ use celerc::macros::async_trait;
 use celerc::res::{Loader, ResError, ResPath, ResResult};
 
 const MAX_RESOURCE_SIZE: usize = 1024 * 1024 * 10; // 10 MB
+static LOADER: Lazy<RefCounted<ServerResourceLoader>> =
+    Lazy::new(|| 
+    RefCounted::new(
+        ServerResourceLoader::new().unwrap_or_else(|e| panic!("failed to create loader {e}")))
+        )
+;
 
 pub fn setup_global_loader() {
     info!("setting up global loader...");
-    let loader = match ServerResourceLoader::new() {
-        Ok(loader) => loader,
-        Err(e) => {
-            error!("failed to create loader: {e}");
-            panic!("failed to create loader");
-        }
-    };
-    let loader: Box<dyn Loader> = Box::new(loader);
-    if celerc::env::global_loader::set(RefCounted::from(loader)).is_err() {
+    // let loader: Arc<dyn Loader> = 
+    // Arc::new(
+    //     ServerResourceLoader::new().unwrap_or_else(|e| panic!("failed to create loader {e}")))
+    //     ;
+    let loader: Arc<ServerResourceLoader> = RefCounted::clone(&LOADER);
+    if celerc::env::global_loader::set(loader).is_err() {
         error!("failed to set global loader because it is already set!");
     }
 }
 
-pub fn get_loader() -> RefCounted<dyn Loader> {
-    celerc::env::global_loader::get().unwrap_or_else(|| {
-        panic!("global loader not set!");
-    })
+pub fn get_loader() -> RefCounted<ServerResourceLoader> {
+    RefCounted::clone(&LOADER)
+    // celerc::env::global_loader::get().unwrap_or_else(|| {
+    //     panic!("global loader not set!");
+    // })
 }
 
 /// Loader for loading resources from the web
@@ -39,6 +46,12 @@ pub struct ServerResourceLoader {
     http_client: Client,
     cache: Mutex<TimedSizedCache<String, RefCounted<[u8]>>>,
 }
+
+// impl Default for ServerResourceLoader {
+//     fn default() -> Self {
+//         Self::new()
+//     }
+// }
 
 impl ServerResourceLoader {
     pub fn new() -> Result<Self, reqwest::Error> {
