@@ -2,7 +2,7 @@ use celerc::pack::PackError;
 use instant::Instant;
 
 use celerc::plugin::Options as PluginOptions;
-use celerc::res::{self, Loader, ResPath, Resource};
+use celerc::res::{self, ResPath, Resource};
 use celerc::{CompDoc, CompileContext, Compiler, ContextBuilder, ExpoContext, PreparedContext};
 
 mod loader;
