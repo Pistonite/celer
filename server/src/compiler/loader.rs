@@ -140,7 +140,7 @@ impl ServerResourceLoader {
             bytes.to_vec()
         };
 
-        let data = RefCounted::from(bytes);
+        let data = RefCounted::from(bytes.clone());
         cache.cache_set(url.to_string(), RefCounted::clone(&data));
 
         Ok(data)
