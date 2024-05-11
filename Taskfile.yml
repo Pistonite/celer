@@ -42,7 +42,6 @@ tasks:
     cmds:
     - rustup update
     - cargo install cargo-watch cargo-expand wasm-pack regen-lang
-    - cargo install cross --git https://github.com/cross-rs/cross --locked
     - cargo install txtpp
     - cargo install magoo
     - magoo install
