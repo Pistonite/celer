@@ -13,7 +13,7 @@ tasks:
       CELERSERVER_HTTPS_CERT: ../cert/cert.pem
       CELERSERVER_HTTPS_KEY: ../cert/cert-key.pem
       CELERSERVER_SITE_ORIGIN: https://pistonite.local:8173
-      CELERSERVER_GZIP: "false"
+      CELERSERVER_GZIP: "true"
     cmds:
     - cargo watch -B 1 -s "cargo run --bin celery {{.CLI_ARGS}}"
 

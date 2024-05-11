@@ -2,41 +2,78 @@ version: '3'
 
 tasks:
   pull:
-    desc: Pull built production asssets locally
+    desc: Pull built production asssets from action
+    dotenv:
+    - .env # Load github token from environment
     cmds:
-    - rm -rf ./dist/*
-    - mkdir -p dist/docs
-    - mkdir -p dist/app
-    - mkdir -p dist/bin
-    - cp -r ../docs/src/.vitepress/dist/* dist/docs
-    - cp -r ../web-client/dist/* dist/app
-    - cp ../target/x86_64-unknown-linux-musl/release/celery dist/bin
-    - chmod +x ./make-version.sh
-    - ./make-version.sh 0.0.0-dev docker
+    - cargo run
+    - task: make-version
+      vars:
+        VERSION_STRING: 0.0.0-dev unknown
+
+  make-version-ci:
+    cmds:
+    - task: make-version
+      vars:
+        VERSION_STRING: "{{.CLI_ARGS}}"
+
+  make-version:
+    cmds:
+    - echo "{{.VERSION_STRING}}"
+    - echo "{{.VERSION_STRING}}" > dist/VERSION
+    - sed -i "s/window\.__CELER_VERSION='.*'/window\.__CELER_VERSION='{{.VERSION_STRING}}'/" dist/app/view.html
+    - sed -i "s/window\.__CELER_VERSION='.*'/window\.__CELER_VERSION='{{.VERSION_STRING}}'/" dist/app/edit.html
 
   build:
-    desc: Build docker container locally (requires building assets first)
-    deps: [pull]
-    cmds:
-    - task: build-container
-
-  build-container:
+    desc: Build docker container locally (requires pulling assets)
     cmds:
     - docker build -t pistonite/celer . {{.CLI_ARGS}}
 
   run:
     desc: Run docker container
     cmds:
-      - task: run-image
-        vars:
-          IMAGE: pistonite/celer
+    - task: run-image-task
+      vars:
+        IMAGE: pistonite/celer:latest
 
   run-image:
-    desc: Run docker container
+    desc: Run docker container with specified image
+    cmds:
+    - task: run-image-task
+      vars:
+        IMAGE: "{{.CLI_ARGS}}"
+
+  run-image-task:
     cmds:
       - docker run -p 8000:80 -e CELERSERVER_SITE_ORIGIN=http://pistonite.local {{.IMAGE}}
+
+  connect:
+    desc: Connect to the running docker container
+    cmds:
+    - docker exec -it $(docker container ls -q --filter ancestor=pistonite/celer) /bin/sh
+
 
   stop:
     desc: Stop docker container
     cmds:
     - docker stop $(docker ps -q -a --filter ancestor=pistonite/celer)
+
+  clean:
+    desc: Delete previous docker containers
+    cmds:
+    - task: clean-image-task
+      vars:
+        IMAGE: pistonite/celer
+
+  clean-image:
+    desc: Delete previous docker container with specified image
+    cmds:
+    - task: clean-image-task
+      vars:
+        IMAGE: "{{.CLI_ARGS}}"
+
+  clean-image-task:
+    cmds:
+    - docker container prune
+    - docker image rm $(docker image ls -q -a --filter reference={{.IMAGE}})
+
