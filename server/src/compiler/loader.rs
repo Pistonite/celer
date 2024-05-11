@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use cached::{Cached, TimedSizedCache};
 use once_cell::sync::Lazy;
 use reqwest::{Client, StatusCode};
@@ -11,16 +9,15 @@ use celerc::macros::async_trait;
 use celerc::res::{Loader, ResError, ResPath, ResResult};
 
 const MAX_RESOURCE_SIZE: usize = 1024 * 1024 * 10; // 10 MB
-static LOADER: Lazy<RefCounted<ServerResourceLoader>> =
-    Lazy::new(|| 
+static LOADER: Lazy<RefCounted<ServerResourceLoader>> = Lazy::new(|| {
     RefCounted::new(
-        ServerResourceLoader::new().unwrap_or_else(|e| panic!("failed to create loader {e}")))
-        )
-;
+        ServerResourceLoader::new().unwrap_or_else(|e| panic!("failed to create loader {e}")),
+    )
+});
 
 pub fn setup_global_loader() {
     info!("setting up global loader...");
-    let loader: Arc<ServerResourceLoader> = RefCounted::clone(&LOADER);
+    let loader: RefCounted<ServerResourceLoader> = RefCounted::clone(&LOADER);
     if celerc::env::global_loader::set(loader).is_err() {
         error!("failed to set global loader because it is already set!");
     }
@@ -39,13 +36,12 @@ pub struct ServerResourceLoader {
 impl ServerResourceLoader {
     pub fn new() -> Result<Self, reqwest::Error> {
         let http_client = Client::builder()
-        .user_agent("celery")
-        .gzip(true)
-        // For some reason idle sockets are not closed
-        // after timeout, use this to explicitly close them
-        .pool_max_idle_per_host(32)
-            .build()?
-        ;
+            .user_agent("celery")
+            .gzip(true)
+            // For some reason idle sockets are not closed
+            // after timeout, use this to explicitly close them
+            .pool_max_idle_per_host(32)
+            .build()?;
         let cache = Mutex::new(TimedSizedCache::with_size_and_lifespan(128, 301));
         Ok(Self { http_client, cache })
     }
@@ -76,18 +72,11 @@ impl ServerResourceLoader {
             return Ok(data);
         }
 
-        let response = self
-            .http_client
-            .get(url)
-            .send()
-            .await
-            .map_err(|e| {
-                let err = ResError::FailToLoadUrl(
-                    url.to_string(),
-                    format!("Failed to send request: {e}"),
-                );
-                (err, true)
-            })?;
+        let response = self.http_client.get(url).send().await.map_err(|e| {
+            let err =
+                ResError::FailToLoadUrl(url.to_string(), format!("Failed to send request: {e}"));
+            (err, true)
+        })?;
 
         let status = response.status();
         if status != StatusCode::OK {
@@ -97,22 +86,6 @@ impl ServerResourceLoader {
             );
             return Err((err, true));
         }
-
-        // check Content-Encoding
-        // let is_gzipped = match response.headers().get(header::CONTENT_ENCODING.as_str()) {
-        //     Some(encoding) => {
-        //         if encoding != "gzip" {
-        //             let encoding = encoding.to_str().unwrap_or("unknown");
-        //             let err = ResError::FailToLoadUrl(
-        //                 url.to_string(),
-        //                 format!("Server responded with unsupported encoding: {encoding}"),
-        //             );
-        //             return Err((err, true));
-        //         }
-        //         true
-        //     }
-        //     None => false,
-        // };
 
         let bytes = response.bytes().await.map_err(|e| {
             let err =
@@ -125,21 +98,6 @@ impl ServerResourceLoader {
             let err = ResError::FailToLoadUrl(url.to_string(), "Resource is too large".to_string());
             return Err((err, false));
         }
-
-        // let bytes = if is_gzipped {
-        //     let mut decoder = GzDecoder::new(&bytes[..]);
-        //     let mut buffer = Vec::new();
-        //     if let Err(e) = decoder.read_to_end(&mut buffer) {
-        //         let err = ResError::FailToLoadUrl(
-        //             url.to_string(),
-        //             format!("Failed to decode response: {e}"),
-        //         );
-        //         return Err((err, true));
-        //     }
-        //     buffer
-        // } else {
-        //     bytes.to_vec()
-        // };
 
         let data = RefCounted::from(bytes.to_vec());
         cache.cache_set(url.to_string(), RefCounted::clone(&data));
