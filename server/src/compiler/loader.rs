@@ -83,29 +83,6 @@ impl ServerResourceLoader {
                 Err(error)
             })
             .await
-
-        // let mut cache = self.cache.lock().await;
-        // if let Some(data) = cache.cache_get(url) {
-        //     return Ok(RefCounted::clone(data));
-        // }
-        //
-        // if url.starts_with("data:") {
-        //     let data = match celerc::util::bytes_from_data_url(url) {
-        //         Ok(data) => data.into_owned(),
-        //         Err(e) => {
-        //             return Err((
-        //                 ResError::FailToLoadUrl(
-        //                     url.to_string(),
-        //                     format!("Failed to parse data URL: {e}"),
-        //                 ),
-        //                 false,
-        //             ));
-        //         }
-        //     };
-        //     let data = RefCounted::from(data);
-        //     cache.cache_set(url.to_string(), RefCounted::clone(&data));
-        //     return Ok(data);
-        // }
     }
 
     async fn fetch(&self, url: &str) -> Result<Bytes, ResError> {

@@ -4,10 +4,8 @@ use cached::{Cached, TimedSizedCache};
 use once_cell::sync::Lazy;
 use tokio::sync::Mutex;
 
-use celerc::{
-    prep::{PrepCtxData, PrepResult},
-    PrepCtx,
-};
+use celerc::prep::{PrepCtxData, PrepResult};
+use celerc::PrepCtx;
 
 use super::ServerResourceLoader;
 

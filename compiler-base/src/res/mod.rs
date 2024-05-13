@@ -108,14 +108,6 @@ where
         }
     }
 
-    /// Create a new resource with the same path as `self` but with a different loader
-    pub fn with_loader<NewL>(self, loader: RefCounted<NewL>) -> Resource<'a, NewL>
-    where
-        NewL: Loader,
-    {
-        Resource::new(self.path, loader)
-    }
-
     pub fn path(&self) -> &ResPath<'a> {
         &self.path
     }
