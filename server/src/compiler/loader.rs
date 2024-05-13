@@ -1,81 +1,116 @@
-use cached::{Cached, TimedSizedCache};
+use std::sync::Arc;
+
+use axum::body::Bytes;
 use once_cell::sync::Lazy;
 use reqwest::{Client, StatusCode};
-use tokio::sync::Mutex;
 use tracing::{error, info};
 
-use celerc::env::RefCounted;
 use celerc::macros::async_trait;
-use celerc::res::{Loader, ResError, ResPath, ResResult};
+use celerc::res::{Loader, LoaderFactory, ResError, ResPath, ResResult};
+
+use super::ResourceCache;
 
 const MAX_RESOURCE_SIZE: usize = 1024 * 1024 * 10; // 10 MB
-static LOADER: Lazy<RefCounted<ServerResourceLoader>> = Lazy::new(|| {
-    RefCounted::new(
-        ServerResourceLoader::new().unwrap_or_else(|e| panic!("failed to create loader {e}")),
-    )
-});
+static CACHE: Lazy<ResourceCache> = Lazy::new(ResourceCache::new);
 
-pub fn setup_global_loader() {
-    info!("setting up global loader...");
-    let loader: RefCounted<ServerResourceLoader> = RefCounted::clone(&LOADER);
-    if celerc::env::global_loader::set(loader).is_err() {
-        error!("failed to set global loader because it is already set!");
+struct ServerResourceLoaderFactory;
+impl LoaderFactory for ServerResourceLoaderFactory {
+    fn create_loader(&self) -> ResResult<Arc<dyn Loader>> {
+        let cache = CACHE.clone();
+        let loader = ServerResourceLoader::with_cache(cache)?;
+        Ok(Arc::new(loader))
     }
 }
 
-pub fn get_loader() -> RefCounted<ServerResourceLoader> {
-    RefCounted::clone(&LOADER)
+pub fn setup_global_loader() {
+    info!("setting up global loader factory...");
+    let loader: Arc<ServerResourceLoaderFactory> = Arc::new(ServerResourceLoaderFactory);
+    if celerc::env::global_loader_factory::set(loader).is_err() {
+        error!("failed to set global loader factory because it is already set!");
+    }
+}
+
+pub fn get_loader() -> ResResult<Arc<ServerResourceLoader>> {
+    let cache = CACHE.clone();
+    let loader = ServerResourceLoader::with_cache(cache)?;
+    Ok(Arc::new(loader))
 }
 
 /// Loader for loading resources from the web
 pub struct ServerResourceLoader {
     http_client: Client,
-    cache: Mutex<TimedSizedCache<String, RefCounted<[u8]>>>,
+    cache: ResourceCache,
 }
 
 impl ServerResourceLoader {
-    pub fn new() -> Result<Self, reqwest::Error> {
-        let http_client = Client::builder()
-            .user_agent("celery")
-            .gzip(true)
-            // For some reason idle sockets are not closed
-            // after timeout, use this to explicitly close them
-            .pool_max_idle_per_host(32)
-            .build()?;
-        let cache = Mutex::new(TimedSizedCache::with_size_and_lifespan(128, 301));
+    pub fn with_cache(cache: ResourceCache) -> ResResult<Self> {
+        let http_client = create_http_client()?;
         Ok(Self { http_client, cache })
     }
-    /// Load a resource from Url or cache.
-    ///
-    /// On error, returns an additional should_retry flag.
-    async fn load_url(&self, url: &str) -> Result<RefCounted<[u8]>, (ResError, bool)> {
-        let mut cache = self.cache.lock().await;
-        if let Some(data) = cache.cache_get(url) {
-            return Ok(RefCounted::clone(data));
-        }
 
-        if url.starts_with("data:") {
-            let data = match celerc::util::bytes_from_data_url(url) {
-                Ok(data) => data.into_owned(),
-                Err(e) => {
-                    return Err((
-                        ResError::FailToLoadUrl(
-                            url.to_string(),
-                            format!("Failed to parse data URL: {e}"),
-                        ),
-                        false,
-                    ));
+    /// Load a resource from Url. Automatically retry if the request fails with retriable error
+    async fn load_url(&self, url: &str) -> ResResult<Arc<[u8]>> {
+        self.cache
+            .get_or_fetch(url, || async {
+                // send the request, retry if failed
+                let retry = 3;
+                let mut last_error = None;
+                for _ in 0..retry {
+                    match self.fetch(url).await {
+                        Ok(data) => {
+                            if data.len() > MAX_RESOURCE_SIZE {
+                                // don't retry if the resource is too big
+                                let err = ResError::FailToLoadUrl(
+                                    url.to_string(),
+                                    "Resource is too large".to_string(),
+                                );
+                                return Err(err);
+                            }
+                            return Ok(data.to_vec());
+                        }
+                        Err(e) => {
+                            error!("Failed to fetch resource: {e}");
+                            last_error = Some(e);
+                        }
+                    }
                 }
-            };
-            let data = RefCounted::from(data);
-            cache.cache_set(url.to_string(), RefCounted::clone(&data));
-            return Ok(data);
-        }
+                error!("Failed to load resource after max retries!");
 
+                let error = last_error.unwrap_or_else(|| {
+                    ResError::FailToLoadUrl(url.to_string(), "Unknown error".to_string())
+                });
+
+                Err(error)
+            })
+            .await
+
+        // let mut cache = self.cache.lock().await;
+        // if let Some(data) = cache.cache_get(url) {
+        //     return Ok(RefCounted::clone(data));
+        // }
+        //
+        // if url.starts_with("data:") {
+        //     let data = match celerc::util::bytes_from_data_url(url) {
+        //         Ok(data) => data.into_owned(),
+        //         Err(e) => {
+        //             return Err((
+        //                 ResError::FailToLoadUrl(
+        //                     url.to_string(),
+        //                     format!("Failed to parse data URL: {e}"),
+        //                 ),
+        //                 false,
+        //             ));
+        //         }
+        //     };
+        //     let data = RefCounted::from(data);
+        //     cache.cache_set(url.to_string(), RefCounted::clone(&data));
+        //     return Ok(data);
+        // }
+    }
+
+    async fn fetch(&self, url: &str) -> Result<Bytes, ResError> {
         let response = self.http_client.get(url).send().await.map_err(|e| {
-            let err =
-                ResError::FailToLoadUrl(url.to_string(), format!("Failed to send request: {e}"));
-            (err, true)
+            ResError::FailToLoadUrl(url.to_string(), format!("Failed to send request: {e}"))
         })?;
 
         let status = response.status();
@@ -84,31 +119,31 @@ impl ServerResourceLoader {
                 url.to_string(),
                 format!("Got response with status: {status}"),
             );
-            return Err((err, true));
+            return Err(err);
         }
 
         let bytes = response.bytes().await.map_err(|e| {
-            let err =
-                ResError::FailToLoadUrl(url.to_string(), format!("Failed to parse response: {e}"));
-            (err, true)
+            ResError::FailToLoadUrl(url.to_string(), format!("Failed to parse response: {e}"))
         })?;
 
-        if bytes.len() > MAX_RESOURCE_SIZE {
-            // don't retry if the resource is too big
-            let err = ResError::FailToLoadUrl(url.to_string(), "Resource is too large".to_string());
-            return Err((err, false));
-        }
-
-        let data = RefCounted::from(bytes.to_vec());
-        cache.cache_set(url.to_string(), RefCounted::clone(&data));
-
-        Ok(data)
+        Ok(bytes)
     }
+}
+
+fn create_http_client() -> ResResult<Client> {
+    Client::builder()
+        .user_agent("celery")
+        .gzip(true)
+        // For some reason idle sockets are not closed
+        // after timeout, use this to explicitly close them
+        .pool_max_idle_per_host(4)
+        .build()
+        .map_err(|e| ResError::Create(format!("Failed to create http client: {e}")))
 }
 
 #[async_trait]
 impl Loader for ServerResourceLoader {
-    async fn load_raw(&self, path: &ResPath) -> ResResult<RefCounted<[u8]>> {
+    async fn load_raw(&self, path: &ResPath) -> ResResult<Arc<[u8]>> {
         let url = match path {
             ResPath::Local(path) => {
                 error!("Local path not supported! This is not supposed to happen.");
@@ -120,31 +155,7 @@ impl Loader for ServerResourceLoader {
             ResPath::Remote(prefix, path) => format!("{prefix}{path}"),
         };
         info!("Loading resource url: {url}");
-        let retry = 3;
-        let mut last_error = None;
-        for _ in 0..retry {
-            match self.load_url(&url).await {
-                Ok(data) => {
-                    info!("Resource loaded from url: {}", url);
-                    return Ok(data);
-                }
-                Err((e, should_retry)) => {
-                    if !should_retry {
-                        error!("Non-retryable error encounted!");
-                        return Err(e);
-                    }
-                    last_error = Some(e);
-                }
-            }
-        }
 
-        error!("Failed to load resource after max retries!");
-        match last_error {
-            Some(e) => Err(e),
-            None => Err(ResError::FailToLoadUrl(
-                url.clone(),
-                "Unknown error".to_string(),
-            )),
-        }
+        self.load_url(&url).await
     }
 }

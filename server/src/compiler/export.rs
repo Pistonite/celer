@@ -2,12 +2,12 @@ use instant::Instant;
 
 use celerc::pack::PackError;
 use celerc::plugin;
-use celerc::{Compiler, ExpoDoc, ExportRequest, PreparedContext};
+use celerc::{Compiler, ExpoDoc, ExportRequest, PrepCtx};
 
 use super::ServerResourceLoader;
 
 pub async fn export(
-    prep_ctx: &PreparedContext<ServerResourceLoader>,
+    prep_ctx: &PrepCtx<ServerResourceLoader>,
     start_time: Option<Instant>,
     plugin_options: Option<plugin::Options>,
     req: ExportRequest,

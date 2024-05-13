@@ -2,16 +2,16 @@ use std::cell::RefCell;
 
 use log::info;
 
-use celerc::PreparedContext;
+use celerc::PrepCtx;
 
 use crate::loader::{self, LoadFileOutput, LoaderInWasm};
 
 thread_local! {
-    static CACHED_COMPILER_CONTEXT: RefCell<Option<PreparedContext<LoaderInWasm>>> = const { RefCell::new(None) };
+    static CACHED_COMPILER_CONTEXT: RefCell<Option<PrepCtx<LoaderInWasm>>> = const { RefCell::new(None) };
 }
 
 /// Guard for acquiring the cached context and takes care of releasing it
-pub struct CachedContextGuard(Option<PreparedContext<LoaderInWasm>>);
+pub struct CachedContextGuard(Option<PrepCtx<LoaderInWasm>>);
 impl CachedContextGuard {
     /// Acquire the cached context if it's valid
     pub async fn acquire(entry_path: Option<&String>) -> Option<Self> {
@@ -46,7 +46,7 @@ impl CachedContextGuard {
     }
 
     /// Put a new context into the cache upon drop
-    pub fn new(prep_ctx: PreparedContext<LoaderInWasm>) -> Self {
+    pub fn new(prep_ctx: PrepCtx<LoaderInWasm>) -> Self {
         CachedContextGuard(Some(prep_ctx))
     }
 }
@@ -55,8 +55,8 @@ impl Drop for CachedContextGuard {
         CACHED_COMPILER_CONTEXT.with_borrow_mut(|x| *x = self.0.take());
     }
 }
-impl AsRef<PreparedContext<LoaderInWasm>> for CachedContextGuard {
-    fn as_ref(&self) -> &PreparedContext<LoaderInWasm> {
+impl AsRef<PrepCtx<LoaderInWasm>> for CachedContextGuard {
+    fn as_ref(&self) -> &PrepCtx<LoaderInWasm> {
         self.0.as_ref().unwrap()
     }
 }

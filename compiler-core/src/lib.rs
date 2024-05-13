@@ -20,6 +20,6 @@ pub use comp::CompDoc;
 pub use exec::{ExecContext, ExecDoc};
 pub use expo::{ExpoContext, ExpoDoc, ExportRequest};
 pub use pack::{CompileContext, Compiler};
-pub use prep::{ContextBuilder, PreparedContext};
+pub use prep::{ContextBuilder, PrepCtx, PrepDoc};
 
 pub use celerb::*;

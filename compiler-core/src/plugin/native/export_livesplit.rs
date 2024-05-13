@@ -222,13 +222,16 @@ async fn load_icon(
     icon_url: String,
     webp_compat: WebpCompat,
 ) -> Result<(String, RefCounted<[u8]>), String> {
-    let loader = match env::global_loader::get() {
+    let loader = match env::global_loader_factory::get() {
         None => {
             return Err(
                 "No global loader available to load the icons for split export!".to_string(),
             )
         }
-        Some(loader) => loader,
+        Some(factory) => match factory.create_loader() {
+            Ok(loader) => loader,
+            Err(e) => return Err(format!("Failed to create loader: {e}")),
+        },
     };
 
     let path = ResPath::new_remote_unchecked("", &icon_url);

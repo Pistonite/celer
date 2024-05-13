@@ -2,27 +2,29 @@ use celerc::pack::PackError;
 use instant::Instant;
 
 use celerc::plugin::Options as PluginOptions;
-use celerc::res::{self, ResPath, Resource};
-use celerc::{CompDoc, CompileContext, Compiler, ContextBuilder, ExpoContext, PreparedContext};
+use celerc::res::{self, ResPath, ResResult, Resource};
+use celerc::{CompDoc, CompileContext, Compiler, ContextBuilder, ExpoContext, PrepCtx};
 
 mod loader;
 pub use loader::*;
-mod cache;
-pub use cache::*;
 mod export;
 pub use export::*;
 mod plugin;
 pub use plugin::*;
+mod prepctx_cache;
+pub use prepctx_cache::*;
+mod resource_cache;
+pub use resource_cache::*;
 
 /// Create a context builder for a project
 pub fn new_context_builder(
     owner: &str,
     repo: &str,
     reference: Option<&str>,
-) -> ContextBuilder<ServerResourceLoader> {
+) -> ResResult<ContextBuilder<ServerResourceLoader>> {
     let resource = new_root_resource(owner, repo, reference);
     let source = format!("{}/{}/{}", owner, repo, reference.unwrap_or("main"));
-    ContextBuilder::new(source, resource)
+    Ok(ContextBuilder::new(source, resource?))
 }
 
 /// Create a root resource for a project
@@ -30,25 +32,25 @@ pub fn new_root_resource(
     owner: &str,
     repo: &str,
     reference: Option<&str>,
-) -> Resource<'static, ServerResourceLoader> {
+) -> ResResult<Resource<'static, ServerResourceLoader>> {
     let loader = loader::get_loader();
     let base_url = res::base_url(owner, repo, reference);
     let res_path = ResPath::new_remote_unchecked(base_url, "project.yaml");
-    Resource::new(res_path, loader)
+    Ok(Resource::new(res_path, loader?))
 }
 
 pub async fn compile(
-    prep_ctx: &PreparedContext<ServerResourceLoader>,
+    prep_ctx: &PrepCtx<ServerResourceLoader>,
     start_time: Option<Instant>,
     plugin_options: Option<PluginOptions>,
 ) -> ExpoContext {
     let mut comp_ctx = prep_ctx.new_compilation(start_time).await;
-    match comp_ctx.configure_plugins(plugin_options).await {
-        Err(e) => compile_with_pack_error(comp_ctx, e).await,
-        Ok(_) => match prep_ctx.create_compiler(comp_ctx).await {
-            Ok(x) => compile_with_compiler(x).await,
-            Err((e, comp_ctx)) => compile_with_pack_error(comp_ctx, e).await,
-        },
+    if let Err(e) = comp_ctx.configure_plugins(plugin_options).await {
+        return compile_with_pack_error(comp_ctx, e).await;
+    }
+    match prep_ctx.create_compiler(comp_ctx).await {
+        Ok(x) => compile_with_compiler(x).await,
+        Err((e, comp_ctx)) => compile_with_pack_error(comp_ctx, e).await,
     }
 }
 

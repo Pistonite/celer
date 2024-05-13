@@ -19,18 +19,19 @@
 //! the compiler with additional (and optional) plugins.
 
 use std::collections::BTreeMap;
+use std::ops::Deref;
 
 use derivative::Derivative;
 use instant::Instant;
 use serde_json::{Map, Value};
 
-use crate::env::join_futures;
+use crate::env::{join_futures, RefCounted};
 use crate::json::{Cast, Coerce, RouteBlob};
 use crate::lang::Preset;
 use crate::macros::derive_wasm;
 use crate::plugin;
 use crate::prop;
-use crate::res::{Loader, Resource, Use, ValidUse};
+use crate::res::{Loader, ResPath, Resource, Use, ValidUse};
 use crate::util::StringMap;
 
 mod error;
@@ -44,11 +45,49 @@ pub use route::*;
 
 /// Output of the prep phase
 #[derive(Debug, Clone)]
-pub struct PreparedContext<L>
+pub struct PrepCtx<L>
 where
     L: Loader,
 {
     pub project_res: Resource<'static, L>,
+    data: RefCounted<PrepCtxData>,
+}
+
+impl<L> Deref for PrepCtx<L>
+where
+    L: Loader,
+{
+    type Target = PrepCtxData;
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
+}
+
+impl<L> PrepCtx<L>
+where
+    L: Loader,
+{
+    /// Hydrate a context from its data with a loader
+    pub fn from_data(data: RefCounted<PrepCtxData>, loader: RefCounted<L>) -> Self {
+        Self {
+            project_res: Resource::new(data.res_path.clone(), loader),
+            data,
+        }
+    }
+
+    /// Get the ref-counted inner data
+    #[inline]
+    pub fn get_data(&self) -> &RefCounted<PrepCtxData> {
+        &self.data
+    }
+}
+
+/// The loader-independent data of prep context that
+/// is safe to be cached
+#[derive(Debug, Clone)]
+pub struct PrepCtxData {
+    pub res_path: ResPath<'static>,
     pub entry_path: Option<String>,
     pub config: RouteConfig,
     pub meta: CompilerMetadata,
@@ -160,7 +199,7 @@ where
     }
 
     /// Load the project and parse config and (optionally) route
-    pub async fn build_context(mut self) -> PrepResult<PreparedContext<L>> {
+    pub async fn build_context(mut self) -> PrepResult<PrepCtx<L>> {
         let start_time = Instant::now();
         let mut project = self.resolve_entry_point().await?;
         let metadata = self.load_metadata(&mut project)?;
@@ -219,15 +258,18 @@ where
         let (config_and_meta, prep_doc) = join_futures!(config_future, route_future);
         let (config, meta, plugins) = config_and_meta?;
 
-        Ok(PreparedContext {
+        Ok(PrepCtx {
+            data: RefCounted::new(PrepCtxData {
+                res_path: self.project_res.path().clone(),
+                entry_path: self.entry_point,
+                config,
+                meta,
+                prep_doc,
+                start_time,
+                setting: self.setting,
+                plugins,
+            }),
             project_res: self.project_res,
-            entry_path: self.entry_point,
-            config,
-            meta,
-            prep_doc,
-            start_time,
-            setting: self.setting,
-            plugins,
         })
     }
 

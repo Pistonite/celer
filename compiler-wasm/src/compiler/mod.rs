@@ -6,7 +6,7 @@ use wasm_bindgen::prelude::*;
 
 use celerc::pack::PackError;
 use celerc::plugin;
-use celerc::{CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PreparedContext};
+use celerc::{CompDoc, CompileContext, Compiler, ContextBuilder, ExecContext, PrepCtx};
 
 use crate::interop::OpaqueExpoContext;
 use crate::loader::LoaderInWasm;
@@ -57,7 +57,7 @@ pub async fn compile_document(
     compile_in_context(guard.as_ref(), None, plugin_options).await
 }
 
-pub async fn new_context(entry_path: Option<String>) -> PrepResult<PreparedContext<LoaderInWasm>> {
+pub async fn new_context(entry_path: Option<String>) -> PrepResult<PrepCtx<LoaderInWasm>> {
     let mut context_builder = new_context_builder();
     if entry_path.is_some() {
         context_builder = context_builder.entry_point(entry_path);
@@ -66,7 +66,7 @@ pub async fn new_context(entry_path: Option<String>) -> PrepResult<PreparedConte
 }
 
 async fn compile_in_context(
-    prep_ctx: &PreparedContext<LoaderInWasm>,
+    prep_ctx: &PrepCtx<LoaderInWasm>,
     start_time: Option<Instant>,
     plugin_options: Option<plugin::Options>,
 ) -> Result<OpaqueExpoContext, JsValue> {
