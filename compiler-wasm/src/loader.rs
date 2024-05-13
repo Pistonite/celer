@@ -12,7 +12,7 @@ use wasm_bindgen::prelude::*;
 
 use celerc::env::{yield_budget, RefCounted};
 use celerc::macros::async_trait;
-use celerc::res::{Loader, ResError, ResPath, ResResult};
+use celerc::res::{Loader, LoaderFactory, ResError, ResPath, ResResult};
 
 use crate::interop::{self, JsIntoFuture};
 use crate::logger;
@@ -43,6 +43,12 @@ pub fn bind(load_file: Function, load_url: Function) {
 }
 
 pub struct LoaderInWasm;
+
+impl LoaderFactory for LoaderInWasm {
+    fn create_loader(&self) -> ResResult<RefCounted<dyn Loader>> {
+        Ok(RefCounted::from(Self))
+    }
+}
 
 #[async_trait(?Send)]
 impl Loader for LoaderInWasm {

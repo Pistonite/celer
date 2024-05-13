@@ -3,7 +3,7 @@
 use std::cell::RefCell;
 
 use crate::macros::late_global;
-use crate::res::Loader;
+use crate::res::LoaderFactory;
 
 #[cfg(feature = "wasm")]
 pub mod env_wasm;
@@ -44,10 +44,10 @@ pub mod site {
     }
 }
 
-/// Global loader instance that can be used to load resources
+/// Factory for getting resource loader instance that can be used to load resources
 /// outside of the usual compilation cycle. For example, in plugins
-#[late_global(dyn Loader)]
-pub mod global_loader {}
+#[late_global(dyn LoaderFactory)]
+pub mod global_loader_factory {}
 
 thread_local! {
     /// Current number of ticks ran without yielding in cooperative multitasking

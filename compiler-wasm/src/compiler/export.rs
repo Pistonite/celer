@@ -3,7 +3,7 @@ use log::{error, info};
 
 use celerc::pack::PackError;
 use celerc::plugin;
-use celerc::{Compiler, ExpoDoc, ExportRequest, PreparedContext};
+use celerc::{Compiler, ExpoDoc, ExportRequest, PrepCtx};
 
 use crate::loader::LoaderInWasm;
 
@@ -46,7 +46,7 @@ pub async fn export_document(
 }
 
 async fn export_in_context(
-    prep_ctx: &PreparedContext<LoaderInWasm>,
+    prep_ctx: &PrepCtx<LoaderInWasm>,
     start_time: Option<Instant>,
     plugin_options: Option<plugin::Options>,
     req: ExportRequest,

@@ -44,6 +44,9 @@ pub enum ResError {
 
     #[error("Cannot load url `{0}`: {1}")]
     FailToLoadUrl(String, String),
+
+    #[error("Failed to create resource: {0}")]
+    Create(String),
 }
 
 impl PartialEq for ResError {
@@ -69,6 +72,13 @@ pub trait Loader {
     async fn load_raw(&self, path: &ResPath) -> ResResult<RefCounted<[u8]>>;
 }
 
+/// Factory for creating new loaders
+pub trait LoaderFactory: Send + Sync {
+    /// Get a loader instance. Note that the loader instance is ref-counted
+    /// and could be shared among multiple resources. (Doesn't have to be a new one)
+    fn create_loader(&self) -> ResResult<RefCounted<dyn Loader>>;
+}
+
 /// A Resource is an absolute reference to a resource that can be loaded.
 /// It can be a local file or a remote URL. It also has an associated ref-counted
 /// [`Loader`] that can be used to load the resource.
@@ -77,8 +87,8 @@ pub struct Resource<'a, L>
 where
     L: Loader,
 {
-    path: ResPath<'a>,
-    loader: RefCounted<L>,
+    pub path: ResPath<'a>,
+    pub loader: RefCounted<L>,
 }
 
 impl<'a, L> Resource<'a, L>

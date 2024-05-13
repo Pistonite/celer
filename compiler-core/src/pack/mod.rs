@@ -25,7 +25,7 @@ use instant::Instant;
 use crate::env::yield_budget;
 use crate::json::RouteBlob;
 use crate::plugin;
-use crate::prep::{self, CompilerMetadata, PrepDoc, PreparedContext, RouteConfig, Setting};
+use crate::prep::{self, CompilerMetadata, PrepCtx, PrepDoc, RouteConfig, Setting};
 use crate::res::Loader;
 
 mod error;
@@ -146,7 +146,7 @@ impl<'p> CompileContext<'p> {
     }
 }
 
-impl<L> PreparedContext<L>
+impl<L> PrepCtx<L>
 where
     L: Loader,
 {

@@ -4,18 +4,17 @@ tasks:
   dev:
     desc: Start server in watch mode
     aliases: [d]
-    env:
-      CELERSERVER_LOG: INFO
-      CELERSERVER_ANSI: "true"
-      CELERSERVER_PORT: 8173
-      CELERSERVER_DOCS_DIR: ../docs/src/.vitepress/dist
-      CELERSERVER_APP_DIR: ../web-client/dist
-      CELERSERVER_HTTPS_CERT: ../cert/cert.pem
-      CELERSERVER_HTTPS_KEY: ../cert/cert-key.pem
-      CELERSERVER_SITE_ORIGIN: https://pistonite.local:8173
-      CELERSERVER_GZIP: "true"
+    dotenv:
+    - dev.env
     cmds:
     - cargo watch -B 1 -s "cargo run --bin celery {{.CLI_ARGS}}"
+
+  run:
+    desc: Start server
+    dotenv:
+    - dev.env
+    cmds:
+    - cargo run --bin celery {{.CLI_ARGS}}
 
   watch:
     desc: Run server tests in watch mode

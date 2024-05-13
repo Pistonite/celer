@@ -145,7 +145,13 @@ async fn view_internal(
     reference: &str,
     path: &str,
 ) -> Result<String, StatusCode> {
-    let mut builder = compiler::new_context_builder(owner, repo, Some(reference));
+    let mut builder = match compiler::new_context_builder(owner, repo, Some(reference)) {
+        Ok(builder) => builder,
+        Err(e) => {
+            error!("Error creating context builder for project {owner}/{repo}/{reference}: {e}");
+            return view_fallback();
+        }
+    };
     if !path.is_empty() {
         builder = builder.entry_point(Some(path.to_string()));
     }
