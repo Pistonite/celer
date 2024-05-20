@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_ansi(env.ansi)
         .with_max_level(env.logging_level)
         .init();
-    info!("celer server version: {}", env::version());
+    info!("celer server version: {}", env.version);
     info!("preparing assets...");
     boot::setup_site_origin(
         PathBuf::from(&env.docs_dir),
@@ -55,7 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         &env.app_dir,
         &["/celerc", "/static", "/assets", "/themes"],
     )?;
-    let router = api::init_api(router, &env.app_dir)?;
+    let router = api::init_api(router, &env)?;
 
     let router = router.layer(
         tower_http::trace::TraceLayer::new_for_http()

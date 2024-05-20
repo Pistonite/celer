@@ -103,6 +103,20 @@ tasks:
     cmds:
     - cargo run --bin buildwasm --release
 
+  build:server:
+    dir: ./server
+    desc: Build server release package (including bootstrap binary)
+    deps:
+    - base:grammar
+    cmds:
+    - rm -rf bin
+    - mkdir -p bin
+    - cargo build --bin celery --release --target x86_64-unknown-linux-musl
+    - cp target/x86_64-unknown-linux-musl/release/celery bin
+    - cargo build --bin celery-boot --release --target x86_64-unknown-linux-musl
+    - cp target/x86_64-unknown-linux-musl/release/celery-boot bin
+
+
   env:server:
     desc: export the nvim lsp environment variables for server development. Run as `eval $(task env:server)`
     cmds:

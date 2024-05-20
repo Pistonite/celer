@@ -25,3 +25,13 @@ tasks:
     desc: Run server tests
     cmds:
     - cargo test {{.CLI_ARGS}}
+
+  package:
+    desc: Build release package (including bootstrap binary)
+    cmds:
+    - rm -rf bin
+    - mkdir -p bin
+    - cargo build --bin celery --release --target x86_64-unknown-linux-musl
+    - cp ../target/x86_64-unknown-linux-musl/release/celery bin
+    - cargo build --bin celery-boot --release --target x86_64-unknown-linux-musl
+    - cp ../target/x86_64-unknown-linux-musl/release/celery-boot bin
