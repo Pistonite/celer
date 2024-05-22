@@ -105,7 +105,6 @@ tasks:
     - cargo run --bin buildwasm --release
 
   build:server:
-    dir: ./server
     desc: Build server release package (including bootstrap binary)
     deps:
     - base:grammar

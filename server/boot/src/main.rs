@@ -39,8 +39,8 @@ fn main() {
         }
 
         // on success status (graceful normal shutdown), reboot the server
-        println!("Restarting server...")
+        println!("[boot] restarting server...")
     }
 
-    println!("Server exited with status: {}", status);
+    println!("[boot] server exited with status: {}", status);
 }
