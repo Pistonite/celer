@@ -111,9 +111,9 @@ tasks:
     cmds:
     - rm -rf bin
     - mkdir -p bin
-    - cargo build --bin celery --release --target x86_64-unknown-linux-musl
+    - cargo build --manifest-path server/Cargo.toml --bin celery --release --target x86_64-unknown-linux-musl
     - cp target/x86_64-unknown-linux-musl/release/celery bin
-    - cargo build --bin celery-boot --release --target x86_64-unknown-linux-musl
+    - cargo build --manifest-path server/boot/Cargo.toml --bin celery-boot --release --target x86_64-unknown-linux-musl
     - cp target/x86_64-unknown-linux-musl/release/celery-boot bin
 
 
