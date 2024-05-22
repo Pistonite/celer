@@ -10,10 +10,6 @@ pub struct Environment {
     #[envconfig(from = "CELERSERVER_VERSION", default = "0.0.0-dev unknown")]
     pub version: String,
 
-    /// If server is booted with the bootstrap launcher
-    #[envconfig(from = "CELERSERVER_BOOTSTRAP", default = "false")]
-    pub bootstrap: bool,
-
     /// Logging level
     #[envconfig(from = "CELERSERVER_LOG", default = "INFO")]
     pub logging_level: Level,
@@ -21,10 +17,6 @@ pub struct Environment {
     #[envconfig(from = "CELERSERVER_PORT", default = "8173")]
     /// Port to listen on
     pub port: u16,
-
-    /// If ANSI formatting is enabled in logs
-    #[envconfig(from = "CELERSERVER_ANSI", default = "true")]
-    pub ansi: bool,
 
     #[envconfig(from = "CELERSERVER_DOCS_DIR")]
     /// Directory to serve docs

@@ -77,6 +77,7 @@ tasks:
     - cargo clippy --package compiler-core --features wasm --all-targets -- {{.CLIPPY_FLAGS}}
     - cargo clippy --package compiler-wasm --all-targets -- {{.CLIPPY_FLAGS}}
     - cargo clippy --package celery --all-targets -- {{.CLIPPY_FLAGS}}
+    - cargo clippy --package celery-boot --all-targets -- {{.CLIPPY_FLAGS}}
     - cargo fmt --check
 
   fix:rs:
