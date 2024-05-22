@@ -13,4 +13,4 @@ ENV CELERSERVER_LOG=INFO \
     CELERSERVER_APP_DIR=/opt/app/app \
     CELERSERVER_GZIP=true
 
-CMD ["./bin/celery"]
+CMD ["./bin/celery-boot"]
