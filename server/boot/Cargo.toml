@@ -1,0 +1,10 @@
+[package]
+name = "celery-boot"
+edition = "2021"
+description = "Bootstrap for celer that handles reboot, etc."
+
+[dependencies]
+
+[[bin]]
+name = "celery-boot"
+path = "src/main.rs"

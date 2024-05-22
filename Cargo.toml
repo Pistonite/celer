@@ -8,6 +8,7 @@ members = [
     "compiler-wasm/build/",
     "docker/",
     "server/",
+    "server/boot/",
 ]
 
 [profile.release]

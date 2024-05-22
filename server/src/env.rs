@@ -1,13 +1,15 @@
 //! Server environment settings
 use axum_server::tls_rustls::RustlsConfig;
 use envconfig::Envconfig;
-use once_cell::sync::Lazy;
-use std::env;
 use std::path::Path;
 use tracing::{error, info, Level};
 
 #[derive(Envconfig)]
 pub struct Environment {
+    /// Server version
+    #[envconfig(from = "CELERSERVER_VERSION", default = "0.0.0-dev unknown")]
+    pub version: String,
+
     /// Logging level
     #[envconfig(from = "CELERSERVER_LOG", default = "INFO")]
     pub logging_level: Level,
@@ -15,10 +17,6 @@ pub struct Environment {
     #[envconfig(from = "CELERSERVER_PORT", default = "8173")]
     /// Port to listen on
     pub port: u16,
-
-    /// If ANSI formatting is enabled in logs
-    #[envconfig(from = "CELERSERVER_ANSI", default = "true")]
-    pub ansi: bool,
 
     #[envconfig(from = "CELERSERVER_DOCS_DIR")]
     /// Directory to serve docs
@@ -46,7 +44,7 @@ pub struct Environment {
 impl Environment {
     /// Parse environment from command line arguments and environment variables
     pub fn parse() -> Self {
-        let mut env = match Environment::init_from_env() {
+        match Environment::init_from_env() {
             Ok(env) => env,
             Err(envconfig::Error::EnvVarMissing { name }) => {
                 panic!("Server cannot start due to missing environment variable: {name}");
@@ -56,15 +54,7 @@ impl Environment {
                     "Server cannot start due to failure when parsing environment variable: {name}"
                 );
             }
-        };
-
-        for arg in env::args() {
-            if arg == "--debug" {
-                env.logging_level = Level::DEBUG;
-            }
         }
-
-        env
     }
 
     pub async fn get_https_config(&self) -> Option<RustlsConfig> {
@@ -100,17 +90,4 @@ impl Environment {
             })
             .ok()
     }
-}
-
-static VERSION: Lazy<String> = Lazy::new(|| {
-    std::fs::read_to_string("VERSION")
-        .map(|x| x.trim().to_string())
-        .unwrap_or_else(|_| "0.0.0-dev unknown".to_string())
-});
-
-/// Get the version of the server
-///
-/// The server version is read from the file `VERSION` in the current working directory
-pub fn version() -> &'static str {
-    &VERSION
 }

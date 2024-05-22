@@ -1,6 +1,7 @@
 # build output
 /dist/
 /docker/dist/
+/bin
 
 # task
 .task/
