@@ -8,10 +8,9 @@ import { mergeClasses } from "@fluentui/react-components";
 import { Header } from "ui/toolbar";
 import { LoadScreen, useWindowSize } from "ui/shared";
 import { settingsActions, settingsSelector, viewSelector } from "core/store";
+import type { Layout, WidgetType } from "core/layout";
 import {
     GridFull,
-    Layout,
-    WidgetType,
     WidgetTypes,
     getDefaultLayout,
     useCurrentUserLayout,

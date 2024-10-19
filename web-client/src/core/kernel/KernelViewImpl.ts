@@ -1,23 +1,21 @@
 /// Implementation of the Kernel in VIEW mode
-import { Void } from "pure/result";
+import type { Void } from "@pistonite/pure/result";
+import { SerialEvent } from "@pistonite/pure/sync";
 
 import {
     getRawPluginOptionsForTitle,
     injectSplitTypesIntoRequest,
     setDocument,
 } from "core/doc";
-import { AppStore, settingsSelector, viewActions } from "core/store";
-import {
-    AlertMgr,
-    SerialEvent,
-    SerialEventCancelToken,
-    consoleKernel as console,
-    sleep,
-} from "low/utils";
-import { ExpoDoc, ExportRequest } from "low/celerc";
+import type { AppStore } from "core/store";
+import { settingsSelector, viewActions } from "core/store";
+import type { AlertMgr } from "low/utils";
+import { consoleKernel as console, sleep } from "low/utils";
+import type { ExpoDoc, ExportRequest } from "low/celerc";
 
-import { Kernel } from "./Kernel";
-import { UiMgr, UiMgrInitFn } from "./UiMgr";
+import type { Kernel } from "./Kernel";
+import type { UiMgrInitFn } from "./UiMgr";
+import { UiMgr } from "./UiMgr";
 import { createAndBindStore } from "./store";
 import { KeyMgr } from "./KeyMgr";
 import { AlertMgrImpl } from "./AlertMgr";
@@ -81,8 +79,8 @@ export class KernelViewImpl implements Kernel {
     }
 
     private async reloadDocumentInternal(
-        serial: number,
-        shouldCancel: () => Void<SerialEventCancelToken>,
+        shouldCancel: () => Void<"cancel">,
+        serial: bigint,
     ) {
         this.store.dispatch(viewActions.setCompileInProgress(true));
         // let UI update

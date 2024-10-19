@@ -2,7 +2,7 @@
 
 import { withPayload } from "low/store";
 
-import { DocViewState, KeyBindingName } from "./state";
+import type { DocViewState, KeyBindingName } from "./state";
 
 /// Set the current document location
 export const setDocLocation = withPayload<

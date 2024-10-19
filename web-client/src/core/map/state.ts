@@ -1,7 +1,7 @@
 //! Map state slice
 import { z } from "zod";
 
-import { GameCoord } from "low/celerc";
+import type { GameCoord } from "low/celerc";
 
 /// Enum for section-based map display
 export enum SectionMode {

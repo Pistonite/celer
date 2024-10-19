@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-
-import { fsComponents, fsJoin, fsRoot } from "pure/fs";
+import { fsComponents, fsJoin, fsRoot } from "@pistonite/pure/fs";
 
 import { useKernel } from "core/kernel";
 import { settingsSelector, viewSelector } from "core/store";

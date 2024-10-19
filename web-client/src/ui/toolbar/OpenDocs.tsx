@@ -4,7 +4,7 @@ import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { BookQuestionMark20Regular } from "@fluentui/react-icons";
 import { forwardRef } from "react";
 
-import { ToolbarControl } from "./util";
+import type { ToolbarControl } from "./util";
 
 export const OpenDocs: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {

@@ -2,7 +2,7 @@ import { Text } from "@fluentui/react-components";
 
 import { smartMergeClasses } from "low/utils";
 
-import { DocLineProps } from "./props";
+import type { DocLineProps } from "./props";
 import { useDocStyles } from "./styles";
 import {
     DocLineCounterClass,

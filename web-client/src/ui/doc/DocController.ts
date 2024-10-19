@@ -5,18 +5,17 @@
 //! rerender when the view updates.
 
 import reduxWatch from "redux-watch";
-import isEqual from "is-equal";
+import { deepEqual } from "fast-equals";
 
+import type { AppState, AppStore } from "core/store";
 import {
-    AppState,
-    AppStore,
     documentSelector,
     settingsSelector,
     viewActions,
     viewSelector,
 } from "core/store";
 import { Debouncer, sleep, consoleDoc as console } from "low/utils";
-import { GameCoord } from "low/celerc";
+import type { GameCoord } from "low/celerc";
 
 import {
     findLineByIndex,
@@ -136,7 +135,7 @@ export class DocController {
             ) {
                 // window is resized
                 needFullUpdate = true;
-            } else if (!isEqual(newSettings, oldSettings)) {
+            } else if (!deepEqual(newSettings, oldSettings)) {
                 // settings has changed
                 needFullUpdate = true;
             }

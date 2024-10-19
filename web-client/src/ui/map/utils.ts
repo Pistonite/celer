@@ -1,6 +1,6 @@
 //! Utility for the map logic
 
-import { MapAttribution } from "low/celerc";
+import type { MapAttribution } from "low/celerc";
 
 /// Epsilon for floating point comparison in the map
 const EPSILON = 1e-3;

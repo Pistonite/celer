@@ -1,16 +1,16 @@
-import { ExecDoc } from "low/celerc";
+import { describe, it, expect } from "vitest";
+import type { ExecDoc } from "low/celerc";
 
 import { getRelativeLocation } from "./utils.ts";
 
-describe("core/doc/utils/getRelativeLocation", () => {
-    const mockDoc = {
-        route: [
-            { lines: { length: 5 } },
-            { lines: { length: 6 } },
-            { lines: { length: 7 } },
-        ],
-    } as ExecDoc;
-
+const mockDoc = {
+    route: [
+        { lines: { length: 5 } },
+        { lines: { length: 6 } },
+        { lines: { length: 7 } },
+    ],
+} as ExecDoc;
+describe("getRelativeLocation", () => {
     it("should return the same location if delta is 0", () => {
         const loc = { section: 1, line: 2 };
         expect(getRelativeLocation(mockDoc, loc.section, loc.line, 0)).toEqual(

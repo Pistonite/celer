@@ -2,7 +2,7 @@
 
 import { withPayload } from "low/store";
 
-import { LayoutViewState } from "./state";
+import type { LayoutViewState } from "./state";
 
 /// Set if the user is editing the layout
 export const setIsEditingLayout = withPayload<LayoutViewState, boolean>(

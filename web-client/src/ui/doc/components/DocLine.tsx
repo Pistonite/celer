@@ -5,7 +5,7 @@ import React from "react";
 import { concatClassName, smartMergeClasses } from "low/utils";
 
 import { DocDiagnosticBlock } from "./DocDiagnosticBlock";
-import { DocLineProps } from "./props";
+import type { DocLineProps } from "./props";
 import { DocLineMain } from "./DocLineMain";
 import { useDocStyles } from "./styles";
 import {

@@ -1,4 +1,4 @@
-import { ExecDoc } from "low/celerc";
+import type { ExecDoc } from "low/celerc";
 import { smartMergeClasses } from "low/utils";
 
 import { DocContainerComp } from "./DocContainerComp";

@@ -4,7 +4,8 @@ import type { ExpoDoc, ExportRequest, PluginOptions } from "low/celerc";
 import { fetchAsJson, getApiUrl } from "low/fetch";
 import { consoleKernel as console } from "low/utils";
 
-import { DocRef, encodeObjectAsBase64, parseDocRef } from "./utils.ts";
+import type { DocRef } from "./utils.ts";
+import { encodeObjectAsBase64, parseDocRef } from "./utils.ts";
 
 function createExportError(error: string): ExpoDoc {
     return { error };

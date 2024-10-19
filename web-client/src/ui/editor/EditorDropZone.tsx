@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Body2, mergeClasses } from "@fluentui/react-components";
 
-import { fsOpenReadWriteFrom } from "pure/fs";
+import { fsOpenReadWriteFrom } from "@pistonite/pure/fs";
 
 import { useKernel } from "core/kernel";
 import { createRetryOpenHandler } from "core/editor";

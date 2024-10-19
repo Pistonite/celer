@@ -1,4 +1,5 @@
-import type { FsFileSystem } from "pure/fs";
+import type { FsFileSystem } from "@pistonite/pure/fs";
+
 import type { CompilerKernel } from "core/compiler";
 import type { EditorKernel } from "core/editor";
 import type { ExpoDoc, ExportRequest } from "low/celerc";

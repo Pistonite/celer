@@ -1,9 +1,11 @@
 //! Manager for modal alerts
 
-import { Result, tryAsync } from "pure/result";
+import type { Result } from "@pistonite/pure/result";
+import { tryAsync } from "@pistonite/pure/result";
 
-import { AppDispatcher, viewActions } from "core/store";
-import {
+import type { AppDispatcher } from "core/store";
+import { viewActions } from "core/store";
+import type {
     AlertExtraAction,
     AlertIds,
     AlertMgr,
@@ -11,8 +13,8 @@ import {
     BlockingAlertOptions,
     ModifyAlertActionPayload,
     RichAlertOptions,
-    console,
 } from "low/utils";
+import { console } from "low/utils";
 
 type AlertCallback = (ok: boolean | string) => void;
 

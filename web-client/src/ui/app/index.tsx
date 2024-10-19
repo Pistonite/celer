@@ -8,7 +8,8 @@ import { Provider as ReduxProvider } from "react-redux";
 
 import { ErrorBoundary } from "ui/shared";
 import type { AppStore } from "core/store";
-import { Kernel, KernelContext } from "core/kernel";
+import type { Kernel } from "core/kernel";
+import { KernelContext } from "core/kernel";
 import { console } from "low/utils";
 
 import { AppRoot } from "./AppRoot";

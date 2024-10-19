@@ -13,25 +13,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: recursive
     - uses: arduino/setup-task@v2
       with:
         version: 3.x
         repo-token: ${{ secrets.GITHUB_TOKEN }}
     - uses: actions/setup-node@v4
       with:
-        node-version: 18.x
+        node-version: 20.x
     - uses: dtolnay/rust-toolchain@stable
       with:
         targets: wasm32-unknown-unknown
     - uses: Swatinem/rust-cache@v2
+    - uses: cargo-bins/cargo-binstall@main
+    - run: cargo-binstall --no-confirm wasm-pack
     - uses: baptiste0928/cargo-install@v3
       with:
         crate: regen-lang
-    - uses: baptiste0928/cargo-install@v3
-      with:
-        crate: wasm-pack
     - run: task client:ci --output group
     - run: task build:wasm --output group
     - run: task client:test

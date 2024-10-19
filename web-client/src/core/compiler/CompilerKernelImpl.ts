@@ -1,22 +1,25 @@
-import isEqual from "is-equal";
+import { deepEqual } from "fast-equals";
 
-import { FsErr, FsError } from "pure/fs";
-import { Result, tryAsync } from "pure/result";
-import { errstr } from "pure/utils";
+import type { FsError } from "@pistonite/pure/fs";
+import { FsErr } from "@pistonite/pure/fs";
+import type { Result } from "@pistonite/pure/result";
+import { tryAsync, errstr } from "@pistonite/pure/result";
 
 import { getRawPluginOptions, setDocument } from "core/doc";
+import type { AppStore } from "core/store";
 import {
-    AppStore,
     settingsActions,
     settingsSelector,
     viewActions,
     viewSelector,
 } from "core/store";
-import {
+import type {
     EntryPointsSorted,
     ExpoDoc,
     ExportRequest,
     PluginOptions,
+} from "low/celerc";
+import {
     compile_document,
     export_document,
     get_entry_points,
@@ -30,8 +33,8 @@ import {
     consoleCompiler as console,
 } from "low/utils";
 
-import { CompilerKernel } from "./CompilerKernel";
-import { CompilerFileAccess } from "./CompilerFileAccess";
+import type { CompilerKernel } from "./CompilerKernel";
+import type { CompilerFileAccess } from "./CompilerFileAccess";
 
 async function checkFileExists(
     fileAccess: CompilerFileAccess,
@@ -378,7 +381,7 @@ export class CompilerKernelImpl implements CompilerKernel {
 
     private async updatePluginOptions() {
         const pluginOptions = getRawPluginOptions(this.store.getState());
-        if (!isEqual(pluginOptions, this.lastPluginOptions)) {
+        if (!deepEqual(pluginOptions, this.lastPluginOptions)) {
             this.lastPluginOptions = pluginOptions;
             console.info("updating plugin options...");
             const result = await tryAsync(() =>

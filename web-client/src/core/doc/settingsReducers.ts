@@ -3,7 +3,7 @@
 import { withPayload } from "low/store";
 import type { ExportMetadata, PluginMetadata } from "low/celerc";
 
-import {
+import type {
     AppPluginType,
     DocSettingsState,
     KeyBinding,

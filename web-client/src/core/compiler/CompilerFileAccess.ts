@@ -1,4 +1,4 @@
-import { FsResult } from "pure/fs";
+import type { FsResult } from "@pistonite/pure/fs";
 
 /// Interface for the compiler to access files
 export interface CompilerFileAccess {

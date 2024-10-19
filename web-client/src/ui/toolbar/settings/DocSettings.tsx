@@ -19,12 +19,8 @@ import {
     viewActions,
     viewSelector,
 } from "core/store";
-import {
-    KeyBinding,
-    KeyBindingName,
-    getAllSplitTypes,
-    useDocSplitTypes,
-} from "core/doc";
+import type { KeyBinding, KeyBindingName } from "core/doc";
+import { getAllSplitTypes, useDocSplitTypes } from "core/doc";
 import { useActions } from "low/store";
 import { ThemeIds } from "low/themes.g";
 

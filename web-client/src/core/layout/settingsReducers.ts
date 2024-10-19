@@ -1,7 +1,8 @@
 //! Layout store reducers
-import { ReducerDecl, withPayload } from "low/store";
+import type { ReducerDecl } from "low/store";
+import { withPayload } from "low/store";
 
-import { LayoutSettingsState, Layout, WidgetType } from "./state";
+import type { LayoutSettingsState, Layout, WidgetType } from "./state";
 import {
     fitLayoutToGrid,
     getDefaultLayout,

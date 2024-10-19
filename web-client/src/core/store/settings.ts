@@ -3,19 +3,19 @@
 //! This is used for user settings, such as theme, layout, map settings, etc.
 //! These settings need to be persisted to local storage.
 
+import type { DocSettingsState } from "core/doc";
 import {
-    DocSettingsState,
     DocSettingsStateSchema,
     docSettingsReducers,
     initialDocSettingsState,
 } from "core/doc";
+import type { LayoutSettingsState } from "core/layout";
 import {
-    LayoutSettingsState,
     initialLayoutSettingsState,
     layoutSettingsReducers,
 } from "core/layout";
+import type { MapSettingsState } from "core/map";
 import {
-    MapSettingsState,
     MapSettingsStateSchema,
     initialMapSettingsState,
     mapSettingsReducers,
@@ -24,11 +24,8 @@ import {
 import { configureSlice } from "low/store";
 import { consoleKernel as console } from "low/utils";
 
-import {
-    EditorSettingsState,
-    editorSettingsReducers,
-    initialEditorSettingsState,
-} from "./editor";
+import type { EditorSettingsState } from "./editor";
+import { editorSettingsReducers, initialEditorSettingsState } from "./editor";
 
 /// Local storage key
 const LOCAL_STORAGE_KEY = "Celer.Settings";

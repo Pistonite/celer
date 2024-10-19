@@ -19,7 +19,7 @@ import { Layer20Regular } from "@fluentui/react-icons";
 import { documentSelector, viewActions, viewSelector } from "core/store";
 import { useActions } from "low/store";
 
-import {
+import type {
     ControlComponentProps,
     OnMenuCheckedValueChangeFunction,
     ToolbarControl,

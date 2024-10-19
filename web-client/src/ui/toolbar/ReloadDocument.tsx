@@ -9,7 +9,7 @@ import { useCommonStyles } from "ui/shared";
 import { useKernel } from "core/kernel";
 import { viewSelector } from "core/store";
 
-import { ToolbarControl } from "./util";
+import type { ToolbarControl } from "./util";
 
 export const ReloadDocument: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {

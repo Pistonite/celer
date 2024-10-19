@@ -1,7 +1,7 @@
 //! Document view, setting, and route document state
 import { z } from "zod";
 
-import { ExecDoc, ExportMetadata, PluginMetadata } from "low/celerc";
+import type { ExecDoc, ExportMetadata, PluginMetadata } from "low/celerc";
 
 // Tsify doesn't generate schema for zod, so we need to define it here
 export const PluginMetadataSchema = z.object({

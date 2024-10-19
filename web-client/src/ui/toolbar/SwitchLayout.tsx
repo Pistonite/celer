@@ -36,7 +36,7 @@ import {
 } from "core/store";
 import { useActions } from "low/store";
 
-import {
+import type {
     ControlComponentProps,
     OnMenuCheckedValueChangeFunction,
     ToolbarControl,

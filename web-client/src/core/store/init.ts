@@ -1,8 +1,10 @@
 //! Setup the store
 import { configureStore } from "@reduxjs/toolkit";
-import { settingsReducer } from "./settings";
-import { viewReducer } from "./view";
-import { documentReducer } from "./document";
+import { useStore as useReduxStore } from "react-redux";
+
+import { settingsReducer } from "./settings.ts";
+import { viewReducer } from "./view.ts";
+import { documentReducer } from "./document.ts";
 
 /// Create the store and return it
 export const initStore = () => {
@@ -24,3 +26,5 @@ export type AppState = ReturnType<AppStore["getState"]>;
 export type AppDispatcher = {
     dispatch: AppStore["dispatch"];
 };
+
+export const useStore: () => AppStore = useReduxStore;

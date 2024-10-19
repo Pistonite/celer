@@ -1,8 +1,14 @@
 //! Utilities for layout logic
 
-import { Draft, produce } from "immer";
+import type { Draft } from "immer";
+import { produce } from "immer";
 
-import { Layout, LayoutDim, LayoutSettingsState, WidgetType } from "./state";
+import type {
+    Layout,
+    LayoutDim,
+    LayoutSettingsState,
+    WidgetType,
+} from "./state";
 
 /// The Grid size
 ///
@@ -27,9 +33,15 @@ export const WidgetTypes: WidgetType[] = ["viewer", "editor", "map"];
 /// This will return a new reference even if the layout is not modified.
 export const fitLayoutToGrid = (layout: Layout): Layout => {
     return produce(layout, (layout) => {
-        layout.viewer && fitLayoutDimToGrid(layout.viewer);
-        layout.map && fitLayoutDimToGrid(layout.map);
-        layout.editor && fitLayoutDimToGrid(layout.editor);
+        if (layout.viewer) {
+            fitLayoutDimToGrid(layout.viewer);
+        }
+        if (layout.map) {
+            fitLayoutDimToGrid(layout.map);
+        }
+        if (layout.editor) {
+            fitLayoutDimToGrid(layout.editor);
+        }
 
         if (layout.viewer?.w === 0 || layout.viewer?.h === 0) {
             delete layout.viewer;

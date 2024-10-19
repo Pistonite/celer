@@ -1,9 +1,10 @@
 //! Reducers for stage view state
 
-import { ReducerDecl, withPayload } from "low/store";
-import { AlertExtraAction, ModifyAlertActionPayload } from "low/utils";
+import type { ReducerDecl } from "low/store";
+import { withPayload } from "low/store";
+import type { AlertExtraAction, ModifyAlertActionPayload } from "low/utils";
 
-import { SettingsTab, StageMode, StageViewState } from "./state";
+import type { SettingsTab, StageMode, StageViewState } from "./state";
 
 export const setStageMode = withPayload<StageViewState, StageMode>(
     (state, mode) => {

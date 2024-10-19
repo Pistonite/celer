@@ -23,7 +23,7 @@ import {
 
 import { useWindowSize } from "ui/shared";
 import { viewActions, viewSelector } from "core/store";
-import { SettingsTab } from "core/stage";
+import type { SettingsTab } from "core/stage";
 import { useActions } from "low/store";
 
 import { MapSettings } from "./MapSettings";

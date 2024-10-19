@@ -1,4 +1,4 @@
-import type { Result } from "pure/result";
+import type { Result } from "@pistonite/pure/result";
 
 import type { EntryPointsSorted, ExpoDoc, ExportRequest } from "low/celerc";
 

@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import { documentSelector } from "core/store";
-import { DocDiagnostic } from "low/celerc";
+import type { DocDiagnostic } from "low/celerc";
 
 import { removeTags } from "./utils";
 

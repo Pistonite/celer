@@ -21,11 +21,12 @@ import {
     SaveSync20Regular,
 } from "@fluentui/react-icons";
 
-import { CommonStyles, useCommonStyles } from "ui/shared";
+import type { CommonStyles } from "ui/shared";
+import { useCommonStyles } from "ui/shared";
 import { useKernel } from "core/kernel";
 import { settingsSelector, viewSelector } from "core/store";
 
-import { ToolbarControl } from "./util";
+import type { ToolbarControl } from "./util";
 
 export const SaveProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {

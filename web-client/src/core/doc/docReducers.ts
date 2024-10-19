@@ -1,9 +1,9 @@
 //! Reducers for the document state
 
-import { ExpoContext } from "low/celerc";
+import type { ExpoContext } from "low/celerc";
 import { withPayload } from "low/store";
 
-import { DocumentState } from "./state";
+import type { DocumentState } from "./state";
 
 /// Set the document from compiler output
 ///

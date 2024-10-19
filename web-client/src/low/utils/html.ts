@@ -148,7 +148,7 @@ export function smartMergeClasses<N extends string>(
     style: Record<N, string>,
     ...classes: (DOMClass<N> | string | false | undefined | null | 0)[]
 ): string {
-    const inputs = [];
+    const inputs: string[] = [];
     for (let i = 0; i < classes.length; i++) {
         const c = classes[i];
         if (!c) {

@@ -4,15 +4,12 @@ import React, { memo, useMemo } from "react";
 import { useSelector, useStore } from "react-redux";
 import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";
 import { useDocSplitTypes } from "core/doc";
-import {
-    AppStore,
-    documentSelector,
-    settingsSelector,
-    viewSelector,
-} from "core/store";
+import type { AppStore } from "core/store";
+import { documentSelector, settingsSelector, viewSelector } from "core/store";
 import { consoleDoc as console } from "low/utils";
 
-import { DocRootProps, DocRoot } from "./components";
+import type { DocRootProps } from "./components";
+import { DocRoot } from "./components";
 import { initDocController } from "./DocController";
 
 export const Doc: React.FC = () => {

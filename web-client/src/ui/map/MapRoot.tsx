@@ -3,9 +3,11 @@
 import { useEffect, useRef } from "react";
 import { useSelector, useStore } from "react-redux";
 import { ErrorBoundary, HintScreen, LoadScreen } from "ui/shared";
-import { AppStore, documentSelector, viewSelector } from "core/store";
+import type { AppStore } from "core/store";
+import { documentSelector, viewSelector } from "core/store";
 
-import { MapState, initMap } from "./MapState";
+import type { MapState } from "./MapState";
+import { initMap } from "./MapState";
 import { MapContainer } from "./MapContainerMgr";
 import { useMapStyles } from "./styles";
 

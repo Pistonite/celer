@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import { useSelector } from "react-redux";
 import YAML from "js-yaml";
 
-import { errstr } from "pure/utils";
-import { Result, tryCatch } from "pure/result";
+import type { Result } from "@pistonite/pure/result";
+import { tryCatch, errstr } from "@pistonite/pure/result";
 
 import { documentSelector, settingsSelector } from "core/store";
-import { Value } from "low/celerc";
+import type { Value } from "low/celerc";
 
 /// Hook to get the parsed user config options for the current document
 export const useDocCurrentUserPluginConfig = (): Result<Value[], string> => {

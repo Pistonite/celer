@@ -1,25 +1,14 @@
+/// <reference types="vitest/config" />
+// @ts-expect-error @types/node
 import path from "path";
+// @ts-expect-error @types/node
 import fs from "fs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import wasm from "vite-plugin-wasm";
-import topLevelAwait from "vite-plugin-top-level-await";
 
-const kebabCase = (x: string) =>
-    x.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-
-const removeRustStyleDocComments = () => {
-    return {
-        name: "remove-rust-style-doc-comments",
-        transform(code: string, _id: string) {
-            return code
-                .split("\n")
-                .filter((x) => !x.startsWith("//!"))
-                .join("\n");
-        },
-    };
-};
+declare const __dirname: string;
 
 const createHttpsConfig = () => {
     try {
@@ -28,21 +17,20 @@ const createHttpsConfig = () => {
         if (fs.existsSync(key) && fs.existsSync(cert)) {
             return { key, cert };
         }
-    } catch (e) {}
+    } catch (e) {
+        // ignore
+    }
     return undefined;
 };
 
 const https = createHttpsConfig();
 
+const kebabCase = (x: string) =>
+    x.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [
-        react(),
-        tsconfigPaths(),
-        removeRustStyleDocComments(),
-        wasm(),
-        topLevelAwait(),
-    ],
+    plugins: [react(), tsconfigPaths(), wasm()],
     server: {
         https,
         proxy: {
@@ -88,5 +76,8 @@ export default defineConfig({
                 },
             },
         },
+    },
+    test: {
+        environment: "jsdom",
     },
 });

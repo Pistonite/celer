@@ -2,7 +2,12 @@
 
 import { withPayload } from "low/store";
 
-import { LayerMode, MapSettingsState, SectionMode, VisualSize } from "./state";
+import type {
+    LayerMode,
+    MapSettingsState,
+    SectionMode,
+    VisualSize,
+} from "./state";
 
 /// Set the current line section mode
 export const setLineSectionMode = withPayload<MapSettingsState, SectionMode>(

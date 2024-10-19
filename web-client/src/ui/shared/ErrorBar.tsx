@@ -1,6 +1,6 @@
 //! An error bar that displays preformatted error messages
 
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import {
     MessageBar,
     MessageBarBody,

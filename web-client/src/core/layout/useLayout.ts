@@ -2,7 +2,7 @@
 import { useSelector } from "react-redux";
 import { settingsSelector } from "core/store";
 
-import { Layout, WidgetType } from "./state";
+import type { Layout, WidgetType } from "./state";
 import { isCurrentLayoutDefault } from "./utils";
 
 /// Return type of useLayout hook

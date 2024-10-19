@@ -5,7 +5,6 @@ const path = require("path");
 const lints = Object.entries({
     "react-namespace": require("./react-namespace.cjs"),
     "non-logger-console": require("./non-logger-console.cjs"),
-    "no-clsx": require("./no-clsx.cjs"),
 });
 
 const rootDir = path.resolve(__dirname, "../../src");

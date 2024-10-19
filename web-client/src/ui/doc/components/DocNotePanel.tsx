@@ -1,6 +1,7 @@
-import { ExecDoc } from "low/celerc";
+import type { ExecDoc } from "low/celerc";
 
-import { DocNoteBlock, DocNoteBlockProps } from "./DocNoteBlock";
+import type { DocNoteBlockProps } from "./DocNoteBlock";
+import { DocNoteBlock } from "./DocNoteBlock";
 import { DocNoteContainer } from "./dom";
 import { useDocStyles } from "./styles";
 

@@ -2,7 +2,7 @@
 import React, { Suspense } from "react";
 import { Spinner } from "@fluentui/react-components";
 
-import { PrismEditorProps } from "./types";
+import type { PrismEditorProps } from "./types";
 
 const PrismEditorCore = React.lazy(() => import("./PrismEditorCore"));
 

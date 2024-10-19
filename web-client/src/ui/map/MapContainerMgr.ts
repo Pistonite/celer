@@ -1,5 +1,5 @@
 //! MapContainerMgr
-import L from "leaflet";
+import type L from "leaflet";
 
 import { DOMId, consoleMap as console } from "low/utils";
 

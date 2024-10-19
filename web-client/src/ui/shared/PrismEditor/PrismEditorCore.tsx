@@ -7,23 +7,19 @@ import ReactSimpleCodeEditor from "react-simple-code-editor";
 import { highlight, languages } from "prismjs";
 
 // load languages
-/* eslint-disable import/no-internal-modules */
 import "prismjs/components/prism-yaml";
-/* eslint-enable import/no-internal-modules */
 
 import { console, isInDarkMode } from "low/utils";
 
-import { PrismEditorProps } from "./types";
+import type { PrismEditorProps } from "./types";
 
 console.info("loading prism editor");
 
 function initStyles() {
     const dark = isInDarkMode();
     if (dark) {
-        // eslint-disable-next-line import/no-internal-modules
         import("prismjs/themes/prism-okaidia.css");
     } else {
-        // eslint-disable-next-line import/no-internal-modules
         import("prismjs/themes/prism.css");
     }
     return makeStyles({

@@ -1,7 +1,8 @@
-import { AppStore, viewActions } from "core/store";
+import type { AppStore } from "core/store";
+import { viewActions } from "core/store";
 import { consoleKernel as console } from "low/utils";
 
-import { Kernel } from "./Kernel";
+import type { Kernel } from "./Kernel";
 
 export type UiMgrInitFn = (kernel: Kernel, store: AppStore) => () => void;
 

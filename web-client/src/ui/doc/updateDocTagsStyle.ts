@@ -1,4 +1,4 @@
-import { DocTag, DocTagColor } from "low/celerc";
+import type { DocTag, DocTagColor } from "low/celerc";
 import { injectDOMStyle, consoleDoc as console } from "low/utils";
 
 import { RichTextVariables, getTagClassName } from "./components";

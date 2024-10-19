@@ -64,7 +64,7 @@ function isImportConsoleFromLowUtils(include, line) {
 
 function getLowUtilsImportLocationFrom(file) {
     if (!file.replace(/^src\/low\/utils\//, "").includes("/")) {
-        return "./logging";
+        return "./logging.ts";
     }
     return file.replace(/^src\/low\//, "").includes("/")
         ? "low/utils"

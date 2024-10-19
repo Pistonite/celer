@@ -14,14 +14,14 @@ import {
     Tooltip,
 } from "@fluentui/react-components";
 import { ListBarTree20Regular } from "@fluentui/react-icons";
-import isEqual from "is-equal";
+import { deepEqual } from "fast-equals";
 import { forwardRef, memo } from "react";
 import { useSelector } from "react-redux";
 import { useDocSections } from "core/doc";
 import { viewActions, viewSelector } from "core/store";
 import { useActions } from "low/store";
 
-import {
+import type {
     ControlComponentProps,
     OnMenuCheckedValueChangeFunction,
     ToolbarControl,
@@ -129,7 +129,7 @@ const SelectSectionInternal = memo(
     },
     (prev, next) => {
         return (
-            isEqual(prev.sections, next.sections) &&
+            deepEqual(prev.sections, next.sections) &&
             prev.current === next.current
         );
     },

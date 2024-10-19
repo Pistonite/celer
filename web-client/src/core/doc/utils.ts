@@ -1,13 +1,8 @@
 //! Utilities for document
 
-import {
-    AppState,
-    SettingsState,
-    settingsSelector,
-    documentSelector,
-    viewSelector,
-} from "core/store";
-import {
+import type { AppState, SettingsState } from "core/store";
+import { settingsSelector, documentSelector, viewSelector } from "core/store";
+import type {
     DocPoorText,
     DocRichTextBlock,
     ExecDoc,
