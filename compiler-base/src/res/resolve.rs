@@ -135,7 +135,7 @@ mod test {
         let result = resource.resolve(&target);
         assert_eq!(
             result.unwrap().path(),
-            &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar")
+            &ResPath::new_remote_unchecked(target.base_url().unwrap(), "bar")
         );
 
         let resource = create_local_resource("foo/a");
@@ -148,7 +148,7 @@ mod test {
         let result = resource.resolve(&target);
         assert_eq!(
             result.unwrap().path(),
-            &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar/b")
+            &ResPath::new_remote_unchecked(target.base_url().unwrap(), "bar/b")
         );
     }
 
@@ -231,7 +231,7 @@ mod test {
         let result = resource.resolve(&target);
         assert_eq!(
             result.unwrap().path(),
-            &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar")
+            &ResPath::new_remote_unchecked(target.base_url().unwrap(), "bar")
         );
 
         let resource = create_remote_resource("foo/a");
@@ -244,7 +244,7 @@ mod test {
         let result = resource.resolve(&target);
         assert_eq!(
             result.unwrap().path(),
-            &ResPath::new_remote_unchecked(&target.base_url().unwrap(), "bar/b")
+            &ResPath::new_remote_unchecked(target.base_url().unwrap(), "bar/b")
         );
     }
 }
