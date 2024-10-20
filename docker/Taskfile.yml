@@ -6,7 +6,7 @@ tasks:
     dotenv:
     - .env # Load github token from environment
     cmds:
-    - cargo run
+    - magnesis -o dist
     - task: make-version
       vars:
         VERSION_STRING: 0.0.0-dev unknown
