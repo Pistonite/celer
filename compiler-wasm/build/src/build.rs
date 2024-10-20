@@ -6,6 +6,7 @@ use std::fs;
 use std::io;
 use std::path::Path;
 use std::process::Command;
+use std::process::ExitCode;
 
 /// Temporary output directory
 const TEMP_OUTPUT_DIR: &str = "celerc";
@@ -18,11 +19,15 @@ const WORKER_JS: &str = "worker.js";
 const OUTPUT_PUBLIC_DIR: &str = "../../web-client/public/celerc";
 const OUTPUT_LOW_DIR: &str = "../../web-client/src/low/celerc";
 
-pub fn main() {
+pub fn main() -> ExitCode {
     match main_internal() {
         Ok(_) => println!("done!"),
-        Err(e) => eprintln!("error: {}", e),
+        Err(e) => {
+            eprintln!("error: {}", e);
+            return ExitCode::FAILURE;
+        }
     }
+    ExitCode::SUCCESS
 }
 
 fn main_internal() -> io::Result<()> {
@@ -70,6 +75,7 @@ fn wasm_pack_build() -> io::Result<()> {
         build_wasm_pack_command(&["--release"])
     };
 
+    println!("running wasm-pack");
     let result = command.spawn()?.wait_with_output()?;
 
     if !result.status.success() {
