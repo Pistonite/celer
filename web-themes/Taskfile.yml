@@ -36,4 +36,4 @@ tasks:
   
   prettier:
     cmds:
-    - npx prettier "./**/*.{ts,tsx,json,js,jsx,cjs,css,html}" {{.PRETTIER_ARGS}} --config ../web-client/.prettierrc.cjs
+    - npx prettier "./**/*.{ts,tsx,json,js,jsx,cjs,css,html}" {{.PRETTIER_ARGS}}
