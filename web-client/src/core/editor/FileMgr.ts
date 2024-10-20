@@ -1,19 +1,22 @@
 import * as monaco from "monaco-editor";
 
-import { FsError, FsFile, FsFileSystem, FsResult } from "pure/fs";
-import { RwLock } from "pure/utils";
+import type {
+    FsError,
+    FsFile,
+    FsFileSystem,
+    FsResult,
+} from "@pistonite/pure/fs";
+import { RwLock } from "@pistonite/pure/sync";
 
-import { AppDispatcher, viewActions } from "core/store";
-import { CompilerFileAccess } from "core/compiler";
-import {
-    Yielder,
-    createYielder,
-    sleep,
-    consoleEditor as console,
-} from "low/utils";
+import type { AppDispatcher } from "core/store";
+import { viewActions } from "core/store";
+import type { CompilerFileAccess } from "core/compiler";
+import type { Yielder } from "low/utils";
+import { createYielder, sleep, consoleEditor as console } from "low/utils";
 
 import { EditorContainerDOM } from "./dom";
-import { ChangeTracker, newModifyTimeBasedTracker } from "./ChangeTracker";
+import type { ChangeTracker } from "./ChangeTracker";
+import { newModifyTimeBasedTracker } from "./ChangeTracker";
 
 type IStandaloneCodeEditor = monaco.editor.IStandaloneCodeEditor;
 

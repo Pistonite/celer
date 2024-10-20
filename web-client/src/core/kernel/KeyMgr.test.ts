@@ -1,7 +1,29 @@
-// @ts-expect-error importing test utils
-import { createMockStore, getAttr, setAttr } from "@test";
+import { describe, it, expect, vi } from "vitest";
+
+import type { AppStore } from "core/store";
 
 import { KeyMgr } from "./KeyMgr";
+
+const createMockStore = (initialState: unknown) => {
+    return {
+        getState: () => initialState,
+        subscribe: vi.fn(),
+        dispatch: vi.fn(),
+    } as unknown as AppStore;
+};
+
+const getAttr = (obj: unknown, member: string) => {
+    expect(obj).toHaveProperty(member);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (obj as any)[member];
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const setAttr = (obj: unknown, member: string, value: any) => {
+    expect(obj).toHaveProperty(member);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (obj as any)[member] = value;
+};
 
 describe("ui/doc/KeyMgr", () => {
     const setupTest = (editingKeyBinding?: string) => {

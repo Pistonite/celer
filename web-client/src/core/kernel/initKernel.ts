@@ -1,7 +1,7 @@
 import { consoleKernel as console } from "low/utils";
 
-import { UiMgrInitFn } from "./UiMgr";
-import { Kernel } from "./Kernel";
+import type { UiMgrInitFn } from "./UiMgr";
+import type { Kernel } from "./Kernel";
 
 declare global {
     interface Window {

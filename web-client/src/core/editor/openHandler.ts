@@ -1,6 +1,8 @@
-import { FsErr, FsError, FsResult } from "pure/fs";
+import type { FsError, FsResult } from "@pistonite/pure/fs";
+import { FsErr } from "@pistonite/pure/fs";
 
-import { AlertMgr, consoleEditor as console } from "low/utils";
+import type { AlertMgr } from "low/utils";
+import { consoleEditor as console } from "low/utils";
 
 export function createRetryOpenHandler(alertMgr: AlertMgr) {
     return async (err: FsError): Promise<FsResult<boolean>> => {

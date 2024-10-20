@@ -1,4 +1,4 @@
-import { Result } from "pure/result";
+import type { Result } from "@pistonite/pure/result";
 
 export type AlertExtraAction = {
     id: string;

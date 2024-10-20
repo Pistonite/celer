@@ -1,14 +1,14 @@
-import isEqual from "is-equal";
+import { deepEqual } from "fast-equals";
 
+import type { AppStore } from "core/store";
 import {
-    AppStore,
     documentActions,
     settingsActions,
     settingsSelector,
     viewActions,
 } from "core/store";
 
-import { ExpoContext } from "low/celerc";
+import type { ExpoContext } from "low/celerc";
 import { consoleDoc as console } from "low/utils";
 
 export function setDocument(store: AppStore, doc: ExpoContext | undefined) {
@@ -19,7 +19,7 @@ export function setDocument(store: AppStore, doc: ExpoContext | undefined) {
 
     const title = doc.execDoc.project.title;
     const { pluginMetadatas } = settingsSelector(store.getState());
-    if (isEqual(doc.pluginMetadata, pluginMetadatas[title])) {
+    if (deepEqual(doc.pluginMetadata, pluginMetadatas[title])) {
         store.dispatch(documentActions.setDocument(doc));
         return;
     }

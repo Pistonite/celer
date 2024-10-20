@@ -1,6 +1,6 @@
 //! Stage state slice
 
-import { AlertExtraAction } from "low/utils";
+import type { AlertExtraAction } from "low/utils";
 
 /// State type for stage view
 export type StageViewState = {

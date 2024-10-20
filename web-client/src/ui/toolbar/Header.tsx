@@ -26,14 +26,15 @@ import {
     mergeClasses,
 } from "@fluentui/react-components";
 import { MoreHorizontal20Filled } from "@fluentui/react-icons";
-import React, { PropsWithChildren, useMemo } from "react";
+import type { PropsWithChildren } from "react";
+import React, { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import { documentSelector, settingsSelector, viewSelector } from "core/store";
 import type { ExecDoc } from "low/celerc";
 
 import { getHeaderControls } from "./getHeaderControls";
-import { HeaderControlList } from "./util";
+import type { HeaderControlList } from "./util";
 import { useHeaderStyles } from "./styles";
 
 /// The header props

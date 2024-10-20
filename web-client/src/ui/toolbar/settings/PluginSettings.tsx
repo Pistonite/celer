@@ -2,11 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useSelector } from "react-redux";
+import type { CheckboxProps } from "@fluentui/react-components";
 import {
     Body1,
     Button,
     Checkbox,
-    CheckboxProps,
     Field,
     Link,
     MessageBar,
@@ -21,14 +21,12 @@ import {
     settingsActions,
     settingsSelector,
 } from "core/store";
-import {
-    AppPluginType,
-    parseUserConfigOptions,
-    useDocPluginMetadata,
-} from "core/doc";
-import { Kernel, useKernel } from "core/kernel";
+import type { AppPluginType } from "core/doc";
+import { parseUserConfigOptions, useDocPluginMetadata } from "core/doc";
+import type { Kernel } from "core/kernel";
+import { useKernel } from "core/kernel";
 import { useActions } from "low/store";
-import { ExecDoc, PluginMetadata } from "low/celerc";
+import type { ExecDoc, PluginMetadata } from "low/celerc";
 import { console } from "low/utils";
 
 import { SettingsSection } from "./SettingsSection";

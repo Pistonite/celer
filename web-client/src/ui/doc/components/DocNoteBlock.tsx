@@ -1,6 +1,6 @@
 import { useRef } from "react";
 
-import { DocNote } from "low/celerc";
+import type { DocNote } from "low/celerc";
 import { smartMergeClasses } from "low/utils";
 
 import {

@@ -36,6 +36,9 @@ body {
     overflow: hidden;
 }
 
+#react-root {
+    width: 100vw;
+}
 /* This needs to be here so it can still apply in case of render error */
 #react-root > div {
     height: 100vh;

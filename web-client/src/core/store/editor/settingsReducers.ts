@@ -1,7 +1,7 @@
 //! Reducers for editor settings
 import { withPayload } from "low/store";
 
-import { EditorMode, EditorSettingsState } from "./state";
+import type { EditorMode, EditorSettingsState } from "./state";
 
 export const setShowFileTree = withPayload<EditorSettingsState, boolean>(
     (state, showFileTree) => {

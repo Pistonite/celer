@@ -1,7 +1,7 @@
-import { AppStore } from "core/store";
+import type { AppStore } from "core/store";
 import { consoleCompiler as console } from "low/utils";
 
-import { CompilerKernel } from "./CompilerKernel";
+import type { CompilerKernel } from "./CompilerKernel";
 import { CompilerKernelImpl } from "./CompilerKernelImpl";
 
 declare global {

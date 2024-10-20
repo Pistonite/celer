@@ -1,23 +1,14 @@
 import * as monaco from "monaco-editor";
-// eslint-disable-next-line import/no-internal-modules
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-// eslint-disable-next-line import/no-internal-modules
 import jsonWorker from "monaco-editor/esm/vs/language/json/json.worker?worker";
-// eslint-disable-next-line import/no-internal-modules
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import reduxWatch from "redux-watch";
 
-import { FsFileSystem } from "pure/fs";
+import type { FsFileSystem } from "@pistonite/pure/fs";
 
-import {
-    AppStore,
-    viewSelector,
-    settingsSelector,
-    viewActions,
-    ViewState,
-    SettingsState,
-} from "core/store";
-import { CompilerFileAccess } from "core/compiler";
+import type { AppStore, ViewState, SettingsState } from "core/store";
+import { viewSelector, settingsSelector, viewActions } from "core/store";
+import type { CompilerFileAccess } from "core/compiler";
 import {
     isInDarkMode,
     IdleMgr,
@@ -27,8 +18,8 @@ import {
 
 import { FileMgr } from "./FileMgr";
 
-import { EditorKernel } from "./EditorKernel";
-import { EditorKernelAccess } from "./EditorKernelAccess";
+import type { EditorKernel } from "./EditorKernel";
+import type { EditorKernelAccess } from "./EditorKernelAccess";
 
 console.info("loading web editor kernel");
 

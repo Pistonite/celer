@@ -1,8 +1,9 @@
 //! Rich text component
 
-import { Text, TextProps } from "@fluentui/react-components";
+import type { TextProps } from "@fluentui/react-components";
+import { Text } from "@fluentui/react-components";
 
-import { DocRichText, DocRichTextBlock } from "low/celerc";
+import type { DocRichText, DocRichTextBlock } from "low/celerc";
 import { smartMergeClasses } from "low/utils";
 
 import {

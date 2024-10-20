@@ -1,5 +1,5 @@
 import { Caption1, makeStyles } from "@fluentui/react-components";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 const useStyles = makeStyles({
     container: {

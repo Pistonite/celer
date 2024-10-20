@@ -1,4 +1,3 @@
-/* eslint-disable */
 import L from "leaflet";
 // https://github.com/Leaflet/Leaflet.TileLayer.NoGap
 // "THE BEER-WARE LICENSE":

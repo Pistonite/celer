@@ -1,21 +1,19 @@
 //! Kernel implementation for the EDIT mode
 
-import { FsFileSystem } from "pure/fs";
+import type { FsFileSystem } from "@pistonite/pure/fs";
 
-import {
-    AppStore,
-    settingsActions,
-    settingsSelector,
-    viewActions,
-} from "core/store";
+import type { AppStore } from "core/store";
+import { settingsActions, settingsSelector, viewActions } from "core/store";
 import { injectSplitTypesIntoRequest, setDocument } from "core/doc";
-import { EditorKernel, EditorKernelAccess } from "core/editor";
-import { CompilerKernel } from "core/compiler";
-import { AlertMgr, consoleKernel as console } from "low/utils";
-import { ExpoDoc, ExportRequest } from "low/celerc";
+import type { EditorKernel, EditorKernelAccess } from "core/editor";
+import type { CompilerKernel } from "core/compiler";
+import type { AlertMgr } from "low/utils";
+import { consoleKernel as console } from "low/utils";
+import type { ExpoDoc, ExportRequest } from "low/celerc";
 
-import { Kernel, KernelEdit } from "./Kernel";
-import { UiMgr, UiMgrInitFn } from "./UiMgr";
+import type { Kernel, KernelEdit } from "./Kernel";
+import type { UiMgrInitFn } from "./UiMgr";
+import { UiMgr } from "./UiMgr";
 import { KeyMgr } from "./KeyMgr";
 import { createAndBindStore } from "./store";
 import { AlertMgrImpl } from "./AlertMgr";

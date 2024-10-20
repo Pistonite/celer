@@ -1,4 +1,4 @@
-import { DocDiagnostic, DocRichText, DocRichTextBlock } from "low/celerc";
+import type { DocDiagnostic, DocRichText, DocRichTextBlock } from "low/celerc";
 
 /// Props for line components
 export type DocLineProps = {

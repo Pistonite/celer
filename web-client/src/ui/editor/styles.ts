@@ -25,7 +25,7 @@ export const useEditorStyles = makeStyles({
         ...shorthands.borderBottom("1px", "solid", "#ccc"),
     },
     editorOuterContainer: {
-        ...shorthands.flex(1),
+        flex: 1,
     },
     editorContainer: {
         height: "100%",

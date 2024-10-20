@@ -1,6 +1,6 @@
 //! Shared component for setting sections
 
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import { Divider, Subtitle2 } from "@fluentui/react-components";
 
 /// Props for SettingsSection

@@ -1,6 +1,6 @@
 //! Utilities
 
-import { DOMId } from "low/utils";
+import type { DOMId } from "low/utils";
 import {
     DocLineContainerClass,
     DocSectionContainerClass,

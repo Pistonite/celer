@@ -16,11 +16,12 @@ import {
     DocumentError20Regular,
     DocumentCheckmark20Regular,
 } from "@fluentui/react-icons";
-import { DiagnosticSection, removeLinks, useDocDiagnostics } from "core/doc";
+import type { DiagnosticSection } from "core/doc";
+import { removeLinks, useDocDiagnostics } from "core/doc";
 import { useActions } from "low/store";
 import { viewActions } from "core/store";
 
-import { ControlComponentProps, ToolbarControl } from "./util";
+import type { ControlComponentProps, ToolbarControl } from "./util";
 
 export const ViewDiagnostics: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {

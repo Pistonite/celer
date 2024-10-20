@@ -19,15 +19,15 @@ import {
     Tooltip,
 } from "@fluentui/react-components";
 import { Window20Regular } from "@fluentui/react-icons";
+import type { WidgetType } from "core/layout";
 import {
-    WidgetType,
     getAvailableToolbarLocations,
     useCurrentUserLayout,
 } from "core/layout";
 import { useActions } from "low/store";
 import { settingsActions } from "core/store";
 
-import {
+import type {
     ControlComponentProps,
     OnMenuCheckedValueChangeFunction,
     ToolbarControl,

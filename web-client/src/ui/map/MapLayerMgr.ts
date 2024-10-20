@@ -2,8 +2,9 @@
 import L from "leaflet";
 import "leaflet-rastercoords";
 
-import { AppDispatcher, viewActions } from "core/store";
-import { MapLayer, MapTilesetTransform, GameCoord } from "low/celerc";
+import type { AppDispatcher } from "core/store";
+import { viewActions } from "core/store";
+import type { MapLayer, MapTilesetTransform, GameCoord } from "low/celerc";
 import { consoleMap as console } from "low/utils";
 
 import { getAttributionHtml } from "./utils";

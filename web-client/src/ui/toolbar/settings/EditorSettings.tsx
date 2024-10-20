@@ -5,13 +5,9 @@ import { Dropdown, Field, Switch, Option } from "@fluentui/react-components";
 import { useSelector } from "react-redux";
 
 import { useKernel } from "core/kernel";
-import {
-    settingsActions,
-    settingsSelector,
-    viewSelector,
-    EditorMode,
-} from "core/store";
-import { EntryPointsSorted } from "low/celerc";
+import type { EditorMode } from "core/store";
+import { settingsActions, settingsSelector, viewSelector } from "core/store";
+import type { EntryPointsSorted } from "low/celerc";
 import { useActions } from "low/store";
 
 import { SettingsSection } from "./SettingsSection";

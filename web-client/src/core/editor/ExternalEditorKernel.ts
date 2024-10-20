@@ -1,19 +1,16 @@
 //! Logic for external editor workflow
 
-import { FsErr, FsFileSystem, FsResult, fsJoin, fsRoot } from "pure/fs";
+import type { FsFileSystem, FsResult } from "@pistonite/pure/fs";
+import { FsErr, fsJoin, fsRoot } from "@pistonite/pure/fs";
 
-import { CompilerFileAccess } from "core/compiler";
-import {
-    IdleMgr,
-    Yielder,
-    createYielder,
-    consoleEditor as console,
-} from "low/utils";
+import type { CompilerFileAccess } from "core/compiler";
+import type { Yielder } from "low/utils";
+import { IdleMgr, createYielder, consoleEditor as console } from "low/utils";
 
-import { EditorKernel } from "./EditorKernel";
-import { EditorKernelAccess } from "./EditorKernelAccess";
+import type { EditorKernel } from "./EditorKernel";
+import type { EditorKernelAccess } from "./EditorKernelAccess";
+import type { ChangeTracker } from "./ChangeTracker";
 import {
-    ChangeTracker,
     StaticTimeTracker,
     newHashBasedTracker,
     newModifyTimeBasedTracker,

@@ -1,5 +1,5 @@
-import { fsSave } from "pure/fs";
-import { Logger, getLogLines } from "pure/log";
+import { fsSave } from "@pistonite/pure/fs";
+import { Logger, getLogLines } from "@pistonite/pure/log";
 
 export const console = new Logger("log");
 export const consoleKernel = new Logger("krn");

@@ -10,12 +10,12 @@ import { useSelector } from "react-redux";
 import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { Dismiss20Regular, FolderOpen20Regular } from "@fluentui/react-icons";
 
-import { fsOpenReadWrite } from "pure/fs";
+import { fsOpenReadWrite } from "@pistonite/pure/fs";
 
 import { useKernel } from "core/kernel";
 import { viewSelector } from "core/store";
 
-import { ToolbarControl } from "./util";
+import type { ToolbarControl } from "./util";
 
 export const OpenCloseProject: ToolbarControl = {
     ToolbarButton: forwardRef<HTMLButtonElement>((_, ref) => {

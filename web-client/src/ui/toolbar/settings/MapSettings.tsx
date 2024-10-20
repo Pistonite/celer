@@ -1,5 +1,6 @@
 //! Map tab of the settings dialog
 
+import type { SliderProps, DropdownProps } from "@fluentui/react-components";
 import {
     Dropdown,
     Field,
@@ -7,8 +8,6 @@ import {
     Switch,
     Label,
     Slider,
-    SliderProps,
-    DropdownProps,
 } from "@fluentui/react-components";
 import { useSelector } from "react-redux";
 import { settingsActions, settingsSelector } from "core/store";

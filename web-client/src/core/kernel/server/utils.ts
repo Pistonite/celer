@@ -1,6 +1,7 @@
 import { Buffer } from "buffer/";
 
-import { Result, tryCatch } from "pure/result";
+import type { Result } from "@pistonite/pure/result";
+import { tryCatch } from "@pistonite/pure/result";
 
 import { consoleKernel as console } from "low/utils";
 

@@ -111,7 +111,7 @@ async fn gzip_file(path: PathBuf) -> io::Result<()> {
     debug!("compressing: {}", path.display());
     let mut path_gz = path.clone();
     if let Some(ext) = path_gz.extension().and_then(|ext| ext.to_str()) {
-        path_gz.set_extension(&format!("{ext}.gz"));
+        path_gz.set_extension(format!("{ext}.gz"));
         if path_gz.exists() {
             debug!("skipping: {}", path.display());
             return Ok(());

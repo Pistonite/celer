@@ -2,17 +2,13 @@
 import "leaflet-arrowheads";
 import L from "leaflet";
 
-import {
-    AppDispatcher,
-    SettingsState,
-    ViewState,
-    viewActions,
-} from "core/store";
-import { ExecDoc, GameCoord, MapIcon } from "low/celerc";
+import type { AppDispatcher, SettingsState, ViewState } from "core/store";
+import { viewActions } from "core/store";
+import type { ExecDoc, GameCoord, MapIcon } from "low/celerc";
 import { consoleMap as console } from "low/utils";
 import { LayerMode, SectionMode, VisualSize } from "core/map";
 
-import { MapLayerMgr } from "./MapLayerMgr";
+import type { MapLayerMgr } from "./MapLayerMgr";
 import { IconMarker } from "./IconMarker";
 
 /// Opacity for non current layer visuals

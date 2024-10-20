@@ -1,17 +1,11 @@
 import reduxWatch from "redux-watch";
 
 import { isRecompileNeeded } from "core/doc";
-import {
-    AppState,
-    AppStore,
-    SettingsState,
-    initStore,
-    saveSettings,
-    settingsSelector,
-} from "core/store";
+import type { AppState, AppStore, SettingsState } from "core/store";
+import { initStore, saveSettings, settingsSelector } from "core/store";
 import { consoleKernel as console } from "low/utils";
 
-import { Kernel } from "./Kernel";
+import type { Kernel } from "./Kernel";
 
 /// Create the store and bind listeners to the kernel
 export const createAndBindStore = (kernel: Kernel): AppStore => {

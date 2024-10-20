@@ -7,7 +7,6 @@ export * from "./IdleMgr.ts";
 export * from "./Debouncer.ts";
 export * from "./html.ts";
 export * from "./ReentrantLock.ts";
-export * from "./SerialEvent.ts";
 export * from "./WorkerHost.ts";
 export * from "./Yielder.ts";
 export * from "./logging.ts";

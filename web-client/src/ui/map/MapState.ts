@@ -7,15 +7,14 @@ import "./leaflet-tilelayer-nogap";
 import reduxWatch from "redux-watch";
 
 import { SectionMode } from "core/map";
+import type { AppStore, ViewState } from "core/store";
 import {
-    AppStore,
-    ViewState,
     documentSelector,
     settingsSelector,
     viewActions,
     viewSelector,
 } from "core/store";
-import { ExecDoc, GameCoord, MapLayer } from "low/celerc";
+import type { ExecDoc, GameCoord, MapLayer } from "low/celerc";
 import { Debouncer, consoleMap as console } from "low/utils";
 
 import { roughlyEquals } from "./utils";

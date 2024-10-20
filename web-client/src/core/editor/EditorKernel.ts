@@ -1,6 +1,6 @@
 //! Editor logic that wraps monaco editor
 
-import { CompilerFileAccess } from "core/compiler";
+import type { CompilerFileAccess } from "core/compiler";
 
 /// Interface used to access editor API
 ///

@@ -1,5 +1,6 @@
-import { ReducerDecl, withPayload } from "low/store";
-import { EditorViewState } from "./state";
+import type { ReducerDecl } from "low/store";
+import { withPayload } from "low/store";
+import type { EditorViewState } from "./state";
 
 export const updateFileSys = withPayload<EditorViewState, string | undefined>(
     (state, rootPath) => {

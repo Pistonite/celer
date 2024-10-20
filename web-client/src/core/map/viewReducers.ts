@@ -1,9 +1,9 @@
 //! Reducers for map view state
 
 import { withPayload } from "low/store";
-import { GameCoord } from "low/celerc";
+import type { GameCoord } from "low/celerc";
 
-import { MapViewState, MapView } from "./state";
+import type { MapViewState, MapView } from "./state";
 
 /// Set the current map layer
 export const setMapLayer = withPayload<MapViewState, number>((state, value) => {

@@ -4,7 +4,8 @@ import type { ExpoContext, PluginOptions } from "low/celerc";
 import { consoleKernel as console } from "low/utils";
 import { fetchAsJson, getApiUrl } from "low/fetch";
 
-import { DocRef, encodeObjectAsBase64, parseDocRef } from "./utils.ts";
+import type { DocRef } from "./utils.ts";
+import { encodeObjectAsBase64, parseDocRef } from "./utils.ts";
 
 export type LoadDocumentResult =
     | {

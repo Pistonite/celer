@@ -1,10 +1,10 @@
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 import { viewActions } from "core/store";
 import { smartMergeClasses } from "low/utils";
 import { useActions } from "low/store";
 
-import { DocLineProps } from "./props";
+import type { DocLineProps } from "./props";
 import { useDocStyles } from "./styles";
 import { DocLineHeadClass } from "./dom";
 

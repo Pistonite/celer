@@ -1,7 +1,7 @@
 //! Logic for handling key events and bindings
 
+import type { AppStore } from "core/store";
 import {
-    AppStore,
     documentSelector,
     settingsActions,
     settingsSelector,

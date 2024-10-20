@@ -1,4 +1,4 @@
-import { consoleEditor as console } from "./logging";
+import { consoleEditor as console } from "./logging.ts";
 
 /// Callback to execute an idle event
 export type IdleFunction = (isLong: boolean, duration: number) => Promise<void>;

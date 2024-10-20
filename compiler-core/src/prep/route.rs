@@ -15,7 +15,7 @@ use super::Setting;
 ///
 /// The following rule is used when seeing a `use`:
 /// - If the `use` is inside an array, and the `use` resolves to an inner array, the inner array is injected
-/// into the outer array
+///   into the outer array
 /// - Otherwise, the resolved value replaces the `use`
 ///
 /// If a `use` cannot be resolved, the error is placed inside the RouteBlob to defer it to the

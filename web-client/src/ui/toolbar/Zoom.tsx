@@ -5,7 +5,7 @@ import { MenuItem, ToolbarButton, Tooltip } from "@fluentui/react-components";
 import { ZoomIn20Regular, ZoomOut20Regular } from "@fluentui/react-icons";
 
 import { useZoomControl } from "./useZoomControl";
-import { ToolbarControl } from "./util";
+import type { ToolbarControl } from "./util";
 
 /// Factory function for zoom controls
 const createZoomControl = (isZoomIn: boolean): ToolbarControl => {

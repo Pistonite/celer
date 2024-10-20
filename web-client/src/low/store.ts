@@ -2,17 +2,19 @@
 //!
 //! Low level store utilities
 
-import {
+import type {
     Reducer,
-    createSlice,
     SliceCaseReducers,
     CreateSliceOptions,
     Draft,
     ActionCreatorWithPayload,
     ActionCreatorWithoutPayload,
-    AnyAction,
-    bindActionCreators as reduxBindActionCreators,
     Dispatch,
+    UnknownAction,
+} from "@reduxjs/toolkit";
+import {
+    createSlice,
+    bindActionCreators as reduxBindActionCreators,
 } from "@reduxjs/toolkit";
 import { useDispatch } from "react-redux";
 
@@ -96,8 +98,8 @@ export type BindedActionCreators<ActionCreators> = {
     >
         ? () => void
         : ActionCreators[t] extends ActionCreatorWithPayload<infer P, infer _>
-        ? (payload: P) => void
-        : never;
+          ? (payload: P) => void
+          : never;
 };
 
 type UnbindedActionCreators<ActionCreators> = {
@@ -107,8 +109,8 @@ type UnbindedActionCreators<ActionCreators> = {
     >
         ? ActionCreatorWithPayload<P, N>
         : ActionCreators[t] extends ActionCreatorWithoutPayload<infer N>
-        ? ActionCreatorWithoutPayload<N>
-        : never;
+          ? ActionCreatorWithoutPayload<N>
+          : never;
 };
 
 /// Bind actions to dispatch as a React hook
@@ -128,7 +130,7 @@ export const useActions = <
 /// This is a direct wrapper around redux's `bindActionCreators` for better typing.
 export const bindActions = <ActionCreators>(
     actions: UnbindedActionCreators<ActionCreators>,
-    dispatch: Dispatch<AnyAction>,
+    dispatch: Dispatch<UnknownAction>,
 ): BindedActionCreators<ActionCreators> => {
     return reduxBindActionCreators(
         actions,

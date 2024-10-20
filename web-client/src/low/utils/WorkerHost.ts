@@ -1,4 +1,4 @@
-import { Logger } from "pure/log";
+import type { Logger } from "@pistonite/pure/log";
 
 let worker: Worker;
 /* eslint-disable @typescript-eslint/no-explicit-any */

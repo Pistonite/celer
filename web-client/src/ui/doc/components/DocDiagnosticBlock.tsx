@@ -2,7 +2,7 @@
 
 import { Text } from "@fluentui/react-components";
 
-import { DocDiagnostic } from "low/celerc";
+import type { DocDiagnostic } from "low/celerc";
 import { concatClassName, smartMergeClasses } from "low/utils";
 
 import { Poor } from "./Poor";

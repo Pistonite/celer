@@ -1,4 +1,4 @@
-import { ExecDoc } from "low/celerc";
+import type { ExecDoc } from "low/celerc";
 import { DocMainContainer } from "./dom";
 import { useDocStyles } from "./styles";
 import { DocSection } from "./DocSection";

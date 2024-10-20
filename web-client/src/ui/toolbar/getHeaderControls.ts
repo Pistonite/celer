@@ -1,7 +1,7 @@
-import { EditorMode } from "core/store";
-import { StageMode } from "core/stage";
+import type { EditorMode } from "core/store";
+import type { StageMode } from "core/stage";
 
-import { HeaderControlList, ToolbarControl } from "./util";
+import type { HeaderControlList, ToolbarControl } from "./util";
 import { SwitchToolbarLocation } from "./SwitchToolbarLocation";
 import { SwitchLayout } from "./SwitchLayout";
 import { SwitchMapLayer } from "./SwitchMapLayer";

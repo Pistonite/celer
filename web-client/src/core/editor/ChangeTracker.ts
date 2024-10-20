@@ -1,6 +1,8 @@
-import { FsErr, FsFile, FsVoid, fsErr } from "pure/fs";
+import type { FsFile, FsVoid } from "@pistonite/pure/fs";
+import { FsErr, fsErr } from "@pistonite/pure/fs";
 
-import { Yielder, consoleEditor as console, createYielder } from "low/utils";
+import type { Yielder } from "low/utils";
+import { consoleEditor as console, createYielder } from "low/utils";
 
 /// Track if file was modified since last time it was accessed
 export interface ChangeTracker {

@@ -1,9 +1,10 @@
-import { FsFileSystem } from "pure/fs";
+import type { FsFileSystem } from "@pistonite/pure/fs";
 
-import { AppStore, settingsSelector } from "core/store";
+import type { AppStore } from "core/store";
+import { settingsSelector } from "core/store";
 
-import { EditorKernelAccess } from "./EditorKernelAccess";
-import { EditorKernel } from "./EditorKernel";
+import type { EditorKernelAccess } from "./EditorKernelAccess";
+import type { EditorKernel } from "./EditorKernel";
 
 declare global {
     interface Window {

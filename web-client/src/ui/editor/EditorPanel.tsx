@@ -1,8 +1,9 @@
+import { Body1 } from "@fluentui/react-components";
 import { useSelector } from "react-redux";
 
 import { viewSelector } from "core/store";
 import { HintScreen } from "ui/shared";
-import { Body1 } from "@fluentui/react-components";
+
 import { useEditorStyles } from "./styles";
 import { EditorContainer } from "./EditorContainer";
 

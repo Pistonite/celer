@@ -3,7 +3,7 @@ import {
     webDarkTheme,
     webLightTheme,
 } from "@fluentui/react-components";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 import { isInDarkMode } from "low/utils";
 

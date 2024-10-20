@@ -1,6 +1,6 @@
 import { smartMergeClasses } from "low/utils";
 
-import { DocLineProps } from "./props";
+import type { DocLineProps } from "./props";
 import { DocLineHead } from "./DocLineHead";
 import { DocLineCounter } from "./DocLineCounter";
 import { DocLineIcon } from "./DocLineIcon";

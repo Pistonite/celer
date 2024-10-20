@@ -19,7 +19,7 @@ import { Settings20Regular } from "@fluentui/react-icons";
 import { viewActions } from "core/store";
 import { useActions } from "low/store";
 
-import { ControlComponentProps, ToolbarControl } from "./util";
+import type { ControlComponentProps, ToolbarControl } from "./util";
 import { SettingsDialog } from "./settings";
 
 /// The settings control

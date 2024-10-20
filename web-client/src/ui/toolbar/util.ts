@@ -1,6 +1,6 @@
 //! Header utility
 
-import { MenuProps } from "@fluentui/react-components";
+import type { MenuProps } from "@fluentui/react-components";
 
 /// Type for defining the control groups and controls in the header
 export type HeaderControlList = {

@@ -1,8 +1,9 @@
 //! Poor text component
 
-import { Text, TextProps } from "@fluentui/react-components";
+import type { TextProps } from "@fluentui/react-components";
+import { Text } from "@fluentui/react-components";
 
-import { DocPoorText, DocPoorTextBlock } from "low/celerc";
+import type { DocPoorText, DocPoorTextBlock } from "low/celerc";
 
 /// Poor text display component
 type PoorProps = {

@@ -38,7 +38,7 @@ const viewerHtml = processHtml(indexHtml, VIEWER_TAG)
         // remove monaco code completely from viewer
         return !l.includes("monaco");
     })
-    .join("");
+    .join("\n");
 const editorHtml = processHtml(indexHtml, EDITOR_TAG).join("\n");
 
 fs.writeFileSync(viewerHtmlPath, viewerHtml);
